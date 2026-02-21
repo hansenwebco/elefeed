@@ -18,6 +18,7 @@
     }
 
     :root {
+      color-scheme: dark;
       --bg: #0d0d0f;
       --surface: #141418;
       --surface2: #1c1c22;
@@ -586,24 +587,46 @@
     /* ─── POST CARD ─── */
     .post {
       border-bottom: 1px solid var(--border);
-      padding: 18px 20px;
-      transition: background var(--trans);
+      border-left: 2px solid var(--border2);
+      padding: 18px 20px 18px 18px;
+      transition: background var(--trans), border-color var(--trans);
       position: relative;
     }
 
     .post:hover {
       background: rgba(255, 255, 255, 0.015);
+      border-left-color: var(--text-dim);
     }
 
-    /* Hashtag-sourced post gets a distinct left border + tinted bg */
+    /* Context borders */
     .post.post--hashtag {
-      border-left: 2px solid rgba(155, 127, 255, 0.5);
+      border-left-color: rgba(155, 127, 255, 0.5);
       background: rgba(155, 127, 255, 0.04);
-      padding-left: 18px;
     }
 
     .post.post--hashtag:hover {
+      border-left-color: rgba(155, 127, 255, 0.7);
       background: rgba(155, 127, 255, 0.07);
+    }
+
+    .post.post--boost {
+      border-left-color: rgba(78, 205, 196, 0.5);
+      background: rgba(78, 205, 196, 0.04);
+    }
+
+    .post.post--boost:hover {
+      border-left-color: rgba(78, 205, 196, 0.7);
+      background: rgba(78, 205, 196, 0.07);
+    }
+
+    .post.post--reply {
+      border-left-color: rgba(136, 136, 160, 0.3);
+      background: rgba(136, 136, 160, 0.03);
+    }
+
+    .post.post--reply:hover {
+      border-left-color: rgba(136, 136, 160, 0.5);
+      background: rgba(136, 136, 160, 0.06);
     }
 
     /* Hashtag banner — sits above post header */
@@ -645,35 +668,59 @@
       color: var(--text-dim);
     }
 
-    /* Boost indicator */
-    .boost-label {
+    .boost-divider {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
+      justify-content: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
       color: var(--text-dim);
-      margin-bottom: 10px;
-      padding-left: 46px;
     }
 
-    .boost-label svg {
-      color: var(--boost);
+    .boost-divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      opacity: 0.6;
+    }
+
+    .boost-divider-arrow {
+      color: var(--border);
+      opacity: 0.6;
       flex-shrink: 0;
     }
 
-    .boost-label a {
-      color: var(--text-dim);
-      text-decoration: none;
+    .boost-text {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .boost-label a:hover {
-      color: var(--teal);
+    .boost-text svg {
+      color: var(--boost);
+      margin-right: 2px;
+    }
+
+    .boost-text .post-display-name {
+      text-transform: none;
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      letter-spacing: 0;
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
     }
 
     /* Post header */
     .post-header {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 12px;
       margin-bottom: 10px;
     }
@@ -862,11 +909,32 @@
     .media-item {
       overflow: hidden;
       position: relative;
-      background: var(--surface2);
+      background: transparent;
+      cursor: pointer;
+      transition: transform var(--trans);
+    }
+
+    .media-item:hover {
+      transform: scale(1.02);
     }
 
     .count-1 .media-item {
-      max-height: 360px;
+      max-height: 500px;
+      height: auto;
+      min-height: 200px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+    }
+
+    .count-1 .media-item img.vertical-image,
+    .count-1 .media-item video.vertical-image {
+      object-position: 0 0;
+    }
+
+    .count-1 .media-item img.horizontal-image,
+    .count-1 .media-item video.horizontal-image {
+      object-position: center center;
     }
 
     .count-2 .media-item,
@@ -888,6 +956,73 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      transition: object-fit var(--trans);
+    }
+
+    .media-item.expanded img,
+    .media-item.expanded video {
+      object-fit: contain;
+      max-height: 80vh;
+    }
+
+    .media-item.expanded {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      max-width: 90vw;
+      max-height: 90vh;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      cursor: default;
+    }
+
+    .media-item.expanded:hover {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .media-expand-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.7);
+      border: none;
+      border-radius: 4px;
+      color: white;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity var(--trans);
+      z-index: 10;
+    }
+
+    .media-item:hover .media-expand-btn {
+      opacity: 1;
+    }
+
+    .media-close-btn {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      background: var(--danger);
+      border: 2px solid var(--bg);
+      border-radius: 50%;
+      color: white;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 1001;
     }
 
     .media-sensitive-blur {
@@ -915,6 +1050,27 @@
       color: var(--text-muted);
       font-size: 12px;
       font-family: var(--font-mono);
+    }
+
+    /* Hide Mastodon's native fallback quote inline text */
+    .quote-inline {
+      display: none !important;
+    }
+
+    /* Quote */
+    .post-quote {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: var(--surface2);
+      cursor: pointer;
+      transition: border-color var(--trans), background var(--trans);
+    }
+
+    .post-quote:hover {
+      border-color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.02);
     }
 
     /* Poll */
@@ -983,6 +1139,81 @@
 
     .post-stat svg {
       opacity: 0.6;
+    }
+
+    .post-reply-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all var(--trans);
+    }
+
+    .post-reply-btn:hover {
+      color: var(--teal);
+    }
+
+    .post-reply-btn:hover svg {
+      opacity: 1;
+    }
+
+    .post-boost-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all var(--trans);
+      position: relative;
+    }
+
+    .post-boost-btn:hover,
+    .post-boost-btn.boosted {
+      color: var(--boost);
+    }
+
+    .post-boost-btn:hover svg,
+    .post-boost-btn.boosted svg {
+      opacity: 1;
+    }
+
+    .boost-dropdown {
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 0;
+      display: none;
+      flex-direction: column;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      min-width: 140px;
+    }
+
+    .boost-dropdown.show {
+      display: flex;
+    }
+
+    .boost-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      transition: background var(--trans);
+    }
+
+    .boost-dropdown-item:hover {
+      background: var(--surface2);
     }
 
     .post-fav-btn {
@@ -1580,7 +1811,7 @@
       font-size: 15px;
       color: var(--text);
       font-family: var(--font-sans);
-      resize: vertical;
+      resize: none;
       line-height: 1.5;
       overflow-y: auto;
     }
@@ -1602,6 +1833,14 @@
       display: inline-block;
       margin: 0 2px;
       user-select: all;
+    }
+
+    .custom-emoji {
+      height: 1.25em;
+      width: auto;
+      vertical-align: top;
+      display: inline-block;
+      margin: 0 1px;
     }
 
     .compose-media-preview {
@@ -1698,6 +1937,7 @@
       outline: none;
       border-color: var(--accent);
     }
+
 
     .hashtag-filter-bar {
       margin-bottom: 24px;
@@ -1852,12 +2092,10 @@
       }
 
       .post {
-        padding: 16px 14px;
+        padding: 16px 14px 16px 12px;
       }
 
-      .boost-label {
-        padding-left: 38px;
-      }
+
 
       .section-header {
         padding: 14px 14px 8px;
@@ -1972,6 +2210,11 @@
           <input type="text" class="compose-cw-input" id="compose-cw-input-sidebar" placeholder="Content warning" maxlength="500" />
         </div>
 
+        <div id="compose-reply-bar-sidebar" style="display:none;font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+          <span id="compose-context-type-sidebar">Replying to</span> <span id="compose-reply-to-sidebar" style="color:var(--accent2);font-weight:500;"></span>
+          <button id="compose-reply-cancel-sidebar" onclick="resetReplyState()" style="margin-left:8px;background:none;border:none;color:var(--danger);cursor:pointer;font-size:11px;">Cancel</button>
+        </div>
+
         <div class="compose-textarea" id="compose-textarea-sidebar" contenteditable="true" placeholder="What's on your mind?" style="min-height:90px;"></div>
 
         <div class="compose-media-preview" id="compose-media-preview-sidebar"></div>
@@ -2014,7 +2257,7 @@
     <div class="main-wrapper">
       <header class="app-header">
         <div class="header-top">
-          <div class="header-wordmark"><span>e</span>lefeed</div>
+          <div class="header-wordmark" id="header-wordmark-btn" style="cursor:pointer;" title="Refresh feed"><span>e</span>lefeed</div>
           <div class="header-actions">
             <button class="icon-btn" id="compose-btn" title="New post">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2137,6 +2380,10 @@
           </div>
 
           <!-- Main Text Area -->
+          <div id="compose-reply-bar" style="display:none;font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+            <span id="compose-context-type">Replying to</span> <span id="compose-reply-to" style="color:var(--accent2);font-weight:500;"></span>
+            <button id="compose-reply-cancel" onclick="resetReplyState()" style="margin-left:8px;background:none;border:none;color:var(--danger);cursor:pointer;font-size:11px;">Cancel</button>
+          </div>
           <div class="compose-textarea" id="compose-textarea" contenteditable="true" placeholder="What's on your mind?"></div>
 
           <!-- Media Preview -->
@@ -2335,6 +2582,88 @@
       return div.innerHTML;
     }
 
+    function expandMedia(mediaItem) {
+      const isExpanded = mediaItem.classList.contains('expanded');
+
+      // Close any currently expanded media
+      document.querySelectorAll('.media-item.expanded').forEach(item => {
+        item.classList.remove('expanded');
+        const closeBtn = item.querySelector('.media-close-btn');
+        if (closeBtn) closeBtn.remove();
+        if (item._overlay) {
+          item._overlay.remove();
+          delete item._overlay;
+        }
+      });
+
+      if (!isExpanded) {
+        // Expand this media
+        mediaItem.classList.add('expanded');
+
+        // Add close button
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'media-close-btn';
+        closeBtn.innerHTML = '×';
+        closeBtn.onclick = () => expandMedia(mediaItem);
+        mediaItem.appendChild(closeBtn);
+
+        // Add overlay to close on click outside
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.8);
+          z-index: 999;
+          cursor: pointer;
+        `;
+        overlay.onclick = () => expandMedia(mediaItem);
+        document.body.appendChild(overlay);
+
+        // Store overlay reference for cleanup
+        mediaItem._overlay = overlay;
+
+        // Add keyboard listener for Escape key
+        const handleEscape = (e) => {
+          if (e.key === 'Escape') {
+            expandMedia(mediaItem);
+            document.removeEventListener('keydown', handleEscape);
+          }
+        };
+        document.addEventListener('keydown', handleEscape);
+        mediaItem._escapeHandler = handleEscape;
+      } else {
+        // Close expanded media
+        mediaItem.classList.remove('expanded');
+        if (mediaItem._overlay) {
+          mediaItem._overlay.remove();
+          delete mediaItem._overlay;
+        }
+        const closeBtn = mediaItem.querySelector('.media-close-btn');
+        if (closeBtn) closeBtn.remove();
+        if (mediaItem._escapeHandler) {
+          document.removeEventListener('keydown', mediaItem._escapeHandler);
+          delete mediaItem._escapeHandler;
+        }
+      }
+    }
+
+    function adjustImageAlignment(img) {
+      if (img.complete) {
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        if (aspectRatio < 1) { // Vertical image
+          img.classList.add('vertical-image');
+        } else { // Horizontal or square image
+          img.classList.add('horizontal-image');
+        }
+      } else {
+        // Image not loaded yet, check when it loads
+        img.onload = () => adjustImageAlignment(img);
+      }
+    }
+
     /* ─── Render a single post ─── */
     function renderPost(status, opts = {}) {
       const isBoost = !!status.reblog;
@@ -2355,13 +2684,23 @@
         </div>` : '';
 
           if (m.type === 'image' || m.type === 'gifv') {
-            return `<div class="media-item">
-          <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy"/>
+            return `<div class="media-item" onclick="expandMedia(this)">
+          <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy" onload="adjustImageAlignment(this)"/>
+          <button class="media-expand-btn" onclick="event.stopPropagation(); expandMedia(this.parentElement)" title="Expand image">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>
+            </svg>
+          </button>
           ${overlay}
         </div>`;
           } else if (m.type === 'video') {
-            return `<div class="media-item">
+            return `<div class="media-item" onclick="expandMedia(this)">
           <video src="${m.url}" poster="${m.preview_url || ''}" controls muted class="${blurClass}"></video>
+          <button class="media-expand-btn" onclick="event.stopPropagation(); expandMedia(this.parentElement)" title="Expand video">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>
+            </svg>
+          </button>
           ${overlay}
         </div>`;
           }
@@ -2391,35 +2730,79 @@
     </div>`;
       }
 
+      // Quote
+      let quoteHTML = '';
+      const qStatus = s.quote && (s.quote.quoted_status || (s.quote.account ? s.quote : null));
+      if (qStatus) {
+        const qHasCW = (qStatus.spoiler_text && qStatus.spoiler_text.length > 0) || qStatus.sensitive;
+        const qCwText = qStatus.spoiler_text ? escapeHTML(qStatus.spoiler_text) : 'Sensitive content';
+        const qCwId = `qcw-${qStatus.id}-${status.id}`;
+        let qContentHTML = '';
+        if (qHasCW) {
+          qContentHTML = `
+            <div class="cw-wrapper">
+              <div class="cw-summary" style="cursor: pointer;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this.querySelector('.cw-toggle'))">
+                <span>${qCwText}</span>
+                <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this)">show</button>
+              </div>
+              <div class="cw-body" id="${qCwId}">
+                <div class="post-content">${sanitizeHTML(qStatus.content)}</div>
+              </div>
+            </div>`;
+        } else {
+          qContentHTML = `<div class="post-content" style="margin-bottom:0">${sanitizeHTML(qStatus.content)}</div>`;
+        }
+
+        quoteHTML = `
+        <div class="post-quote" onclick="event.stopPropagation(); window.open('${qStatus.url}', '_blank')">
+          <div class="post-header" style="margin-bottom:8px;">
+            <div class="post-avatar" style="width:24px;height:24px;">
+              <img src="${qStatus.account.avatar_static || qStatus.account.avatar}" alt="" loading="lazy"/>
+            </div>
+            <div class="post-meta">
+              <div class="post-author" style="font-size:13px;">
+                <span class="post-display-name">${renderCustomEmojis(qStatus.account.display_name || qStatus.account.username, qStatus.account.emojis)}</span>
+                <span class="post-acct">@${escapeHTML(qStatus.account.acct)}</span>
+                <span class="post-time">${relativeTime(qStatus.created_at)}</span>
+              </div>
+            </div>
+          </div>
+          ${qContentHTML}
+        </div>`;
+      }
+
       // Content warning
-      const hasCW = s.spoiler_text && s.spoiler_text.length > 0;
-      const cwId = `cw-${s.id}`;
+      const hasCW = (s.spoiler_text && s.spoiler_text.length > 0) || s.sensitive;
+      const cwText = s.spoiler_text ? escapeHTML(s.spoiler_text) : 'Sensitive content';
+      const cwId = `cw-${status.id}`;
       let contentHTML = '';
       if (hasCW) {
         contentHTML = `
       <div class="cw-wrapper">
-        <div class="cw-summary">
-          <span>${escapeHTML(s.spoiler_text)}</span>
-          <button class="cw-toggle" onclick="toggleCW('${cwId}', this)">show</button>
+        <div class="cw-summary" style="cursor: pointer;" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this.querySelector('.cw-toggle'))">
+          <span>${cwText}</span>
+          <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this)">show</button>
         </div>
         <div class="cw-body" id="${cwId}">
           <div class="post-content">${sanitizeHTML(s.content)}</div>
           ${mediaHTML}
           ${pollHTML}
+          ${quoteHTML}
         </div>
       </div>`;
       } else {
         contentHTML = `
       <div class="post-content">${sanitizeHTML(s.content)}</div>
       ${mediaHTML}
-      ${pollHTML}`;
+      ${pollHTML}
+      ${quoteHTML}`;
       }
 
       // Hashtag banner — shown when post is sourced from a followed hashtag
       const tagList = opts.tags && opts.tags.length ? opts.tags : (opts.tag ? [opts.tag] : []);
       const isHashtagPost = tagList.length > 0;
 
-      const hashtagBanner = isHashtagPost ? `
+      const hashtagBanner = (isHashtagPost && !boostBy) ? `
     <div class="post-hashtag-banner">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
       via
@@ -2430,13 +2813,27 @@
 
       // Boost header
       const boostLabelHTML = boostBy ? `
-    <div class="boost-label">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-      <span data-profile-id="${boostBy.id}" data-profile-server="${escapeHTML(state.server || '')}" style="cursor:pointer;text-decoration:none;color:var(--text-dim);">${escapeHTML(boostBy.display_name || boostBy.username)}</span> boosted
+    <div class="boost-divider">
+      <div class="boost-text">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <span class="post-display-name" data-profile-id="${boostBy.id}" data-profile-server="${escapeHTML(state.server || '')}">${renderCustomEmojis(boostBy.display_name || boostBy.username, boostBy.emojis)}</span> <span style="opacity:0.8;text-transform:uppercase;font-size:11px;font-weight:500;">boosted</span>
+      </div>
+      <div class="boost-divider-line"></div>
+      <svg class="boost-divider-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
     </div>` : '';
 
+      // Context styling
+      let contextClass = '';
+      if (boostBy) {
+        contextClass = ' post--boost';
+      } else if (isHashtagPost) {
+        contextClass = ' post--hashtag';
+      } else if (s.in_reply_to_id) {
+        contextClass = ' post--reply';
+      }
+
       return `
-    <article class="post${isHashtagPost ? ' post--hashtag' : ''}" data-id="${status.id}">
+    <article class="post${contextClass}" data-id="${status.id}">
       ${boostLabelHTML}
       ${hashtagBanner}
       <div class="post-header">
@@ -2445,7 +2842,7 @@
         </div>
         <div class="post-meta">
           <div class="post-author">
-            <span class="post-display-name" data-profile-id="${s.account.id}" data-profile-server="${escapeHTML(state.server || '')}">${escapeHTML(s.account.display_name || s.account.username)}</span>
+            <span class="post-display-name" data-profile-id="${s.account.id}" data-profile-server="${escapeHTML(state.server || '')}">${renderCustomEmojis(s.account.display_name || s.account.username, s.account.emojis)}</span>
             <span class="post-acct">@${escapeHTML(s.account.acct)}</span>
             <span class="post-time">${relativeTime(s.created_at)}</span>
           </div>
@@ -2453,14 +2850,28 @@
       </div>
       ${contentHTML}
       <div class="post-footer">
-        <span class="post-stat">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-          ${s.replies_count || 0}
-        </span>
-        <span class="post-stat">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--boost)"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          ${s.reblogs_count || 0}
-        </span>
+        <button class="post-stat post-reply-btn" data-post-id="${s.id}" data-account-acct="${s.account.acct}" title="Reply">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l5-5v3c8 0 13 4 13 11-3-4-7-5-13-5v3l-5-5z"></path></svg>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">${s.replies_count || 0}</span>
+        </button>
+        <div style="position:relative;display:inline-flex;">
+          <button class="post-stat post-boost-btn ${s.reblogged ? 'boosted' : ''}" data-post-id="${s.id}" onclick="event.stopPropagation(); window.toggleBoostMenu('${s.id}')" title="Boost or Quote">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--boost)"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            <span class="boost-count" style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">${(s.reblogs_count || 0) + (s.quotes_count || 0)}</span>
+          </button>
+          <div class="boost-dropdown" id="boost-menu-${s.id}">
+            <button class="boost-dropdown-item" onclick="event.stopPropagation(); window.handleBoostSubmit('${s.id}', ${s.reblogged ? 'true' : 'false'})">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              <span>${s.reblogged ? 'Undo Boost' : 'Boost'}</span>
+              <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
+            </button>
+            <button class="boost-dropdown-item" onclick="event.stopPropagation(); window.handleQuoteInit('${s.id}', '${escapeHTML(s.account.acct)}')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 11h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2zm10 0h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2z"/></svg>
+              <span>Quote</span>
+              <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || 0}</span>
+            </button>
+          </div>
+        </div>
         <button class="post-stat post-fav-btn ${s.favourited ? 'favourited' : ''}" data-post-id="${s.id}" data-favourited="${s.favourited ? 'true' : 'false'}" title="${s.favourited ? 'Unfavorite' : 'Favorite'}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.favourited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" style="color:var(--fav)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
           <span class="post-fav-count">${s.favourites_count || 0}</span>
@@ -2473,6 +2884,18 @@
     function escapeHTML(str) {
       if (!str) return '';
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderCustomEmojis(text, emojis = []) {
+      if (!text) return '';
+      let escaped = escapeHTML(text);
+      if (emojis && emojis.length > 0) {
+        emojis.forEach(e => {
+          const regex = new RegExp(`:${e.shortcode}:`, 'g');
+          escaped = escaped.replace(regex, `<img src="${e.url}" alt=":${e.shortcode}:" title=":${e.shortcode}:" class="custom-emoji" />`);
+        });
+      }
+      return escaped;
     }
 
     window.toggleCW = function (id, btn) {
@@ -2828,14 +3251,16 @@
       });
     });
 
-    /* ─── Refresh button ─── */
-    $('refresh-btn').addEventListener('click', () => {
+    /* ─── Refresh button & Logo click ─── */
+    const doRefresh = () => {
       const tab = state.activeTab;
       if (tab === 'home') loadHomeTab();
       else if (tab === 'following') loadFollowingTab();
       else if (tab === 'hashtags') loadHashtagsTab();
       showToast('Refreshing…');
-    });
+    };
+    $('refresh-btn').addEventListener('click', doRefresh);
+    $('header-wordmark-btn').addEventListener('click', doRefresh);
 
     /* ─── Logout ─── */
     $('logout-btn').addEventListener('click', () => {
@@ -3275,7 +3700,7 @@
         </div>
         <div class="profile-name-row">
           <div>
-            <div class="profile-display-name">${escapeHTML(account.display_name || account.username)}</div>
+            <div class="profile-display-name">${renderCustomEmojis(account.display_name || account.username, account.emojis)}</div>
             <div class="profile-acct">@${escapeHTML(account.acct)}</div>
           </div>
           ${followButton}
@@ -3345,7 +3770,145 @@
       mediaFiles: [],
       mediaUrls: [],
       sidebarMediaFiles: [],
-      sidebarMediaUrls: []
+      sidebarMediaUrls: [],
+      replyToId: null,
+      replyToAcct: null,
+      quoteId: null
+    };
+
+    function resetReplyState() {
+      composeState.replyToId = null;
+      composeState.replyToAcct = null;
+      composeState.quoteId = null;
+      ['', '-sidebar'].forEach(suffix => {
+        const bar = $('compose-reply-bar' + suffix);
+        const nameNode = $('compose-reply-to' + suffix);
+        const typeNode = $('compose-context-type' + suffix);
+        const textarea = $('compose-textarea' + suffix);
+        if (bar) bar.style.display = 'none';
+        if (nameNode) nameNode.textContent = '';
+        if (typeNode) typeNode.textContent = 'Replying to';
+        if (textarea) textarea.innerText = '';
+      });
+      if (window.innerWidth > 900) updateSidebarCharCount(); else updateCharCount();
+    }
+
+    function handleReply(postId, acct) {
+      composeState.replyToId = postId;
+      composeState.replyToAcct = acct;
+      const isDesktop = window.innerWidth > 900;
+      const suffix = isDesktop ? '-sidebar' : '';
+      const textarea = $('compose-textarea' + suffix);
+      const bar = $('compose-reply-bar' + suffix);
+      const to = $('compose-reply-to' + suffix);
+
+      if (bar && to) {
+        const typeNode = $('compose-context-type' + suffix);
+        if (typeNode) typeNode.textContent = 'Replying to';
+        bar.style.display = 'block';
+        to.textContent = '@' + acct;
+      }
+
+      const mentionText = `@${acct} `;
+      if (!textarea.innerText.includes(mentionText)) {
+        textarea.innerText = mentionText + textarea.innerText;
+      }
+
+      if (!isDesktop) {
+        openComposeDrawer();
+      } else {
+        textarea.focus();
+        try {
+          const sel = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(textarea);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } catch (e) { }
+      }
+      if (isDesktop) updateSidebarCharCount(); else updateCharCount();
+    }
+
+    window.toggleBoostMenu = function (postId) {
+      document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
+      const menu = $(`boost-menu-${postId}`);
+      if (menu) menu.classList.toggle('show');
+    };
+
+    window.addEventListener('click', () => {
+      document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
+    });
+
+    window.handleQuoteInit = function (postId, acct) {
+      document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
+      composeState.quoteId = postId;
+      composeState.replyToAcct = acct;
+      const isDesktop = window.innerWidth > 900;
+      const suffix = isDesktop ? '-sidebar' : '';
+      const textarea = $('compose-textarea' + suffix);
+      const bar = $('compose-reply-bar' + suffix);
+      const to = $('compose-reply-to' + suffix);
+
+      if (bar && to) {
+        const typeNode = $('compose-context-type' + suffix);
+        if (typeNode) typeNode.textContent = 'Quoting';
+        bar.style.display = 'block';
+        to.textContent = '@' + acct;
+      }
+
+      if (!isDesktop) {
+        openComposeDrawer();
+      } else {
+        textarea.focus();
+      }
+    };
+
+    window.handleBoostSubmit = async function (postId, isBoosted) {
+      document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
+      if (!state.token) {
+        showToast("Please sign in to boost posts.");
+        return;
+      }
+
+      const endpoint = isBoosted ? `/api/v1/statuses/${postId}/unreblog` : `/api/v1/statuses/${postId}/reblog`;
+
+      try {
+        const res = await fetch(`https://${state.server}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${state.token}` }
+        });
+
+        if (!res.ok) throw new Error("Failed to process boost");
+        const statusResponse = await res.json();
+        const actualStatus = statusResponse.reblog || statusResponse;
+
+        // Optimistic UI update
+        const menuBtn = document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`);
+        if (menuBtn) {
+          const countSpan = menuBtn.querySelector('.boost-count');
+          const isNowBoosted = actualStatus.reblogged === true;
+          menuBtn.classList.toggle('boosted', isNowBoosted);
+          if (countSpan) countSpan.textContent = (actualStatus.reblogs_count || 0) + (actualStatus.quotes_count || 0);
+
+          const dropdownItems = menuBtn.nextElementSibling.querySelectorAll('.boost-dropdown-item');
+          if (dropdownItems.length > 0) {
+            const boostDropdownBtn = dropdownItems[0];
+            boostDropdownBtn.setAttribute('onclick', `event.stopPropagation(); window.handleBoostSubmit('${postId}', ${isNowBoosted})`);
+
+            // first span is the text 'Boost' / 'Undo Boost'
+            const textSpan = boostDropdownBtn.querySelector('span:not(.dropdown-stat-count)');
+            if (textSpan) textSpan.textContent = isNowBoosted ? 'Undo Boost' : 'Boost';
+
+            // second span is the count
+            const countNode = boostDropdownBtn.querySelector('.dropdown-stat-count');
+            if (countNode) countNode.textContent = actualStatus.reblogs_count || 0;
+          }
+        }
+
+      } catch (e) {
+        showToast("Error updating boost: " + e.message);
+      }
     };
 
     function openComposeDrawer() {
@@ -3377,6 +3940,7 @@
       composeState.mediaFiles = [];
       composeState.mediaUrls = [];
       $('compose-media-preview').innerHTML = '';
+      resetReplyState();
       updateCharCount();
     }
 
@@ -3394,6 +3958,23 @@
       counter.classList.toggle('error', remaining < 0);
 
       $('compose-post-btn').disabled = remaining < 0 || (textLength === 0 && composeState.mediaFiles.length === 0);
+    }
+
+    function updateSidebarCharCount() {
+      const suffix = '-sidebar';
+      const textarea = $('compose-textarea' + suffix);
+      const cwInput = $('compose-cw-input' + suffix);
+      const counter = $('compose-char-count' + suffix);
+
+      const textLength = textarea.innerText.trim().length;
+      const cwLength = cwInput.value.length;
+      const remaining = 500 - textLength - cwLength;
+
+      counter.textContent = remaining;
+      counter.classList.toggle('warning', remaining <= 50 && remaining > 0);
+      counter.classList.toggle('error', remaining < 0);
+
+      $('compose-post-btn' + suffix).disabled = remaining < 0 || (textLength === 0 && composeState.sidebarMediaFiles.length === 0);
     }
 
     // Compose button click
@@ -3682,23 +4263,6 @@
         loadHashtagsTab();
       });
 
-      // Character counter for sidebar
-      function updateSidebarCharCount() {
-        const textarea = $('compose-textarea' + suffix);
-        const cwInput = $('compose-cw-input' + suffix);
-        const counter = $('compose-char-count' + suffix);
-
-        const textLength = textarea.innerText.trim().length;
-        const cwLength = cwInput.value.length;
-        const remaining = 500 - textLength - cwLength;
-
-        counter.textContent = remaining;
-        counter.classList.toggle('warning', remaining <= 50 && remaining > 0);
-        counter.classList.toggle('error', remaining < 0);
-
-        $('compose-post-btn' + suffix).disabled = remaining < 0 || (textLength === 0 && composeState.sidebarMediaFiles.length === 0);
-      }
-
       // Event listeners for sidebar
       $('compose-textarea' + suffix).addEventListener('input', updateSidebarCharCount);
       $('compose-cw-input' + suffix).addEventListener('input', updateSidebarCharCount);
@@ -3804,6 +4368,8 @@
           }
 
           const postData = { status, visibility };
+          if (composeState.replyToId) postData.in_reply_to_id = composeState.replyToId;
+          if (composeState.quoteId) postData.quoted_status_id = composeState.quoteId;
           if (spoilerText) postData.spoiler_text = spoilerText;
           if (mediaIds.length) postData.media_ids = mediaIds;
 
@@ -3833,6 +4399,7 @@
           composeState.sidebarMediaUrls.forEach(url => URL.revokeObjectURL(url));
           composeState.sidebarMediaUrls = [];
           $('compose-media-preview' + suffix).innerHTML = '';
+          resetReplyState();
           updateSidebarCharCount();
 
           // Refresh current tab
@@ -3898,6 +4465,8 @@
           status,
           visibility,
         };
+        if (composeState.replyToId) postData.in_reply_to_id = composeState.replyToId;
+        if (composeState.quoteId) postData.quoted_status_id = composeState.quoteId;
 
         if (spoilerText) postData.spoiler_text = spoilerText;
         if (mediaIds.length) postData.media_ids = mediaIds;
@@ -3956,6 +4525,14 @@
       if (favBtn) {
         e.preventDefault();
         handleFavoriteToggle(favBtn);
+        return;
+      }
+
+      // Handle reply button clicks
+      const replyBtn = e.target.closest('.post-reply-btn');
+      if (replyBtn) {
+        e.preventDefault();
+        handleReply(replyBtn.dataset.postId, replyBtn.dataset.accountAcct);
         return;
       }
 
