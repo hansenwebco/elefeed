@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual" />
   <title>Elefeed</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1297,6 +1297,7 @@
         opacity: 1;
         color: var(--fav);
       }
+
       100% {
         opacity: 0.5;
         color: inherit;
@@ -1562,6 +1563,29 @@
       cursor: not-allowed;
     }
 
+    .profile-edit-btn {
+      flex-shrink: 0;
+      background: transparent;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 16px;
+      cursor: pointer;
+      transition: all var(--trans);
+      margin-top: 2px;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .profile-edit-btn:hover {
+      background: var(--surface2);
+      border-color: var(--accent);
+      color: var(--accent2);
+    }
+
     .profile-bio {
       font-size: 13.5px;
       line-height: 1.6;
@@ -1636,6 +1660,128 @@
     /* Profile posts reuse .post styles but need tighter padding */
     .profile-drawer-inner .post {
       padding: 14px 20px;
+    }
+
+    /* ─── PINNED POSTS ─── */
+    .pinned-section {
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Header row — label on left, nav controls on right */
+    .pinned-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px 10px 20px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .pinned-header-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pinned-header-label svg {
+      opacity: 0.8;
+      flex-shrink: 0;
+    }
+
+    /* Nav controls in header */
+    .pinned-header-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pinned-nav {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--trans);
+    }
+
+    .pinned-nav:hover {
+      background: var(--surface2);
+      color: var(--accent2);
+      border-color: var(--accent);
+    }
+
+    .pinned-counter {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      min-width: 28px;
+      text-align: center;
+    }
+
+    /* Single pinned post — no nav chrome */
+    .pinned-single .post {
+      padding: 14px 20px;
+      border-bottom: none;
+    }
+
+    /* Slide show/hide with fade */
+    .pinned-slide {
+      display: none;
+    }
+
+    .pinned-slide.active {
+      display: block;
+      animation: pinnedFadeIn 180ms ease;
+    }
+
+    @keyframes pinnedFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .pinned-slide .post {
+      padding: 14px 20px;
+      border-bottom: none;
+    }
+
+    /* Dot position indicators */
+    .pinned-dots {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 0 10px;
+    }
+
+    .pinned-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--border2);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: background var(--trans), transform var(--trans);
+    }
+
+    .pinned-dot.active {
+      background: var(--accent);
+      transform: scale(1.3);
     }
 
     /* ─── COMPOSE DRAWER ─── */
@@ -1746,6 +1892,7 @@
       pointer-events: auto;
     }
 
+
     /* OPTION 5: Compact Floating */
     .compose-drawer.layout-float {
       position: fixed;
@@ -1770,6 +1917,60 @@
       opacity: 1;
       transform: translateY(0);
       pointer-events: auto;
+    }
+
+    /* ─── MOBILE COMPOSE: full-screen, anchored to top, keyboard folds under ─── */
+    @media (max-width: 900px) {
+
+      /* Override any desktop layout variant on mobile */
+      .compose-drawer.layout-float,
+      .compose-drawer.layout-bottom,
+      .compose-drawer.layout-center,
+      .compose-drawer.layout-right,
+      .compose-drawer.layout-top {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: auto;
+        width: 100vw;
+        /* 100dvh = visual viewport — shrinks as keyboard rises */
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+        transform: translateY(-100%);
+        opacity: 1;
+        transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .compose-drawer.layout-float.open,
+      .compose-drawer.layout-bottom.open,
+      .compose-drawer.layout-center.open,
+      .compose-drawer.layout-right.open,
+      .compose-drawer.layout-top.open {
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      /* Inner scroll so long posts don't overflow */
+      .compose-drawer .compose-body {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Let textarea grow freely within the scrollable area */
+      .compose-drawer .compose-textarea {
+        min-height: 100px;
+        max-height: none;
+      }
     }
 
     /* Common drawer styles */
@@ -1974,21 +2175,6 @@
       color: var(--accent2);
     }
 
-    .compose-visibility {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 12px;
-      color: var(--text);
-      font-family: var(--font-mono);
-      cursor: pointer;
-    }
-
-    .compose-visibility:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
 
 
     .hashtag-filter-bar {
@@ -2015,6 +2201,16 @@
       background-position: right 12px top 50%;
       background-size: 10px auto;
       transition: border-color var(--trans);
+      color-scheme: dark;
+    }
+
+    .hashtag-filter-select option {
+      background-color: #1c1c22;
+      color: #e8e8f0;
+    }
+
+    .hashtag-filter-select option:checked {
+      background-color: #2a2a34;
     }
 
     .hashtag-filter-select:focus {
@@ -2242,8 +2438,8 @@
     <aside class="compose-sidebar">
       <div class="compose-sidebar-body">
         <div style="display:flex; gap:8px; margin-bottom:4px;">
-          <select class="compose-visibility" id="compose-visibility-sidebar" style="border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:12px; color:var(--text-muted); background:transparent; font-family:var(--font-body); cursor:pointer; width:auto; text-align:left;">
-            <option value="public">🌍 Public, quotes allowed</option>
+          <select class="hashtag-filter-select compose-visibility" id="compose-visibility-sidebar" style="padding:6px 28px 6px 10px;font-size:12px;">
+            <option value="public">🌐 Public</option>
             <option value="unlisted">🔓 Unlisted</option>
             <option value="private">🔒 Followers</option>
             <option value="direct">✉️ Direct</option>
@@ -2469,11 +2665,11 @@
               <input type="file" id="compose-media-input" accept="image/*,video/*" multiple style="display:none;" />
             </div>
             <div class="compose-toolbar-right">
-              <select class="compose-visibility" id="compose-visibility">
-                <option value="public">Public</option>
-                <option value="unlisted">Unlisted</option>
-                <option value="private">Followers</option>
-                <option value="direct">Direct</option>
+              <select class="hashtag-filter-select compose-visibility" id="compose-visibility" style="padding:6px 28px 6px 10px;font-size:12px;">
+                <option value="public">🌐 Public</option>
+                <option value="unlisted">🔓 Unlisted</option>
+                <option value="private">🔒 Followers</option>
+                <option value="direct">✉️ Direct</option>
               </select>
             </div>
           </div>
@@ -2771,7 +2967,7 @@
         const items = s.media_attachments.slice(0, 4).map(m => {
           const sensitive = s.sensitive;
           const blurClass = sensitive ? 'media-sensitive-blur' : '';
-        const overlay = sensitive ? `
+          const overlay = sensitive ? `
         <div class="sensitive-overlay" onclick="event.stopPropagation(); this.parentElement.querySelector('img,video').classList.remove('media-sensitive-blur'); this.style.display='none'">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           <span>sensitive content</span>
@@ -3346,6 +3542,13 @@
     $('refresh-btn').addEventListener('click', doRefresh);
     $('header-wordmark-btn').addEventListener('click', doRefresh);
 
+    /* ─── Avatar → own profile ─── */
+    $('avatar-btn').addEventListener('click', () => {
+      if (state.account) {
+        openProfileDrawer(state.account.id, state.server);
+      }
+    });
+
     /* ─── Logout ─── */
     $('logout-btn').addEventListener('click', () => {
       store.del('token');
@@ -3404,6 +3607,7 @@
     }, { passive: true });
 
     async function loadHomeTab() {
+      window.scrollTo({ top: 0, behavior: 'instant' });
       setLoading('home', true);
       setError('home', null);
       $('home-posts').innerHTML = '';
@@ -3478,6 +3682,7 @@
     }
 
     async function loadFollowingTab() {
+      window.scrollTo({ top: 0, behavior: 'instant' });
       setLoading('following', true);
       setError('following', null);
       $('following-posts').innerHTML = '';
@@ -3601,6 +3806,7 @@
     }
 
     async function loadHashtagsTab() {
+      window.scrollTo({ top: 0, behavior: 'instant' });
       setLoading('hashtags', true);
       setError('hashtags', null);
       $('hashtags-posts').innerHTML = '';
@@ -3616,7 +3822,7 @@
       }
 
       try {
-        // Use cached followed tags if available
+        // 1. Get/cache followed tags
         let tags = state.followedHashtags;
         if (!tags || !tags.length) {
           tags = await apiGet('/api/v1/followed_tags?limit=100', state.token);
@@ -3633,81 +3839,103 @@
           return;
         }
 
-        const followedTagNames = new Set(tags.map(t => t.name.toLowerCase()));
-
-        // Build Select Options
+        // 2. Build filter dropdown
         const filterSelect = $('hashtag-filter-select');
         filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
-        tags.forEach(t => {
+        const sortedTags = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+        sortedTags.forEach(t => {
           const opt = document.createElement('option');
           opt.value = t.name.toLowerCase();
           opt.textContent = '#' + t.name;
-          if (state.selectedHashtagFilter === t.name.toLowerCase()) {
-            opt.selected = true;
-          }
+          if (state.selectedHashtagFilter === t.name.toLowerCase()) opt.selected = true;
           filterSelect.appendChild(opt);
         });
         $('hashtag-filter-bar').style.display = 'flex';
 
+        const followedTagNames = new Set(tags.map(t => t.name.toLowerCase()));
         const requiredTags = state.selectedHashtagFilter === 'all'
           ? followedTagNames
           : new Set([state.selectedHashtagFilter]);
 
-        // Strategy: Fetch home timeline and filter to only posts that match followed hashtags
-        // The home timeline already includes hashtag posts, so we just need to identify them
-        const allPosts = [];
-        let maxId = null;
-        let pagesLoaded = 0;
+        // Session ID: if filter changes or tab reloads, background fills abort themselves
+        state.hashtagLoadSession = (state.hashtagLoadSession || 0) + 1;
+        const mySession = state.hashtagLoadSession;
 
-        // Fetch up to 5 pages (200 posts) from home timeline
-        while (pagesLoaded < 5) {
-          const url = maxId
-            ? `/api/v1/timelines/home?limit=40&max_id=${maxId}`
-            : '/api/v1/timelines/home?limit=40';
-
-          const page = await apiGet(url, state.token);
-          if (!page.length) break;
-
-          // Filter to only posts that have matching tags
+        // Helper: extract matching posts from a home timeline page
+        function extractHashtagPosts(page) {
+          const matched = [];
           page.forEach(p => {
             const inner = p.reblog || p;
             if (inner.tags && Array.isArray(inner.tags)) {
               const matchingTags = inner.tags
                 .filter(t => requiredTags.has(t.name.toLowerCase()))
                 .map(t => t.name.toLowerCase());
-
-              if (matchingTags.length) {
-                allPosts.push({ ...p, _sourceTags: matchingTags });
-              }
+              if (matchingTags.length) matched.push({ ...p, _sourceTags: matchingTags });
             }
           });
-
-          pagesLoaded++;
-          maxId = page[page.length - 1].id;
+          return matched;
         }
 
-        // Sort newest-first
-        allPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        // 3. Fetch page 1 and render immediately
+        const page1 = await apiGet('/api/v1/timelines/home?limit=40', state.token);
+        if (state.hashtagLoadSession !== mySession) return;
 
-        state.hashtagFeed = allPosts;
-        state.hashtagsMaxId = maxId;
+        const matched1 = extractHashtagPosts(page1);
+        state.hashtagFeed = matched1;
+        state.hashtagsMaxId = page1.length ? page1[page1.length - 1].id : null;
         setLoading('hashtags', false);
 
-        if (!allPosts.length) {
+        if (!matched1.length) {
           $('hashtags-posts').innerHTML = `<div class="feed-status">
         <div class="status-icon">#</div>
         <p>No recent posts for your followed hashtags.</p>
         <p class="status-sub">Posts from followed hashtags will appear here.</p>
       </div>`;
         } else {
-          const html = allPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-          const loadMoreBtn = `
-        <button class="load-more-btn" data-feed="hashtags">
-          Load More
-        </button>`;
-          $('hashtags-posts').innerHTML = html + loadMoreBtn;
+          const html = matched1.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
+          $('hashtags-posts').innerHTML = html + (page1.length >= 40
+            ? `<button class="load-more-btn" data-feed="hashtags">Load More</button>`
+            : '');
           setTimeout(checkInfiniteScroll, 100);
         }
+
+        // 4. Background-fill pages 2-3: append without disrupting scroll
+        if (page1.length >= 40) {
+          (async () => {
+            for (let i = 0; i < 2; i++) {
+              if (state.hashtagLoadSession !== mySession || !state.hashtagsMaxId) return;
+              try {
+                const page = await apiGet(
+                  `/api/v1/timelines/home?limit=40&max_id=${state.hashtagsMaxId}`,
+                  state.token
+                );
+                if (state.hashtagLoadSession !== mySession) return;
+
+                state.hashtagsMaxId = page.length ? page[page.length - 1].id : null;
+                const newPosts = extractHashtagPosts(page);
+
+                if (newPosts.length) {
+                  state.hashtagFeed = [...state.hashtagFeed, ...newPosts];
+                  // Append before the load-more button without touching existing posts
+                  const container = $('hashtags-posts');
+                  const loadBtn = container.querySelector('.load-more-btn');
+                  const tmp = document.createElement('div');
+                  tmp.innerHTML = newPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
+                  while (tmp.firstChild) {
+                    if (loadBtn) container.insertBefore(tmp.firstChild, loadBtn);
+                    else container.appendChild(tmp.firstChild);
+                  }
+                  setTimeout(checkInfiniteScroll, 100);
+                }
+
+                if (!page.length || page.length < 40) return; // end of timeline
+              } catch (e) {
+                return; // background failure is silent
+              }
+            }
+          })();
+        }
+
       } catch (err) {
         setLoading('hashtags', false);
         setError('hashtags', `Failed to load hashtags: ${err.message}`);
@@ -3751,7 +3979,8 @@
         apiGet(`/api/v1/accounts/${accountId}`, state.token, srv),
         apiGet(`/api/v1/accounts/${accountId}/statuses?limit=20&exclude_replies=true`, state.token, srv),
         apiGet(`/api/v1/accounts/relationships?id[]=${accountId}`, state.token, srv).catch(() => []),
-      ]).then(([account, statuses, relationships]) => {
+        apiGet(`/api/v1/accounts/${accountId}/statuses?pinned=true`, state.token, srv).catch(() => []),
+      ]).then(([account, statuses, relationships, pinnedStatuses]) => {
         const relationship = relationships && relationships.length ? relationships[0] : null;
         const isFollowing = relationship && relationship.following;
 
@@ -3763,18 +3992,71 @@
           ? `<div class="profile-bio">${account.note}</div>`
           : '';
 
-        const followButton = `
-      <button 
-        class="profile-follow-btn ${isFollowing ? 'following' : ''}" 
-        data-account-id="${accountId}"
-        data-following="${isFollowing ? 'true' : 'false'}"
-      >
-        ${isFollowing ? 'Following' : 'Follow'}
-      </button>`;
+        const isSelf = state.account && state.account.id === accountId;
+
+        const followButton = isSelf
+          ? `<a
+              class="profile-edit-btn"
+              href="https://${srv}/settings/profile"
+              target="_blank"
+              rel="noopener"
+            >Edit Profile</a>`
+          : `<button
+              class="profile-follow-btn ${isFollowing ? 'following' : ''}"
+              data-account-id="${accountId}"
+              data-following="${isFollowing ? 'true' : 'false'}"
+            >${isFollowing ? 'Following' : 'Follow'}</button>`;
 
         const postsHtml = statuses.length
           ? statuses.map(s => renderPost(s)).join('')
           : `<div class="feed-status"><p style="font-size:13px;">No posts yet.</p></div>`;
+
+        // ── Pinned posts ──────────────────────────────────────────────
+        let pinnedHtml = '';
+        // The ?pinned=true query already guarantees all returned posts are pinned.
+        // The .pinned property is only true for your own posts; for other accounts
+        // it is null/false even though the posts are genuinely pinned.
+        const pinned = pinnedStatuses || [];
+        if (pinned.length === 1) {
+          pinnedHtml = `
+        <div class="pinned-section">
+          <div class="pinned-header">
+            <div class="pinned-header-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/></svg>
+              pinned
+            </div>
+          </div>
+          <div class="pinned-single">${renderPost(pinned[0])}</div>
+        </div>`;
+        } else if (pinned.length > 1) {
+          const carouselId = `pinned-carousel-${accountId}`;
+          const slides = pinned.map((s, i) =>
+            `<div class="pinned-slide${i === 0 ? ' active' : ''}" data-index="${i}">${renderPost(s)}</div>`
+          ).join('');
+          pinnedHtml = `
+        <div class="pinned-section">
+          <div class="pinned-header">
+            <div class="pinned-header-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/></svg>
+              pinned
+            </div>
+            <div class="pinned-header-nav">
+              <button class="pinned-nav prev" aria-label="Previous pinned post">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <span class="pinned-counter">1 / ${pinned.length}</span>
+              <button class="pinned-nav next" aria-label="Next pinned post">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div id="${carouselId}">${slides}</div>
+          <div class="pinned-dots">${pinned.map((_, i) =>
+            `<button class="pinned-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Post ${i + 1}"></button>`
+          ).join('')}</div>
+        </div>`;
+        }
+        // ─────────────────────────────────────────────────────────────
 
         content.innerHTML = `
       ${headerImg}
@@ -3809,9 +4091,44 @@
           View on ${srv}
         </a>
       </div>
+      ${pinnedHtml}
       <div class="profile-posts-header">recent posts</div>
       ${postsHtml}
     `;
+
+        // Wire up pinned navigation after HTML is injected
+        if (pinned.length > 1) {
+          const carouselEl = $(`pinned-carousel-${accountId}`);
+          if (carouselEl) {
+            const slides = carouselEl.querySelectorAll('.pinned-slide');
+            const dots = carouselEl.closest('.pinned-section').querySelectorAll('.pinned-dot');
+            const counter = carouselEl.closest('.pinned-section').querySelector('.pinned-counter');
+            const total = slides.length;
+            let current = 0;
+
+            function goTo(idx) {
+              slides[current].classList.remove('active');
+              dots[current].classList.remove('active');
+              current = (idx + total) % total;
+              slides[current].classList.add('active');
+              dots[current].classList.add('active');
+              if (counter) counter.textContent = `${current + 1} / ${total}`;
+            }
+
+            carouselEl.closest('.pinned-section').querySelector('.pinned-nav.prev')
+              .addEventListener('click', e => { e.stopPropagation(); goTo(current - 1); });
+            carouselEl.closest('.pinned-section').querySelector('.pinned-nav.next')
+              .addEventListener('click', e => { e.stopPropagation(); goTo(current + 1); });
+
+            // Touch swipe on the slide container
+            let touchStartX = 0;
+            carouselEl.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+            carouselEl.addEventListener('touchend', e => {
+              const dx = e.changedTouches[0].clientX - touchStartX;
+              if (Math.abs(dx) > 40) goTo(dx < 0 ? current + 1 : current - 1);
+            }, { passive: true });
+          }
+        }
       }).catch(err => {
         content.innerHTML = `<div class="feed-status" style="padding-top:60px;">
       <p style="font-size:13px;font-family:var(--font-mono);color:var(--danger);">Could not load profile.</p>
@@ -3914,9 +4231,13 @@
       if (isDesktop) updateSidebarCharCount(); else updateCharCount();
     }
 
-    window.toggleBoostMenu = function (postId) {
+    window.toggleBoostMenu = function (postId, triggerBtn) {
       document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
-      const menu = $(`boost-menu-${postId}`);
+      // Prefer finding the menu relative to the clicked button to avoid duplicate-ID
+      // collisions when the same post appears in multiple feed panels (e.g. Home + Following).
+      const menu = triggerBtn
+        ? triggerBtn.parentElement.querySelector('.boost-dropdown')
+        : $(`boost-menu-${postId}`);
       if (menu) menu.classList.toggle('show');
     };
 
@@ -4003,7 +4324,12 @@
       drawer.setAttribute('aria-hidden', 'false');
       backdrop.classList.add('open');
 
-      // Focus textarea
+      // On mobile, lock background scroll so the feed doesn't drift
+      if (window.innerWidth <= 900) {
+        document.body.style.overflow = 'hidden';
+      }
+
+      // Focus textarea — slight delay lets the drawer animation start first
       setTimeout(() => $('compose-textarea').focus(), 300);
     }
 
@@ -4015,7 +4341,10 @@
       drawer.setAttribute('aria-hidden', 'true');
       backdrop.classList.remove('open');
 
-      // Blur textarea to prevent keyboard from staying up
+      // Restore scroll lock
+      document.body.style.overflow = '';
+
+      // Blur textarea to dismiss the keyboard
       $('compose-textarea').blur();
 
       // Reset form
@@ -4517,6 +4846,7 @@
 
     setupSidebarCompose();
 
+
     async function handlePost() {
       const btn = $('compose-post-btn');
       const textarea = $('compose-textarea');
@@ -4622,7 +4952,7 @@
       if (boostBtn) {
         e.preventDefault();
         e.stopPropagation();
-        window.toggleBoostMenu(boostBtn.dataset.postId);
+        window.toggleBoostMenu(boostBtn.dataset.postId, boostBtn);
         return;
       }
 
@@ -4791,62 +5121,54 @@
     }
 
     async function loadMoreHashtags(btn) {
-      if (!state.hashtagsMaxId) return;
+      if (!state.hashtagsMaxId) { btn.remove(); return; }
 
       const tags = state.followedHashtags || [];
-      if (!tags.length) {
-        btn.remove();
-        return;
-      }
+      if (!tags.length) { btn.remove(); return; }
 
       const followedTagNames = new Set(tags.map(t => t.name.toLowerCase()));
       const requiredTags = state.selectedHashtagFilter === 'all'
         ? followedTagNames
         : new Set([state.selectedHashtagFilter]);
 
-      // Fetch next page of home timeline and filter to hashtag posts
-      const page = await apiGet(`/api/v1/timelines/home?limit=40&max_id=${state.hashtagsMaxId}`, state.token);
-      if (!page.length) {
-        btn.remove();
-        return;
-      }
+      btn.disabled = true;
+      btn.textContent = 'Loading...';
 
-      // Filter to posts with matching tags
-      const newPosts = [];
-      page.forEach(p => {
-        const inner = p.reblog || p;
-        if (inner.tags && Array.isArray(inner.tags)) {
-          const matchingTags = inner.tags
-            .filter(t => requiredTags.has(t.name.toLowerCase()))
-            .map(t => t.name.toLowerCase());
+      try {
+        const page = await apiGet(
+          `/api/v1/timelines/home?limit=40&max_id=${state.hashtagsMaxId}`,
+          state.token
+        );
 
-          if (matchingTags.length) {
-            newPosts.push({ ...p, _sourceTags: matchingTags });
+        if (!page.length) { btn.remove(); return; }
+
+        state.hashtagsMaxId = page[page.length - 1].id;
+
+        const newPosts = [];
+        page.forEach(p => {
+          const inner = p.reblog || p;
+          if (inner.tags && Array.isArray(inner.tags)) {
+            const matchingTags = inner.tags
+              .filter(t => requiredTags.has(t.name.toLowerCase()))
+              .map(t => t.name.toLowerCase());
+            if (matchingTags.length) newPosts.push({ ...p, _sourceTags: matchingTags });
           }
-        }
-      });
+        });
 
-      if (!newPosts.length && page.length < 40) {
-        // No more hashtag posts and we've exhausted the timeline
+        state.hashtagFeed = [...(state.hashtagFeed || []), ...newPosts];
+        const allPosts = state.hashtagFeed;
+
+        const hasMore = page.length >= 40;
         const html = allPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-        $('hashtags-posts').innerHTML = html;
-        return;
+        $('hashtags-posts').innerHTML = html + (hasMore
+          ? `<button class="load-more-btn" data-feed="hashtags">Load More</button>`
+          : '');
+        setTimeout(checkInfiniteScroll, 100);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Load More';
+        console.error('Load more hashtags failed:', err);
       }
-
-      // Merge with existing feed
-      const allPostsMerged = [...(state.hashtagFeed || []), ...newPosts];
-      allPostsMerged.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-      state.hashtagFeed = allPostsMerged;
-      state.hashtagsMaxId = page[page.length - 1].id;
-
-      const html = allPostsMerged.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-      const loadMoreBtn = page.length >= 40 ? `
-    <button class="load-more-btn" data-feed="hashtags">
-      Load More
-    </button>` : '';
-      $('hashtags-posts').innerHTML = html + loadMoreBtn;
-      setTimeout(checkInfiniteScroll, 100);
     }
 
     async function handleFollowToggle(btn) {
@@ -4923,7 +5245,7 @@
       if (svg) {
         // Keep filled during animation
         svg.setAttribute('fill', 'currentColor');
-        
+
         if (!willBeFavourited) {
           // On unfavorite, after the spin animation completes, fade out
           setTimeout(() => {
