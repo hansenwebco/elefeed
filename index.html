@@ -1334,57 +1334,76 @@
       transition: object-fit var(--trans);
     }
 
-    .media-item.expanded {
+    /* Lightbox */
+    .lightbox-overlay {
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: auto;
-      height: auto;
-      max-width: calc(100vw - 16px);
-      max-height: calc(100vh - 16px);
-      z-index: 1001;
-      background: transparent;
-      pointer-events: auto;
-    }
-
-    .media-item.expanded img,
-    .media-item.expanded video {
-      object-fit: contain;
-      width: auto;
-      height: auto;
-      max-width: calc(100vw - 12px);
-      max-height: calc(100vh - 12px);
-      border-radius: 12px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-    }
-
-    .media-close-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: rgba(0, 0, 0, 0.6);
-      border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 3000;
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: zoom-out;
+      opacity: 0;
+      transition: opacity 200ms ease;
+      padding: 20px;
+    }
+
+    .lightbox-overlay.open {
+      opacity: 1;
+    }
+
+    .lightbox-content {
+      position: relative;
+      max-width: 100%;
+      max-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: scale(0.96);
+      transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: default;
+    }
+
+    .lightbox-overlay.open .lightbox-content {
+      transform: scale(1);
+    }
+
+    .lightbox-content img,
+    .lightbox-content video {
+      display: block;
+      max-width: 100%;
+      max-height: calc(100vh - 40px);
+      width: auto;
+      height: auto;
+      border-radius: 4px;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8);
+      background: var(--bg);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       cursor: pointer;
-      color: var(--text);
-      transition: background var(--trans);
-      z-index: 1002;
-      padding: 0;
-      font-size: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 3100;
     }
 
-    .media-close-btn:hover {
-      background: rgba(0, 0, 0, 0.8);
-    }
-
-    .media-close-btn:active {
-      transform: scale(0.95);
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(90deg);
     }
 
     .media-sensitive-blur {
@@ -1997,6 +2016,77 @@
     .profile-stat-label {
       font-size: 11px;
       color: var(--text-dim);
+    }
+
+    /* Profile fields & join date */
+    .profile-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      margin-top: 14px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .profile-field {
+      display: flex;
+      flex-direction: column;
+      padding: 8px 12px;
+      background: var(--surface);
+      gap: 1px;
+      position: relative;
+    }
+
+    .profile-field.verified {
+      background: rgba(78, 205, 196, 0.04);
+    }
+
+    .profile-field-name {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+    }
+
+    .profile-field-value {
+      font-size: 13px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .profile-field-value a {
+      color: var(--accent2);
+      text-decoration: none;
+    }
+
+    .profile-field.verified .profile-field-name {
+      color: var(--teal);
+    }
+
+    .profile-field.verified .verified-icon {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      color: var(--teal);
+    }
+
+    .profile-joined {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .profile-joined svg {
+      opacity: 0.6;
     }
 
     .profile-open-link {
@@ -2621,6 +2711,30 @@
       border-color: var(--accent);
     }
 
+    .hashtag-search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .hashtag-search-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px 8px 32px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: var(--font-body);
+      transition: border-color var(--trans);
+    }
+
+    .hashtag-search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
     .compose-footer {
       display: flex;
       align-items: center;
@@ -2734,6 +2848,71 @@
 
     .emoji-btn:hover {
       background: var(--surface2);
+    }
+
+    /* ─── MENTION AUTOCOMPLETE ─── */
+    .mention-suggestions {
+      position: fixed;
+      z-index: 2000;
+      width: 280px;
+      max-height: 300px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .mention-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      gap: 12px;
+      cursor: pointer;
+      transition: background var(--trans);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mention-item:last-child {
+      border-bottom: none;
+    }
+
+    .mention-item:hover,
+    .mention-item.selected {
+      background: var(--surface2);
+    }
+
+    .mention-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .mention-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .mention-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mention-acct {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* ─── RESPONSIVE ─── */
@@ -3376,12 +3555,21 @@
           <div id="following-posts"></div>
         </div>
 
-        <!-- Hashtags Tab -->
         <div class="tab-panel" id="panel-hashtags" role="tabpanel">
-          <div class="hashtag-filter-bar" id="hashtag-filter-bar" style="display:none;">
-            <select class="hashtag-filter-select" id="hashtag-filter-select">
-              <option value="all">All Followed Hashtags</option>
-            </select>
+          <div class="hashtag-filter-bar" id="hashtag-filter-bar">
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; width: 100%;">
+              <select class="hashtag-filter-select" id="hashtag-filter-select">
+                <option value="all">All Followed Hashtags</option>
+              </select>
+              <div class="hashtag-search-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none;">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" id="hashtag-search-input" class="hashtag-search-input" placeholder="Search hashtag..." autocomplete="off" />
+              </div>
+              <button id="hashtag-follow-btn" class="profile-follow-btn" style="display:none; margin-top:0; height:36px;"></button>
+            </div>
           </div>
           <div class="feed-loading" id="hashtags-loading" style="display:none;">
             <div class="skeleton-posts" id="hashtags-skeleton"></div>
@@ -3599,6 +3787,8 @@
     <div class="emoji-picker-body" id="emoji-picker-body"></div>
   </div>
 
+  <div class="mention-suggestions" id="mention-suggestions"></div>
+
   <!-- ALT TEXT MODAL -->
   <div id="alt-text-modal" class="compose-alt-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,13,15,0.85); align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
     <div style="background:var(--surface); width:min(500px, 100%); margin: 0 16px; border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,0.5);">
@@ -3789,90 +3979,64 @@
     }
 
     function expandMedia(mediaItem) {
-      const isExpanded = mediaItem.classList.contains('expanded');
+      const fullUrl = mediaItem.dataset.fullUrl;
+      const type = mediaItem.dataset.type;
+      if (!fullUrl) return;
 
-      // Close any currently expanded media
-      document.querySelectorAll('.media-item.expanded').forEach(item => {
-        item.classList.remove('expanded');
-        const closeBtn = item.querySelector('.media-close-btn');
-        if (closeBtn) closeBtn.remove();
-        if (item._overlay) {
-          item._overlay.remove();
-          delete item._overlay;
-        }
+      // Create lightbox overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'lightbox-overlay';
+
+      const content = document.createElement('div');
+      content.className = 'lightbox-content';
+
+      let mediaEl;
+      if (type === 'video') {
+        mediaEl = document.createElement('video');
+        mediaEl.src = fullUrl;
+        mediaEl.controls = true;
+        mediaEl.autoplay = true;
+      } else {
+        mediaEl = document.createElement('img');
+        mediaEl.src = fullUrl;
+      }
+
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'lightbox-close';
+      closeBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+
+      content.appendChild(mediaEl);
+      overlay.appendChild(content);
+      overlay.appendChild(closeBtn);
+      document.body.appendChild(overlay);
+
+      // Animation
+      requestAnimationFrame(() => {
+        overlay.classList.add('open');
       });
 
-      if (!isExpanded) {
-        // Prevent background scrolling and interaction
-        document.body.style.overflow = 'hidden';
-        document.documentElement.style.overflow = 'hidden';
+      // Interaction
+      const close = () => {
+        overlay.classList.remove('open');
+        setTimeout(() => overlay.remove(), 250);
+        document.removeEventListener('keydown', handleEsc);
+      };
 
-        // Expand this media
-        mediaItem.classList.add('expanded');
-
-        // Prevent media item clicks from bubbling to overlay
-        mediaItem.addEventListener('click', (e) => {
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') {
           e.stopPropagation();
-        });
-
-        // Add close button
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'media-close-btn';
-        closeBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-        closeBtn.onclick = (e) => {
-          e.stopPropagation();
-          expandMedia(mediaItem);
-        };
-        mediaItem.appendChild(closeBtn);
-
-        // Add overlay to close on click outside
-        const overlay = document.createElement('div');
-        overlay.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.8);
-          z-index: 999;
-          cursor: pointer;
-          pointer-events: auto;
-        `;
-        const closeOverlay = () => expandMedia(mediaItem);
-        overlay.addEventListener('click', closeOverlay);
-        overlay.addEventListener('touchend', closeOverlay);
-        document.body.appendChild(overlay);
-
-        // Store overlay reference for cleanup
-        mediaItem._overlay = overlay;
-
-        // Add keyboard listener for Escape key
-        const handleEscape = (e) => {
-          if (e.key === 'Escape') {
-            expandMedia(mediaItem);
-            document.removeEventListener('keydown', handleEscape);
-          }
-        };
-        document.addEventListener('keydown', handleEscape);
-        mediaItem._escapeHandler = handleEscape;
-      } else {
-        // Allow background scrolling and interaction
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-
-        // Close expanded media
-        mediaItem.classList.remove('expanded');
-        if (mediaItem._overlay) {
-          mediaItem._overlay.remove();
-          delete mediaItem._overlay;
+          close();
         }
-        const closeBtn = mediaItem.querySelector('.media-close-btn');
-        if (closeBtn) closeBtn.remove();
-        if (mediaItem._escapeHandler) {
-          document.removeEventListener('keydown', mediaItem._escapeHandler);
-          delete mediaItem._escapeHandler;
-        }
-      }
+      };
+
+      overlay.onclick = close;
+      closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        close();
+      };
+      mediaEl.onclick = (e) => e.stopPropagation();
+
+      document.addEventListener('keydown', handleEsc);
     }
 
     function adjustImageAlignment(img) {
@@ -3909,12 +4073,12 @@
         </div>` : '';
 
           if (m.type === 'image' || m.type === 'gifv') {
-            return `<div class="media-item" onclick="expandMedia(this)">
+            return `<div class="media-item" data-full-url="${m.url}" data-type="image" onclick="expandMedia(this)">
           <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy" onload="adjustImageAlignment(this)"/>
           ${overlay}
         </div>`;
           } else if (m.type === 'video') {
-            return `<div class="media-item" onclick="expandMedia(this)">
+            return `<div class="media-item" data-full-url="${m.url}" data-type="video" onclick="expandMedia(this)">
           <video src="${m.url}" poster="${m.preview_url || ''}" controls muted class="${blurClass}"></video>
           ${overlay}
         </div>`;
@@ -4120,13 +4284,14 @@
     };
 
     /* ─── API helpers ─── */
-    async function apiGet(path, token, server) {
+    async function apiGet(path, token, server, signal) {
       const base = server || state.server;
       let res;
       try {
         res = await fetch(`https://${base}${path}`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           cache: 'no-store',
+          signal: signal,
         });
       } catch (networkErr) {
         throw new Error(`Network error fetching ${path}. Are you online?`);
@@ -4997,23 +5162,50 @@
       $('hashtags-posts').innerHTML = '';
 
       try {
+        if (!state.demoMode) {
+          const tags = await apiGet('/api/v1/followed_tags?limit=100', state.token).catch(() => []);
+          state.followedHashtags = tags;
+        }
         await ensureHomeFeedLoaded();
         const tags = state.followedHashtags || [];
 
-        // Build filter dropdown if needed
+        // Build filter dropdown
         const filterSelect = $('hashtag-filter-select');
-        if (tags.length > 0 && filterSelect.options.length <= 1) {
-          filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
-          const sortedTags = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-          sortedTags.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t.name.toLowerCase();
-            opt.textContent = '#' + t.name;
-            if (state.selectedHashtagFilter === t.name.toLowerCase()) opt.selected = true;
-            filterSelect.appendChild(opt);
-          });
-          $('hashtag-filter-bar').style.display = 'flex';
-          filterSelect.value = state.selectedHashtagFilter || 'all';
+        filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
+        const sortedTags = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+
+        let found = state.selectedHashtagFilter === 'all';
+        sortedTags.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.name.toLowerCase();
+          opt.textContent = '#' + t.name;
+          if (state.selectedHashtagFilter === t.name.toLowerCase()) {
+            opt.selected = true;
+            found = true;
+          }
+          filterSelect.appendChild(opt);
+        });
+
+        // Add searched tag if not following
+        if (!found && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+          const opt = document.createElement('option');
+          opt.value = state.selectedHashtagFilter;
+          opt.textContent = '#' + state.selectedHashtagFilter;
+          opt.selected = true;
+          filterSelect.appendChild(opt);
+        }
+
+        // Update Follow Button
+        const followBtn = $('hashtag-follow-btn');
+        if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+          const isFollowing = tags.some(t => t.name.toLowerCase() === state.selectedHashtagFilter);
+          followBtn.style.display = 'block';
+          followBtn.textContent = isFollowing ? 'Following' : `Follow #${state.selectedHashtagFilter}`;
+          followBtn.dataset.tag = state.selectedHashtagFilter;
+          followBtn.dataset.following = isFollowing ? 'true' : 'false';
+          followBtn.classList.toggle('following', isFollowing);
+        } else {
+          followBtn.style.display = 'none';
         }
 
         let display = [];
@@ -5174,6 +5366,27 @@
             <span class="profile-stat-label">Followers</span>
           </div>
         </div>
+        
+        ${(account.fields && account.fields.length) ? `
+          <div class="profile-fields">
+            ${account.fields.map(f => {
+          const isVerified = !!f.verified_at;
+          return `
+                <div class="profile-field ${isVerified ? 'verified' : ''}">
+                  <span class="profile-field-name">${escapeHTML(f.name)}</span>
+                  <div class="profile-field-value">${sanitizeHTML(f.value)}</div>
+                  ${isVerified ? '<svg class="verified-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' : ''}
+                </div>
+              `;
+        }).join('')}
+          </div>
+        ` : ''}
+
+        <div class="profile-joined">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Joined ${new Date(account.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+        </div>
+
         <a class="profile-open-link" href="${escapeHTML(account.url)}" target="_blank" rel="noopener">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           View on ${account.url ? new URL(account.url).hostname : srv}
@@ -5364,9 +5577,9 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             <span>sensitive content</span></div>` : '';
           if (m.type === 'image' || m.type === 'gifv') {
-            return `<div class="media-item" onclick="expandMedia(this)"><img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy" onload="adjustImageAlignment(this)"/>${overlay}</div>`;
+            return `<div class="media-item" data-full-url="${m.url}" data-type="image" onclick="expandMedia(this)"><img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy" onload="adjustImageAlignment(this)"/>${overlay}</div>`;
           } else if (m.type === 'video') {
-            return `<div class="media-item" onclick="expandMedia(this)"><video src="${m.url}" poster="${m.preview_url || ''}" controls muted class="${blurClass}"></video>${overlay}</div>`;
+            return `<div class="media-item" data-full-url="${m.url}" data-type="video" onclick="expandMedia(this)"><video src="${m.url}" poster="${m.preview_url || ''}" controls muted class="${blurClass}"></video>${overlay}</div>`;
           }
           return '';
         }).join('');
@@ -5922,6 +6135,188 @@
       e.target.value = ''; // Reset input
     });
 
+    /* ─── MENTION AUTOCOMPLETE ─── */
+    let mentionActiveRequest = null;
+    let mentionCurrentQuery = '';
+    let mentionTargetTextarea = null;
+    let mentionSuggestions = [];
+    let mentionSelectedIndex = -1;
+
+    function initMentionAutocomplete() {
+      const t1 = $('compose-textarea');
+      const t2 = $('compose-textarea-sidebar');
+      const list = $('mention-suggestions');
+
+      [t1, t2].forEach(textarea => {
+        if (!textarea) return;
+        textarea.addEventListener('input', (e) => handleMentionInput(e, textarea));
+        textarea.addEventListener('keydown', (e) => handleMentionKeydown(e, textarea));
+        textarea.addEventListener('scroll', closeMentionSuggestions);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!list.contains(e.target)) closeMentionSuggestions();
+      });
+      window.addEventListener('scroll', closeMentionSuggestions, { passive: true });
+    }
+
+    function handleMentionInput(e, textarea) {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      if (range.startContainer.nodeType !== Node.TEXT_NODE) {
+        closeMentionSuggestions();
+        return;
+      }
+      const textBefore = range.startContainer.textContent.substring(0, range.startOffset);
+
+      // Match @username (only at start or after whitespace)
+      const match = textBefore.match(/(?:^|\s)@([a-zA-Z0-9_]*)$/);
+
+      if (match) {
+        mentionCurrentQuery = match[1];
+        mentionTargetTextarea = textarea;
+        fetchMentions(mentionCurrentQuery);
+      } else {
+        closeMentionSuggestions();
+      }
+    }
+
+    async function fetchMentions(q) {
+      if (mentionActiveRequest) mentionActiveRequest.abort();
+      const controller = new AbortController();
+      mentionActiveRequest = controller;
+
+      try {
+        const results = await apiGet(`/api/v1/accounts/search?q=${encodeURIComponent(q)}&limit=5&following=true`, state.token, null, controller.signal);
+        mentionSuggestions = results;
+        renderMentionSuggestions(results);
+      } catch (err) {
+        if (err.name !== 'AbortError') console.warn('Mention search failed:', err);
+      }
+    }
+
+    function renderMentionSuggestions(users) {
+      const list = $('mention-suggestions');
+      if (!users.length) {
+        closeMentionSuggestions();
+        return;
+      }
+
+      list.innerHTML = users.map((u, i) => `
+        <div class="mention-item ${i === 0 ? 'selected' : ''}" data-index="${i}" data-acct="${escapeHTML(u.acct)}">
+          <img src="${u.avatar_static || u.avatar}" class="mention-avatar" loading="lazy" />
+          <div class="mention-info">
+            <span class="mention-name">${renderCustomEmojis(u.display_name || u.username, u.emojis)}</span>
+            <span class="mention-acct">@${escapeHTML(u.acct)}</span>
+          </div>
+        </div>
+      `).join('');
+
+      list.style.display = 'flex';
+      mentionSelectedIndex = users.length > 0 ? 0 : -1;
+
+      // Position the list
+      const sel = window.getSelection();
+      if (sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        const rects = range.getClientRects();
+        if (rects.length > 0) {
+          const rect = rects[0];
+          let top = rect.bottom + 10;
+          let left = rect.left;
+
+          // Keep within viewport
+          if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
+          if (top + 300 > window.innerHeight) {
+            top = rect.top - (users.length * 52) - 10;
+          }
+
+          list.style.top = top + 'px';
+          list.style.left = Math.max(10, left) + 'px';
+        }
+      }
+
+      // Handle click on item
+      list.querySelectorAll('.mention-item').forEach(item => {
+        item.onmousedown = (e) => e.preventDefault(); // maintain focus
+        item.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          insertMention(item.dataset.acct);
+        };
+      });
+    }
+
+    function handleMentionKeydown(e, textarea) {
+      const list = $('mention-suggestions');
+      if (list.style.display === 'none') return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        moveMentionSelection(1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        moveMentionSelection(-1);
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        if (mentionSelectedIndex > -1) {
+          e.preventDefault();
+          const acct = mentionSuggestions[mentionSelectedIndex].acct;
+          insertMention(acct);
+        }
+      } else if (e.key === 'Escape') {
+        closeMentionSuggestions();
+      }
+    }
+
+    function moveMentionSelection(dir) {
+      const items = $('mention-suggestions').querySelectorAll('.mention-item');
+      if (!items.length) return;
+
+      items[mentionSelectedIndex]?.classList.remove('selected');
+      mentionSelectedIndex = (mentionSelectedIndex + dir + items.length) % items.length;
+      items[mentionSelectedIndex].classList.add('selected');
+      items[mentionSelectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    function insertMention(acct) {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+
+      // Find the @ and the following text to replace it
+      const node = range.startContainer;
+      const text = node.textContent;
+      const textBefore = text.substring(0, range.startOffset);
+      const match = textBefore.match(/@([a-zA-Z0-9_]*)$/);
+
+      if (match) {
+        const startPos = match.index + (match[0].startsWith('@') ? 0 : 1);
+        const endPos = range.startOffset;
+
+        const newRange = document.createRange();
+        newRange.setStart(node, startPos);
+        newRange.setEnd(node, endPos);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+
+        document.execCommand('insertText', false, `@${acct} `);
+      }
+
+      closeMentionSuggestions();
+      if (mentionTargetTextarea === $('compose-textarea')) updateCharCount();
+      else updateSidebarCharCount();
+    }
+
+    function closeMentionSuggestions() {
+      $('mention-suggestions').style.display = 'none';
+      mentionSelectedIndex = -1;
+      if (mentionActiveRequest) mentionActiveRequest.abort();
+      mentionActiveRequest = null;
+    }
+
+    initMentionAutocomplete();
+
     // Emoji picker logic
     let emojiPickerTarget = null;
     let updateCountCallback = null;
@@ -6310,7 +6705,29 @@
     setupContentEditable($('compose-textarea'));
     setupContentEditable($('compose-textarea-sidebar'));
 
+    function setupHashtagTab() {
+      const input = $('hashtag-search-input');
+      if (input) {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const val = input.value.trim().replace(/^#/, '');
+            if (val) {
+              state.selectedHashtagFilter = val.toLowerCase();
+              loadHashtagsTab();
+              input.value = '';
+            }
+          }
+        });
+      }
+
+      const followBtn = $('hashtag-follow-btn');
+      if (followBtn) {
+        followBtn.addEventListener('click', () => handleHashtagFollowToggle(followBtn));
+      }
+    }
+
     setupSidebarCompose();
+    setupHashtagTab();
 
 
     async function handlePost() {
@@ -6466,13 +6883,6 @@
         const rawText = tagSourceEl ? tagSourceEl.textContent : hashtagLink.textContent;
         const tag = rawText.replace(/^#/, '').split(/\s+/)[0].toLowerCase();
 
-        // Ensure clicked tag exists in our dropdown state list temporarily if missing
-        let tags = state.followedHashtags || [];
-        if (!tags.some(t => t.name.toLowerCase() === tag)) {
-          tags.push({ name: tag });
-          state.followedHashtags = tags;
-        }
-
         // Set the active filter state
         state.selectedHashtagFilter = tag;
 
@@ -6499,13 +6909,6 @@
       if (trendingTagLink) {
         e.preventDefault();
         const tag = trendingTagLink.dataset.trendingTag.toLowerCase();
-
-        // Ensure the tag is in our followed hashtags list temporarily
-        let followedTags = state.followedHashtags || [];
-        if (!followedTags.some(t => t.name.toLowerCase() === tag)) {
-          followedTags.push({ name: tag });
-          state.followedHashtags = followedTags;
-        }
 
         state.selectedHashtagFilter = tag;
 
@@ -6650,6 +7053,58 @@
         btn.classList.toggle('following', nowFollowing);
 
         showToast(nowFollowing ? 'Now following' : 'Unfollowed');
+      } catch (err) {
+        btn.textContent = originalText;
+        showToast('Action failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function handleHashtagFollowToggle(btn) {
+      if (btn.disabled) return;
+
+      const tag = btn.dataset.tag;
+      const isFollowing = btn.dataset.following === 'true';
+
+      btn.disabled = true;
+      const originalText = btn.textContent;
+      btn.textContent = '...';
+
+      try {
+        const endpoint = isFollowing
+          ? `/api/v1/tags/${tag}/unfollow`
+          : `/api/v1/tags/${tag}/follow`;
+
+        const res = await fetch(`https://${state.server}${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${state.token}`,
+            'Content-Type': 'application/json'
+          },
+          cache: 'no-store',
+        });
+
+        if (!res.ok) throw new Error('Failed to update hashtag follow status');
+
+        const tagInfo = await res.json();
+        const nowFollowing = tagInfo.following;
+
+        // Update button state
+        btn.dataset.following = nowFollowing ? 'true' : 'false';
+        btn.textContent = nowFollowing ? 'Following' : `Follow #${tag}`;
+        btn.classList.toggle('following', nowFollowing);
+
+        // Update state
+        if (nowFollowing) {
+          if (!state.followedHashtags.some(t => t.name.toLowerCase() === tag.toLowerCase())) {
+            state.followedHashtags.push(tagInfo);
+          }
+        } else {
+          state.followedHashtags = state.followedHashtags.filter(t => t.name.toLowerCase() !== tag.toLowerCase());
+        }
+
+        showToast(nowFollowing ? `Following #${tag}` : `Unfollowed #${tag}`);
       } catch (err) {
         btn.textContent = originalText;
         showToast('Action failed: ' + err.message);
