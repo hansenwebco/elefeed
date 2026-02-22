@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual" />
   <title>Elefeed</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
@@ -55,7 +56,6 @@
       line-height: 1.6;
       min-height: 100dvh;
       -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
     }
 
     /* ─── SCROLLBAR ─── */
@@ -307,6 +307,7 @@
       flex-direction: column;
       position: sticky;
       top: 94px;
+      align-self: flex-start;
       height: fit-content;
       max-height: calc(100vh - 114px);
       overflow-y: auto;
@@ -1420,7 +1421,7 @@
       top: 0;
       right: 0;
       bottom: 0;
-      width: min(420px, 100vw);
+      width: min(420px, 100%);
       background: var(--surface);
       border-left: 1px solid var(--border);
       z-index: 201;
@@ -1433,6 +1434,15 @@
 
     .profile-drawer.open {
       transform: translateX(0);
+    }
+
+    @media (max-width: 900px) {
+      .profile-drawer {
+        width: 100%;
+        /* full screen on mobile */
+        border-left: none;
+        /* no border that adds 1px overflow */
+      }
     }
 
     .profile-drawer-inner {
@@ -1854,7 +1864,7 @@
       top: 0;
       right: 0;
       bottom: 0;
-      width: min(480px, 100vw);
+      width: min(480px, 100%);
       background: var(--surface);
       border-left: 1px solid var(--border);
       z-index: 1002;
@@ -1898,7 +1908,7 @@
       position: fixed;
       bottom: 80px;
       right: 20px;
-      width: min(420px, calc(100vw - 40px));
+      width: min(420px, calc(100% - 40px));
       max-height: 500px;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1933,7 +1943,7 @@
         left: 0;
         right: 0;
         bottom: auto;
-        width: 100vw;
+        width: 100%;
         /* 100dvh = visual viewport — shrinks as keyboard rises */
         height: 100dvh;
         max-height: 100dvh;
@@ -2100,6 +2110,36 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 8px;
+    }
+
+    .compose-media-item-alt-btn {
+      position: absolute;
+      bottom: 6px;
+      left: 6px;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 6px;
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    .compose-media-item-alt-btn.missing {
+      background: rgba(255, 107, 107, 0.9);
+      border-color: #ff6b6b;
+    }
+
+    .compose-media-item-alt-btn:hover {
+      background: rgba(0, 0, 0, 0.85);
+    }
+
+    .compose-media-item-alt-btn.missing:hover {
+      background: #ff6b6b;
     }
 
     .compose-media-item {
@@ -2695,6 +2735,30 @@
     <div class="emoji-picker-body" id="emoji-picker-body"></div>
   </div>
 
+  <!-- ALT TEXT MODAL -->
+  <div id="alt-text-modal" class="compose-alt-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,13,15,0.85); align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
+    <div style="background:var(--surface); width:min(500px, 100%); margin: 0 16px; border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,0.5);">
+      <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size:16px; font-weight:500;">Image Description</h3>
+        <button id="alt-modal-close" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div style="padding:16px; flex:1; overflow-y:auto;">
+        <img id="alt-modal-img" src="" style="width:100%; max-height:200px; object-fit:contain; border-radius:8px; margin-bottom:16px; background:var(--bg);" />
+        <textarea id="alt-modal-input" placeholder="Describe this image for users with visual impairments..." style="width:100%; min-height:120px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px; color:var(--text); font-family:var(--font-body); font-size:14px; resize:vertical; outline:none; transition:border-color 0.2s;"></textarea>
+      </div>
+      <div style="padding:16px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
+        <span id="alt-modal-count" style="margin-right:auto; color:var(--text-muted); font-size:13px; align-self:center;">1500</span>
+        <button id="alt-modal-cancel" style="padding:8px 16px; background:none; border:1px solid var(--border); border-radius:6px; color:var(--text); cursor:pointer;">Cancel</button>
+        <button id="alt-modal-save" style="padding:8px 16px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-weight:500; cursor:pointer;">Done</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     /* ═══════════════════════════════════════════════════════
        ELEFEED — Lightweight Mastodon Client
@@ -2734,6 +2798,9 @@
       hashtagFeed: null,
       followedHashtags: [],
       selectedHashtagFilter: 'all',
+      homeFilter: 'all',
+      knownFollowing: new Set(),
+      knownNotFollowing: new Set(),
       activeTab: 'home',
       demoMode: false,
     };
@@ -3502,6 +3569,7 @@
 
       // Load home feed
       loadHomeTab();
+      startPolling();
     }
 
     /* ─── TAB SWITCHING ─── */
@@ -3577,7 +3645,99 @@
 
       showScreen('login-screen');
       showToast('Signed out.');
+      stopPolling();
     });
+
+    /* ═══════════════════════════════════════════════
+       POLLING
+    ══════════════════════════════════════════════════ */
+    let pollInterval = null;
+
+    function startPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(pollForNewPosts, 20000);  // every 20 seconds
+    }
+
+    function stopPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = null;
+    }
+
+    async function pollForNewPosts() {
+      if (!state.token || state.demoMode || !state.activeTab) return;
+      const feed = state.activeTab;
+
+      let minIdToUse = state.homeFeed && state.homeFeed.length > 0 ? state.homeFeed[0].id : null;
+      if (feed === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+        minIdToUse = state.hashtagFeed && state.hashtagFeed.length > 0 ? state.hashtagFeed[0].id : null;
+      }
+      if (!minIdToUse) return;
+
+      try {
+        let newPosts = [];
+        if (feed === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+          const tag = encodeURIComponent(state.selectedHashtagFilter);
+          newPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40&min_id=${minIdToUse}`, state.token);
+          newPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
+          if (newPosts.length > 0) {
+            state.hashtagFeed = [...newPosts, ...state.hashtagFeed];
+          }
+        } else {
+          newPosts = await apiGet(`/api/v1/timelines/home?limit=40&min_id=${minIdToUse}`, state.token);
+          const followedTagNames = new Set((state.followedHashtags || []).map(t => t.name.toLowerCase()));
+          newPosts.forEach(p => {
+            p._sourceTags = [];
+            const inner = p.reblog || p;
+            if (inner.tags && Array.isArray(inner.tags)) {
+              inner.tags.forEach(t => {
+                if (followedTagNames.has(t.name.toLowerCase())) p._sourceTags.push(t.name.toLowerCase());
+              });
+            }
+          });
+          if (newPosts.length > 0) {
+            state.homeFeed = [...newPosts, ...state.homeFeed];
+          }
+        }
+
+        if (!newPosts.length) return;
+
+        let display = newPosts;
+        if (feed === 'following') display = await filterForFollowing(newPosts);
+        else if (feed === 'hashtags') {
+          if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+            display = newPosts;
+          } else {
+            display = newPosts.filter(p => p._sourceTags && p._sourceTags.length > 0);
+          }
+        }
+
+        if (!display.length) return;
+
+        const html = display.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
+        const container = $(`${feed}-posts`);
+        if (!container) return;
+
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+
+        const currentScroll = window.scrollY || document.documentElement.scrollTop;
+        const originalHeight = document.documentElement.scrollHeight;
+
+        while (tmp.lastChild) {
+          container.insertBefore(tmp.lastChild, container.firstChild);
+        }
+
+        if (currentScroll > 50) {
+          requestAnimationFrame(() => {
+            const newHeight = document.documentElement.scrollHeight;
+            window.scrollTo(0, currentScroll + (newHeight - originalHeight));
+          });
+        }
+
+      } catch (err) {
+        console.warn('Silent polling failed:', err.message);
+      }
+    }
 
     /* ═══════════════════════════════════════════════
        FEED LOADERS
@@ -3606,30 +3766,50 @@
       }
     }, { passive: true });
 
-    async function loadHomeTab() {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      setLoading('home', true);
-      setError('home', null);
-      $('home-posts').innerHTML = '';
+    async function filterForFollowing(page) {
+      if (state.account && state.account.id) {
+        state.knownFollowing.add(state.account.id);
+      }
+      const idsToCheck = new Set();
+      page.forEach(p => {
+        const authorId = (p.reblog || p).account.id;
+        if (!state.knownFollowing.has(authorId) && !state.knownNotFollowing.has(authorId)) {
+          idsToCheck.add(authorId);
+        }
+      });
+      const idsArr = Array.from(idsToCheck);
+      if (idsArr.length > 0) {
+        for (let i = 0; i < idsArr.length; i += 40) {
+          const chunk = idsArr.slice(i, i + 40);
+          const relPath = '/api/v1/accounts/relationships?' + chunk.map(id => `id[]=${id}`).join('&');
+          try {
+            const rels = await apiGet(relPath, state.token);
+            rels.forEach(r => {
+              if (r.following) state.knownFollowing.add(r.id);
+              else state.knownNotFollowing.add(r.id);
+            });
+          } catch (err) {
+            chunk.forEach(id => state.knownFollowing.add(id)); // Fail open
+          }
+        }
+      }
+      return page.filter(p => {
+        const inner = p.reblog || p;
+        return state.knownFollowing.has(inner.account.id);
+      });
+    }
 
+    async function ensureHomeFeedLoaded() {
       if (state.demoMode) {
-        await delay(600);
-        setLoading('home', false);
-        const posts = getDemoHomePosts();
-        state.homeFeed = posts;
-        renderHomePosts(posts);
+        if (!state.homeFeed) state.homeFeed = getDemoHomePosts();
+        if (!state.followedHashtags) state.followedHashtags = getDemoHashtagData().tags;
         return;
       }
-
-      try {
-        // Single API call: home timeline already includes followed accounts + followed hashtags
-        // Use limit=40 (max for timelines) to get as much as possible
+      if (!state.homeFeed) {
         const posts = await apiGet('/api/v1/timelines/home?limit=40', state.token);
-
-        // Annotate posts with hashtag information from their tags array
-        // This allows us to show which posts came from followed hashtags
-        const followedTags = await apiGet('/api/v1/followed_tags?limit=100', state.token).catch(() => []);
-        const followedTagNames = new Set(followedTags.map(t => t.name.toLowerCase()));
+        const tags = await apiGet('/api/v1/followed_tags?limit=100', state.token).catch(() => []);
+        state.followedHashtags = tags;
+        const followedTagNames = new Set(tags.map(t => t.name.toLowerCase()));
 
         posts.forEach(p => {
           p._sourceTags = [];
@@ -3643,166 +3823,59 @@
           }
         });
 
-        // Posts are already sorted newest-first by Mastodon
         state.homeFeed = posts;
-        state.followedHashtags = followedTags; // Cache for hashtags tab
-        setLoading('home', false);
-
-        if (!posts.length) {
-          $('home-posts').innerHTML = `<div class="feed-status">
-        <div class="status-icon">📭</div>
-        <p>Your home timeline is empty.</p>
-        <p class="status-sub">Follow some accounts or hashtags to get started.</p>
-      </div>`;
-        } else {
-          renderHomePosts(posts);
-        }
-      } catch (err) {
-        setLoading('home', false);
-        setError('home', `Failed to load home feed: ${err.message}`);
-        console.error(err);
+        state.homeMaxId = posts.length ? posts[posts.length - 1].id : null;
       }
     }
 
-    function renderHomePosts(posts, hasMore = true) {
-      const html = posts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-      const loadMoreBtn = hasMore ? `
-    <button class="load-more-btn" data-feed="home">
-      Load More
-    </button>` : '';
-
-      $('home-posts').innerHTML = html + loadMoreBtn;
-
-      // Store last post ID for pagination
-      if (posts.length) {
-        state.homeMaxId = posts[posts.length - 1].id;
+    function renderFilteredPosts(tab, displayPosts) {
+      const container = $(`${tab}-posts`);
+      if (!displayPosts.length) {
+        let msg = "Nothing here yet.";
+        if (tab === 'following') msg = "No recent posts from people you follow.";
+        if (tab === 'hashtags') msg = "No recent posts matching your hashtags.";
+        container.innerHTML = `<div class="feed-status"><div class="status-icon">📭</div><p>${msg}</p></div>`;
+        return;
       }
 
+      let maxId = state.homeMaxId;
+      if (tab === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+        maxId = state.hashtagMaxId;
+      }
+
+      const html = displayPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
+      const loadMoreBtn = maxId ? `<button class="load-more-btn" data-feed="${tab}">Load More</button>` : '';
+      container.innerHTML = html + loadMoreBtn;
       setTimeout(checkInfiniteScroll, 100);
+    }
+
+    async function loadHomeTab() {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      setLoading('home', true);
+      setError('home', null);
+
+      try {
+        await ensureHomeFeedLoaded();
+        renderFilteredPosts('home', state.homeFeed);
+      } catch (err) {
+        setError('home', "Failed to load feed");
+      }
+      setLoading('home', false);
     }
 
     async function loadFollowingTab() {
       window.scrollTo({ top: 0, behavior: 'instant' });
       setLoading('following', true);
       setError('following', null);
-      $('following-posts').innerHTML = '';
-
-      if (state.demoMode) {
-        await delay(800);
-        setLoading('following', false);
-        const posts = getDemoFollowingPosts();
-        state.followingFeed = posts;
-        renderFollowingPosts(posts);
-        return;
-      }
 
       try {
-        // Strategy: The home timeline already contains only posts from followed accounts
-        // We just need to exclude posts that came from followed hashtags (those go in Hashtags tab)
-
-        // Get followed hashtags to identify which posts are hashtag-sourced
-        let tags = state.followedHashtags;
-        if (!tags || !tags.length) {
-          tags = await apiGet('/api/v1/followed_tags?limit=100', state.token).catch(() => []);
-          state.followedHashtags = tags;
-        }
-        const followedTagNames = new Set(tags.map(t => t.name.toLowerCase()));
-
-        // Fetch up to 3 pages (120 posts) from home timeline
-        const allPosts = [];
-        let maxId = null;
-        let pagesLoaded = 0;
-
-        // Caches to avoid repeated relationship lookups
-        const knownFollowing = new Set();
-        const knownNotFollowing = new Set();
-
-        // The user itself is trivially followed (you see your own posts on the home feed)
-        if (state.account && state.account.id) {
-          knownFollowing.add(state.account.id);
-        }
-
-        while (pagesLoaded < 3) {
-          const url = maxId
-            ? `/api/v1/timelines/home?limit=40&max_id=${maxId}`
-            : '/api/v1/timelines/home?limit=40';
-
-          const page = await apiGet(url, state.token);
-          if (!page.length) break;
-
-          // Collect author IDs we haven't checked yet
-          // (Use inner account because we want to verify the actual author being shown)
-          const idsToCheck = new Set();
-          page.forEach(p => {
-            const authorId = (p.reblog || p).account.id;
-            if (!knownFollowing.has(authorId) && !knownNotFollowing.has(authorId)) {
-              idsToCheck.add(authorId);
-            }
-          });
-
-          const idsArr = Array.from(idsToCheck);
-
-          if (idsArr.length > 0) {
-            // Fetch relationship status in chunks of 40 (Mastodon API limit)
-            for (let i = 0; i < idsArr.length; i += 40) {
-              const chunk = idsArr.slice(i, i + 40);
-              const relPath = '/api/v1/accounts/relationships?' + chunk.map(id => `id[]=${id}`).join('&');
-              try {
-                const relationships = await apiGet(relPath, state.token);
-                relationships.forEach(r => {
-                  if (r.following) knownFollowing.add(r.id);
-                  else knownNotFollowing.add(r.id);
-                });
-              } catch (err) {
-                console.error("Relationships fetch failed", err);
-                // If API fails, assume we follow them so feed doesn't completely break
-                chunk.forEach(id => knownFollowing.add(id));
-              }
-            }
-          }
-
-          // Strictly filter to ensure we ONLY show posts authored by people the user genuinely follows
-          const filteredPage = page.filter(p => {
-            const inner = p.reblog || p;
-            return knownFollowing.has(inner.account.id);
-          });
-
-          allPosts.push(...filteredPage);
-
-          pagesLoaded++;
-          maxId = page[page.length - 1].id;
-        }
-
-        state.followingMaxId = maxId;
-
-        state.followingFeed = allPosts;
-        setLoading('following', false);
-
-        if (!allPosts.length) {
-          $('following-posts').innerHTML = `<div class="feed-status">
-        <div class="status-icon">👤</div>
-        <p>No recent posts from people you follow.</p>
-      </div>`;
-        } else {
-          renderFollowingPosts(allPosts);
-        }
+        await ensureHomeFeedLoaded();
+        const display = state.demoMode ? state.homeFeed.filter(p => !p.reblog) : await filterForFollowing(state.homeFeed);
+        renderFilteredPosts('following', display);
       } catch (err) {
-        setLoading('following', false);
-        setError('following', `Failed to load following feed: ${err.message}`);
-        console.error(err);
+        setError('following', "Failed to load following feed: " + err.message);
       }
-    }
-
-    function renderFollowingPosts(posts, hasMore = true) {
-      const sorted = [...posts].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      const html = sorted.map(p => renderPost(p)).join('');
-      const loadMoreBtn = hasMore ? `
-    <button class="load-more-btn" data-feed="following">
-      Load More
-    </button>` : '';
-
-      $('following-posts').innerHTML = html + loadMoreBtn;
-      setTimeout(checkInfiniteScroll, 100);
+      setLoading('following', false);
     }
 
     async function loadHashtagsTab() {
@@ -3811,148 +3884,51 @@
       setError('hashtags', null);
       $('hashtags-posts').innerHTML = '';
 
-      if (state.demoMode) {
-        await delay(1000);
-        setLoading('hashtags', false);
-        const { tags, posts } = getDemoHashtagData();
-        state.followedHashtags = tags;
-        state.hashtagFeed = posts;
-        renderHashtagPosts(tags, posts);
-        return;
-      }
-
       try {
-        // 1. Get/cache followed tags
-        let tags = state.followedHashtags;
-        if (!tags || !tags.length) {
-          tags = await apiGet('/api/v1/followed_tags?limit=100', state.token);
-          state.followedHashtags = tags;
-        }
+        await ensureHomeFeedLoaded();
+        const tags = state.followedHashtags || [];
 
-        if (!tags.length) {
-          setLoading('hashtags', false);
-          $('hashtags-posts').innerHTML = `<div class="feed-status">
-        <div class="status-icon">#</div>
-        <p>You're not following any hashtags.</p>
-        <p class="status-sub">Follow hashtags on your Mastodon server to see them here.</p>
-      </div>`;
-          return;
-        }
-
-        // 2. Build filter dropdown
+        // Build filter dropdown if needed
         const filterSelect = $('hashtag-filter-select');
-        filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
-        const sortedTags = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-        sortedTags.forEach(t => {
-          const opt = document.createElement('option');
-          opt.value = t.name.toLowerCase();
-          opt.textContent = '#' + t.name;
-          if (state.selectedHashtagFilter === t.name.toLowerCase()) opt.selected = true;
-          filterSelect.appendChild(opt);
-        });
-        $('hashtag-filter-bar').style.display = 'flex';
-
-        const followedTagNames = new Set(tags.map(t => t.name.toLowerCase()));
-        const requiredTags = state.selectedHashtagFilter === 'all'
-          ? followedTagNames
-          : new Set([state.selectedHashtagFilter]);
-
-        // Session ID: if filter changes or tab reloads, background fills abort themselves
-        state.hashtagLoadSession = (state.hashtagLoadSession || 0) + 1;
-        const mySession = state.hashtagLoadSession;
-
-        // Helper: extract matching posts from a home timeline page
-        function extractHashtagPosts(page) {
-          const matched = [];
-          page.forEach(p => {
-            const inner = p.reblog || p;
-            if (inner.tags && Array.isArray(inner.tags)) {
-              const matchingTags = inner.tags
-                .filter(t => requiredTags.has(t.name.toLowerCase()))
-                .map(t => t.name.toLowerCase());
-              if (matchingTags.length) matched.push({ ...p, _sourceTags: matchingTags });
-            }
+        if (tags.length > 0 && filterSelect.options.length <= 1) {
+          filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
+          const sortedTags = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+          sortedTags.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.name.toLowerCase();
+            opt.textContent = '#' + t.name;
+            if (state.selectedHashtagFilter === t.name.toLowerCase()) opt.selected = true;
+            filterSelect.appendChild(opt);
           });
-          return matched;
+          $('hashtag-filter-bar').style.display = 'flex';
+          filterSelect.value = state.selectedHashtagFilter || 'all';
         }
 
-        // 3. Fetch page 1 and render immediately
-        const page1 = await apiGet('/api/v1/timelines/home?limit=40', state.token);
-        if (state.hashtagLoadSession !== mySession) return;
-
-        const matched1 = extractHashtagPosts(page1);
-        state.hashtagFeed = matched1;
-        state.hashtagsMaxId = page1.length ? page1[page1.length - 1].id : null;
-        setLoading('hashtags', false);
-
-        if (!matched1.length) {
-          $('hashtags-posts').innerHTML = `<div class="feed-status">
-        <div class="status-icon">#</div>
-        <p>No recent posts for your followed hashtags.</p>
-        <p class="status-sub">Posts from followed hashtags will appear here.</p>
-      </div>`;
+        let display = [];
+        if (state.demoMode) {
+          display = state.homeFeed.filter(p => p._sourceTags && p._sourceTags.length > 0);
+          if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+            display = display.filter(p => p._sourceTags.includes(state.selectedHashtagFilter));
+          }
         } else {
-          const html = matched1.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-          $('hashtags-posts').innerHTML = html + (page1.length >= 40
-            ? `<button class="load-more-btn" data-feed="hashtags">Load More</button>`
-            : '');
-          setTimeout(checkInfiniteScroll, 100);
+          if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+            const tag = encodeURIComponent(state.selectedHashtagFilter);
+            const tagPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40`, state.token);
+            tagPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
+            state.hashtagFeed = tagPosts;
+            state.hashtagMaxId = tagPosts.length ? tagPosts[tagPosts.length - 1].id : null;
+            display = tagPosts;
+          } else {
+            display = state.homeFeed.filter(p => p._sourceTags && p._sourceTags.length > 0);
+            state.hashtagMaxId = state.homeMaxId;
+          }
         }
 
-        // 4. Background-fill pages 2-3: append without disrupting scroll
-        if (page1.length >= 40) {
-          (async () => {
-            for (let i = 0; i < 2; i++) {
-              if (state.hashtagLoadSession !== mySession || !state.hashtagsMaxId) return;
-              try {
-                const page = await apiGet(
-                  `/api/v1/timelines/home?limit=40&max_id=${state.hashtagsMaxId}`,
-                  state.token
-                );
-                if (state.hashtagLoadSession !== mySession) return;
-
-                state.hashtagsMaxId = page.length ? page[page.length - 1].id : null;
-                const newPosts = extractHashtagPosts(page);
-
-                if (newPosts.length) {
-                  state.hashtagFeed = [...state.hashtagFeed, ...newPosts];
-                  // Append before the load-more button without touching existing posts
-                  const container = $('hashtags-posts');
-                  const loadBtn = container.querySelector('.load-more-btn');
-                  const tmp = document.createElement('div');
-                  tmp.innerHTML = newPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-                  while (tmp.firstChild) {
-                    if (loadBtn) container.insertBefore(tmp.firstChild, loadBtn);
-                    else container.appendChild(tmp.firstChild);
-                  }
-                  setTimeout(checkInfiniteScroll, 100);
-                }
-
-                if (!page.length || page.length < 40) return; // end of timeline
-              } catch (e) {
-                return; // background failure is silent
-              }
-            }
-          })();
-        }
-
+        renderFilteredPosts('hashtags', display);
       } catch (err) {
-        setLoading('hashtags', false);
-        setError('hashtags', `Failed to load hashtags: ${err.message}`);
-        console.error(err);
+        setError('hashtags', "Failed to load hashtags feed: " + err.message);
       }
-    }
-
-    function renderHashtagPosts(tags, posts) {
-      // Demo mode only: posts is a flat array with _tag property
-      const allPosts = posts.map(p => ({ ...p, _sourceTags: [p._tag] }));
-      allPosts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-      $('hashtags-posts').innerHTML = allPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-    }
-
-    function renderPostList(containerId, posts) {
-      $(containerId).innerHTML = posts.map(p => renderPost(p)).join('');
+      setLoading('hashtags', false);
     }
 
     function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -4170,12 +4146,76 @@
     const composeState = {
       mediaFiles: [],
       mediaUrls: [],
+      mediaDescriptions: [],
       sidebarMediaFiles: [],
       sidebarMediaUrls: [],
+      sidebarMediaDescriptions: [],
       replyToId: null,
       replyToAcct: null,
-      quoteId: null
+      quoteId: null,
+      activeAltIndex: -1,
+      activeAltSuffix: ''
     };
+
+    function openAltModal(url, index, suffix, currentDesc) {
+      composeState.activeAltIndex = index;
+      composeState.activeAltSuffix = suffix;
+
+      $('alt-modal-img').src = url;
+      $('alt-modal-input').value = currentDesc || '';
+      $('alt-modal-count').textContent = 1500 - (currentDesc || '').length;
+
+      $('alt-text-modal').style.display = 'flex';
+      $('alt-modal-input').focus();
+    }
+
+    function closeAltModal() {
+      $('alt-text-modal').style.display = 'none';
+      composeState.activeAltIndex = -1;
+      composeState.activeAltSuffix = '';
+    }
+
+    $('alt-modal-close').addEventListener('click', closeAltModal);
+    $('alt-modal-cancel').addEventListener('click', closeAltModal);
+
+    $('alt-modal-input').addEventListener('input', (e) => {
+      let val = e.target.value;
+      if (val.length > 1500) {
+        e.target.value = val.slice(0, 1500);
+        val = e.target.value;
+      }
+      $('alt-modal-count').textContent = 1500 - val.length;
+    });
+
+    $('alt-modal-save').addEventListener('click', () => {
+      const idx = composeState.activeAltIndex;
+      const sfx = composeState.activeAltSuffix;
+      const desc = $('alt-modal-input').value.trim();
+
+      if (idx > -1) {
+        if (sfx === '-sidebar') {
+          composeState.sidebarMediaDescriptions[idx] = desc;
+        } else {
+          composeState.mediaDescriptions[idx] = desc;
+        }
+
+        // Update alt button UI in preview
+        const preview = $('compose-media-preview' + sfx);
+        if (preview && preview.children[idx]) {
+          const btn = preview.children[idx].querySelector('.compose-media-item-alt-btn');
+          if (btn) {
+            if (desc) {
+              btn.classList.remove('missing');
+              btn.textContent = 'ALT';
+            } else {
+              btn.classList.add('missing');
+              btn.textContent = 'ALT';
+            }
+          }
+        }
+      }
+      closeAltModal();
+    });
 
     function resetReplyState() {
       composeState.replyToId = null;
@@ -4355,6 +4395,7 @@
       $('compose-visibility').value = 'public';
       composeState.mediaFiles = [];
       composeState.mediaUrls = [];
+      composeState.mediaDescriptions = [];
       $('compose-media-preview').innerHTML = '';
       resetReplyState();
       updateCharCount();
@@ -4438,6 +4479,7 @@
         composeState.mediaFiles.push(file);
         const url = URL.createObjectURL(file);
         composeState.mediaUrls.push(url);
+        composeState.mediaDescriptions.push(''); // Empty desc to start
 
         const preview = $('compose-media-preview');
         const item = document.createElement('div');
@@ -4448,6 +4490,14 @@
         mediaEl.src = url;
         if (isVideo) mediaEl.muted = true;
 
+        const altBtn = document.createElement('button');
+        altBtn.className = 'compose-media-item-alt-btn missing';
+        altBtn.textContent = 'ALT';
+        altBtn.onclick = () => {
+          const idx = composeState.mediaUrls.indexOf(url);
+          openAltModal(url, idx, '', composeState.mediaDescriptions[idx]);
+        };
+
         const removeBtn = document.createElement('button');
         removeBtn.className = 'compose-media-remove';
         removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
@@ -4457,12 +4507,14 @@
             URL.revokeObjectURL(url);
             composeState.mediaFiles.splice(index, 1);
             composeState.mediaUrls.splice(index, 1);
+            composeState.mediaDescriptions.splice(index, 1);
           }
           item.remove();
           updateCharCount();
         };
 
         item.appendChild(mediaEl);
+        if (!isVideo) item.appendChild(altBtn);
         item.appendChild(removeBtn);
         preview.appendChild(item);
       });
@@ -4716,6 +4768,7 @@
           composeState.sidebarMediaFiles.push(file);
           const url = URL.createObjectURL(file);
           composeState.sidebarMediaUrls.push(url);
+          composeState.sidebarMediaDescriptions.push(''); // Empty desc to start
 
           const preview = $('compose-media-preview' + suffix);
           const item = document.createElement('div');
@@ -4726,6 +4779,14 @@
           mediaEl.src = url;
           if (isVideo) mediaEl.muted = true;
 
+          const altBtn = document.createElement('button');
+          altBtn.className = 'compose-media-item-alt-btn missing';
+          altBtn.textContent = 'ALT';
+          altBtn.onclick = () => {
+            const idx = composeState.sidebarMediaUrls.indexOf(url);
+            openAltModal(url, idx, suffix, composeState.sidebarMediaDescriptions[idx]);
+          };
+
           const removeBtn = document.createElement('button');
           removeBtn.className = 'compose-media-remove';
           removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
@@ -4735,12 +4796,14 @@
               URL.revokeObjectURL(url);
               composeState.sidebarMediaFiles.splice(index, 1);
               composeState.sidebarMediaUrls.splice(index, 1);
+              composeState.sidebarMediaDescriptions.splice(index, 1);
             }
             item.remove();
             updateSidebarCharCount();
           };
 
           item.appendChild(mediaEl);
+          if (!isVideo) item.appendChild(altBtn);
           item.appendChild(removeBtn);
           preview.appendChild(item);
         });
@@ -4770,9 +4833,12 @@
 
         try {
           const mediaIds = [];
-          for (const file of composeState.sidebarMediaFiles) {
+          for (let i = 0; i < composeState.sidebarMediaFiles.length; i++) {
+            const file = composeState.sidebarMediaFiles[i];
+            const desc = composeState.sidebarMediaDescriptions[i];
             const formData = new FormData();
             formData.append('file', file);
+            if (desc) formData.append('description', desc);
 
             const res = await fetch(`https://${state.server}/api/v1/media`, {
               method: 'POST',
@@ -4816,6 +4882,7 @@
           composeState.sidebarMediaFiles = [];
           composeState.sidebarMediaUrls.forEach(url => URL.revokeObjectURL(url));
           composeState.sidebarMediaUrls = [];
+          composeState.sidebarMediaDescriptions = [];
           $('compose-media-preview' + suffix).innerHTML = '';
           resetReplyState();
           updateSidebarCharCount();
@@ -4864,9 +4931,12 @@
       try {
         // Upload media first if any
         const mediaIds = [];
-        for (const file of composeState.mediaFiles) {
+        for (let i = 0; i < composeState.mediaFiles.length; i++) {
+          const file = composeState.mediaFiles[i];
+          const desc = composeState.mediaDescriptions[i];
           const formData = new FormData();
           formData.append('file', file);
+          if (desc) formData.append('description', desc);
 
           const res = await fetch(`https://${state.server}/api/v1/media`, {
             method: 'POST',
@@ -5016,18 +5086,67 @@
     });
 
     async function handleLoadMore(btn) {
-      const feed = btn.dataset.feed;
+      const feed = state.activeTab;
+
+      let maxIdToUse = state.homeMaxId;
+      if (feed === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+        maxIdToUse = state.hashtagMaxId;
+      }
+      if (!maxIdToUse) return;
+
       btn.disabled = true;
       btn.textContent = 'Loading...';
 
       try {
-        if (feed === 'home') {
-          await loadMoreHome(btn);
-        } else if (feed === 'following') {
-          await loadMoreFollowing(btn);
-        } else if (feed === 'hashtags') {
-          await loadMoreHashtags(btn);
+        let newPosts = [];
+        if (feed === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+          const tag = encodeURIComponent(state.selectedHashtagFilter);
+          newPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40&max_id=${maxIdToUse}`, state.token);
+          newPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
+          state.hashtagFeed = [...(state.hashtagFeed || []), ...newPosts];
+          state.hashtagMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
+          maxIdToUse = state.hashtagMaxId;
+        } else {
+          newPosts = await apiGet(`/api/v1/timelines/home?limit=40&max_id=${state.homeMaxId}`, state.token);
+
+          const followedTagNames = new Set((state.followedHashtags || []).map(t => t.name.toLowerCase()));
+          newPosts.forEach(p => {
+            p._sourceTags = [];
+            const inner = p.reblog || p;
+            if (inner.tags && Array.isArray(inner.tags)) {
+              inner.tags.forEach(t => {
+                if (followedTagNames.has(t.name.toLowerCase())) p._sourceTags.push(t.name.toLowerCase());
+              });
+            }
+          });
+
+          state.homeFeed = [...(state.homeFeed || []), ...newPosts];
+          state.homeMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
+          maxIdToUse = state.homeMaxId;
         }
+
+        let display = newPosts;
+        if (feed === 'following' && !state.demoMode) display = await filterForFollowing(newPosts);
+        else if (feed === 'hashtags') {
+          if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+            display = newPosts;
+          } else {
+            display = newPosts.filter(p => p._sourceTags && p._sourceTags.length > 0);
+          }
+        }
+
+        const html = display.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
+        const container = $(`${feed}-posts`);
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        while (tmp.firstChild) container.insertBefore(tmp.firstChild, btn);
+
+        btn.disabled = false;
+        btn.textContent = 'Load More';
+
+        if (!maxIdToUse) btn.remove();
+        else setTimeout(checkInfiniteScroll, 100);
+
       } catch (err) {
         showToast('Failed to load more: ' + err.message);
         btn.disabled = false;
@@ -5035,141 +5154,6 @@
       }
     }
 
-    async function loadMoreHome(btn) {
-      if (!state.homeMaxId) return;
-
-      const newPosts = await apiGet(`/api/v1/timelines/home?limit=40&max_id=${state.homeMaxId}`, state.token);
-
-      const followedTags = state.followedHashtags || [];
-      const followedTagNames = new Set(followedTags.map(t => t.name.toLowerCase()));
-
-      newPosts.forEach(p => {
-        p._sourceTags = [];
-        const inner = p.reblog || p;
-        if (inner.tags && Array.isArray(inner.tags)) {
-          inner.tags.forEach(t => {
-            if (followedTagNames.has(t.name.toLowerCase())) {
-              p._sourceTags.push(t.name.toLowerCase());
-            }
-          });
-        }
-      });
-
-      const allPosts = [...(state.homeFeed || []), ...newPosts];
-      state.homeFeed = allPosts;
-
-      if (!newPosts.length) {
-        renderHomePosts(allPosts, false); // false = no more button
-      } else {
-        renderHomePosts(allPosts, true);
-      }
-    }
-
-    async function loadMoreFollowing(btn) {
-      if (!state.followingMaxId) return;
-
-      const newPosts = await apiGet(`/api/v1/timelines/home?limit=40&max_id=${state.followingMaxId}`, state.token);
-      if (!newPosts.length) {
-        renderFollowingPosts(state.followingFeed || [], false);
-        return;
-      }
-
-      const knownFollowing = new Set();
-      const knownNotFollowing = new Set();
-
-      if (state.account && state.account.id) {
-        knownFollowing.add(state.account.id);
-      }
-
-      const idsToCheck = new Set();
-      newPosts.forEach(p => {
-        const authorId = (p.reblog || p).account.id;
-        if (!knownFollowing.has(authorId) && !knownNotFollowing.has(authorId)) {
-          idsToCheck.add(authorId);
-        }
-      });
-
-      const idsArr = Array.from(idsToCheck);
-
-      if (idsArr.length > 0) {
-        for (let i = 0; i < idsArr.length; i += 40) {
-          const chunk = idsArr.slice(i, i + 40);
-          const relPath = '/api/v1/accounts/relationships?' + chunk.map(id => `id[]=${id}`).join('&');
-          try {
-            const relationships = await apiGet(relPath, state.token);
-            relationships.forEach(r => {
-              if (r.following) knownFollowing.add(r.id);
-              else knownNotFollowing.add(r.id);
-            });
-          } catch (err) {
-            console.error("Relationships fetch failed", err);
-            chunk.forEach(id => knownFollowing.add(id));
-          }
-        }
-      }
-
-      const filteredNewPosts = newPosts.filter(p => {
-        const inner = p.reblog || p;
-        return knownFollowing.has(inner.account.id);
-      });
-
-      state.followingMaxId = newPosts[newPosts.length - 1].id;
-
-      const allPosts = [...(state.followingFeed || []), ...filteredNewPosts];
-      state.followingFeed = allPosts;
-      renderFollowingPosts(allPosts);
-    }
-
-    async function loadMoreHashtags(btn) {
-      if (!state.hashtagsMaxId) { btn.remove(); return; }
-
-      const tags = state.followedHashtags || [];
-      if (!tags.length) { btn.remove(); return; }
-
-      const followedTagNames = new Set(tags.map(t => t.name.toLowerCase()));
-      const requiredTags = state.selectedHashtagFilter === 'all'
-        ? followedTagNames
-        : new Set([state.selectedHashtagFilter]);
-
-      btn.disabled = true;
-      btn.textContent = 'Loading...';
-
-      try {
-        const page = await apiGet(
-          `/api/v1/timelines/home?limit=40&max_id=${state.hashtagsMaxId}`,
-          state.token
-        );
-
-        if (!page.length) { btn.remove(); return; }
-
-        state.hashtagsMaxId = page[page.length - 1].id;
-
-        const newPosts = [];
-        page.forEach(p => {
-          const inner = p.reblog || p;
-          if (inner.tags && Array.isArray(inner.tags)) {
-            const matchingTags = inner.tags
-              .filter(t => requiredTags.has(t.name.toLowerCase()))
-              .map(t => t.name.toLowerCase());
-            if (matchingTags.length) newPosts.push({ ...p, _sourceTags: matchingTags });
-          }
-        });
-
-        state.hashtagFeed = [...(state.hashtagFeed || []), ...newPosts];
-        const allPosts = state.hashtagFeed;
-
-        const hasMore = page.length >= 40;
-        const html = allPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-        $('hashtags-posts').innerHTML = html + (hasMore
-          ? `<button class="load-more-btn" data-feed="hashtags">Load More</button>`
-          : '');
-        setTimeout(checkInfiniteScroll, 100);
-      } catch (err) {
-        btn.disabled = false;
-        btn.textContent = 'Load More';
-        console.error('Load more hashtags failed:', err);
-      }
-    }
 
     async function handleFollowToggle(btn) {
       if (btn.disabled) return;
