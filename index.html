@@ -4772,7 +4772,6 @@
           });
           if (newPosts.length > 0) {
             state.homeFeed = [...newPosts, ...state.homeFeed];
-            renderTrendingNowFromState();
           }
         }
 
@@ -6948,10 +6947,11 @@
     });
 
     async function handleLoadMore(btn) {
-      const feed = state.activeTab;
+      const tab = state.activeTab;
+      const mode = (tab === 'home') ? (state.homeFilter || 'all') : 'trending';
 
       let maxIdToUse = state.homeMaxId;
-      if (feed === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+      if (mode === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
         maxIdToUse = state.hashtagMaxId;
       }
       if (!maxIdToUse) return;
@@ -6961,7 +6961,7 @@
 
       try {
         let newPosts = [];
-        if (feed === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+        if (mode === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
           const tag = encodeURIComponent(state.selectedHashtagFilter);
           newPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40&max_id=${maxIdToUse}`, state.token);
           newPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
@@ -6985,21 +6985,16 @@
           state.homeFeed = [...(state.homeFeed || []), ...newPosts];
           state.homeMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
           maxIdToUse = state.homeMaxId;
-          renderTrendingNowFromState();
         }
 
         let display = newPosts;
-        if (feed === 'following' && !state.demoMode) display = await filterForFollowing(newPosts);
-        else if (feed === 'hashtags') {
-          if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
-            display = newPosts;
-          } else {
-            display = newPosts.filter(p => p._sourceTags && p._sourceTags.length > 0);
-          }
+        if (mode === 'following' && !state.demoMode) display = await filterForFollowing(newPosts);
+        else if (mode === 'hashtags' && (!state.selectedHashtagFilter || state.selectedHashtagFilter === 'all')) {
+          display = newPosts.filter(p => p._sourceTags && p._sourceTags.length > 0);
         }
 
         const html = display.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-        const container = $(`${feed}-posts`);
+        const container = $(`${tab}-posts`);
         const tmp = document.createElement('div');
         tmp.innerHTML = html;
         while (tmp.firstChild) container.insertBefore(tmp.firstChild, btn);
