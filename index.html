@@ -313,6 +313,75 @@
       overflow-y: auto;
     }
 
+    /* Trending Now panel (desktop, aligned with compose sidebar) */
+    .trending-now {
+      position: fixed;
+      bottom: 20px;
+      /* left and width are set via JS to match .compose-sidebar */
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      color: var(--text);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      z-index: 900;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .trending-header {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .trending-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .trending-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      color: var(--text);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background var(--trans), color var(--trans);
+      min-width: 0;
+    }
+
+    .trending-item:hover {
+      background: var(--surface);
+      color: var(--accent2);
+    }
+
+    .trending-tag {
+      color: var(--accent);
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .trending-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-left: 8px;
+      white-space: nowrap;
+    }
+
     .compose-sidebar-body {
       padding: 16px;
       display: flex;
@@ -341,6 +410,10 @@
 
       #compose-btn {
         display: flex;
+      }
+
+      .trending-now {
+        display: none;
       }
     }
 
@@ -2541,6 +2614,12 @@
       </div>
     </aside>
 
+    <!-- Trending Now panel, aligned with compose sidebar and pinned to screen bottom -->
+    <section id="trending-now" class="trending-now" aria-label="Trending now">
+      <div class="trending-header">Trending now</div>
+      <div class="trending-list"></div>
+    </section>
+
     <!-- Main Feed Area -->
     <div class="main-wrapper">
       <header class="app-header">
@@ -2803,6 +2882,7 @@
       knownNotFollowing: new Set(),
       activeTab: 'home',
       demoMode: false,
+      trendingReady: false,
     };
 
     /* ─── Utility ─── */
@@ -3696,6 +3776,7 @@
           });
           if (newPosts.length > 0) {
             state.homeFeed = [...newPosts, ...state.homeFeed];
+            renderTrendingNowFromState();
           }
         }
 
@@ -3803,6 +3884,7 @@
       if (state.demoMode) {
         if (!state.homeFeed) state.homeFeed = getDemoHomePosts();
         if (!state.followedHashtags) state.followedHashtags = getDemoHashtagData().tags;
+        renderTrendingNowFromState();
         return;
       }
       if (!state.homeFeed) {
@@ -3825,6 +3907,97 @@
 
         state.homeFeed = posts;
         state.homeMaxId = posts.length ? posts[posts.length - 1].id : null;
+        renderTrendingNowFromState();
+      }
+    }
+
+    // Fetch and render trending hashtags over the last 2 days via /api/v1/trends
+    async function renderTrendingNowFromState() {
+      const panel = $('trending-now');
+      if (!panel) return;
+      const list = panel.querySelector('.trending-list');
+      if (!list) return;
+
+      // In demo mode, fall back to local demo hashtag data
+      if (state.demoMode) {
+        const demo = getDemoHashtagData();
+        const counts = new Map();
+        (demo.posts || []).forEach(p => {
+          if (p._tag) {
+            const name = String(p._tag).toLowerCase();
+            counts.set(name, (counts.get(name) || 0) + 1);
+          }
+        });
+        const entries = Array.from(counts.entries()).map(([name, count]) => ({ name, count }));
+        entries.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+        if (!entries.length) {
+          state.trendingReady = false;
+          return;
+        }
+        list.innerHTML = entries.slice(0, 5).map(t => `
+          <a href="#" class="trending-item hashtag">
+            <span class="trending-tag">#${t.name}</span>
+            <span class="trending-count">${t.count} posts</span>
+          </a>
+        `).join('');
+        state.trendingReady = true;
+        positionTrendingNow();
+        return;
+      }
+
+      if (!state.server) {
+        state.trendingReady = false;
+        return;
+      }
+
+      try {
+        // Mastodon: /api/v1/trends/tags returns tags with a history array (most recent first)
+        const tags = await apiGet('/api/v1/trends/tags?limit=10', state.token);
+        if (!Array.isArray(tags) || !tags.length) {
+          state.trendingReady = false;
+          return;
+        }
+
+        const now = Date.now();
+        const cutoff = now - 2 * 24 * 60 * 60 * 1000; // last 2 days
+        const results = [];
+
+        tags.forEach(tag => {
+          if (!tag || !tag.name || !Array.isArray(tag.history)) return;
+
+          let count2d = 0;
+          tag.history.forEach(entry => {
+            if (!entry || !entry.day) return;
+            const dayTs = parseInt(entry.day, 10) * 1000;
+            if (!Number.isFinite(dayTs)) return;
+            if (dayTs >= cutoff) {
+              const uses = parseInt(entry.uses, 10) || 0;
+              count2d += uses;
+            }
+          });
+
+          if (count2d > 0) {
+            results.push({ name: tag.name.toLowerCase(), count: count2d });
+          }
+        });
+
+        results.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+        if (!results.length) {
+          state.trendingReady = false;
+          return;
+        }
+
+        list.innerHTML = results.slice(0, 5).map(t => `
+          <a href="#" class="trending-item hashtag">
+            <span class="trending-tag">#${t.name}</span>
+            <span class="trending-count">${t.count} posts</span>
+          </a>
+        `).join('');
+        state.trendingReady = true;
+        positionTrendingNow();
+      } catch (err) {
+        state.trendingReady = false;
       }
     }
 
@@ -5059,7 +5232,11 @@
       const hashtagLink = e.target.closest('a.hashtag');
       if (hashtagLink) {
         e.preventDefault();
-        const tag = hashtagLink.textContent.replace('#', '').toLowerCase();
+        // Prefer the inner .trending-tag text for Trending panel links,
+        // otherwise fall back to the anchor text (post hashtags).
+        const tagSourceEl = hashtagLink.querySelector('.trending-tag');
+        const rawText = tagSourceEl ? tagSourceEl.textContent : hashtagLink.textContent;
+        const tag = rawText.replace(/^#/, '').split(/\s+/)[0].toLowerCase();
 
         // Ensure clicked tag exists in our dropdown state list temporarily if missing
         let tags = state.followedHashtags || [];
@@ -5123,6 +5300,7 @@
           state.homeFeed = [...(state.homeFeed || []), ...newPosts];
           state.homeMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
           maxIdToUse = state.homeMaxId;
+          renderTrendingNowFromState();
         }
 
         let display = newPosts;
@@ -5454,6 +5632,27 @@
 
       showScreen('login-screen');
     }
+
+    /* Keep Trending Now panel aligned with the compose sidebar on desktop */
+    function positionTrendingNow() {
+      const sidebar = document.querySelector('.compose-sidebar');
+      const trending = document.getElementById('trending-now');
+      if (!sidebar || !trending) return;
+
+      // Hide when the sidebar is hidden (mobile breakpoint)
+      if (window.innerWidth <= 900 || getComputedStyle(sidebar).display === 'none' || !state.trendingReady) {
+        trending.style.display = 'none';
+        return;
+      }
+
+      const rect = sidebar.getBoundingClientRect();
+      trending.style.display = 'flex';
+      trending.style.width = rect.width + 'px';
+      trending.style.left = rect.left + 'px';
+    }
+
+    window.addEventListener('resize', positionTrendingNow);
+    window.addEventListener('load', positionTrendingNow);
 
     /* Network status */
     window.addEventListener('offline', () => $('offline-bar').classList.add('visible'));
