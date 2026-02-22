@@ -2711,6 +2711,30 @@
       border-color: var(--accent);
     }
 
+    .hashtag-search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .hashtag-search-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px 8px 32px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: var(--font-body);
+      transition: border-color var(--trans);
+    }
+
+    .hashtag-search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
     .compose-footer {
       display: flex;
       align-items: center;
@@ -3531,12 +3555,21 @@
           <div id="following-posts"></div>
         </div>
 
-        <!-- Hashtags Tab -->
         <div class="tab-panel" id="panel-hashtags" role="tabpanel">
-          <div class="hashtag-filter-bar" id="hashtag-filter-bar" style="display:none;">
-            <select class="hashtag-filter-select" id="hashtag-filter-select">
-              <option value="all">All Followed Hashtags</option>
-            </select>
+          <div class="hashtag-filter-bar" id="hashtag-filter-bar">
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; width: 100%;">
+              <select class="hashtag-filter-select" id="hashtag-filter-select">
+                <option value="all">All Followed Hashtags</option>
+              </select>
+              <div class="hashtag-search-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none;">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" id="hashtag-search-input" class="hashtag-search-input" placeholder="Search hashtag..." autocomplete="off" />
+              </div>
+              <button id="hashtag-follow-btn" class="profile-follow-btn" style="display:none; margin-top:0; height:36px;"></button>
+            </div>
           </div>
           <div class="feed-loading" id="hashtags-loading" style="display:none;">
             <div class="skeleton-posts" id="hashtags-skeleton"></div>
@@ -5129,23 +5162,50 @@
       $('hashtags-posts').innerHTML = '';
 
       try {
+        if (!state.demoMode) {
+          const tags = await apiGet('/api/v1/followed_tags?limit=100', state.token).catch(() => []);
+          state.followedHashtags = tags;
+        }
         await ensureHomeFeedLoaded();
         const tags = state.followedHashtags || [];
 
-        // Build filter dropdown if needed
+        // Build filter dropdown
         const filterSelect = $('hashtag-filter-select');
-        if (tags.length > 0 && filterSelect.options.length <= 1) {
-          filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
-          const sortedTags = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-          sortedTags.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t.name.toLowerCase();
-            opt.textContent = '#' + t.name;
-            if (state.selectedHashtagFilter === t.name.toLowerCase()) opt.selected = true;
-            filterSelect.appendChild(opt);
-          });
-          $('hashtag-filter-bar').style.display = 'flex';
-          filterSelect.value = state.selectedHashtagFilter || 'all';
+        filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
+        const sortedTags = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+
+        let found = state.selectedHashtagFilter === 'all';
+        sortedTags.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.name.toLowerCase();
+          opt.textContent = '#' + t.name;
+          if (state.selectedHashtagFilter === t.name.toLowerCase()) {
+            opt.selected = true;
+            found = true;
+          }
+          filterSelect.appendChild(opt);
+        });
+
+        // Add searched tag if not following
+        if (!found && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+          const opt = document.createElement('option');
+          opt.value = state.selectedHashtagFilter;
+          opt.textContent = '#' + state.selectedHashtagFilter;
+          opt.selected = true;
+          filterSelect.appendChild(opt);
+        }
+
+        // Update Follow Button
+        const followBtn = $('hashtag-follow-btn');
+        if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+          const isFollowing = tags.some(t => t.name.toLowerCase() === state.selectedHashtagFilter);
+          followBtn.style.display = 'block';
+          followBtn.textContent = isFollowing ? 'Following' : `Follow #${state.selectedHashtagFilter}`;
+          followBtn.dataset.tag = state.selectedHashtagFilter;
+          followBtn.dataset.following = isFollowing ? 'true' : 'false';
+          followBtn.classList.toggle('following', isFollowing);
+        } else {
+          followBtn.style.display = 'none';
         }
 
         let display = [];
@@ -6645,7 +6705,29 @@
     setupContentEditable($('compose-textarea'));
     setupContentEditable($('compose-textarea-sidebar'));
 
+    function setupHashtagTab() {
+      const input = $('hashtag-search-input');
+      if (input) {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const val = input.value.trim().replace(/^#/, '');
+            if (val) {
+              state.selectedHashtagFilter = val.toLowerCase();
+              loadHashtagsTab();
+              input.value = '';
+            }
+          }
+        });
+      }
+
+      const followBtn = $('hashtag-follow-btn');
+      if (followBtn) {
+        followBtn.addEventListener('click', () => handleHashtagFollowToggle(followBtn));
+      }
+    }
+
     setupSidebarCompose();
+    setupHashtagTab();
 
 
     async function handlePost() {
@@ -6801,13 +6883,6 @@
         const rawText = tagSourceEl ? tagSourceEl.textContent : hashtagLink.textContent;
         const tag = rawText.replace(/^#/, '').split(/\s+/)[0].toLowerCase();
 
-        // Ensure clicked tag exists in our dropdown state list temporarily if missing
-        let tags = state.followedHashtags || [];
-        if (!tags.some(t => t.name.toLowerCase() === tag)) {
-          tags.push({ name: tag });
-          state.followedHashtags = tags;
-        }
-
         // Set the active filter state
         state.selectedHashtagFilter = tag;
 
@@ -6834,13 +6909,6 @@
       if (trendingTagLink) {
         e.preventDefault();
         const tag = trendingTagLink.dataset.trendingTag.toLowerCase();
-
-        // Ensure the tag is in our followed hashtags list temporarily
-        let followedTags = state.followedHashtags || [];
-        if (!followedTags.some(t => t.name.toLowerCase() === tag)) {
-          followedTags.push({ name: tag });
-          state.followedHashtags = followedTags;
-        }
 
         state.selectedHashtagFilter = tag;
 
@@ -6985,6 +7053,58 @@
         btn.classList.toggle('following', nowFollowing);
 
         showToast(nowFollowing ? 'Now following' : 'Unfollowed');
+      } catch (err) {
+        btn.textContent = originalText;
+        showToast('Action failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function handleHashtagFollowToggle(btn) {
+      if (btn.disabled) return;
+
+      const tag = btn.dataset.tag;
+      const isFollowing = btn.dataset.following === 'true';
+
+      btn.disabled = true;
+      const originalText = btn.textContent;
+      btn.textContent = '...';
+
+      try {
+        const endpoint = isFollowing
+          ? `/api/v1/tags/${tag}/unfollow`
+          : `/api/v1/tags/${tag}/follow`;
+
+        const res = await fetch(`https://${state.server}${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${state.token}`,
+            'Content-Type': 'application/json'
+          },
+          cache: 'no-store',
+        });
+
+        if (!res.ok) throw new Error('Failed to update hashtag follow status');
+
+        const tagInfo = await res.json();
+        const nowFollowing = tagInfo.following;
+
+        // Update button state
+        btn.dataset.following = nowFollowing ? 'true' : 'false';
+        btn.textContent = nowFollowing ? 'Following' : `Follow #${tag}`;
+        btn.classList.toggle('following', nowFollowing);
+
+        // Update state
+        if (nowFollowing) {
+          if (!state.followedHashtags.some(t => t.name.toLowerCase() === tag.toLowerCase())) {
+            state.followedHashtags.push(tagInfo);
+          }
+        } else {
+          state.followedHashtags = state.followedHashtags.filter(t => t.name.toLowerCase() !== tag.toLowerCase());
+        }
+
+        showToast(nowFollowing ? `Following #${tag}` : `Unfollowed #${tag}`);
       } catch (err) {
         btn.textContent = originalText;
         showToast('Action failed: ' + err.message);
