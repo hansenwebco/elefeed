@@ -2826,6 +2826,71 @@
       background: var(--surface2);
     }
 
+    /* ─── MENTION AUTOCOMPLETE ─── */
+    .mention-suggestions {
+      position: fixed;
+      z-index: 2000;
+      width: 280px;
+      max-height: 300px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .mention-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      gap: 12px;
+      cursor: pointer;
+      transition: background var(--trans);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mention-item:last-child {
+      border-bottom: none;
+    }
+
+    .mention-item:hover,
+    .mention-item.selected {
+      background: var(--surface2);
+    }
+
+    .mention-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .mention-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .mention-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mention-acct {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     /* ─── RESPONSIVE ─── */
     @media (max-width: 500px) {
       .header-wordmark {
@@ -3689,6 +3754,8 @@
     <div class="emoji-picker-body" id="emoji-picker-body"></div>
   </div>
 
+  <div class="mention-suggestions" id="mention-suggestions"></div>
+
   <!-- ALT TEXT MODAL -->
   <div id="alt-text-modal" class="compose-alt-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,13,15,0.85); align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
     <div style="background:var(--surface); width:min(500px, 100%); margin: 0 16px; border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,0.5);">
@@ -4184,13 +4251,14 @@
     };
 
     /* ─── API helpers ─── */
-    async function apiGet(path, token, server) {
+    async function apiGet(path, token, server, signal) {
       const base = server || state.server;
       let res;
       try {
         res = await fetch(`https://${base}${path}`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           cache: 'no-store',
+          signal: signal,
         });
       } catch (networkErr) {
         throw new Error(`Network error fetching ${path}. Are you online?`);
@@ -6006,6 +6074,188 @@
       updateCharCount();
       e.target.value = ''; // Reset input
     });
+
+    /* ─── MENTION AUTOCOMPLETE ─── */
+    let mentionActiveRequest = null;
+    let mentionCurrentQuery = '';
+    let mentionTargetTextarea = null;
+    let mentionSuggestions = [];
+    let mentionSelectedIndex = -1;
+
+    function initMentionAutocomplete() {
+      const t1 = $('compose-textarea');
+      const t2 = $('compose-textarea-sidebar');
+      const list = $('mention-suggestions');
+
+      [t1, t2].forEach(textarea => {
+        if (!textarea) return;
+        textarea.addEventListener('input', (e) => handleMentionInput(e, textarea));
+        textarea.addEventListener('keydown', (e) => handleMentionKeydown(e, textarea));
+        textarea.addEventListener('scroll', closeMentionSuggestions);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!list.contains(e.target)) closeMentionSuggestions();
+      });
+      window.addEventListener('scroll', closeMentionSuggestions, { passive: true });
+    }
+
+    function handleMentionInput(e, textarea) {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      if (range.startContainer.nodeType !== Node.TEXT_NODE) {
+        closeMentionSuggestions();
+        return;
+      }
+      const textBefore = range.startContainer.textContent.substring(0, range.startOffset);
+
+      // Match @username (only at start or after whitespace)
+      const match = textBefore.match(/(?:^|\s)@([a-zA-Z0-9_]*)$/);
+
+      if (match) {
+        mentionCurrentQuery = match[1];
+        mentionTargetTextarea = textarea;
+        fetchMentions(mentionCurrentQuery);
+      } else {
+        closeMentionSuggestions();
+      }
+    }
+
+    async function fetchMentions(q) {
+      if (mentionActiveRequest) mentionActiveRequest.abort();
+      const controller = new AbortController();
+      mentionActiveRequest = controller;
+
+      try {
+        const results = await apiGet(`/api/v1/accounts/search?q=${encodeURIComponent(q)}&limit=5&following=true`, state.token, null, controller.signal);
+        mentionSuggestions = results;
+        renderMentionSuggestions(results);
+      } catch (err) {
+        if (err.name !== 'AbortError') console.warn('Mention search failed:', err);
+      }
+    }
+
+    function renderMentionSuggestions(users) {
+      const list = $('mention-suggestions');
+      if (!users.length) {
+        closeMentionSuggestions();
+        return;
+      }
+
+      list.innerHTML = users.map((u, i) => `
+        <div class="mention-item ${i === 0 ? 'selected' : ''}" data-index="${i}" data-acct="${escapeHTML(u.acct)}">
+          <img src="${u.avatar_static || u.avatar}" class="mention-avatar" loading="lazy" />
+          <div class="mention-info">
+            <span class="mention-name">${renderCustomEmojis(u.display_name || u.username, u.emojis)}</span>
+            <span class="mention-acct">@${escapeHTML(u.acct)}</span>
+          </div>
+        </div>
+      `).join('');
+
+      list.style.display = 'flex';
+      mentionSelectedIndex = users.length > 0 ? 0 : -1;
+
+      // Position the list
+      const sel = window.getSelection();
+      if (sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        const rects = range.getClientRects();
+        if (rects.length > 0) {
+          const rect = rects[0];
+          let top = rect.bottom + 10;
+          let left = rect.left;
+
+          // Keep within viewport
+          if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
+          if (top + 300 > window.innerHeight) {
+            top = rect.top - (users.length * 52) - 10;
+          }
+
+          list.style.top = top + 'px';
+          list.style.left = Math.max(10, left) + 'px';
+        }
+      }
+
+      // Handle click on item
+      list.querySelectorAll('.mention-item').forEach(item => {
+        item.onmousedown = (e) => e.preventDefault(); // maintain focus
+        item.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          insertMention(item.dataset.acct);
+        };
+      });
+    }
+
+    function handleMentionKeydown(e, textarea) {
+      const list = $('mention-suggestions');
+      if (list.style.display === 'none') return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        moveMentionSelection(1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        moveMentionSelection(-1);
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        if (mentionSelectedIndex > -1) {
+          e.preventDefault();
+          const acct = mentionSuggestions[mentionSelectedIndex].acct;
+          insertMention(acct);
+        }
+      } else if (e.key === 'Escape') {
+        closeMentionSuggestions();
+      }
+    }
+
+    function moveMentionSelection(dir) {
+      const items = $('mention-suggestions').querySelectorAll('.mention-item');
+      if (!items.length) return;
+
+      items[mentionSelectedIndex]?.classList.remove('selected');
+      mentionSelectedIndex = (mentionSelectedIndex + dir + items.length) % items.length;
+      items[mentionSelectedIndex].classList.add('selected');
+      items[mentionSelectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    function insertMention(acct) {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+
+      // Find the @ and the following text to replace it
+      const node = range.startContainer;
+      const text = node.textContent;
+      const textBefore = text.substring(0, range.startOffset);
+      const match = textBefore.match(/@([a-zA-Z0-9_]*)$/);
+
+      if (match) {
+        const startPos = match.index + (match[0].startsWith('@') ? 0 : 1);
+        const endPos = range.startOffset;
+
+        const newRange = document.createRange();
+        newRange.setStart(node, startPos);
+        newRange.setEnd(node, endPos);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+
+        document.execCommand('insertText', false, `@${acct} `);
+      }
+
+      closeMentionSuggestions();
+      if (mentionTargetTextarea === $('compose-textarea')) updateCharCount();
+      else updateSidebarCharCount();
+    }
+
+    function closeMentionSuggestions() {
+      $('mention-suggestions').style.display = 'none';
+      mentionSelectedIndex = -1;
+      if (mentionActiveRequest) mentionActiveRequest.abort();
+      mentionActiveRequest = null;
+    }
+
+    initMentionAutocomplete();
 
     // Emoji picker logic
     let emojiPickerTarget = null;
