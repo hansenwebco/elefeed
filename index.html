@@ -701,6 +701,10 @@
       font-size: 22px;
       color: var(--text);
       letter-spacing: -0.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
 
     .header-wordmark span {
@@ -783,6 +787,9 @@
       padding: 10px 0;
       text-align: center;
       transition: all var(--trans);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .tab-btn:hover {
@@ -797,6 +804,7 @@
     .tab-btn-wrap {
       flex: 1;
       position: relative;
+      min-width: 0;
     }
 
     .tab-btn-label {
@@ -3082,6 +3090,19 @@
         font-size: 18px;
       }
 
+      .header-actions {
+        gap: 4px;
+      }
+
+      .tab-bar {
+        padding: 0 6px;
+      }
+
+      .tab-btn {
+        font-size: 12px;
+        padding: 9px 0;
+      }
+
       .post {
         padding: 16px 14px 16px 12px;
       }
@@ -5095,20 +5116,31 @@
     /* ─── TAB SWITCHING & DROPDOWN ─── */
     let tabSwitchTimeout = null;
     const filterLabels = { all: 'All', following: 'Followed Profiles', hashtags: 'Followed Hashtags' };
+    const filterLabelsMobile = { all: 'All', following: 'Following', hashtags: 'Hashtags' };
     const subtabLabels = { posts: 'Trending Posts', hashtags: 'Trending Hashtags', people: 'Trending People', news: 'Trending News' };
+    const subtabLabelsMobile = { posts: 'Trending', hashtags: 'Hashtags', people: 'People', news: 'News' };
+
+    function isMobileWidth() { return window.innerWidth <= 500; }
 
     function updateTabLabel(tab) {
       const btn = $(`tab-btn-${tab}`);
       if (!btn) return;
       const label = btn.querySelector('.tab-btn-label');
       const isActive = tab === state.activeTab;
+      const mobile = isMobileWidth();
       if (tab === 'feed') {
-        label.textContent = isActive ? `Home · ${filterLabels[state.feedFilter] || 'All'}` : 'Home';
+        if (isActive) {
+          const labels = mobile ? filterLabelsMobile : filterLabels;
+          label.textContent = `Home · ${labels[state.feedFilter] || 'All'}`;
+        } else {
+          label.textContent = 'Home';
+        }
       } else if (tab === 'explore') {
         if (isActive) {
           const activeSubtab = document.querySelector('#tab-dropdown-explore .tab-dropdown-item.active');
           const subtabName = activeSubtab ? activeSubtab.dataset.subtab : 'posts';
-          label.textContent = `Explore · ${subtabLabels[subtabName] || 'Trending Posts'}`;
+          const labels = mobile ? subtabLabelsMobile : subtabLabels;
+          label.textContent = `Explore · ${labels[subtabName] || (mobile ? 'Trending' : 'Trending Posts')}`;
         } else {
           label.textContent = 'Explore';
         }
@@ -5117,6 +5149,12 @@
       const chevron = btn.querySelector('.tab-chevron');
       if (chevron) chevron.style.display = isActive ? '' : 'none';
     }
+
+    // Re-compute tab labels on resize (mobile ↔ desktop label switch)
+    window.addEventListener('resize', (() => {
+      let raf;
+      return () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { updateTabLabel('feed'); updateTabLabel('explore'); }); };
+    })());
 
     function closeAllTabDropdowns() {
       document.querySelectorAll('.tab-dropdown').forEach(d => d.classList.remove('show'));
