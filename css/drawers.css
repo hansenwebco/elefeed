@@ -212,8 +212,15 @@
 .thread-back-bar-title { font-size: 14px; font-weight: 500; color: var(--text-muted); font-family: var(--font-mono); }
 .thread-inline-inner { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
 @media (min-width: 901px) {
-  body.thread-inline-active .feed-container { padding-bottom: 0; overflow: hidden; }
-  body.thread-inline-active .thread-inline-panel { height: calc(100svh - 97px); max-height: calc(100svh - 97px); }
+  body.thread-inline-active .feed-container {
+    padding-bottom: 0;
+    overflow: hidden;
+    min-height: calc(100dvh - 55px);
+  }
+  body.thread-inline-active .thread-inline-panel {
+    flex: 1;
+    min-height: 0;
+  }
 }
 
 /* Header & Close */
@@ -244,14 +251,11 @@
 
 /* Thread post variants */
 .thread-post-ancestor, .thread-post-focal, .thread-post-reply { position: relative; }
-.thread-post-ancestor { border-bottom: none; }
 .thread-post-ancestor::after {
   content: ''; position: absolute; left: 36px; bottom: 0;
   width: 2px; height: 12px; background: var(--border2);
   pointer-events: none; z-index: 2;
 }
-.thread-post-focal { background: rgba(155, 127, 255, 0.07); border-left: 3px solid var(--accent); border-bottom: 1px solid var(--border); }
-.thread-post-focal .post { padding-left: 15px; background: transparent; }
 .thread-post-reply { border-bottom: 1px solid var(--border); }
 
 .thread-reply-to {
@@ -262,11 +266,10 @@
 .thread-reply-to-acct { color: var(--accent2); font-weight: 500; }
 .thread-reply-children { border-left: 2px solid var(--border); margin-left: 36px; }
 
-/* Posts inside thread drawers */
+/* Posts inside thread drawers — keep feed styling, just remove clickable cursor */
 .thread-drawer-inner .post,
 .thread-inline-inner .post {
-  border-radius: 0; border-left: none; border-right: none;
-  border-top: none; border-bottom: none; cursor: default !important;
+  cursor: default;
 }
 
 /* Section & focal labels */

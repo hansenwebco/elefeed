@@ -253,6 +253,7 @@ export function renderThreadPost(status, variant) {
   const isBoost = !!status.reblog;
   const s = isBoost ? status.reblog : status;
   const boostBy = isBoost ? status.account : null;
+  const profileServer = escapeHTML(state.server || '');
 
   const { contentHTML, footerHTML } = _buildPostBody(status, s, 'thread-');
 
@@ -260,7 +261,7 @@ export function renderThreadPost(status, variant) {
     <div class="boost-divider">
       <div class="boost-text">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-        <span class="post-display-name" data-profile-id="${boostBy.id}" data-profile-server="">${renderCustomEmojis(boostBy.display_name || boostBy.username, boostBy.emojis)}</span> <span style="opacity:0.8;text-transform:uppercase;font-size:11px;font-weight:500;">boosted</span>
+        <span class="post-display-name" data-profile-id="${boostBy.id}" data-profile-server="${profileServer}">${renderCustomEmojis(boostBy.display_name || boostBy.username, boostBy.emojis)}</span> <span style="opacity:0.8;text-transform:uppercase;font-size:11px;font-weight:500;">boosted</span>
       </div>
       <div class="boost-divider-line"></div>
     </div>` : '';
@@ -270,17 +271,22 @@ export function renderThreadPost(status, variant) {
     variant === 'ancestor' ? 'thread-post-ancestor' :
                              'thread-post-reply';
 
+  /* Use the same context classes as feed posts */
+  let contextClass = '';
+  if (boostBy) contextClass = ' post--boost';
+  else if (s.in_reply_to_id) contextClass = ' post--reply';
+
   return `
     <div class="${variantClass}" data-status-id="${s.id}">
-      <article class="post" data-id="${status.id}">
+      <article class="post${contextClass}" data-id="${status.id}">
         ${boostLabelHTML}
         <div class="post-header">
-          <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="" style="cursor:pointer">
+          <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer">
             <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy"/>
           </div>
           <div class="post-meta">
             <div class="post-author">
-              <span class="post-display-name" data-profile-id="${s.account.id}" data-profile-server="">${renderCustomEmojis(s.account.display_name || s.account.username, s.account.emojis)}</span>
+              <span class="post-display-name" data-profile-id="${s.account.id}" data-profile-server="${profileServer}">${renderCustomEmojis(s.account.display_name || s.account.username, s.account.emojis)}</span>
               <span class="post-acct">@${escapeHTML(s.account.acct)}</span>
               <span class="post-time">${relativeTime(s.created_at)}</span>
             </div>

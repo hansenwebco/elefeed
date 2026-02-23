@@ -102,7 +102,6 @@ function renderThread(focalStatus, ancestors, descendants, container) {
     ancestors.forEach(s => parts.push(renderThreadPost(s, 'ancestor')));
   }
 
-  parts.push('<div class="thread-focal-label">This post</div>');
   parts.push(renderThreadPost(focalStatus, 'focal'));
 
   if (descendants.length > 0) {
