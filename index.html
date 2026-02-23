@@ -1563,13 +1563,13 @@
       left: 0;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       padding: 6px 0;
       display: none;
       flex-direction: column;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      z-index: 100;
-      min-width: 140px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 200;
+      min-width: 160px;
     }
 
     .boost-dropdown.show {
@@ -1836,9 +1836,9 @@
 
     .profile-close {
       position: absolute;
-      top: 14px;
-      right: 14px;
-      z-index: 10;
+      top: 12px;
+      right: 12px;
+      z-index: 100;
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 50%;
@@ -3473,7 +3473,7 @@
               <div class="avatar-btn" id="avatar-btn" title="Profile options">
                 <img id="user-avatar" src="" alt="" />
               </div>
-              <div class="boost-dropdown" id="profile-dropdown" style="right:0; left:auto; top:100%; margin-top:8px; min-width:150px; transform-origin: top right;">
+              <div class="boost-dropdown" id="profile-dropdown" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:150px; transform-origin: top right;">
                 <button class="boost-dropdown-item" id="profile-view-btn">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -3665,13 +3665,13 @@
     <!-- Profile Drawer -->
     <div class="profile-backdrop" id="profile-backdrop"></div>
     <aside class="profile-drawer" id="profile-drawer" aria-hidden="true">
+      <button class="profile-close" id="profile-close" aria-label="Close profile">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
       <div class="profile-drawer-inner">
-        <button class="profile-close" id="profile-close" aria-label="Close profile">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
         <div id="profile-content">
           <div class="profile-loading">
             <div class="spinner"></div>
