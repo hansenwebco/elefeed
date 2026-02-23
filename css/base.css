@@ -1,0 +1,114 @@
+/* ═══════════════════════════════════════════════
+   BASE — Reset, CSS Variables, Typography, Animations
+   ═══════════════════════════════════════════════
+   Global styles that apply everywhere. Edit the :root
+   variables to change the entire color scheme / typography.
+   ══════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Colors */
+  --bg: #0d0d0f;
+  --surface: #141418;
+  --surface2: #1c1c22;
+  --border: #2a2a34;
+  --border2: #3a3a48;
+  --text: #e8e8f0;
+  --text-muted: #8888a0;
+  --text-dim: #55556a;
+  --accent: #9b7fff;
+  --accent2: #c4b0ff;
+  --teal: #4ecdc4;
+  --danger: #ff6b6b;
+  --boost: #4ecdc4;
+  --fav: #ffd93d;
+
+  /* Typography */
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  /* Spacing & Shape */
+  --radius: 8px;
+  --radius-lg: 14px;
+  --trans: 140ms ease;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ─── Keyframe Animations ─── */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pinnedFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes starFavorite {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.3) rotate(72deg); }
+  100% { transform: scale(1) rotate(144deg); }
+}
+
+@keyframes starUnfavorite {
+  0% { transform: scale(1) rotate(144deg); }
+  50% { transform: scale(1.3) rotate(72deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; color: var(--fav); }
+  100% { opacity: 0.5; color: inherit; }
+}
+
+@keyframes bookmarkPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bellRing {
+  0%   { transform: rotate(0deg); }
+  15%  { transform: rotate(14deg); }
+  30%  { transform: rotate(-12deg); }
+  45%  { transform: rotate(10deg); }
+  60%  { transform: rotate(-8deg); }
+  75%  { transform: rotate(4deg); }
+  90%  { transform: rotate(-2deg); }
+  100% { transform: rotate(0deg); }
+}

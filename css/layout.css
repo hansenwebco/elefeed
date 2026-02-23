@@ -1,0 +1,286 @@
+/* ═══════════════════════════════════════════════
+   LAYOUT — Screen System, App Shell, Header, Tabs
+   ═══════════════════════════════════════════════
+   Controls the overall page structure: screen switching,
+   the sticky header, tab bar, feed container, and
+   responsive breakpoints.
+   ══════════════════════════════════════════════════ */
+
+/* ─── Screen System ─── */
+.screen {
+  display: none;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.screen.active { display: flex; }
+
+/* ─── App Screen (main layout) ─── */
+#app-screen {
+  background: var(--bg);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 24px;
+  padding: 0 20px;
+}
+
+.main-wrapper {
+  flex: 1;
+  max-width: 680px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Compose sidebar (desktop only) */
+.compose-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 94px 0 20px 0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 94px;
+  align-self: flex-start;
+  height: fit-content;
+  max-height: calc(100vh - 114px);
+  overflow-y: auto;
+}
+
+.compose-sidebar-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Hide compose button in header when sidebar is visible */
+#compose-btn { display: none; }
+
+@media (max-width: 900px) {
+  .compose-sidebar { display: none; }
+  #compose-btn { display: flex; }
+}
+
+@media (max-width: 500px) {
+  .main-wrapper { max-width: 100%; }
+  #app-screen { padding: 0; }
+}
+
+/* ─── Sticky Header ─── */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13, 13, 15, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 54px;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.header-wordmark {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.header-wordmark span { color: var(--accent); }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Icon & Avatar Buttons (reused across header + elsewhere) ─── */
+.icon-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  transition: all var(--trans);
+  flex-shrink: 0;
+}
+.icon-btn:hover {
+  background: var(--surface2);
+  border-color: var(--border);
+  color: var(--text);
+}
+.icon-btn svg { pointer-events: none; }
+
+.avatar-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--trans);
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+.avatar-btn:hover { border-color: var(--accent); }
+.avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ─── Tab Bar ─── */
+.tab-bar {
+  display: flex;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 12px;
+}
+
+.tab-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 10px 0;
+  text-align: center;
+  transition: all var(--trans);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab-btn:hover { color: var(--text-muted); }
+.tab-btn.active {
+  color: var(--accent2);
+  border-bottom-color: var(--accent);
+}
+
+.tab-btn-wrap {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+.tab-btn-label { pointer-events: none; }
+
+.tab-chevron {
+  display: inline-block;
+  margin-left: 3px;
+  font-size: 10px;
+  opacity: 0.6;
+  pointer-events: none;
+  transition: transform 0.15s ease;
+}
+.tab-btn.active .tab-chevron { opacity: 0.8; }
+.tab-btn.dropdown-open .tab-chevron { transform: rotate(180deg); }
+
+/* ─── Tab Dropdown ─── */
+.tab-dropdown {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.96);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 0;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  z-index: 300;
+  min-width: 170px;
+  opacity: 0;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.tab-dropdown.show {
+  display: flex;
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.tab-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background var(--trans);
+  white-space: nowrap;
+}
+.tab-dropdown-item:hover { background: var(--surface2); }
+.tab-dropdown-item.active { color: var(--accent2); }
+.tab-dropdown-item.active svg { color: var(--accent); }
+.tab-dropdown-item svg { color: var(--text-dim); flex-shrink: 0; }
+
+/* ─── Tab Pill Badge ─── */
+.tab-pill {
+  display: none;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  margin-left: 5px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  vertical-align: middle;
+  pointer-events: none;
+}
+.tab-pill.visible { display: inline-block; }
+
+/* ─── Feed Container ─── */
+.feed-container {
+  flex: 1;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 0 60px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─── Mobile Responsive ─── */
+@media (max-width: 500px) {
+  .header-wordmark { font-size: 18px; }
+  .header-actions { gap: 4px; }
+  .tab-bar { padding: 0 6px; }
+  .tab-btn { font-size: 12px; padding: 9px 0; }
+}
