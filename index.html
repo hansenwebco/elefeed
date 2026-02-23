@@ -44,9 +44,9 @@
       --trans: 140ms ease;
     }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    /* scroll-behavior: smooth removed from html — it animates programmatic
+       scrollTo() calls and fights with native scroll anchoring.
+       Use behavior:'smooth' on individual scrollTo() calls instead. */
 
     body {
       background: var(--bg);
@@ -855,6 +855,29 @@
       display: block;
     }
 
+    /* ─── TAB PILL BADGE ─── */
+    .tab-pill {
+      display: none;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 5px;
+      margin-left: 5px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 16px;
+      text-align: center;
+      vertical-align: middle;
+      pointer-events: none;
+    }
+
+    .tab-pill.visible {
+      display: inline-block;
+    }
+
     /* ─── STATUS MESSAGES ─── */
     .feed-status {
       padding: 48px 20px;
@@ -960,6 +983,7 @@
 
     /* ─── POST CARD ─── */
     .post {
+      overflow-anchor: auto;
       border-bottom: 1px solid var(--border);
       border-left: 2px solid var(--border2);
       padding: 18px 20px 18px 18px;
@@ -3496,13 +3520,13 @@
 
         <div class="tab-bar" role="tablist">
           <button class="tab-btn active" role="tab" data-tab="home" aria-selected="true">
-            Home
+            Home<span class="tab-pill" id="pill-home"></span>
           </button>
           <button class="tab-btn" role="tab" data-tab="following" aria-selected="false">
-            Following
+            Following<span class="tab-pill" id="pill-following"></span>
           </button>
           <button class="tab-btn" role="tab" data-tab="hashtags" aria-selected="false">
-            Hashtags
+            Hashtags<span class="tab-pill" id="pill-hashtags"></span>
           </button>
           <button class="tab-btn" role="tab" data-tab="trending" aria-selected="false">
             Trending
@@ -3856,6 +3880,7 @@
       knownFollowing: new Set(),
       knownNotFollowing: new Set(),
       activeTab: 'home',
+      pendingPosts: { home: [], following: [], hashtags: [] },
       demoMode: false,
       trendingPostsLoaded: false,
       trendingHashtagsLoaded: false,
@@ -4622,6 +4647,8 @@
 
         state.activeTab = tab;
 
+        // Pill badges are always visible per-tab; no need to toggle on switch
+
         // Debounce tab loads to prevent rapid-fire API calls
         clearTimeout(tabSwitchTimeout);
         tabSwitchTimeout = setTimeout(() => {
@@ -4654,6 +4681,10 @@
     /* ─── Refresh button & Logo click ─── */
     const doRefresh = () => {
       const tab = state.activeTab;
+      // Clear any buffered posts on manual refresh
+      const feedKey = (tab === 'following' || tab === 'hashtags') ? tab : 'home';
+      state.pendingPosts[feedKey] = [];
+      updateTabPill(feedKey);
       if (tab === 'home') loadHomeTab();
       else if (tab === 'following') loadFollowingTab();
       else if (tab === 'hashtags') loadHashtagsTab();
@@ -4698,6 +4729,7 @@
       state.hashtagFeed = null;
       state.followedHashtags = null;
       state.activeTab = 'home';
+      state.pendingPosts = { home: [], following: [], hashtags: [] };
       state.trendingPostsLoaded = false;
       state.trendingHashtagsLoaded = false;
       state.trendingPeopleLoaded = false;
@@ -4789,31 +4821,127 @@
 
         if (!display.length) return;
 
-        const html = display.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-        const container = $(`${feed}-posts`);
-        if (!container) return;
-
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-
-        const currentScroll = window.scrollY || document.documentElement.scrollTop;
-        const originalHeight = document.documentElement.scrollHeight;
-
-        while (tmp.lastChild) {
-          container.insertBefore(tmp.lastChild, container.firstChild);
-        }
-
-        if (currentScroll > 50) {
-          requestAnimationFrame(() => {
-            const newHeight = document.documentElement.scrollHeight;
-            window.scrollTo(0, currentScroll + (newHeight - originalHeight));
-          });
-        }
+        // Buffer new posts and show the banner instead of inserting directly
+        const feedKey = (feed === 'following' || feed === 'hashtags') ? feed : 'home';
+        state.pendingPosts[feedKey] = [...display, ...(state.pendingPosts[feedKey] || [])];
+        updateTabPill(feedKey);
 
       } catch (err) {
         console.warn('Silent polling failed:', err.message);
       }
     }
+
+    /* ─── Tab pill helpers ─── */
+    function activeFeedKey() {
+      const tab = state.activeTab;
+      return (tab === 'following' || tab === 'hashtags') ? tab : 'home';
+    }
+
+    function updateTabPill(feedKey) {
+      const pill = $(`pill-${feedKey}`);
+      if (!pill) return;
+      const count = (state.pendingPosts[feedKey] || []).length;
+      if (count === 0) {
+        pill.classList.remove('visible');
+        pill.textContent = '';
+        return;
+      }
+      pill.textContent = count > 99 ? '99+' : String(count);
+      pill.classList.add('visible');
+    }
+
+    function flushPendingPosts(feedKey, scrollToTop) {
+      const posts = state.pendingPosts[feedKey] || [];
+      if (!posts.length) return;
+
+      const containerMap = { home: 'home-posts', following: 'following-posts', hashtags: 'hashtags-posts' };
+      const container = $(containerMap[feedKey]);
+      if (!container) return;
+
+      const html = posts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
+
+      state.pendingPosts[feedKey] = [];
+      updateTabPill(feedKey);
+
+      // Build a fragment so we do a single DOM insertion
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      const frag = document.createDocumentFragment();
+      while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+
+      if (scrollToTop) {
+        container.insertBefore(frag, container.firstChild);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Disable browser scroll anchoring so it doesn't fight our manual adjustment.
+        document.documentElement.style.overflowAnchor = 'none';
+
+        const currentScroll = window.scrollY || document.documentElement.scrollTop;
+        const originalHeight = document.documentElement.scrollHeight;
+
+        container.insertBefore(frag, container.firstChild);
+
+        // Instantly adjust scroll so the currently-viewed post stays in place.
+        // This works at every scroll position (including scrollY = 0).
+        // It's imperceptible because we removed scroll-behavior:smooth from html.
+        const newHeight = document.documentElement.scrollHeight;
+        window.scrollTo(0, currentScroll + (newHeight - originalHeight));
+
+        // Re-enable anchoring for normal scrolling behaviour
+        document.documentElement.style.overflowAnchor = '';
+      }
+    }
+
+    /* ─── Scroll-direction detection & auto-flush near top ─── */
+    let lastScrollY = 0;
+    let scrollingUp = false;
+
+    function handleScrollDirection() {
+      const currentY = window.scrollY || document.documentElement.scrollTop;
+      scrollingUp = currentY < lastScrollY;
+      const feedKey = activeFeedKey();
+      const pending = state.pendingPosts[feedKey] || [];
+
+      if (scrollingUp && currentY < 200 && pending.length > 0) {
+        flushPendingPosts(feedKey, false);
+      }
+
+      lastScrollY = currentY;
+    }
+
+    /* ─── Detect scroll-up intent when already at the top ─── */
+    // Mouse wheel: deltaY < 0 = scrolling up
+    window.addEventListener('wheel', (e) => {
+      const currentY = window.scrollY || document.documentElement.scrollTop;
+      if (currentY < 5 && e.deltaY < 0) {
+        const feedKey = activeFeedKey();
+        const pending = state.pendingPosts[feedKey] || [];
+        if (pending.length > 0) {
+          flushPendingPosts(feedKey, false);
+        }
+      }
+    }, { passive: true });
+
+    // Touch: detect pull-down gesture at the top
+    let touchStartY = 0;
+    window.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      const currentY = window.scrollY || document.documentElement.scrollTop;
+      if (currentY < 5) {
+        const touchDelta = e.touches[0].clientY - touchStartY;
+        if (touchDelta > 30) { // pulling down = wants to see newer content
+          const feedKey = activeFeedKey();
+          const pending = state.pendingPosts[feedKey] || [];
+          if (pending.length > 0) {
+            flushPendingPosts(feedKey, false);
+            touchStartY = e.touches[0].clientY; // reset so it doesn't fire repeatedly
+          }
+        }
+      }
+    }, { passive: true });
 
     /* ═══════════════════════════════════════════════
        FEED LOADERS
@@ -4837,6 +4965,7 @@
       if (!scrollTimeout) {
         scrollTimeout = requestAnimationFrame(() => {
           checkInfiniteScroll();
+          handleScrollDirection();
           scrollTimeout = null;
         });
       }
