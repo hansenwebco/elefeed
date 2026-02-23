@@ -625,46 +625,6 @@
     }
 
     /* Trending sub-tabs */
-    .trending-subtabs {
-      display: flex;
-      padding: 0 20px;
-      gap: 0;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 4px;
-      position: sticky;
-      top: 94px;
-      z-index: 50;
-      background: var(--bg);
-    }
-
-    .trending-subtab-btn {
-      flex: 1;
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      color: var(--text-dim);
-      cursor: pointer;
-      font-family: var(--font-body);
-      font-size: 13px;
-      font-weight: 500;
-      padding: 12px 0 10px;
-      text-align: center;
-      transition: all var(--trans);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    .trending-subtab-btn:hover {
-      color: var(--text-muted);
-    }
-
-    .trending-subtab-btn.active {
-      color: var(--accent2);
-      border-bottom-color: var(--accent);
-    }
-
     .trending-subpanel {
       display: none;
     }
@@ -810,7 +770,7 @@
     }
 
     .tab-btn {
-      flex: 1;
+      width: 100%;
       background: none;
       border: none;
       border-bottom: 2px solid transparent;
@@ -823,7 +783,6 @@
       padding: 10px 0;
       text-align: center;
       transition: all var(--trans);
-      position: relative;
     }
 
     .tab-btn:hover {
@@ -833,6 +792,90 @@
     .tab-btn.active {
       color: var(--accent2);
       border-bottom-color: var(--accent);
+    }
+
+    .tab-btn-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .tab-btn-label {
+      pointer-events: none;
+    }
+
+    .tab-chevron {
+      display: inline-block;
+      margin-left: 3px;
+      font-size: 10px;
+      opacity: 0.6;
+      pointer-events: none;
+      transition: transform 0.15s ease;
+    }
+
+    .tab-btn.active .tab-chevron { opacity: 0.8; }
+
+    .tab-btn.dropdown-open .tab-chevron {
+      transform: rotate(180deg);
+    }
+
+    /* ─── Tab Dropdown ─── */
+    .tab-dropdown {
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 50%;
+      transform: translateX(-50%) scale(0.96);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 0;
+      display: none;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 300;
+      min-width: 170px;
+      opacity: 0;
+      transition: opacity 0.12s ease, transform 0.12s ease;
+    }
+
+    .tab-dropdown.show {
+      display: flex;
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+
+    .tab-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      transition: background var(--trans);
+      white-space: nowrap;
+    }
+
+    .tab-dropdown-item:hover {
+      background: var(--surface2);
+    }
+
+    .tab-dropdown-item.active {
+      color: var(--accent2);
+    }
+
+    .tab-dropdown-item.active svg {
+      color: var(--accent);
+    }
+
+    .tab-dropdown-item svg {
+      color: var(--text-dim);
+      flex-shrink: 0;
     }
 
     /* ─── FEED AREA ─── */
@@ -3519,18 +3562,48 @@
         </div>
 
         <div class="tab-bar" role="tablist">
-          <button class="tab-btn active" role="tab" data-tab="home" aria-selected="true">
-            Home<span class="tab-pill" id="pill-home"></span>
-          </button>
-          <button class="tab-btn" role="tab" data-tab="following" aria-selected="false">
-            Following<span class="tab-pill" id="pill-following"></span>
-          </button>
-          <button class="tab-btn" role="tab" data-tab="hashtags" aria-selected="false">
-            Hashtags<span class="tab-pill" id="pill-hashtags"></span>
-          </button>
-          <button class="tab-btn" role="tab" data-tab="trending" aria-selected="false">
-            Trending
-          </button>
+          <div class="tab-btn-wrap">
+            <button class="tab-btn active" role="tab" data-tab="feed" aria-selected="true" id="tab-btn-feed">
+              <span class="tab-btn-label">Feed · All</span><span class="tab-chevron">▾</span><span class="tab-pill" id="pill-feed"></span>
+            </button>
+            <div class="tab-dropdown" id="tab-dropdown-feed">
+              <button class="tab-dropdown-item active" data-filter="all">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                All
+              </button>
+              <button class="tab-dropdown-item" data-filter="following">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Following
+              </button>
+              <button class="tab-dropdown-item" data-filter="hashtags">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                Hashtags
+              </button>
+            </div>
+          </div>
+          <div class="tab-btn-wrap">
+            <button class="tab-btn" role="tab" data-tab="explore" aria-selected="false" id="tab-btn-explore">
+              <span class="tab-btn-label">Explore</span><span class="tab-chevron" style="display:none">▾</span>
+            </button>
+            <div class="tab-dropdown" id="tab-dropdown-explore">
+              <button class="tab-dropdown-item active" data-subtab="posts">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                Posts
+              </button>
+              <button class="tab-dropdown-item" data-subtab="hashtags">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                Hashtags
+              </button>
+              <button class="tab-dropdown-item" data-subtab="people">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                People
+              </button>
+              <button class="tab-dropdown-item" data-subtab="news">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+                News
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -3561,26 +3634,10 @@
             </div>
           </div>
         </div>
-        <!-- Home Tab -->
-        <div class="tab-panel active" id="panel-home" role="tabpanel">
-          <div class="feed-loading" id="home-loading">
-            <div class="skeleton-posts" id="home-skeleton"></div>
-          </div>
-          <div class="error-banner" id="home-error"></div>
-          <div id="home-posts"></div>
-        </div>
-
-        <!-- Following Tab -->
-        <div class="tab-panel" id="panel-following" role="tabpanel">
-          <div class="feed-loading" id="following-loading" style="display:none;">
-            <div class="skeleton-posts" id="following-skeleton"></div>
-          </div>
-          <div class="error-banner" id="following-error"></div>
-          <div id="following-posts"></div>
-        </div>
-
-        <div class="tab-panel" id="panel-hashtags" role="tabpanel">
-          <div class="hashtag-filter-bar" id="hashtag-filter-bar">
+        <!-- Feed Tab (unified: All / Following / #Hashtags) -->
+        <div class="tab-panel active" id="panel-feed" role="tabpanel">
+          <!-- Hashtag sub-bar (visible when #Hashtags filter is active) -->
+          <div class="hashtag-filter-bar" id="hashtag-filter-bar" style="display:none;">
             <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; width: 100%;">
               <select class="hashtag-filter-select" id="hashtag-filter-select">
                 <option value="all">All Followed Hashtags</option>
@@ -3595,51 +3652,15 @@
               <button id="hashtag-follow-btn" class="profile-follow-btn" style="display:none; margin-top:0; height:36px;"></button>
             </div>
           </div>
-          <div class="feed-loading" id="hashtags-loading" style="display:none;">
-            <div class="skeleton-posts" id="hashtags-skeleton"></div>
+          <div class="feed-loading" id="feed-loading">
+            <div class="skeleton-posts" id="feed-skeleton"></div>
           </div>
-          <div class="error-banner" id="hashtags-error"></div>
-          <div id="hashtags-posts"></div>
+          <div class="error-banner" id="feed-error"></div>
+          <div id="feed-posts"></div>
         </div>
 
-        <!-- Trending Tab -->
-        <div class="tab-panel" id="panel-trending" role="tabpanel">
-          <!-- Sub-navigation -->
-          <div class="trending-subtabs" id="trending-subtabs">
-            <button class="trending-subtab-btn active" data-subtab="posts" id="trending-subtab-posts">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-              Posts
-            </button>
-            <button class="trending-subtab-btn" data-subtab="hashtags" id="trending-subtab-hashtags">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="4" y1="9" x2="20" y2="9" />
-                <line x1="4" y1="15" x2="20" y2="15" />
-                <line x1="10" y1="3" x2="8" y2="21" />
-                <line x1="16" y1="3" x2="14" y2="21" />
-              </svg>
-              Hashtags
-            </button>
-            <button class="trending-subtab-btn" data-subtab="people" id="trending-subtab-people">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-              People
-            </button>
-            <button class="trending-subtab-btn" data-subtab="news" id="trending-subtab-news">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
-                <path d="M18 14h-8" />
-                <path d="M15 18h-5" />
-                <path d="M10 6h8v4h-8V6Z" />
-              </svg>
-              News
-            </button>
-          </div>
+        <!-- Explore Tab (was Trending) -->
+        <div class="tab-panel" id="panel-explore" role="tabpanel">
 
           <!-- Posts subpanel -->
           <div class="trending-subpanel active" id="trending-subpanel-posts">
@@ -3876,11 +3897,11 @@
       hashtagFeed: null,
       followedHashtags: [],
       selectedHashtagFilter: 'all',
-      homeFilter: 'all',
       knownFollowing: new Set(),
       knownNotFollowing: new Set(),
-      activeTab: 'home',
-      pendingPosts: { home: [], following: [], hashtags: [] },
+      activeTab: 'feed',
+      feedFilter: 'all',
+      pendingPosts: { feed: [] },
       demoMode: false,
       trendingPostsLoaded: false,
       trendingHashtagsLoaded: false,
@@ -4611,7 +4632,7 @@
 
       if (demo) {
         $('demo-notice').style.display = 'block';
-        loadDemoData();
+        loadFeedTab();
         return;
       }
 
@@ -4625,51 +4646,142 @@
         console.warn('Could not load account info:', err);
       }
 
-      // Load home feed
-      loadHomeTab();
+      // Load feed
+      loadFeedTab();
       startPolling();
     }
 
-    /* ─── TAB SWITCHING ─── */
+    /* ─── TAB SWITCHING & DROPDOWN ─── */
     let tabSwitchTimeout = null;
+    const filterLabels = { all: 'All', following: 'Following', hashtags: 'Hashtags' };
+    const subtabLabels = { posts: 'Posts', hashtags: 'Hashtags', people: 'People', news: 'News' };
+
+    function updateTabLabel(tab) {
+      const btn = $(`tab-btn-${tab}`);
+      if (!btn) return;
+      const label = btn.querySelector('.tab-btn-label');
+      const isActive = tab === state.activeTab;
+      if (tab === 'feed') {
+        label.textContent = isActive ? `Feed · ${filterLabels[state.feedFilter] || 'All'}` : 'Feed';
+      } else if (tab === 'explore') {
+        if (isActive) {
+          const activeSubtab = document.querySelector('#tab-dropdown-explore .tab-dropdown-item.active');
+          const subtabName = activeSubtab ? activeSubtab.dataset.subtab : 'posts';
+          label.textContent = `Explore · ${subtabLabels[subtabName] || 'Posts'}`;
+        } else {
+          label.textContent = 'Explore';
+        }
+      }
+      // Show/hide chevron based on active state
+      const chevron = btn.querySelector('.tab-chevron');
+      if (chevron) chevron.style.display = isActive ? '' : 'none';
+    }
+
+    function closeAllTabDropdowns() {
+      document.querySelectorAll('.tab-dropdown').forEach(d => d.classList.remove('show'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('dropdown-open'));
+    }
+
+    function switchToTab(tab) {
+      if (tab === state.activeTab) return;
+      closeAllTabDropdowns();
+
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tab);
+        b.setAttribute('aria-selected', b.dataset.tab === tab);
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.toggle('active', p.id === `panel-${tab}`);
+      });
+
+      state.activeTab = tab;
+
+      // Update both labels — active shows filter, inactive hides it
+      updateTabLabel('feed');
+      updateTabLabel('explore');
+
+      clearTimeout(tabSwitchTimeout);
+      tabSwitchTimeout = setTimeout(() => {
+        if (tab === 'feed') loadFeedTab();
+        else if (tab === 'explore') loadExploreTab();
+      }, 100);
+    }
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const tab = btn.dataset.tab;
-        if (tab === state.activeTab) return;
+        const dropdown = $(`tab-dropdown-${tab}`);
+        const isActive = tab === state.activeTab;
+        const isOpen = dropdown && dropdown.classList.contains('show');
 
+        // Close other dropdowns and menus
+        document.querySelectorAll('.tab-dropdown').forEach(d => {
+          if (d.id !== `tab-dropdown-${tab}`) d.classList.remove('show');
+        });
         document.querySelectorAll('.tab-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.tab === tab);
-          b.setAttribute('aria-selected', b.dataset.tab === tab);
-        });
-        document.querySelectorAll('.tab-panel').forEach(p => {
-          p.classList.toggle('active', p.id === `panel-${tab}`);
+          if (b !== btn) b.classList.remove('dropdown-open');
         });
 
-        state.activeTab = tab;
-
-        // Pill badges are always visible per-tab; no need to toggle on switch
-
-        // Debounce tab loads to prevent rapid-fire API calls
-        clearTimeout(tabSwitchTimeout);
-        tabSwitchTimeout = setTimeout(() => {
-          if (tab === 'home') loadHomeTab();
-          else if (tab === 'following') loadFollowingTab();
-          else if (tab === 'hashtags') loadHashtagsTab();
-          else if (tab === 'trending') loadTrendingTab();
-        }, 100);
+        if (isActive) {
+          // Already on this tab — toggle dropdown
+          if (dropdown) {
+            dropdown.classList.toggle('show');
+            btn.classList.toggle('dropdown-open');
+          }
+        } else {
+          // Switch to this tab
+          switchToTab(tab);
+        }
       });
     });
 
-    /* ─── Trending sub-tab switching ─── */
-    document.querySelectorAll('.trending-subtab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const subtab = btn.dataset.subtab;
-        document.querySelectorAll('.trending-subtab-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.subtab === subtab);
+    // Feed dropdown items
+    document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const filter = item.dataset.filter;
+        if (filter === state.feedFilter) {
+          closeAllTabDropdowns();
+          return;
+        }
+
+        // Update active state in dropdown
+        document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
+          i.classList.toggle('active', i.dataset.filter === filter);
         });
+
+        state.feedFilter = filter;
+
+        // Show/hide hashtag sub-bar
+        const hashtagBar = $('hashtag-filter-bar');
+        hashtagBar.style.display = (filter === 'hashtags') ? '' : 'none';
+
+        updateTabLabel('feed');
+        closeAllTabDropdowns();
+        loadFeedTab();
+      });
+    });
+
+    // Explore dropdown items
+    document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const subtab = item.dataset.subtab;
+
+        // Update active state in dropdown
+        document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(i => {
+          i.classList.toggle('active', i.dataset.subtab === subtab);
+        });
+
+        // Toggle subpanels
         document.querySelectorAll('.trending-subpanel').forEach(p => {
           p.classList.toggle('active', p.id === `trending-subpanel-${subtab}`);
         });
+
+        updateTabLabel('explore');
+        closeAllTabDropdowns();
+
         // Load if not yet populated
         if (subtab === 'hashtags' && !state.trendingHashtagsLoaded) loadTrendingHashtags();
         else if (subtab === 'people' && !state.trendingPeopleLoaded) loadTrendingPeople();
@@ -4677,23 +4789,29 @@
       });
     });
 
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      closeAllTabDropdowns();
+    });
+
 
     /* ─── Refresh button & Logo click ─── */
     const doRefresh = () => {
       const tab = state.activeTab;
       // Clear any buffered posts on manual refresh
-      const feedKey = (tab === 'following' || tab === 'hashtags') ? tab : 'home';
-      state.pendingPosts[feedKey] = [];
-      updateTabPill(feedKey);
-      if (tab === 'home') loadHomeTab();
-      else if (tab === 'following') loadFollowingTab();
-      else if (tab === 'hashtags') loadHashtagsTab();
-      else if (tab === 'trending') {
+      state.pendingPosts.feed = [];
+      updateTabPill('feed');
+      if (tab === 'feed') {
+        // Force re-fetch
+        state.homeFeed = null;
+        state.hashtagFeed = null;
+        loadFeedTab();
+      } else if (tab === 'explore') {
         state.trendingPostsLoaded = false;
         state.trendingHashtagsLoaded = false;
         state.trendingPeopleLoaded = false;
         state.trendingNewsLoaded = false;
-        loadTrendingTab();
+        loadExploreTab();
       }
       showToast('Refreshing…');
     };
@@ -4703,6 +4821,7 @@
     /* ─── Avatar Menu ─── */
     $('avatar-btn').addEventListener('click', (e) => {
       e.stopPropagation();
+      closeAllTabDropdowns();
       document.querySelectorAll('.boost-dropdown').forEach(m => {
         if (m.id !== 'profile-dropdown') m.classList.remove('show');
       });
@@ -4728,20 +4847,24 @@
       state.followingFeed = null;
       state.hashtagFeed = null;
       state.followedHashtags = null;
-      state.activeTab = 'home';
-      state.pendingPosts = { home: [], following: [], hashtags: [] };
+      state.activeTab = 'feed';
+      state.feedFilter = 'all';
+      state.pendingPosts = { feed: [] };
       state.trendingPostsLoaded = false;
       state.trendingHashtagsLoaded = false;
       state.trendingPeopleLoaded = false;
       state.trendingNewsLoaded = false;
       $('demo-notice').style.display = 'none';
-      $('home-posts').innerHTML = '';
-      $('following-posts').innerHTML = '';
-      $('hashtags-posts').innerHTML = '';
+      $('feed-posts').innerHTML = '';
       $('trending-posts-list').innerHTML = '';
       $('trending-hashtags-list').innerHTML = '';
       $('trending-people-list').innerHTML = '';
       $('trending-news-list').innerHTML = '';
+      // Reset feed filter dropdown
+      document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach((b, i) => b.classList.toggle('active', i === 0));
+      $('hashtag-filter-bar').style.display = 'none';
+      // Reset explore dropdown
+      document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach((b, i) => b.classList.toggle('active', i === 0));
 
       // Reset tabs
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
@@ -4750,6 +4873,8 @@
       document.querySelectorAll('.tab-panel').forEach((p, i) => {
         p.classList.toggle('active', i === 0);
       });
+      updateTabLabel('feed');
+      updateTabLabel('explore');
 
       showScreen('login-screen');
       showToast('Signed out.');
@@ -4772,21 +4897,26 @@
     }
 
     async function pollForNewPosts() {
-      if (!state.token || state.demoMode || !state.activeTab) return;
-      const feed = state.activeTab;
+      if (!state.token || state.demoMode || state.activeTab !== 'feed') return;
+      const filter = state.feedFilter;
 
       let minIdToUse = state.homeFeed && state.homeFeed.length > 0 ? state.homeFeed[0].id : null;
-      if (feed === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+      if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
         minIdToUse = state.hashtagFeed && state.hashtagFeed.length > 0 ? state.hashtagFeed[0].id : null;
       }
       if (!minIdToUse) return;
 
       try {
         let newPosts = [];
-        if (feed === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+        if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
           const tag = encodeURIComponent(state.selectedHashtagFilter);
           newPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40&min_id=${minIdToUse}`, state.token);
           newPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
+          // min_id returns ascending order; sort newest-first
+          newPosts.sort((a, b) => {
+            if (a.id.length !== b.id.length) return b.id.length - a.id.length;
+            return b.id > a.id ? 1 : b.id < a.id ? -1 : 0;
+          });
           if (newPosts.length > 0) {
             state.hashtagFeed = [...newPosts, ...state.hashtagFeed];
           }
@@ -4802,6 +4932,11 @@
               });
             }
           });
+          // min_id returns ascending order; sort newest-first
+          newPosts.sort((a, b) => {
+            if (a.id.length !== b.id.length) return b.id.length - a.id.length;
+            return b.id > a.id ? 1 : b.id < a.id ? -1 : 0;
+          });
           if (newPosts.length > 0) {
             state.homeFeed = [...newPosts, ...state.homeFeed];
           }
@@ -4810,8 +4945,8 @@
         if (!newPosts.length) return;
 
         let display = newPosts;
-        if (feed === 'following') display = await filterForFollowing(newPosts);
-        else if (feed === 'hashtags') {
+        if (filter === 'following') display = await filterForFollowing(newPosts);
+        else if (filter === 'hashtags') {
           if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
             display = newPosts;
           } else {
@@ -4821,10 +4956,9 @@
 
         if (!display.length) return;
 
-        // Buffer new posts and show the banner instead of inserting directly
-        const feedKey = (feed === 'following' || feed === 'hashtags') ? feed : 'home';
-        state.pendingPosts[feedKey] = [...display, ...(state.pendingPosts[feedKey] || [])];
-        updateTabPill(feedKey);
+        // Buffer new posts and show the pill badge
+        state.pendingPosts.feed = [...display, ...(state.pendingPosts.feed || [])];
+        updateTabPill('feed');
 
       } catch (err) {
         console.warn('Silent polling failed:', err.message);
@@ -4833,8 +4967,7 @@
 
     /* ─── Tab pill helpers ─── */
     function activeFeedKey() {
-      const tab = state.activeTab;
-      return (tab === 'following' || tab === 'hashtags') ? tab : 'home';
+      return 'feed';
     }
 
     function updateTabPill(feedKey) {
@@ -4854,8 +4987,7 @@
       const posts = state.pendingPosts[feedKey] || [];
       if (!posts.length) return;
 
-      const containerMap = { home: 'home-posts', following: 'following-posts', hashtags: 'hashtags-posts' };
-      const container = $(containerMap[feedKey]);
+      const container = $('feed-posts');
       if (!container) return;
 
       const html = posts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
@@ -4899,11 +5031,16 @@
     function handleScrollDirection() {
       const currentY = window.scrollY || document.documentElement.scrollTop;
       scrollingUp = currentY < lastScrollY;
-      const feedKey = activeFeedKey();
-      const pending = state.pendingPosts[feedKey] || [];
 
-      if (scrollingUp && currentY < 200 && pending.length > 0) {
-        flushPendingPosts(feedKey, false);
+      // Only auto-flush on the "All" feed filter — other filters show
+      // a different subset so injecting home-timeline posts would be wrong.
+      if (state.activeTab === 'feed' && state.feedFilter === 'all') {
+        const feedKey = activeFeedKey();
+        const pending = state.pendingPosts[feedKey] || [];
+
+        if (scrollingUp && currentY < 200 && pending.length > 0) {
+          flushPendingPosts(feedKey, false);
+        }
       }
 
       lastScrollY = currentY;
@@ -4912,6 +5049,7 @@
     /* ─── Detect scroll-up intent when already at the top ─── */
     // Mouse wheel: deltaY < 0 = scrolling up
     window.addEventListener('wheel', (e) => {
+      if (state.activeTab !== 'feed' || state.feedFilter !== 'all') return;
       const currentY = window.scrollY || document.documentElement.scrollTop;
       if (currentY < 5 && e.deltaY < 0) {
         const feedKey = activeFeedKey();
@@ -4929,6 +5067,7 @@
     }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
+      if (state.activeTab !== 'feed' || state.feedFilter !== 'all') return;
       const currentY = window.scrollY || document.documentElement.scrollTop;
       if (currentY < 5) {
         const touchDelta = e.touches[0].clientY - touchStartY;
@@ -5218,8 +5357,9 @@
     async function loadTrendingTab() {
       window.scrollTo({ top: 0, behavior: 'instant' });
       // Reset to first subtab
-      document.querySelectorAll('.trending-subtab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+      document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach((b, i) => b.classList.toggle('active', i === 0));
       document.querySelectorAll('.trending-subpanel').forEach((p, i) => p.classList.toggle('active', i === 0));
+      updateTabLabel('explore');
 
       // Always reload posts on tab switch (they change frequently)
       state.trendingPostsLoaded = false;
@@ -5233,136 +5373,134 @@
       loadTrendingNews();
     }
 
-    function renderFilteredPosts(tab, displayPosts) {
-      const container = $(`${tab}-posts`);
+    function renderFilteredPosts(displayPosts) {
+      const container = $('feed-posts');
+      const filter = state.feedFilter;
       if (!displayPosts.length) {
         let msg = "Nothing here yet.";
-        if (tab === 'following') msg = "No recent posts from people you follow.";
-        if (tab === 'hashtags') msg = "No recent posts matching your hashtags.";
+        if (filter === 'following') msg = "No recent posts from people you follow.";
+        if (filter === 'hashtags') msg = "No recent posts matching your hashtags.";
         container.innerHTML = `<div class="feed-status"><div class="status-icon">📭</div><p>${msg}</p></div>`;
         return;
       }
 
       let maxId = state.homeMaxId;
-      if (tab === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+      if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
         maxId = state.hashtagMaxId;
       }
 
       const html = displayPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-      const loadMoreBtn = maxId ? `<button class="load-more-btn" data-feed="${tab}">Load More</button>` : '';
+      const loadMoreBtn = maxId ? `<button class="load-more-btn" data-feed="feed">Load More</button>` : '';
       container.innerHTML = html + loadMoreBtn;
       setTimeout(checkInfiniteScroll, 100);
     }
 
-    async function loadHomeTab() {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      setLoading('home', true);
-      setError('home', null);
+    async function loadFeedTab(scrollTop = true) {
+      if (scrollTop) window.scrollTo({ top: 0, behavior: 'instant' });
+      const filter = state.feedFilter;
+
+      setLoading('feed', true);
+      setError('feed', null);
 
       try {
-        await ensureHomeFeedLoaded();
-        renderFilteredPosts('home', state.homeFeed);
-      } catch (err) {
-        setError('home', "Failed to load feed");
-      }
-      setLoading('home', false);
-    }
-
-    async function loadFollowingTab() {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      setLoading('following', true);
-      setError('following', null);
-
-      try {
-        await ensureHomeFeedLoaded();
-        const display = state.demoMode ? state.homeFeed.filter(p => !p.reblog) : await filterForFollowing(state.homeFeed);
-        renderFilteredPosts('following', display);
-      } catch (err) {
-        setError('following', "Failed to load following feed: " + err.message);
-      }
-      setLoading('following', false);
-    }
-
-    async function loadHashtagsTab() {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      setLoading('hashtags', true);
-      setError('hashtags', null);
-      $('hashtags-posts').innerHTML = '';
-
-      try {
-        if (!state.demoMode) {
-          const tags = await apiGet('/api/v1/followed_tags?limit=100', state.token).catch(() => []);
-          state.followedHashtags = tags;
+        if (filter === 'all') {
+          await ensureHomeFeedLoaded();
+          renderFilteredPosts(state.homeFeed);
+        } else if (filter === 'following') {
+          await ensureHomeFeedLoaded();
+          const display = state.demoMode ? state.homeFeed.filter(p => !p.reblog) : await filterForFollowing(state.homeFeed);
+          renderFilteredPosts(display);
+        } else if (filter === 'hashtags') {
+          await loadHashtagsFeed();
         }
-        await ensureHomeFeedLoaded();
-        const tags = state.followedHashtags || [];
+      } catch (err) {
+        setError('feed', "Failed to load feed: " + err.message);
+      }
+      setLoading('feed', false);
+    }
 
-        // Build filter dropdown
-        const filterSelect = $('hashtag-filter-select');
-        filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
-        const sortedTags = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    async function loadHashtagsFeed() {
+      $('feed-posts').innerHTML = '';
 
-        let found = state.selectedHashtagFilter === 'all';
-        sortedTags.forEach(t => {
-          const opt = document.createElement('option');
-          opt.value = t.name.toLowerCase();
-          opt.textContent = '#' + t.name;
-          if (state.selectedHashtagFilter === t.name.toLowerCase()) {
-            opt.selected = true;
-            found = true;
-          }
-          filterSelect.appendChild(opt);
-        });
+      if (!state.demoMode) {
+        const tags = await apiGet('/api/v1/followed_tags?limit=100', state.token).catch(() => []);
+        state.followedHashtags = tags;
+      }
+      await ensureHomeFeedLoaded();
+      const tags = state.followedHashtags || [];
 
-        // Add searched tag if not following
-        if (!found && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
-          const opt = document.createElement('option');
-          opt.value = state.selectedHashtagFilter;
-          opt.textContent = '#' + state.selectedHashtagFilter;
+      // Build filter dropdown
+      const filterSelect = $('hashtag-filter-select');
+      filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
+      const sortedTags = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+
+      let found = state.selectedHashtagFilter === 'all';
+      sortedTags.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.name.toLowerCase();
+        opt.textContent = '#' + t.name;
+        if (state.selectedHashtagFilter === t.name.toLowerCase()) {
           opt.selected = true;
-          filterSelect.appendChild(opt);
+          found = true;
         }
+        filterSelect.appendChild(opt);
+      });
 
-        // Update Follow Button
-        const followBtn = $('hashtag-follow-btn');
-        if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
-          const isFollowing = tags.some(t => t.name.toLowerCase() === state.selectedHashtagFilter);
-          followBtn.style.display = 'block';
-          followBtn.textContent = isFollowing ? 'Following' : `Follow #${state.selectedHashtagFilter}`;
-          followBtn.dataset.tag = state.selectedHashtagFilter;
-          followBtn.dataset.following = isFollowing ? 'true' : 'false';
-          followBtn.classList.toggle('following', isFollowing);
-        } else {
-          followBtn.style.display = 'none';
-        }
-
-        let display = [];
-        if (state.demoMode) {
-          display = state.homeFeed.filter(p => p._sourceTags && p._sourceTags.length > 0);
-          if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
-            display = display.filter(p => p._sourceTags.includes(state.selectedHashtagFilter));
-          }
-        } else {
-          if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
-            const tag = encodeURIComponent(state.selectedHashtagFilter);
-            const tagPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40`, state.token);
-            tagPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
-            state.hashtagFeed = tagPosts;
-            state.hashtagMaxId = tagPosts.length ? tagPosts[tagPosts.length - 1].id : null;
-            display = tagPosts;
-          } else {
-            display = state.homeFeed.filter(p => p._sourceTags && p._sourceTags.length > 0);
-            state.hashtagMaxId = state.homeMaxId;
-          }
-        }
-
-        renderFilteredPosts('hashtags', display);
-      } catch (err) {
-        setError('hashtags', "Failed to load hashtags feed: " + err.message);
+      // Add searched tag if not following
+      if (!found && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+        const opt = document.createElement('option');
+        opt.value = state.selectedHashtagFilter;
+        opt.textContent = '#' + state.selectedHashtagFilter;
+        opt.selected = true;
+        filterSelect.appendChild(opt);
       }
-      setLoading('hashtags', false);
+
+      // Update Follow Button
+      const followBtn = $('hashtag-follow-btn');
+      if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+        const isFollowing = tags.some(t => t.name.toLowerCase() === state.selectedHashtagFilter);
+        followBtn.style.display = 'block';
+        followBtn.textContent = isFollowing ? 'Following' : `Follow #${state.selectedHashtagFilter}`;
+        followBtn.dataset.tag = state.selectedHashtagFilter;
+        followBtn.dataset.following = isFollowing ? 'true' : 'false';
+        followBtn.classList.toggle('following', isFollowing);
+      } else {
+        followBtn.style.display = 'none';
+      }
+
+      let display = [];
+      if (state.demoMode) {
+        display = state.homeFeed.filter(p => p._sourceTags && p._sourceTags.length > 0);
+        if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+          display = display.filter(p => p._sourceTags.includes(state.selectedHashtagFilter));
+        }
+      } else {
+        if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+          const tag = encodeURIComponent(state.selectedHashtagFilter);
+          const tagPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40`, state.token);
+          tagPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
+          state.hashtagFeed = tagPosts;
+          state.hashtagMaxId = tagPosts.length ? tagPosts[tagPosts.length - 1].id : null;
+          display = tagPosts;
+        } else {
+          display = state.homeFeed.filter(p => p._sourceTags && p._sourceTags.length > 0);
+          state.hashtagMaxId = state.homeMaxId;
+        }
+      }
+
+      renderFilteredPosts(display);
     }
 
+    /* Aliases for backward compat with any internal calls */
+    function setFeedDropdownActive(filter) {
+      document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === filter);
+      });
+    }
+    const loadHomeTab = () => { state.feedFilter = 'all'; setFeedDropdownActive('all'); updateTabLabel('feed'); loadFeedTab(); };
+    const loadFollowingTab = () => { state.feedFilter = 'following'; setFeedDropdownActive('following'); updateTabLabel('feed'); loadFeedTab(); };
+    const loadHashtagsTab = () => { state.feedFilter = 'hashtags'; setFeedDropdownActive('hashtags'); $('hashtag-filter-bar').style.display = ''; updateTabLabel('feed'); loadFeedTab(); };
+    const loadExploreTab = loadTrendingTab;
     function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
     /* ═══════════════════════════════════════════════
@@ -6652,7 +6790,7 @@
 
       $('hashtag-filter-select').addEventListener('change', (e) => {
         state.selectedHashtagFilter = e.target.value;
-        loadHashtagsTab();
+        loadFeedTab();
       });
 
       // Event listeners for sidebar
@@ -6810,8 +6948,7 @@
           updateSidebarCharCount();
 
           // Refresh current tab
-          if (state.activeTab === 'home') loadHomeTab();
-          else if (state.activeTab === 'following') loadFollowingTab();
+          if (state.activeTab === 'feed') loadFeedTab(false);
 
         } catch (err) {
           showToast('Failed to post: ' + err.message);
@@ -6841,7 +6978,7 @@
             const val = input.value.trim().replace(/^#/, '');
             if (val) {
               state.selectedHashtagFilter = val.toLowerCase();
-              loadHashtagsTab();
+              loadFeedTab();
               input.value = '';
             }
           }
@@ -6922,8 +7059,7 @@
         closeComposeDrawer();
 
         // Refresh current tab
-        if (state.activeTab === 'home') loadHomeTab();
-        else if (state.activeTab === 'following') loadFollowingTab();
+        if (state.activeTab === 'feed') loadFeedTab(false);
 
       } catch (err) {
         showToast('Failed to post: ' + err.message);
@@ -7013,22 +7149,28 @@
 
         // Set the active filter state
         state.selectedHashtagFilter = tag;
+        state.feedFilter = 'hashtags';
 
-        // Switch to the Hashtags tab visually
+        // Switch to the Feed tab + Hashtags filter
         document.querySelectorAll('.tab-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.tab === 'hashtags');
+          b.classList.toggle('active', b.dataset.tab === 'feed');
         });
         document.querySelectorAll('.tab-panel').forEach(p => {
-          p.classList.toggle('active', p.id === 'panel-hashtags');
+          p.classList.toggle('active', p.id === 'panel-feed');
         });
-        state.activeTab = 'hashtags';
+        document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(b => {
+          b.classList.toggle('active', b.dataset.filter === 'hashtags');
+        });
+        $('hashtag-filter-bar').style.display = '';
+        state.activeTab = 'feed';
+        updateTabLabel('feed');
 
         closeProfileDrawer();
         closeThreadDrawer();
         closeComposeDrawer();
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        loadHashtagsTab();
+        loadFeedTab();
         return;
       }
 
@@ -7039,22 +7181,28 @@
         const tag = trendingTagLink.dataset.trendingTag.toLowerCase();
 
         state.selectedHashtagFilter = tag;
+        state.feedFilter = 'hashtags';
 
-        // Switch to Hashtags tab
+        // Switch to Feed tab + Hashtags filter
         document.querySelectorAll('.tab-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.tab === 'hashtags');
+          b.classList.toggle('active', b.dataset.tab === 'feed');
         });
         document.querySelectorAll('.tab-panel').forEach(p => {
-          p.classList.toggle('active', p.id === 'panel-hashtags');
+          p.classList.toggle('active', p.id === 'panel-feed');
         });
-        state.activeTab = 'hashtags';
+        document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(b => {
+          b.classList.toggle('active', b.dataset.filter === 'hashtags');
+        });
+        $('hashtag-filter-bar').style.display = '';
+        state.activeTab = 'feed';
+        updateTabLabel('feed');
 
         closeProfileDrawer();
         closeThreadDrawer();
         closeComposeDrawer();
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        loadHashtagsTab();
+        loadFeedTab();
       }
 
       // Handle post article clicks → open thread view
@@ -7076,11 +7224,10 @@
     });
 
     async function handleLoadMore(btn) {
-      const tab = state.activeTab;
-      const mode = (tab === 'home') ? (state.homeFilter || 'all') : 'trending';
+      const filter = state.feedFilter;
 
       let maxIdToUse = state.homeMaxId;
-      if (mode === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+      if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
         maxIdToUse = state.hashtagMaxId;
       }
       if (!maxIdToUse) return;
@@ -7090,7 +7237,7 @@
 
       try {
         let newPosts = [];
-        if (mode === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+        if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
           const tag = encodeURIComponent(state.selectedHashtagFilter);
           newPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40&max_id=${maxIdToUse}`, state.token);
           newPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
@@ -7117,13 +7264,13 @@
         }
 
         let display = newPosts;
-        if (mode === 'following' && !state.demoMode) display = await filterForFollowing(newPosts);
-        else if (mode === 'hashtags' && (!state.selectedHashtagFilter || state.selectedHashtagFilter === 'all')) {
+        if (filter === 'following' && !state.demoMode) display = await filterForFollowing(newPosts);
+        else if (filter === 'hashtags' && (!state.selectedHashtagFilter || state.selectedHashtagFilter === 'all')) {
           display = newPosts.filter(p => p._sourceTags && p._sourceTags.length > 0);
         }
 
         const html = display.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
-        const container = $(`${tab}-posts`);
+        const container = $('feed-posts');
         const tmp = document.createElement('div');
         tmp.innerHTML = html;
         while (tmp.firstChild) container.insertBefore(tmp.firstChild, btn);
