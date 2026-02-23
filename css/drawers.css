@@ -215,11 +215,13 @@
   body.thread-inline-active .feed-container {
     padding-bottom: 0;
     overflow: hidden;
-    min-height: calc(100dvh - 55px);
+    height: calc(100dvh - 55px);
+    max-height: calc(100dvh - 55px);
   }
   body.thread-inline-active .thread-inline-panel {
     flex: 1;
     min-height: 0;
+    overflow: hidden;
   }
 }
 

@@ -10,13 +10,18 @@ import { escapeHTML } from './utils.js';
 
 /* ── Open / close ──────────────────────────────────────────────────── */
 
+let _savedScrollY = 0;
+
 export function openThreadDrawer(statusId) {
   const isDesktop = window.innerWidth > 900;
 
   if (isDesktop) {
+    _savedScrollY = window.scrollY;
     const inlineContent = $('thread-inline-content');
     inlineContent.innerHTML = '<div class="thread-status"><div class="spinner"></div></div>';
     document.body.classList.add('thread-inline-active');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.body.style.overflow = 'hidden';
     loadThread(statusId, inlineContent);
   } else {
     const drawer = $('thread-drawer');
@@ -32,6 +37,7 @@ export function openThreadDrawer(statusId) {
 }
 
 export function closeThreadDrawer() {
+  const wasInline = document.body.classList.contains('thread-inline-active');
   document.body.classList.remove('thread-inline-active');
   const drawer = $('thread-drawer');
   const backdrop = $('thread-backdrop');
@@ -39,6 +45,14 @@ export function closeThreadDrawer() {
   drawer.setAttribute('aria-hidden', 'true');
   backdrop.classList.remove('open');
   document.body.style.overflow = '';
+  if (wasInline) {
+    requestAnimationFrame(() => window.scrollTo(0, _savedScrollY));
+  }
+  // Reset scroll position in both containers
+  const inlineContent = $('thread-inline-content');
+  if (inlineContent) inlineContent.scrollTop = 0;
+  const drawerContent = $('thread-content');
+  if (drawerContent) drawerContent.scrollTop = 0;
 }
 
 /* ── Load thread data ──────────────────────────────────────────────── */
@@ -113,12 +127,5 @@ function renderThread(focalStatus, ancestors, descendants, container) {
   }
 
   container.innerHTML = parts.join('');
-
-  const focalEl = container.querySelector('.thread-post-focal');
-  if (focalEl) {
-    requestAnimationFrame(() => {
-      focalEl.scrollIntoView({ block: 'start', behavior: 'instant' });
-      container.scrollTop = Math.max(0, container.scrollTop - 60);
-    });
-  }
+  container.scrollTop = 0;
 }
