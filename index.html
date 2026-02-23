@@ -2038,7 +2038,6 @@
       padding: 6px 16px;
       cursor: pointer;
       transition: all var(--trans);
-      margin-top: 2px;
     }
 
     .profile-follow-btn:hover {
@@ -2061,6 +2060,60 @@
     .profile-follow-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    .profile-notify-btn {
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--trans);
+    }
+
+    .profile-notify-btn:hover {
+      background: var(--surface2);
+      border-color: var(--accent);
+      color: var(--accent2);
+    }
+
+    .profile-notify-btn.notifying {
+      background: rgba(155, 127, 255, 0.12);
+      border-color: var(--accent);
+      color: var(--accent2);
+    }
+
+    .profile-notify-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    @keyframes bellRing {
+      0%   { transform: rotate(0deg); }
+      15%  { transform: rotate(14deg); }
+      30%  { transform: rotate(-12deg); }
+      45%  { transform: rotate(10deg); }
+      60%  { transform: rotate(-8deg); }
+      75%  { transform: rotate(4deg); }
+      90%  { transform: rotate(-2deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    .profile-notify-btn.ringing svg {
+      animation: bellRing 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    .profile-action-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
     }
 
     .profile-edit-btn {
@@ -5977,6 +6030,16 @@
           : '';
 
         const isSelf = state.account && state.account.id === accountId;
+        const isNotifying = relationship && relationship.notifying;
+
+        const notifyButton = (!isSelf && isFollowing)
+          ? `<button
+              class="profile-notify-btn ${isNotifying ? 'notifying' : ''}"
+              data-account-id="${accountId}"
+              data-notifying="${isNotifying ? 'true' : 'false'}"
+              title="${isNotifying ? 'Stop post notifications' : 'Get notified about posts'}"
+            ><svg width="15" height="15" viewBox="0 0 24 24" fill="${isNotifying ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>`
+          : '';
 
         const followButton = isSelf
           ? `<a
@@ -6053,7 +6116,10 @@
             <div class="profile-display-name">${renderCustomEmojis(account.display_name || account.username, account.emojis)}</div>
             <div class="profile-acct">@${escapeHTML(account.acct)}</div>
           </div>
-          ${followButton}
+          <div class="profile-action-group">
+            ${followButton}
+            ${notifyButton}
+          </div>
         </div>
         ${bio}
         <div class="profile-stats">
@@ -7820,6 +7886,14 @@
         return;
       }
 
+      // Handle notify toggle button clicks
+      const notifyBtn = e.target.closest('.profile-notify-btn');
+      if (notifyBtn) {
+        e.preventDefault();
+        handleNotifyToggle(notifyBtn);
+        return;
+      }
+
       // Handle favorite/star button clicks
       const favBtn = e.target.closest('.post-fav-btn');
       if (favBtn) {
@@ -8060,10 +8134,70 @@
         btn.textContent = nowFollowing ? 'Following' : 'Follow';
         btn.classList.toggle('following', nowFollowing);
 
+        // Show/hide notify button based on follow state
+        const notifyBtn = btn.closest('.profile-action-group')?.querySelector('.profile-notify-btn');
+        if (notifyBtn) {
+          notifyBtn.style.display = nowFollowing ? '' : 'none';
+        }
+
         showToast(nowFollowing ? 'Now following' : 'Unfollowed');
       } catch (err) {
         btn.textContent = originalText;
         showToast('Action failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function handleNotifyToggle(btn) {
+      if (btn.disabled) return;
+
+      const accountId = btn.dataset.accountId;
+      const isNotifying = btn.dataset.notifying === 'true';
+      const willNotify = !isNotifying;
+
+      btn.disabled = true;
+      const svg = btn.querySelector('svg');
+
+      // Optimistic update
+      btn.dataset.notifying = willNotify ? 'true' : 'false';
+      btn.classList.toggle('notifying', willNotify);
+      btn.title = willNotify ? 'Stop post notifications' : 'Get notified about posts';
+      if (svg) svg.setAttribute('fill', willNotify ? 'currentColor' : 'none');
+
+      // Ring animation
+      btn.classList.add('ringing');
+      setTimeout(() => btn.classList.remove('ringing'), 600);
+
+      try {
+        const res = await fetch(`https://${state.server}/api/v1/accounts/${accountId}/follow`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${state.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ notify: willNotify }),
+          cache: 'no-store',
+        });
+
+        if (!res.ok) throw new Error('Failed to update notification setting');
+
+        const relationship = await res.json();
+        const nowNotifying = !!relationship.notifying;
+
+        btn.dataset.notifying = nowNotifying ? 'true' : 'false';
+        btn.classList.toggle('notifying', nowNotifying);
+        btn.title = nowNotifying ? 'Stop post notifications' : 'Get notified about posts';
+        if (svg) svg.setAttribute('fill', nowNotifying ? 'currentColor' : 'none');
+
+        showToast(nowNotifying ? 'Notifications on for this user' : 'Notifications off for this user');
+      } catch (err) {
+        // Rollback
+        btn.dataset.notifying = isNotifying ? 'true' : 'false';
+        btn.classList.toggle('notifying', isNotifying);
+        btn.title = isNotifying ? 'Stop post notifications' : 'Get notified about posts';
+        if (svg) svg.setAttribute('fill', isNotifying ? 'currentColor' : 'none');
+        showToast('Failed: ' + err.message);
       } finally {
         btn.disabled = false;
       }
