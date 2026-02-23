@@ -1758,6 +1758,47 @@
       animation: fadeOut 0.3s ease-out forwards;
     }
 
+    /* Bookmark button */
+    .post-bookmark-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all var(--trans);
+      color: var(--text-muted);
+    }
+
+    .post-bookmark-btn:hover {
+      color: var(--accent2);
+    }
+
+    .post-bookmark-btn:hover svg {
+      transform: scale(1.1);
+    }
+
+    .post-bookmark-btn.bookmarked {
+      color: var(--accent2);
+    }
+
+    .post-bookmark-btn.bookmarked svg {
+      fill: currentColor;
+    }
+
+    .post-bookmark-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    @keyframes bookmarkPop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    .post-bookmark-btn.bookmarking svg {
+      animation: bookmarkPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
     /* Hashtag section header */
     .section-header {
       padding: 16px 20px 8px;
@@ -3845,6 +3886,12 @@
                   </svg>
                   <span>View Profile</span>
                 </button>
+                <button class="boost-dropdown-item" id="bookmarks-view-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span>Bookmarks</span>
+                </button>
                 <button class="boost-dropdown-item" id="logout-btn">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -4038,7 +4085,7 @@
         <button class="notif-filter-btn active" data-notif-filter="all">All</button>
         <button class="notif-filter-btn" data-notif-filter="mention">Mentions</button>
         <button class="notif-filter-btn" data-notif-filter="reblog">Boosts</button>
-        <button class="notif-filter-btn" data-notif-filter="favourite">Favourites</button>
+        <button class="notif-filter-btn" data-notif-filter="favourite">Favorites</button>
         <button class="notif-filter-btn" data-notif-filter="follow">Follows</button>
       </div>
       <div class="notif-drawer-inner" id="notif-content">
@@ -4203,7 +4250,7 @@
       // Otherwise use full path including filename
       return location.origin + path;
     })();
-    const SCOPES = 'read write write:statuses write:media write:favourites';
+    const SCOPES = 'read write write:statuses write:media write:favourites write:bookmarks';
 
     /* ─── Storage helpers ─── */
     const store = {
@@ -4635,6 +4682,9 @@
         <button class="post-stat post-fav-btn ${s.favourited ? 'favourited' : ''}" data-post-id="${s.id}" data-favourited="${s.favourited ? 'true' : 'false'}" title="${s.favourited ? 'Unfavorite' : 'Favorite'}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.favourited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" style="color:var(--fav)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
           <span class="post-fav-count">${s.favourites_count || 0}</span>
+        </button>
+        <button class="post-stat post-bookmark-btn ${s.bookmarked ? 'bookmarked' : ''}" data-post-id="${s.id}" data-bookmarked="${s.bookmarked ? 'true' : 'false'}" title="${s.bookmarked ? 'Remove bookmark' : 'Bookmark'}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
         </button>
         <a href="${s.url}" target="_blank" rel="noopener" style="margin-left:auto;color:var(--text-dim);font-family:var(--font-mono);font-size:11px;text-decoration:none;" title="Open original">↗</a>
       </div>
@@ -5172,6 +5222,48 @@
         openProfileDrawer(state.account.id, state.server);
       }
     });
+
+    $('bookmarks-view-btn').addEventListener('click', () => {
+      openBookmarksDrawer();
+    });
+
+    function openBookmarksDrawer() {
+      const drawer = $('profile-drawer');
+      const backdrop = $('profile-backdrop');
+      const content = $('profile-content');
+
+      content.innerHTML = `<div class="profile-loading"><div class="spinner"></div></div>`;
+      drawer.classList.add('open');
+      drawer.setAttribute('aria-hidden', 'false');
+      backdrop.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      apiGet('/api/v1/bookmarks?limit=40', state.token)
+        .then(bookmarks => {
+          if (!bookmarks.length) {
+            content.innerHTML = `
+              <div style="padding:40px 20px;text-align:center;">
+                <h2 style="font-family:var(--font-display);font-size:20px;margin-bottom:8px;">Bookmarks</h2>
+                <p style="color:var(--text-muted);font-size:13px;">No bookmarks yet. Bookmark posts to save them here.</p>
+              </div>`;
+            return;
+          }
+          const postsHtml = bookmarks.map(s => renderPost(s)).join('');
+          content.innerHTML = `
+            <div style="padding:20px 20px 12px;">
+              <h2 style="font-family:var(--font-display);font-size:20px;margin-bottom:4px;">Bookmarks</h2>
+              <p style="color:var(--text-muted);font-size:12px;font-family:var(--font-mono);">${bookmarks.length} saved post${bookmarks.length !== 1 ? 's' : ''}</p>
+            </div>
+            <div style="border-top:1px solid var(--border);">${postsHtml}</div>`;
+        })
+        .catch(err => {
+          content.innerHTML = `
+            <div style="padding:40px 20px;text-align:center;">
+              <p style="color:var(--danger);font-size:13px;">Failed to load bookmarks</p>
+            </div>`;
+          console.warn('Bookmarks load error:', err);
+        });
+    }
 
     /* ─── Logout ─── */
     $('logout-btn').addEventListener('click', () => {
@@ -6141,7 +6233,7 @@
     const NOTIF_LABELS = {
       mention: 'mentioned you',
       reblog: 'boosted your post',
-      favourite: 'favourited your post',
+      favourite: 'favorited your post',
       follow: 'followed you',
       follow_request: 'requested to follow you',
       poll: 'poll ended',
@@ -6574,6 +6666,9 @@
               <button class="post-stat post-fav-btn ${s.favourited ? 'favourited' : ''}" data-post-id="${s.id}" data-favourited="${s.favourited ? 'true' : 'false'}" title="${s.favourited ? 'Unfavorite' : 'Favorite'}">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.favourited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" style="color:var(--fav)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                 <span class="post-fav-count">${s.favourites_count || 0}</span>
+              </button>
+              <button class="post-stat post-bookmark-btn ${s.bookmarked ? 'bookmarked' : ''}" data-post-id="${s.id}" data-bookmarked="${s.bookmarked ? 'true' : 'false'}" title="${s.bookmarked ? 'Remove bookmark' : 'Bookmark'}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
               </button>
               <a href="${s.url}" target="_blank" rel="noopener" style="margin-left:auto;color:var(--text-dim);font-family:var(--font-mono);font-size:11px;text-decoration:none;" title="Open original">↗</a>
             </div>
@@ -7733,6 +7828,14 @@
         return;
       }
 
+      // Handle bookmark button clicks
+      const bookmarkBtn = e.target.closest('.post-bookmark-btn');
+      if (bookmarkBtn) {
+        e.preventDefault();
+        handleBookmarkToggle(bookmarkBtn);
+        return;
+      }
+
       // Handle boost button clicks
       const boostBtn = e.target.closest('.post-boost-btn');
       if (boostBtn) {
@@ -8106,6 +8209,56 @@
         }
 
         showToast('Failed to favorite: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function handleBookmarkToggle(btn) {
+      if (btn.disabled) return;
+
+      const postId = btn.dataset.postId;
+      const isBookmarked = btn.dataset.bookmarked === 'true';
+      const willBeBookmarked = !isBookmarked;
+      const svg = btn.querySelector('svg');
+
+      btn.disabled = true;
+
+      // Optimistic update
+      btn.dataset.bookmarked = willBeBookmarked ? 'true' : 'false';
+      btn.classList.toggle('bookmarked', willBeBookmarked);
+      btn.title = willBeBookmarked ? 'Remove bookmark' : 'Bookmark';
+      if (svg) svg.setAttribute('fill', willBeBookmarked ? 'currentColor' : 'none');
+
+      if (willBeBookmarked) {
+        btn.classList.add('bookmarking');
+        setTimeout(() => btn.classList.remove('bookmarking'), 400);
+      }
+
+      try {
+        const endpoint = isBookmarked
+          ? `/api/v1/statuses/${postId}/unbookmark`
+          : `/api/v1/statuses/${postId}/bookmark`;
+
+        const res = await fetch(`https://${state.server}${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${state.token}`,
+            'Content-Type': 'application/json'
+          },
+          cache: 'no-store',
+        });
+
+        if (!res.ok) throw new Error('Failed to bookmark');
+
+        showToast(willBeBookmarked ? 'Bookmarked' : 'Bookmark removed');
+      } catch (err) {
+        // Rollback
+        btn.dataset.bookmarked = isBookmarked ? 'true' : 'false';
+        btn.classList.toggle('bookmarked', isBookmarked);
+        btn.title = isBookmarked ? 'Remove bookmark' : 'Bookmark';
+        if (svg) svg.setAttribute('fill', isBookmarked ? 'currentColor' : 'none');
+        showToast('Failed to bookmark: ' + err.message);
       } finally {
         btn.disabled = false;
       }
