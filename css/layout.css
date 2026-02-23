@@ -17,11 +17,13 @@
 /* ─── App Screen (main layout) ─── */
 #app-screen {
   background: var(--bg);
-  display: flex;
   flex-direction: row;
   justify-content: center;
   gap: 24px;
   padding: 0 20px;
+}
+#app-screen.active {
+  display: flex;
 }
 
 .main-wrapper {
