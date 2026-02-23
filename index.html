@@ -3399,6 +3399,294 @@
     .thread-show-more-btn:hover {
       color: var(--accent2);
     }
+
+    /* ═══════════════════════════════════════════════
+       NOTIFICATION BELL & DRAWER
+    ══════════════════════════════════════════════════ */
+
+    /* Bell icon badge */
+    .notif-bell-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 99px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      line-height: 16px;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .notif-badge.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Backdrop */
+    .notif-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 250;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+    }
+
+    .notif-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* Drawer */
+    .notif-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(420px, 100%);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 251;
+      transform: translateX(100%);
+      transition: transform 260ms cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notif-drawer.open {
+      transform: translateX(0);
+    }
+
+    @media (max-width: 900px) {
+      .notif-drawer {
+        width: 100%;
+        border-left: none;
+      }
+    }
+
+    .notif-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      background: var(--surface);
+      min-height: 52px;
+    }
+
+    .notif-drawer-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .notif-close-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--trans);
+    }
+
+    .notif-close-btn:hover {
+      background: var(--surface);
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    .notif-drawer-inner {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0;
+    }
+
+    .notif-filters {
+      display: flex;
+      gap: 6px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+
+    .notif-filter-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--trans);
+    }
+
+    .notif-filter-btn:hover {
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    .notif-filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Notification items */
+    .notif-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--trans);
+      cursor: default;
+    }
+
+    .notif-item:hover {
+      background: var(--surface2);
+    }
+
+    .notif-icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notif-icon.type-mention  { background: rgba(155, 127, 255, 0.15); color: var(--accent); }
+    .notif-icon.type-reblog   { background: rgba(78, 205, 196, 0.15); color: var(--boost); }
+    .notif-icon.type-favourite { background: rgba(255, 217, 61, 0.15); color: var(--fav); }
+    .notif-icon.type-follow    { background: rgba(155, 127, 255, 0.15); color: var(--accent2); }
+    .notif-icon.type-poll      { background: rgba(136, 136, 160, 0.15); color: var(--text-muted); }
+    .notif-icon.type-update    { background: rgba(78, 205, 196, 0.15); color: var(--teal); }
+    .notif-icon.type-status    { background: rgba(155, 127, 255, 0.15); color: var(--accent); }
+
+    .notif-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .notif-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .notif-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .notif-who {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    .notif-who:hover {
+      color: var(--accent);
+    }
+
+    .notif-action {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .notif-preview {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+      margin-top: 4px;
+      cursor: pointer;
+    }
+
+    .notif-preview:hover {
+      color: var(--text);
+    }
+
+    .notif-time {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      margin-top: 4px;
+    }
+
+    .notif-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .notif-empty svg {
+      margin-bottom: 12px;
+      opacity: 0.4;
+    }
+
+    .notif-load-more {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--accent);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--trans);
+    }
+
+    .notif-load-more:hover {
+      background: var(--surface2);
+    }
   </style>
 </head>
 
@@ -3536,6 +3824,15 @@
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
               </svg>
             </button>
+            <div class="notif-bell-wrap">
+              <button class="icon-btn" id="notif-btn" title="Notifications">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+              </button>
+              <span class="notif-badge" id="notif-badge"></span>
+            </div>
             <div style="position:relative; display:inline-flex;">
               <div class="avatar-btn" id="avatar-btn" title="Profile options">
                 <img id="user-avatar" src="" alt="" />
@@ -3725,6 +4022,36 @@
       </div>
     </aside>
 
+    <!-- Notification Drawer -->
+    <div class="notif-backdrop" id="notif-backdrop"></div>
+    <aside class="notif-drawer" id="notif-drawer" aria-hidden="true">
+      <div class="notif-drawer-header">
+        <span class="notif-drawer-title">Notifications</span>
+        <button class="notif-close-btn" id="notif-close" aria-label="Close notifications">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="notif-filters">
+        <button class="notif-filter-btn active" data-notif-filter="all">All</button>
+        <button class="notif-filter-btn" data-notif-filter="mention">Mentions</button>
+        <button class="notif-filter-btn" data-notif-filter="reblog">Boosts</button>
+        <button class="notif-filter-btn" data-notif-filter="favourite">Favourites</button>
+        <button class="notif-filter-btn" data-notif-filter="follow">Follows</button>
+      </div>
+      <div class="notif-drawer-inner" id="notif-content">
+        <div class="notif-empty">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <p style="font-size:13px;">No notifications yet</p>
+        </div>
+      </div>
+    </aside>
+
     <!-- Thread Drawer -->
     <div class="thread-backdrop" id="thread-backdrop"></div>
     <aside class="thread-drawer" id="thread-drawer" aria-hidden="true" aria-label="Thread view">
@@ -3907,6 +4234,14 @@
       trendingHashtagsLoaded: false,
       trendingPeopleLoaded: false,
       trendingNewsLoaded: false,
+      /* Notifications */
+      notifications: [],
+      notifByType: {},
+      notifFilter: 'all',
+      notifMaxId: {},
+      notifUnreadCount: 0,
+      lastSeenNotifId: null,
+      notifDrawerOpen: false,
     };
 
     /* ─── Utility ─── */
@@ -4649,6 +4984,9 @@
       // Load feed
       loadFeedTab();
       startPolling();
+
+      // Load notification count
+      pollNotifications();
     }
 
     /* ─── TAB SWITCHING & DROPDOWN ─── */
@@ -4889,11 +5227,19 @@
     function startPolling() {
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = setInterval(pollForNewPosts, 20000);  // every 20 seconds
+      // Also poll notifications every 30 seconds
+      if (!notifPollInterval) {
+        notifPollInterval = setInterval(pollNotifications, 30000);
+      }
     }
+
+    let notifPollInterval = null;
 
     function stopPolling() {
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = null;
+      if (notifPollInterval) clearInterval(notifPollInterval);
+      notifPollInterval = null;
     }
 
     async function pollForNewPosts() {
@@ -5776,6 +6122,294 @@
     $('thread-close-btn').addEventListener('click', closeThreadDrawer);
     $('thread-backdrop').addEventListener('click', closeThreadDrawer);
     $('thread-back-btn').addEventListener('click', closeThreadDrawer);
+
+    /* ═══════════════════════════════════════════════
+       NOTIFICATIONS
+    ══════════════════════════════════════════════════ */
+
+    const NOTIF_ICONS = {
+      mention: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+      reblog: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+      favourite: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+      follow: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>`,
+      follow_request: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>`,
+      poll: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="8" x2="9" y2="16"/><line x1="15" y1="11" x2="15" y2="16"/></svg>`,
+      update: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+      status: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    };
+
+    const NOTIF_LABELS = {
+      mention: 'mentioned you',
+      reblog: 'boosted your post',
+      favourite: 'favourited your post',
+      follow: 'followed you',
+      follow_request: 'requested to follow you',
+      poll: 'poll ended',
+      update: 'edited a post',
+      status: 'posted',
+    };
+
+    function openNotifDrawer() {
+      const drawer = $('notif-drawer');
+      const backdrop = $('notif-backdrop');
+      drawer.classList.add('open');
+      drawer.setAttribute('aria-hidden', 'false');
+      backdrop.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      state.notifDrawerOpen = true;
+
+      // Render cached notifications immediately so the drawer isn't empty
+      if (state.notifications.length > 0) {
+        renderNotifications();
+        // Mark as read
+        state.lastSeenNotifId = state.notifications[0].id;
+        store.set('lastSeenNotifId_' + state.server, state.lastSeenNotifId);
+        state.notifUnreadCount = 0;
+        updateNotifBadge();
+        dismissNotifMarker();
+      }
+
+      // Always fetch latest (shows spinner only when cache is empty)
+      loadNotifications();
+    }
+
+    function closeNotifDrawer() {
+      const drawer = $('notif-drawer');
+      const backdrop = $('notif-backdrop');
+      drawer.classList.remove('open');
+      drawer.setAttribute('aria-hidden', 'true');
+      backdrop.classList.remove('open');
+      document.body.style.overflow = '';
+      state.notifDrawerOpen = false;
+    }
+
+    function updateNotifBadge() {
+      const badge = $('notif-badge');
+      if (!badge) return;
+      if (state.notifUnreadCount > 0) {
+        badge.textContent = state.notifUnreadCount > 99 ? '99+' : String(state.notifUnreadCount);
+        badge.classList.add('visible');
+      } else {
+        badge.classList.remove('visible');
+        badge.textContent = '';
+      }
+    }
+
+    async function dismissNotifMarker() {
+      if (!state.token || state.demoMode) return;
+      try {
+        await fetch(`https://${state.server}/api/v1/markers`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${state.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ notifications: { last_read_id: state.lastSeenNotifId } }),
+        });
+      } catch { /* silent */ }
+    }
+
+    function getNotifCache(filter) {
+      if (filter === 'all') return state.notifications;
+      return state.notifByType[filter] || [];
+    }
+
+    function setNotifCache(filter, items) {
+      if (filter === 'all') state.notifications = items;
+      else state.notifByType[filter] = items;
+    }
+
+    async function loadNotifications(append = false) {
+      if (!state.token || state.demoMode) return;
+      const content = $('notif-content');
+      const filter = state.notifFilter;
+      const cached = getNotifCache(filter);
+
+      // Only show spinner if we have nothing cached to display
+      if (!append && cached.length === 0) {
+        content.innerHTML = `<div class="notif-empty"><div class="spinner"></div></div>`;
+      }
+
+      try {
+        let url = `/api/v1/notifications?limit=30`;
+        if (filter !== 'all') {
+          url += `&types[]=${filter}`;
+        }
+        const maxId = state.notifMaxId[filter];
+        if (append && maxId) {
+          url += `&max_id=${maxId}`;
+        }
+        const notifs = await apiGet(url, state.token);
+
+        if (!append) {
+          setNotifCache(filter, notifs);
+        } else {
+          setNotifCache(filter, [...cached, ...notifs]);
+        }
+
+        if (notifs.length > 0) {
+          state.notifMaxId[filter] = notifs[notifs.length - 1].id;
+        }
+
+        // Only render if user is still on the same filter
+        if (state.notifFilter === filter) {
+          renderNotifications();
+        }
+      } catch (err) {
+        console.warn('Failed to load notifications:', err);
+        if (!append && cached.length === 0) {
+          content.innerHTML = `<div class="notif-empty"><p style="font-size:13px;color:var(--danger)">Failed to load notifications</p></div>`;
+        }
+      }
+    }
+
+    function renderNotifications() {
+      const content = $('notif-content');
+      const filter = state.notifFilter;
+      const items = getNotifCache(filter);
+
+      if (items.length === 0) {
+        content.innerHTML = `
+          <div class="notif-empty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <p style="font-size:13px;">No notifications${filter !== 'all' ? ' of this type' : ''}</p>
+          </div>`;
+        return;
+      }
+
+      let html = items.map(n => renderNotifItem(n)).join('');
+
+      // Show "load more" if we got a full page
+      const maxId = state.notifMaxId[filter];
+      if (items.length >= 30 && maxId) {
+        html += `<button class="notif-load-more" id="notif-load-more">Load more notifications</button>`;
+      }
+
+      content.innerHTML = html;
+
+      // Wire load-more
+      const loadMoreBtn = $('notif-load-more');
+      if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => {
+          loadMoreBtn.textContent = 'Loading…';
+          loadMoreBtn.disabled = true;
+          loadNotifications(true);
+        });
+      }
+
+      // Wire interactions within notification items
+      content.querySelectorAll('[data-notif-profile]').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.dataset.notifProfile;
+          const srv = el.dataset.notifServer || state.server;
+          closeNotifDrawer();
+          setTimeout(() => openProfileDrawer(id, srv), 180);
+        });
+      });
+
+      content.querySelectorAll('[data-notif-status]').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.dataset.notifStatus;
+          closeNotifDrawer();
+          setTimeout(() => openThreadDrawer(id), 180);
+        });
+      });
+    }
+
+    function renderNotifItem(n) {
+      const account = n.account;
+      if (!account) return '';
+
+      const icon = NOTIF_ICONS[n.type] || NOTIF_ICONS.mention;
+      const typeClass = `type-${n.type === 'follow_request' ? 'follow' : n.type}`;
+      const label = NOTIF_LABELS[n.type] || n.type;
+      const time = relativeTime(n.created_at);
+      const avatarUrl = account.avatar_static || account.avatar;
+      const displayName = escapeHTML(account.display_name || account.username);
+
+      let preview = '';
+      if (n.status) {
+        const text = n.status.content
+          ? n.status.content.replace(/<[^>]*>/g, '').substring(0, 200)
+          : '';
+        if (text) {
+          preview = `<div class="notif-preview" data-notif-status="${n.status.id}">${escapeHTML(text)}</div>`;
+        }
+      }
+
+      const statusAttr = n.status ? `data-notif-status="${n.status.id}"` : '';
+
+      return `
+        <div class="notif-item">
+          <div class="notif-icon ${typeClass}">${icon}</div>
+          <div class="notif-body">
+            <div class="notif-meta">
+              <img class="notif-avatar" src="${escapeHTML(avatarUrl)}" alt="" loading="lazy"
+                   data-notif-profile="${account.id}" data-notif-server="${state.server}" />
+              <span class="notif-who" data-notif-profile="${account.id}" data-notif-server="${state.server}">${displayName}</span>
+              <span class="notif-action">${label}</span>
+            </div>
+            ${preview}
+            <div class="notif-time">${time}</div>
+          </div>
+        </div>`;
+    }
+
+    async function pollNotifications() {
+      if (!state.token || state.demoMode) return;
+
+      // Restore last seen ID
+      state.lastSeenNotifId = store.get('lastSeenNotifId_' + state.server) || null;
+
+      try {
+        const notifs = await apiGet('/api/v1/notifications?limit=30', state.token);
+        state.notifications = notifs;
+
+        if (notifs.length > 0) {
+          state.notifMaxId['all'] = notifs[notifs.length - 1].id;
+          // Count unread
+          if (state.lastSeenNotifId) {
+            state.notifUnreadCount = notifs.filter(n => n.id > state.lastSeenNotifId).length;
+          } else {
+            state.notifUnreadCount = notifs.length;
+          }
+        } else {
+          state.notifUnreadCount = 0;
+        }
+
+        updateNotifBadge();
+
+        // If drawer is open, refresh it
+        if (state.notifDrawerOpen) {
+          renderNotifications();
+        }
+      } catch (err) {
+        console.warn('Notification poll failed:', err.message);
+      }
+    }
+
+    // Notification filter buttons
+    document.querySelectorAll('.notif-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.notif-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.notifFilter = btn.dataset.notifFilter;
+        const cached = getNotifCache(state.notifFilter);
+        if (cached.length > 0) {
+          renderNotifications();
+        }
+        // Always fetch from API to fill / refresh this type
+        loadNotifications();
+      });
+    });
+
+    // Open/close events
+    $('notif-btn').addEventListener('click', openNotifDrawer);
+    $('notif-close').addEventListener('click', closeNotifDrawer);
+    $('notif-backdrop').addEventListener('click', closeNotifDrawer);
 
     async function loadThread(statusId, container) {
       try {
