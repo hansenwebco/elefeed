@@ -3564,7 +3564,7 @@
         <div class="tab-bar" role="tablist">
           <div class="tab-btn-wrap">
             <button class="tab-btn active" role="tab" data-tab="feed" aria-selected="true" id="tab-btn-feed">
-              <span class="tab-btn-label">Feed · All</span><span class="tab-chevron">▾</span><span class="tab-pill" id="pill-feed"></span>
+              <span class="tab-btn-label">Home · All</span><span class="tab-chevron">▾</span><span class="tab-pill" id="pill-feed"></span>
             </button>
             <div class="tab-dropdown" id="tab-dropdown-feed">
               <button class="tab-dropdown-item active" data-filter="all">
@@ -3573,11 +3573,11 @@
               </button>
               <button class="tab-dropdown-item" data-filter="following">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Following
+                Followed Profiles
               </button>
               <button class="tab-dropdown-item" data-filter="hashtags">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
-                Hashtags
+                Followed Hashtags
               </button>
             </div>
           </div>
@@ -3588,19 +3588,19 @@
             <div class="tab-dropdown" id="tab-dropdown-explore">
               <button class="tab-dropdown-item active" data-subtab="posts">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                Posts
+                Trending Posts
               </button>
               <button class="tab-dropdown-item" data-subtab="hashtags">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
-                Hashtags
+                Trending Hashtags
               </button>
               <button class="tab-dropdown-item" data-subtab="people">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                People
+                Trending People
               </button>
               <button class="tab-dropdown-item" data-subtab="news">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
-                News
+                Trending News
               </button>
             </div>
           </div>
@@ -4653,8 +4653,8 @@
 
     /* ─── TAB SWITCHING & DROPDOWN ─── */
     let tabSwitchTimeout = null;
-    const filterLabels = { all: 'All', following: 'Following', hashtags: 'Hashtags' };
-    const subtabLabels = { posts: 'Posts', hashtags: 'Hashtags', people: 'People', news: 'News' };
+    const filterLabels = { all: 'All', following: 'Followed Profiles', hashtags: 'Followed Hashtags' };
+    const subtabLabels = { posts: 'Trending Posts', hashtags: 'Trending Hashtags', people: 'Trending People', news: 'Trending News' };
 
     function updateTabLabel(tab) {
       const btn = $(`tab-btn-${tab}`);
@@ -4662,12 +4662,12 @@
       const label = btn.querySelector('.tab-btn-label');
       const isActive = tab === state.activeTab;
       if (tab === 'feed') {
-        label.textContent = isActive ? `Feed · ${filterLabels[state.feedFilter] || 'All'}` : 'Feed';
+        label.textContent = isActive ? `Home · ${filterLabels[state.feedFilter] || 'All'}` : 'Home';
       } else if (tab === 'explore') {
         if (isActive) {
           const activeSubtab = document.querySelector('#tab-dropdown-explore .tab-dropdown-item.active');
           const subtabName = activeSubtab ? activeSubtab.dataset.subtab : 'posts';
-          label.textContent = `Explore · ${subtabLabels[subtabName] || 'Posts'}`;
+          label.textContent = `Explore · ${subtabLabels[subtabName] || 'Trending Posts'}`;
         } else {
           label.textContent = 'Explore';
         }
