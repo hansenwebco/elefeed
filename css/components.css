@@ -1,0 +1,55 @@
+/* ═══════════════════════════════════════════════
+   COMPONENTS — Toast, Error Banner, Load More, Offline, etc.
+   ═══════════════════════════════════════════════ */
+
+/* ─── Toast ─── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: var(--radius);
+  padding: 10px 18px;
+  font-family: var(--font-mono); font-size: 12px; color: var(--text);
+  opacity: 0; pointer-events: none;
+  transition: all 250ms ease; z-index: 9999; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── Error Banner ─── */
+.error-banner {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.25);
+  border-radius: var(--radius); color: var(--danger);
+  font-family: var(--font-mono); font-size: 12px;
+  margin: 16px 20px; padding: 10px 14px; display: none;
+}
+.error-banner.visible { display: block; }
+
+/* ─── Load More ─── */
+.load-more-btn {
+  display: block; width: calc(100% - 40px);
+  margin: 20px auto; padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: var(--font-mono); font-size: 12px;
+  cursor: pointer; text-align: center; transition: all var(--trans);
+}
+.load-more-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+/* ─── Offline Bar ─── */
+.offline-bar {
+  background: rgba(255, 107, 107, 0.12);
+  border-bottom: 1px solid rgba(255, 107, 107, 0.2);
+  color: var(--danger); font-family: var(--font-mono); font-size: 12px;
+  padding: 8px 20px; text-align: center; display: none;
+}
+.offline-bar.visible { display: block; }
+
+/* ─── Demo Notice ─── */
+.demo-notice {
+  background: rgba(155, 127, 255, 0.08);
+  border-bottom: 1px solid rgba(155, 127, 255, 0.15);
+  color: var(--accent); font-family: var(--font-mono); font-size: 11px;
+  padding: 6px 20px; text-align: center;
+}

@@ -1,0 +1,102 @@
+/* ═══════════════════════════════════════════════
+   TRENDING — Hashtags, People, News, Posts
+   ═══════════════════════════════════════════════ */
+
+.trending-section { padding: 24px 20px 0; }
+.trending-section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-muted); font-family: var(--font-mono);
+  margin-bottom: 14px;
+}
+.trending-section-title svg { color: var(--accent); flex-shrink: 0; }
+
+/* Trending Posts */
+.trending-posts-list { display: flex; flex-direction: column; gap: 0; }
+
+/* Trending Hashtags */
+.trending-tags-grid { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+.trending-tag-row {
+  display: flex; align-items: center;
+  padding: 10px 14px; border-radius: var(--radius);
+  cursor: pointer; text-decoration: none;
+  transition: background var(--trans); gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.trending-tag-row:last-child { border-bottom: none; }
+.trending-tag-row:hover { background: rgba(155, 127, 255, 0.06); }
+.trending-tag-rank { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); width: 18px; flex-shrink: 0; text-align: center; }
+.trending-tag-main { flex: 1; min-width: 0; }
+.trending-tag-name { font-size: 14px; font-weight: 600; color: var(--accent2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trending-tag-bar-wrap { flex: 1; min-width: 0; }
+.trending-tag-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.trending-tag-stat { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+.trending-tag-sparkline { display: flex; align-items: flex-end; gap: 2px; height: 20px; flex-shrink: 0; }
+.sparkline-bar {
+  width: 4px; border-radius: 2px 2px 0 0;
+  background: var(--accent); opacity: 0.5;
+  transition: opacity var(--trans); min-height: 2px;
+}
+.trending-tag-row:hover .sparkline-bar { opacity: 0.85; }
+
+/* Trending People */
+.trending-people-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 8px; }
+.trending-person-card {
+  background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px; display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 8px;
+  cursor: pointer; transition: border-color var(--trans), background var(--trans);
+}
+.trending-person-card:hover { border-color: var(--accent); background: rgba(155, 127, 255, 0.05); }
+.trending-person-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 2px solid var(--border); overflow: hidden;
+  flex-shrink: 0; background: var(--surface);
+}
+.trending-person-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.trending-person-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.trending-person-acct { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.trending-person-stats { display: flex; gap: 10px; justify-content: center; }
+.trending-person-stat { display: flex; flex-direction: column; align-items: center; }
+.trending-person-stat-val { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--text); }
+.trending-person-stat-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Trending News / Links */
+.trending-links-list { display: flex; flex-direction: column; gap: 0; margin-bottom: 8px; }
+.trending-link-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 0; border-bottom: 1px solid var(--border);
+  cursor: pointer; text-decoration: none;
+  transition: background var(--trans);
+}
+.trending-link-card:last-child { border-bottom: none; }
+.trending-link-card:hover .trending-link-title { color: var(--accent2); }
+.trending-link-thumb {
+  width: 72px; height: 56px; border-radius: 6px; overflow: hidden;
+  flex-shrink: 0; background: var(--surface2);
+  border: 1px solid var(--border);
+}
+.trending-link-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.trending-link-thumb-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim);
+}
+.trending-link-body { flex: 1; min-width: 0; }
+.trending-link-provider { font-family: var(--font-mono); font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.trending-link-title {
+  font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.4;
+  transition: color var(--trans);
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.trending-link-desc {
+  font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-top: 4px;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.trending-link-stat { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+
+/* Sub-panels */
+.trending-subpanel { display: none; }
+.trending-subpanel.active { display: block; }
