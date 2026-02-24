@@ -3,8 +3,12 @@
    ══════════════════════════════════════════════════ */
 
 #login-screen {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 100vh;
+  padding-top: 40px;
   background:
     radial-gradient(ellipse 70% 50% at 50% -10%, rgba(155, 127, 255, 0.18) 0%, transparent 70%),
     radial-gradient(ellipse 40% 30% at 90% 80%, rgba(78, 205, 196, 0.10) 0%, transparent 60%),
@@ -15,6 +19,9 @@
   width: 100%;
   max-width: 420px;
   padding: 0 20px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
 }
 
 .login-logo {
