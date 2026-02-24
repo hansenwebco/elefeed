@@ -402,9 +402,13 @@ $('avatar-btn').addEventListener('click', (e) => {
 
 $('profile-view-btn').addEventListener('click', () => {
   if (state.account) openProfileDrawer(state.account.id, state.server);
+  $('profile-dropdown').classList.toggle('show');
 });
 
-$('bookmarks-view-btn').addEventListener('click', () => openBookmarksDrawer());
+$('bookmarks-view-btn').addEventListener('click', () => {
+  openBookmarksDrawer();
+  $('profile-dropdown').classList.toggle('show');
+});
 
 /* Logout */
 $('logout-btn').addEventListener('click', () => {
