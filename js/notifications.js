@@ -44,9 +44,6 @@ export function openNotifDrawer() {
   document.body.style.overflow = 'hidden';
   state.notifDrawerOpen = true;
 
-  // Push history state for back button
-  history.pushState({ drawer: 'notif-drawer' }, '', '');
-
   if (state.notifications.length > 0) {
     renderNotifications();
     state.lastSeenNotifId = state.notifications[0].id;

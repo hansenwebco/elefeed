@@ -32,7 +32,6 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
 }
 
 /* Compose sidebar (desktop only) */

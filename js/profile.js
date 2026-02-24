@@ -25,9 +25,6 @@ export function openProfileDrawer(accountId, server) {
   backdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  // Push history state for back button
-  history.pushState({ drawer: 'profile-drawer' }, '', '');
-
   const srv = server || state.server;
 
   Promise.all([

@@ -34,30 +34,6 @@ import {
 } from './notifications.js';
 import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply } from './compose.js';
 
-// Drawer state tracking for history
-function isAnyDrawerOpen() {
-  return (
-    $('notif-drawer') && $('notif-drawer').classList.contains('open') ||
-    $('thread-drawer') && $('thread-drawer').classList.contains('open') ||
-    $('profile-drawer') && $('profile-drawer').classList.contains('open')
-  );
-}
-
-function closeAnyDrawer() {
-  if ($('notif-drawer') && $('notif-drawer').classList.contains('open')) closeNotifDrawer();
-  if ($('thread-drawer') && $('thread-drawer').classList.contains('open')) closeThreadDrawer();
-  if ($('profile-drawer') && $('profile-drawer').classList.contains('open')) closeProfileDrawer();
-}
-
-// Listen for popstate to close drawers
-window.addEventListener('popstate', e => {
-  if (isAnyDrawerOpen()) {
-    closeAnyDrawer();
-    // Optionally, push state again to prevent further navigation
-    // history.pushState(null, '', '');
-  }
-});
-
 const loadExploreTab = loadTrendingTab;
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -656,9 +632,6 @@ async function boot() {
   initCompose();
   initNotifications();
 
-  // Hide all screens initially
-  document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
-
   // If we're a popup completing OAuth, run callback and close
   const params = new URLSearchParams(location.search);
   const code = params.get('code');
@@ -681,9 +654,14 @@ async function boot() {
   const server = store.get('server');
   const tokenScopes = store.get('token_scopes');
 
-  if (token && server && tokenScopes === SCOPES) {
-    await initApp(server, token);
-    return;
+  if (token && server) {
+    if (tokenScopes === SCOPES) {
+      await initApp(server, token);
+      return;
+    }
+    store.del('token');
+    store.del('server');
+    store.del('token_scopes');
   }
 
   showScreen('login-screen');
