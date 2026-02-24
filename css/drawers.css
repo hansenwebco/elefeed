@@ -266,13 +266,14 @@
   padding: 8px 18px 0;
 }
 .thread-reply-to-acct { color: var(--accent2); font-weight: 500; }
-.thread-reply-children { border-left: 2px solid var(--border); margin-left: 36px; }
+.thread-reply-children { border-left: 0px solid var(--border); margin-left: 10px; }
 
 /* Posts inside thread drawers — keep feed styling, just remove clickable cursor */
 .thread-drawer-inner .post,
 .thread-inline-inner .post {
   cursor: default;
 }
+
 
 /* Section & focal labels */
 .thread-section-label {
