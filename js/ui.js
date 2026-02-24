@@ -18,8 +18,8 @@ export function registerTabLoader(tab, fn) { _tabLoaders[tab] = fn; }
 /* ── Screen switching ──────────────────────────────────────────────── */
 
 export function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  $(id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+  $(id).style.display = 'block';
 }
 
 /* ── Toast ──────────────────────────────────────────────────────────── */

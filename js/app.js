@@ -632,6 +632,9 @@ async function boot() {
   initCompose();
   initNotifications();
 
+  // Hide all screens initially
+  document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+
   // If we're a popup completing OAuth, run callback and close
   const params = new URLSearchParams(location.search);
   const code = params.get('code');
@@ -654,14 +657,9 @@ async function boot() {
   const server = store.get('server');
   const tokenScopes = store.get('token_scopes');
 
-  if (token && server) {
-    if (tokenScopes === SCOPES) {
-      await initApp(server, token);
-      return;
-    }
-    store.del('token');
-    store.del('server');
-    store.del('token_scopes');
+  if (token && server && tokenScopes === SCOPES) {
+    await initApp(server, token);
+    return;
   }
 
   showScreen('login-screen');
