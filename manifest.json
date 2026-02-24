@@ -1,7 +1,7 @@
 {
   "name": "Elefeed - A Quieter Mastadon Client",
   "short_name": "Elefeed",
-  "start_url": "/",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0f172a",
