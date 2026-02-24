@@ -90,14 +90,14 @@ function buildReplyTree(descendants, rootId) {
 function renderReplyTree(nodes, depth, parentAcct) {
   return nodes.map(node => {
     const s = node.status.reblog ? node.status.reblog : node.status;
-    const replyToTag = (depth > 1 && parentAcct)
-      ? `<div class="thread-reply-to">
-           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 10l5-5v3c8 0 13 4 13 11-3-4-7-5-13-5v3l-5-5z"/></svg>
-           Replying to <span class="thread-reply-to-acct">@${escapeHTML(parentAcct)}</span>
-         </div>`
-      : '';
+    // const replyToTag = (depth > 1 && parentAcct)
+    //   ? `<div class="thread-reply-to">
+    //        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 10l5-5v3c8 0 13 4 13 11-3-4-7-5-13-5v3l-5-5z"/></svg>
+    //        Replying to <span class="thread-reply-to-acct">@${escapeHTML(parentAcct)}</span>
+    //      </div>`
+    //   : '';
 
-    const postHTML = replyToTag + renderThreadPost(node.status, 'reply');
+    const postHTML =  renderThreadPost(node.status, 'reply');
     const childrenHTML = node.children.length > 0
       ? `<div class="thread-reply-children">${renderReplyTree(node.children, depth + 1, s.account.acct)}</div>`
       : '';
