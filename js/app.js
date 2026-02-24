@@ -34,6 +34,30 @@ import {
 } from './notifications.js';
 import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply } from './compose.js';
 
+// Drawer state tracking for history
+function isAnyDrawerOpen() {
+  return (
+    $('notif-drawer') && $('notif-drawer').classList.contains('open') ||
+    $('thread-drawer') && $('thread-drawer').classList.contains('open') ||
+    $('profile-drawer') && $('profile-drawer').classList.contains('open')
+  );
+}
+
+function closeAnyDrawer() {
+  if ($('notif-drawer') && $('notif-drawer').classList.contains('open')) closeNotifDrawer();
+  if ($('thread-drawer') && $('thread-drawer').classList.contains('open')) closeThreadDrawer();
+  if ($('profile-drawer') && $('profile-drawer').classList.contains('open')) closeProfileDrawer();
+}
+
+// Listen for popstate to close drawers
+window.addEventListener('popstate', e => {
+  if (isAnyDrawerOpen()) {
+    closeAnyDrawer();
+    // Optionally, push state again to prevent further navigation
+    // history.pushState(null, '', '');
+  }
+});
+
 const loadExploreTab = loadTrendingTab;
 
 /* ══════════════════════════════════════════════════════════════════════
