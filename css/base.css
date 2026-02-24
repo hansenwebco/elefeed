@@ -51,7 +51,6 @@ body {
   line-height: 1.6;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
 
 /* ─── Scrollbar ─── */
