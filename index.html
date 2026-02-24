@@ -509,6 +509,11 @@
   </div>
 
   <!-- Application entry point -->
+   <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('js/sw.js');
+    }
+   </script>
   <script type="module" src="js/app.js"></script>
 </body>
 
