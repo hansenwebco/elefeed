@@ -211,6 +211,9 @@ export function openBookmarksDrawer() {
   backdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
 
+  // Push history state for back button
+  history.pushState({ drawer: 'profile-drawer' }, '', '');
+
   apiGet('/api/v1/bookmarks?limit=40', state.token)
     .then(bookmarks => {
       if (!bookmarks.length) {
