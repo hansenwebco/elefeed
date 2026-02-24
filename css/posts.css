@@ -580,4 +580,12 @@
   .post { padding: 16px 14px 16px 12px; }
   .section-header { padding: 14px 14px 8px; }
   .post-content { font-size: 14px; }
+  .post-media,
+  .post-media-grid,
+  .media-item,
+  .post {
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
 }
