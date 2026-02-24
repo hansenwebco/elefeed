@@ -32,8 +32,6 @@ export function openThreadDrawer(statusId) {
     drawer.setAttribute('aria-hidden', 'false');
     backdrop.classList.add('open');
     document.body.style.overflow = 'hidden';
-    // Push history state for back button
-    history.pushState({ drawer: 'thread-drawer' }, '', '');
     loadThread(statusId, content);
   }
 }
