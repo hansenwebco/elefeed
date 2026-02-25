@@ -210,7 +210,11 @@ export function openComposeDrawer() {
   drawer.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
   backdrop.classList.add('open');
-  if (window.innerWidth <= 900) document.body.style.overflow = 'hidden';
+  if (window.innerWidth <= 900) {
+    document.body.style.overflow = 'hidden';
+    // Push history state for back button
+    history.pushState({ drawer: 'compose-drawer' }, '', '');
+  }
   setTimeout(() => $('compose-textarea').focus(), 300);
 }
 
