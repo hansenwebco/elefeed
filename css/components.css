@@ -1,3 +1,27 @@
+/* Overlay pill for new posts */
+.overlay-pill {
+  position: fixed;
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid rgba(30,30,30,0.45);
+  border-radius: 999px;
+  padding: 8px 24px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.10);
+  cursor: pointer;
+  transition: opacity 0.2s, border 0.2s;
+  opacity: 0.68;
+  z-index: 2000;
+  pointer-events: auto;
+  left: 50%; /* fallback, will be set by JS */
+  top: 20px;  /* fallback, will be set by JS */
+  transform: translateX(-50%);
+  backdrop-filter: blur(2px);
+}
+.overlay-pill[hidden], .overlay-pill.hide, .overlay-pill[style*="display:none"] {
+  display: none !important;
+}
 /* ═══════════════════════════════════════════════
    COMPONENTS — Toast, Error Banner, Load More, Offline, etc.
    ═══════════════════════════════════════════════ */
@@ -12,6 +36,18 @@
   font-family: var(--font-mono); font-size: 12px; color: var(--text);
   opacity: 0; pointer-events: none;
   transition: all 250ms ease; z-index: 9999; white-space: nowrap;
+/* Profile dropdown and drawers above pill */
+#profile-dropdown {
+  position: fixed !important;
+  z-index: 9999 !important;
+  right: 20px !important;
+  left: auto !important;
+  top: 62px !important;
+  margin-top: 0 !important;
+}
+.notif-drawer, .thread-drawer, .profile-drawer, .compose-drawer {
+  z-index: 1200 !important;
+}
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 

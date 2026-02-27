@@ -44,6 +44,18 @@ function isAnyDrawerOpen() {
   );
 }
 
+function setOverlayPillVisibility() {
+  const pill = document.getElementById('new-posts-pill');
+  if (!pill) return;
+  if (isAnyDrawerOpen()) {
+    pill.style.visibility = 'hidden';
+    pill.style.transition = 'none';
+  } else {
+    pill.style.visibility = '';
+    pill.style.transition = '';
+  }
+}
+
 function closeAnyDrawer() {
   if ($('notif-drawer') && $('notif-drawer').classList.contains('open')) closeNotifDrawer();
   if ($('thread-drawer') && $('thread-drawer').classList.contains('open')) closeThreadDrawer();
@@ -55,6 +67,7 @@ function closeAnyDrawer() {
 window.addEventListener('popstate', e => {
   if (isAnyDrawerOpen()) {
     closeAnyDrawer();
+    setTimeout(setOverlayPillVisibility, 10);
     // Optionally, push state again to prevent further navigation
     // history.pushState(null, '', '');
   }
@@ -503,12 +516,20 @@ window.addEventListener('touchmove', (e) => {
    CLOSE HANDLERS (profile / thread / compose drawers)
    ══════════════════════════════════════════════════════════════════════ */
 
-$('profile-close').addEventListener('click', closeProfileDrawer);
-$('profile-backdrop').addEventListener('click', closeProfileDrawer);
 
-$('thread-close-btn').addEventListener('click', closeThreadDrawer);
-$('thread-backdrop').addEventListener('click', closeThreadDrawer);
-$('thread-back-btn').addEventListener('click', closeThreadDrawer);
+function wrapDrawerClose(fn) {
+  return function(...args) {
+    fn.apply(this, args);
+    setTimeout(setOverlayPillVisibility, 10);
+  };
+}
+
+$('profile-close').addEventListener('click', wrapDrawerClose(closeProfileDrawer));
+$('profile-backdrop').addEventListener('click', wrapDrawerClose(closeProfileDrawer));
+
+$('thread-close-btn').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
+$('thread-backdrop').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
+$('thread-back-btn').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
@@ -518,8 +539,18 @@ document.addEventListener('keydown', e => {
       closeProfileDrawer();
       closeComposeDrawer();
     }
+    setTimeout(setOverlayPillVisibility, 10);
   }
 });
+// Hide pill when any drawer opens (immediate, no delay)
+['notif-drawer','thread-drawer','profile-drawer','compose-drawer'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('transitionstart', setOverlayPillVisibility);
+    el.addEventListener('transitionend', setOverlayPillVisibility);
+  }
+});
+setTimeout(setOverlayPillVisibility, 100);
 
 /* ══════════════════════════════════════════════════════════════════════
    DELEGATION (clicks on dynamic content)

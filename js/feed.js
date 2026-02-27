@@ -1,3 +1,16 @@
+// Position overlay pill relative to #feed-posts
+function positionOverlayPill() {
+  const pill = document.getElementById('new-posts-pill');
+  const feed = document.getElementById('feed-posts');
+  if (!pill || !feed) return;
+  const rect = feed.getBoundingClientRect();
+  pill.style.left = (rect.left + rect.width/2) + 'px';
+  pill.style.top = (rect.top + window.scrollY + 20) + 'px';
+}
+
+window.addEventListener('scroll', positionOverlayPill);
+window.addEventListener('resize', positionOverlayPill);
+
 /**
  * @module feed
  * Home feed: loading, filtering, polling, pagination, pending-post buffering.
@@ -14,16 +27,55 @@ import { getDemoHomePosts, getDemoHashtagData } from './demo.js';
 export function activeFeedKey() { return 'feed'; }
 
 export function updateTabPill(feedKey) {
-  const pill = $(`pill-${feedKey}`);
-  if (!pill) return;
+  // Overlay pill logic
+  const overlayPill = document.getElementById('new-posts-pill');
   const count = (state.pendingPosts[feedKey] || []).length;
+  if (!overlayPill) return;
   if (count === 0) {
-    pill.classList.remove('visible');
-    pill.textContent = '';
+    overlayPill.style.display = 'none';
+    overlayPill.textContent = 'New posts';
     return;
   }
-  pill.textContent = count > 99 ? '99+' : String(count);
-  pill.classList.add('visible');
+  overlayPill.textContent = count > 99 ? '99+ new posts' : `${count} new post${count > 1 ? 's' : ''}`;
+  overlayPill.style.display = '';
+  positionOverlayPill();
+}
+
+// ...existing code...
+// Overlay pill click handler
+function setupOverlayPill(feedKey) {
+  const overlayPill = document.getElementById('new-posts-pill');
+  if (!overlayPill) return;
+  overlayPill.onclick = () => {
+    flushPendingPosts(feedKey, true);
+    // Do not hide here; updateTabPill will handle visibility
+  };
+}
+
+// Hide overlay pill on scroll up
+function setupOverlayPillScroll(feedKey) {
+  let lastY = window.scrollY;
+  window.addEventListener('scroll', () => {
+    const overlayPill = document.getElementById('new-posts-pill');
+    if (!overlayPill) return;
+    const pending = state.pendingPosts[feedKey] || [];
+    if (pending.length === 0) {
+      overlayPill.style.display = 'none';
+      return;
+    }
+      // If the user scrolls to the top of the feed (where new posts would be), dismiss the pill
+      const feed = document.getElementById('feed-posts');
+      if (feed) {
+        const rect = feed.getBoundingClientRect();
+        if (rect.top >= 0 && rect.top < 100) {
+          overlayPillDismissed = true;
+          overlayPill.style.display = 'none';
+          return;
+        }
+      }
+      overlayPill.style.display = pending.length > 0 && !overlayPillDismissed ? '' : 'none';
+      positionOverlayPill();
+  });
 }
 
 /* ── Rendering ─────────────────────────────────────────────────────── */
@@ -65,6 +117,7 @@ export async function filterForFollowing(page) {
     }
   });
 
+    let overlayPillDismissed = false;
   const idsArr = Array.from(idsToCheck);
   if (idsArr.length > 0) {
     for (let i = 0; i < idsArr.length; i += 40) {
@@ -194,6 +247,10 @@ async function loadHashtagsFeed() {
 export async function loadFeedTab(scrollTop = true) {
   if (scrollTop) window.scrollTo({ top: 0, behavior: 'instant' });
   const filter = state.feedFilter;
+
+  // Setup overlay pill handlers
+  setupOverlayPill('feed');
+  setupOverlayPillScroll('feed');
 
   setLoading('feed', true);
   setError('feed', null);
