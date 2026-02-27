@@ -198,7 +198,7 @@
         <div class="tab-bar" role="tablist">
           <div class="tab-btn-wrap">
             <button class="tab-btn active" role="tab" data-tab="feed" aria-selected="true" id="tab-btn-feed">
-              <span class="tab-btn-label">Home · All</span><span class="tab-chevron">▾</span><span class="tab-pill" id="pill-feed"></span>
+              <span class="tab-btn-label">Home · All</span><span class="tab-chevron">▾</span>
             </button>
             <div class="tab-dropdown" id="tab-dropdown-feed">
               <button class="tab-dropdown-item active" data-filter="all">
@@ -290,7 +290,13 @@
             <div class="skeleton-posts" id="feed-skeleton"></div>
           </div>
           <div class="error-banner" id="feed-error"></div>
-          <div id="feed-posts"></div>
+          <div style="position:relative;">
+            <div id="feed-posts" style="position:relative;"></div>
+          </main>
+
+            <!-- Move overlay pill to end of body to avoid stacking context issues -->
+            <button id="new-posts-pill" class="overlay-pill" style="display:none;">New posts</button>
+          </div>
         </div>
 
         <!-- Explore Tab -->
