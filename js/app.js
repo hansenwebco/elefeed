@@ -39,7 +39,8 @@ function isAnyDrawerOpen() {
   return (
     $('notif-drawer') && $('notif-drawer').classList.contains('open') ||
     $('thread-drawer') && $('thread-drawer').classList.contains('open') ||
-    $('profile-drawer') && $('profile-drawer').classList.contains('open')
+    $('profile-drawer') && $('profile-drawer').classList.contains('open') ||
+    $('compose-drawer') && $('compose-drawer').classList.contains('open')
   );
 }
 
@@ -47,6 +48,7 @@ function closeAnyDrawer() {
   if ($('notif-drawer') && $('notif-drawer').classList.contains('open')) closeNotifDrawer();
   if ($('thread-drawer') && $('thread-drawer').classList.contains('open')) closeThreadDrawer();
   if ($('profile-drawer') && $('profile-drawer').classList.contains('open')) closeProfileDrawer();
+  if ($('compose-drawer') && $('compose-drawer').classList.contains('open')) closeComposeDrawer();
 }
 
 // Listen for popstate to close drawers
