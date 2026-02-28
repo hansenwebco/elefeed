@@ -198,8 +198,8 @@ export function renderPost(status, opts = {}) {
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
       via
       <div class="post-hashtag-banner-tags">${tagList.map(t =>
-        `<a href="#" class="hashtag post-hashtag-banner-tag">#${escapeHTML(t)}</a>`
-      ).join('')}</div>
+    `<a href="#" class="hashtag post-hashtag-banner-tag">#${escapeHTML(t)}</a>`
+  ).join('')}</div>
     </div>` : '';
 
   /* ── Boost header ── */
@@ -234,6 +234,23 @@ export function renderPost(status, opts = {}) {
             <span class="post-time">${relativeTime(s.created_at)}</span>
           </div>
         </div>
+        ${state.account && s.account.id === state.account.id ? `
+        <div style="position:relative; margin-left:auto; display:inline-flex;">
+          <button class="icon-btn post-menu-btn" data-post-id="${s.id}" title="Post options" style="margin-right:-8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="opacity:0.6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="1"/>
+              <circle cx="19" cy="12" r="1"/>
+              <circle cx="5" cy="12" r="1"/>
+            </svg>
+          </button>
+          <div class="boost-dropdown post-dropdown" id="post-menu-${s.id}" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:150px; transform-origin: top right;">
+            <button class="boost-dropdown-item" data-action="edit" data-post-id="${s.id}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+              <span>Edit</span>
+            </button>
+          </div>
+        </div>
+        ` : ''}
       </div>
       ${contentHTML}
       ${footerHTML}
@@ -267,9 +284,9 @@ export function renderThreadPost(status, variant) {
     </div>` : '';
 
   const variantClass =
-    variant === 'focal'    ? 'thread-post-focal' :
-    variant === 'ancestor' ? 'thread-post-ancestor' :
-                             'thread-post-reply';
+    variant === 'focal' ? 'thread-post-focal' :
+      variant === 'ancestor' ? 'thread-post-ancestor' :
+        'thread-post-reply';
 
   /* Use the same context classes as feed posts */
   let contextClass = '';
@@ -291,6 +308,23 @@ export function renderThreadPost(status, variant) {
               <span class="post-time">${relativeTime(s.created_at)}</span>
             </div>
           </div>
+          ${state.account && s.account.id === state.account.id ? `
+          <div style="position:relative; margin-left:auto; display:inline-flex;">
+            <button class="icon-btn post-menu-btn" data-post-id="${s.id}" title="Post options" style="margin-right:-8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="opacity:0.6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="1"/>
+                <circle cx="19" cy="12" r="1"/>
+                <circle cx="5" cy="12" r="1"/>
+              </svg>
+            </button>
+            <div class="boost-dropdown post-dropdown" id="post-menu-${s.id}" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:150px; transform-origin: top right;">
+              <button class="boost-dropdown-item" data-action="edit" data-post-id="${s.id}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                <span>Edit</span>
+              </button>
+            </div>
+          </div>
+          ` : ''}
         </div>
         ${contentHTML}
         ${footerHTML}
