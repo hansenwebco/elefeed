@@ -498,6 +498,10 @@
   border-color: var(--accent);
 }
 
+.hashtag-filter-select.compose-visibility-btn {
+  background-image: none;
+}
+
 .hashtag-search-wrap {
   position: relative;
   flex: 1;

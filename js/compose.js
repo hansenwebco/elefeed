@@ -94,7 +94,7 @@ export function resetReplyState() {
     const cwInput = $('compose-cw-input' + suffix);
     const cwSection = $('compose-cw-section' + suffix);
     const cwBtn = $('compose-cw-btn' + suffix);
-    const visibility = $('compose-visibility' + suffix);
+    const visBtn = $('compose-visibility-btn' + suffix);
     const mediaPreview = $('compose-media-preview' + suffix);
 
     if (bar) bar.style.display = 'none';
@@ -106,7 +106,16 @@ export function resetReplyState() {
     if (cwInput) cwInput.value = '';
     if (cwSection) cwSection.style.display = 'none';
     if (cwBtn) cwBtn.classList.remove('active');
-    if (visibility) visibility.value = 'public';
+
+    if (visBtn) {
+      visBtn.dataset.visibility = 'public';
+      visBtn.dataset.quote = 'public';
+      const icon = $('compose-visibility-icon' + suffix);
+      const text = $('compose-visibility-text' + suffix);
+      if (icon) icon.textContent = '🌐';
+      if (text) text.textContent = 'Public, quotes allowed';
+    }
+
     if (mediaPreview) mediaPreview.innerHTML = '';
   });
   if (window.innerWidth > 900) updateSidebarCharCount(); else updateCharCount();
@@ -114,6 +123,57 @@ export function resetReplyState() {
 
 // Expose on window so inline onclick="resetReplyState()" on cancel buttons works
 window.resetReplyState = resetReplyState;
+
+/* ══════════════════════════════════════════════════════════════════════
+   VISIBILITY MODAL
+   ══════════════════════════════════════════════════════════════════════ */
+
+window.openVisibilityModal = function (suffix) {
+  composeState.activeVisibilitySuffix = suffix;
+  const visBtn = $('compose-visibility-btn' + suffix);
+  if (visBtn) {
+    $('modal-visibility-select').value = visBtn.dataset.visibility || 'public';
+    $('modal-quote-select').value = visBtn.dataset.quote || 'public';
+  }
+  window.handleModalVisibilityChange(); // init disabled state
+  $('visibility-modal').style.display = 'flex';
+};
+
+window.closeVisibilityModal = function () {
+  $('visibility-modal').style.display = 'none';
+  composeState.activeVisibilitySuffix = '';
+};
+
+window.saveVisibilityModal = function () {
+  const suffix = composeState.activeVisibilitySuffix || '';
+  const visBtn = $('compose-visibility-btn' + suffix);
+  if (visBtn) {
+    const vis = $('modal-visibility-select').value;
+    const quote = $('modal-quote-select').value;
+    visBtn.dataset.visibility = vis;
+    visBtn.dataset.quote = quote;
+
+    const icons = { 'public': '🌐', 'unlisted': '🔓', 'private': '🔒', 'direct': '✉️' };
+    const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
+    const quoteLabels = { 'public': 'quotes allowed', 'followers': 'quotes limited', 'nobody': 'quotes disabled' };
+    const iconNode = $('compose-visibility-icon' + suffix);
+    const textNode = $('compose-visibility-text' + suffix);
+    if (iconNode) iconNode.textContent = icons[vis] || '🌐';
+    if (textNode) textNode.textContent = `${visLabels[vis] || 'Public'}, ${quoteLabels[quote] || 'quotes allowed'}`;
+  }
+  window.closeVisibilityModal();
+};
+
+window.handleModalVisibilityChange = function () {
+  const vis = $('modal-visibility-select').value;
+  const quote = $('modal-quote-select');
+  if (vis === 'private' || vis === 'direct') {
+    quote.value = 'nobody';
+    quote.disabled = true;
+  } else {
+    quote.disabled = false;
+  }
+};
 
 /* ══════════════════════════════════════════════════════════════════════
    REPLY & QUOTE HANDLERS
@@ -274,8 +334,35 @@ window.handleEditInit = async function (postId) {
       cwBtn.classList.remove('active');
     }
 
-    const visibilitySelect = $('compose-visibility' + suffix);
-    if (statusResponse.visibility) visibilitySelect.value = statusResponse.visibility;
+    const visBtn = $('compose-visibility-btn' + suffix);
+    if (visBtn) {
+      const vis = statusResponse.visibility || 'public';
+      visBtn.dataset.visibility = vis;
+
+      const icons = { 'public': '🌐', 'unlisted': '🔓', 'private': '🔒', 'direct': '✉️' };
+      const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
+      const quoteLabels = { 'public': 'quotes allowed', 'followers': 'quotes limited', 'nobody': 'quotes disabled' };
+
+      let finalQuote = 'public';
+      if (vis === 'private' || vis === 'direct') {
+        finalQuote = 'nobody';
+      } else {
+        let policy = statusResponse.quote_approval_policy || sourceResponse.quote_approval_policy;
+        if (!policy && statusResponse.quote_approval && statusResponse.quote_approval.automatic) {
+          const autoList = statusResponse.quote_approval.automatic;
+          if (autoList.includes('public')) policy = 'public';
+          else if (autoList.includes('followers')) policy = 'followers';
+          else policy = 'nobody';
+        }
+        finalQuote = policy || 'public';
+      }
+      visBtn.dataset.quote = finalQuote;
+
+      const iconNode = $('compose-visibility-icon' + suffix);
+      const textNode = $('compose-visibility-text' + suffix);
+      if (iconNode) iconNode.textContent = icons[vis] || '🌐';
+      if (textNode) textNode.textContent = `${visLabels[vis] || 'Public'}, ${quoteLabels[finalQuote] || 'quotes allowed'}`;
+    }
 
     const mediaFilesKey = suffix === '-sidebar' ? 'sidebarMediaFiles' : 'mediaFiles';
     const mediaUrlsKey = suffix === '-sidebar' ? 'sidebarMediaUrls' : 'mediaUrls';
@@ -393,7 +480,9 @@ async function doPost(suffix = '') {
   const btn = $('compose-post-btn' + suffix);
   const textarea = $('compose-textarea' + suffix);
   const cwInput = $('compose-cw-input' + suffix);
-  const visibility = $('compose-visibility' + suffix).value;
+  const visBtn = $('compose-visibility-btn' + suffix);
+  const visibility = visBtn ? (visBtn.dataset.visibility || 'public') : 'public';
+  const quote_approval_policy = visBtn ? (visBtn.dataset.quote || 'public') : 'public';
   const status = textarea.innerText.trim();
   const spoilerText = cwInput.value.trim();
 
@@ -435,7 +524,7 @@ async function doPost(suffix = '') {
       }
     }
 
-    const postData = { status, visibility };
+    const postData = { status, visibility, quote_approval_policy };
     if (!composeState.editPostId) {
       if (composeState.replyToId) postData.in_reply_to_id = composeState.replyToId;
       if (composeState.quoteId) postData.quoted_status_id = composeState.quoteId;
