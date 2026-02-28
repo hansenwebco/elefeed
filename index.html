@@ -34,11 +34,14 @@
 
       <div class="login-form-box">
         <label class="form-label" for="server-input">mastodon server</label>
-        <div class="server-input-wrap">
-          <span class="server-prefix">https://</span>
-          <input type="text" id="server-input" class="server-input" placeholder="mastodon.social" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <div style="position: relative;" id="server-input-container">
+          <div class="server-input-wrap">
+            <span class="server-prefix">https://</span>
+            <input type="text" id="server-input" class="server-input" placeholder="mastodon.social" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          </div>
+          <div id="server-autocomplete" class="server-autocomplete-dropdown"></div>
         </div>
-        <div class="quick-servers">
+        <div class="quick-servers" id="quick-servers">
           <button class="quick-server-btn" data-server="mastodon.social">mastodon.social</button>
           <button class="quick-server-btn" data-server="mastodon.online">mastodon.online</button>
           <button class="quick-server-btn" data-server="fosstodon.org">fosstodon.org</button>
