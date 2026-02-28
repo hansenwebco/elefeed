@@ -4,7 +4,7 @@ function positionOverlayPill() {
   const feed = document.getElementById('feed-posts');
   if (!pill || !feed) return;
   const rect = feed.getBoundingClientRect();
-  pill.style.left = (rect.left + rect.width/2) + 'px';
+  pill.style.left = (rect.left + rect.width / 2) + 'px';
   pill.style.top = (rect.top + window.scrollY + 20) + 'px';
 }
 
@@ -24,7 +24,15 @@ import { getDemoHomePosts, getDemoHashtagData } from './demo.js';
 
 /* ── Key helpers ───────────────────────────────────────────────────── */
 
-export function activeFeedKey() { return 'feed'; }
+export let overlayPillDismissed = false;
+
+export function activeFeedKey() {
+  const filter = state.feedFilter || 'all';
+  if (filter === 'hashtags') {
+    return 'feed_hashtags_' + (state.selectedHashtagFilter || 'all');
+  }
+  return 'feed_' + filter;
+}
 
 export function updateTabPill(feedKey) {
   // Overlay pill logic
@@ -43,38 +51,42 @@ export function updateTabPill(feedKey) {
 
 // ...existing code...
 // Overlay pill click handler
-function setupOverlayPill(feedKey) {
+function setupOverlayPill() {
   const overlayPill = document.getElementById('new-posts-pill');
   if (!overlayPill) return;
   overlayPill.onclick = () => {
-    flushPendingPosts(feedKey, true);
+    flushPendingPosts(activeFeedKey(), true);
     // Do not hide here; updateTabPill will handle visibility
   };
 }
 
+let scrollPillListenerAttached = false;
+
 // Hide overlay pill on scroll up
-function setupOverlayPillScroll(feedKey) {
-  let lastY = window.scrollY;
+function setupOverlayPillScroll() {
+  if (scrollPillListenerAttached) return;
+  scrollPillListenerAttached = true;
   window.addEventListener('scroll', () => {
     const overlayPill = document.getElementById('new-posts-pill');
     if (!overlayPill) return;
+    const feedKey = activeFeedKey();
     const pending = state.pendingPosts[feedKey] || [];
     if (pending.length === 0) {
       overlayPill.style.display = 'none';
       return;
     }
-      // If the user scrolls to the top of the feed (where new posts would be), dismiss the pill
-      const feed = document.getElementById('feed-posts');
-      if (feed) {
-        const rect = feed.getBoundingClientRect();
-        if (rect.top >= 0 && rect.top < 100) {
-          overlayPillDismissed = true;
-          overlayPill.style.display = 'none';
-          return;
-        }
+    // If the user scrolls to the top of the feed (where new posts would be), dismiss the pill
+    const feed = document.getElementById('feed-posts');
+    if (feed) {
+      const rect = feed.getBoundingClientRect();
+      if (rect.top >= 0 && rect.top < 100) {
+        overlayPillDismissed = true;
+        overlayPill.style.display = 'none';
+        return;
       }
-      overlayPill.style.display = pending.length > 0 && !overlayPillDismissed ? '' : 'none';
-      positionOverlayPill();
+    }
+    overlayPill.style.display = pending.length > 0 && !overlayPillDismissed ? '' : 'none';
+    positionOverlayPill();
   });
 }
 
@@ -117,7 +129,7 @@ export async function filterForFollowing(page) {
     }
   });
 
-    let overlayPillDismissed = false;
+  // Removed errant overlayPillDismissed declaration
   const idsArr = Array.from(idsToCheck);
   if (idsArr.length > 0) {
     for (let i = 0; i < idsArr.length; i += 40) {
@@ -247,10 +259,23 @@ async function loadHashtagsFeed() {
 export async function loadFeedTab(scrollTop = true) {
   if (scrollTop) window.scrollTo({ top: 0, behavior: 'instant' });
   const filter = state.feedFilter;
+  const feedKey = activeFeedKey();
+
+  // Merge pending posts into appropriate timeline on tab switch
+  if (state.pendingPosts[feedKey] && state.pendingPosts[feedKey].length > 0) {
+    if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+      state.hashtagFeed = [...state.pendingPosts[feedKey], ...(state.hashtagFeed || [])];
+    } else {
+      state.homeFeed = [...state.pendingPosts[feedKey], ...(state.homeFeed || [])];
+    }
+    state.pendingPosts[feedKey] = [];
+    overlayPillDismissed = false;
+  }
+  updateTabPill(feedKey);
 
   // Setup overlay pill handlers
-  setupOverlayPill('feed');
-  setupOverlayPillScroll('feed');
+  setupOverlayPill();
+  setupOverlayPillScroll();
 
   setLoading('feed', true);
   setError('feed', null);
@@ -342,8 +367,10 @@ async function pollForNewPosts() {
     }
     if (!display.length) return;
 
-    state.pendingPosts.feed = [...display, ...(state.pendingPosts.feed || [])];
-    updateTabPill('feed');
+    const feedKey = activeFeedKey();
+    state.pendingPosts[feedKey] = [...display, ...(state.pendingPosts[feedKey] || [])];
+    overlayPillDismissed = false;
+    updateTabPill(feedKey);
   } catch (err) {
     console.warn('Silent polling failed:', err.message);
   }
@@ -402,7 +429,7 @@ export function handleScrollDirection() {
   const currentY = window.scrollY || document.documentElement.scrollTop;
   scrollingUp = currentY < lastScrollY;
 
-  if (state.activeTab === 'feed' && state.feedFilter === 'all') {
+  if (state.activeTab === 'feed') {
     const feedKey = activeFeedKey();
     const pending = state.pendingPosts[feedKey] || [];
     if (scrollingUp && currentY < 200 && pending.length > 0) {

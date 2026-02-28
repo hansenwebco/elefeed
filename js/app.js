@@ -543,8 +543,9 @@ window.addEventListener('resize', (() => {
 
 const doRefresh = () => {
   const tab = state.activeTab;
-  state.pendingPosts.feed = [];
-  updateTabPill('feed');
+  const feedKey = activeFeedKey();
+  state.pendingPosts[feedKey] = [];
+  updateTabPill(feedKey);
   if (tab === 'feed') {
     state.homeFeed = null;
     state.hashtagFeed = null;
@@ -595,7 +596,7 @@ $('logout-btn').addEventListener('click', () => {
   state.followedHashtags = null;
   state.activeTab = 'feed';
   state.feedFilter = 'all';
-  state.pendingPosts = { feed: [] };
+  state.pendingPosts = {};
   state.trendingPostsLoaded = false;
   state.trendingHashtagsLoaded = false;
   state.trendingPeopleLoaded = false;
@@ -641,7 +642,7 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 window.addEventListener('wheel', (e) => {
-  if (state.activeTab !== 'feed' || state.feedFilter !== 'all') return;
+  if (state.activeTab !== 'feed') return;
   const currentY = window.scrollY || document.documentElement.scrollTop;
   if (currentY < 5 && e.deltaY < 0) {
     const feedKey = activeFeedKey();
@@ -653,7 +654,7 @@ window.addEventListener('wheel', (e) => {
 let touchStartY = 0;
 window.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
 window.addEventListener('touchmove', (e) => {
-  if (state.activeTab !== 'feed' || state.feedFilter !== 'all') return;
+  if (state.activeTab !== 'feed') return;
   const currentY = window.scrollY || document.documentElement.scrollTop;
   if (currentY < 5) {
     const touchDelta = e.touches[0].clientY - touchStartY;
