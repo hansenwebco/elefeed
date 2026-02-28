@@ -76,12 +76,10 @@
     <aside class="compose-sidebar">
       <div class="compose-sidebar-body">
         <div style="display:flex; gap:8px; margin-bottom:4px;">
-          <select class="hashtag-filter-select compose-visibility" id="compose-visibility-sidebar" style="padding:6px 28px 6px 10px;font-size:12px;">
-            <option value="public">🌐 Public</option>
-            <option value="unlisted">🔓 Unlisted</option>
-            <option value="private">🔒 Followers</option>
-            <option value="direct">✉️ Direct</option>
-          </select>
+          <button class="hashtag-filter-select compose-visibility-btn" id="compose-visibility-btn-sidebar" data-visibility="public" data-quote="public" style="padding:6px 10px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;" onclick="window.openVisibilityModal('-sidebar')">
+            <span id="compose-visibility-icon-sidebar">🌐</span>
+            <span id="compose-visibility-text-sidebar">Public, quotes allowed</span>
+          </button>
           <button style="border:1px solid var(--border); border-radius:4px; padding:4px 8px; font-size:12px; color:var(--text-muted); background:transparent; font-family:var(--font-body); cursor:pointer; display:flex; gap:4px; align-items:center;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 2A10 10 0 1 0 22 12 10 10 0 0 0 12 2z" />
@@ -498,13 +496,11 @@
               </button>
               <input type="file" id="compose-media-input" accept="image/*,video/*" multiple style="display:none;" />
             </div>
-            <div class="compose-toolbar-right">
-              <select class="hashtag-filter-select compose-visibility" id="compose-visibility" style="padding:6px 28px 6px 10px;font-size:12px;">
-                <option value="public">🌐 Public</option>
-                <option value="unlisted">🔓 Unlisted</option>
-                <option value="private">🔒 Followers</option>
-                <option value="direct">✉️ Direct</option>
-              </select>
+            <div class="compose-toolbar-right" style="display:flex; gap:8px; align-items:center;">
+              <button class="hashtag-filter-select compose-visibility-btn" id="compose-visibility-btn" data-visibility="public" data-quote="public" style="padding:6px 10px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;" onclick="window.openVisibilityModal('')">
+                <span id="compose-visibility-icon">🌐</span>
+                <span id="compose-visibility-text">Public, quotes allowed</span>
+              </button>
             </div>
           </div>
 
@@ -537,6 +533,47 @@
 
   <div class="mention-suggestions" id="mention-suggestions"></div>
   <div class="hashtag-suggestions" id="hashtag-suggestions"></div>
+
+  <!-- Visibility Modal -->
+  <div id="visibility-modal" class="compose-alt-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,13,15,0.85); align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
+    <div style="background:var(--surface); width:min(400px, 100%); margin: 0 16px; border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,0.5);">
+      <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size:16px; font-weight:500;">Visibility and interaction</h3>
+        <button onclick="window.closeVisibilityModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div style="padding:16px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
+        <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">Control who can interact with this post.</p>
+
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:13px; font-weight:500; color:var(--text);">Visibility</label>
+          <select id="modal-visibility-select" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; outline:none;" onchange="window.handleModalVisibilityChange()">
+            <option value="public">🌐 Public</option>
+            <option value="unlisted">🔓 Unlisted</option>
+            <option value="private">🔒 Followers</option>
+            <option value="direct">✉️ Direct</option>
+          </select>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:13px; font-weight:500; color:var(--text);">Who can quote</label>
+          <select id="modal-quote-select" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; outline:none;">
+            <option value="public">💬 Anyone</option>
+            <option value="followers">👥 Followers only</option>
+            <option value="nobody">🚫 Just me</option>
+          </select>
+        </div>
+      </div>
+      <div style="padding:16px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
+        <button onclick="window.closeVisibilityModal()" style="padding:8px 16px; background:none; border:1px solid var(--border); border-radius:6px; color:var(--text); cursor:pointer;">Cancel</button>
+        <button onclick="window.saveVisibilityModal()" style="padding:8px 16px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-weight:500; cursor:pointer;">Done</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Alt Text Modal -->
   <div id="alt-text-modal" class="compose-alt-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,13,15,0.85); align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
