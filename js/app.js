@@ -568,7 +568,7 @@ document.addEventListener('click', e => {
   }
 
   /* Follow / unfollow */
-  const followBtn = e.target.closest('.profile-follow-btn');
+  const followBtn = e.target.closest('.profile-follow-btn:not(#hashtag-follow-btn)');
   if (followBtn) { e.preventDefault(); handleFollowToggle(followBtn); return; }
 
   /* Notify toggle */
