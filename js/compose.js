@@ -71,15 +71,43 @@ export function resetReplyState() {
   composeState.replyToId = null;
   composeState.replyToAcct = null;
   composeState.quoteId = null;
+  composeState.editPostId = null;
+
+  (composeState.mediaUrls || []).forEach(url => { if (url && url.startsWith('blob:')) URL.revokeObjectURL(url); });
+  (composeState.sidebarMediaUrls || []).forEach(url => { if (url && url.startsWith('blob:')) URL.revokeObjectURL(url); });
+
+  composeState.mediaFiles = [];
+  composeState.mediaUrls = [];
+  composeState.mediaDescriptions = [];
+  composeState.mediaIds = [];
+  composeState.sidebarMediaFiles = [];
+  composeState.sidebarMediaUrls = [];
+  composeState.sidebarMediaDescriptions = [];
+  composeState.sidebarMediaIds = [];
+
   ['', '-sidebar'].forEach(suffix => {
     const bar = $('compose-reply-bar' + suffix);
     const nameNode = $('compose-reply-to' + suffix);
     const typeNode = $('compose-context-type' + suffix);
     const textarea = $('compose-textarea' + suffix);
+    const postBtn = $('compose-post-btn' + suffix);
+    const cwInput = $('compose-cw-input' + suffix);
+    const cwSection = $('compose-cw-section' + suffix);
+    const cwBtn = $('compose-cw-btn' + suffix);
+    const visibility = $('compose-visibility' + suffix);
+    const mediaPreview = $('compose-media-preview' + suffix);
+
     if (bar) bar.style.display = 'none';
     if (nameNode) nameNode.textContent = '';
     if (typeNode) typeNode.textContent = 'Replying to';
     if (textarea) textarea.innerText = '';
+    if (postBtn) postBtn.textContent = 'Post';
+
+    if (cwInput) cwInput.value = '';
+    if (cwSection) cwSection.style.display = 'none';
+    if (cwBtn) cwBtn.classList.remove('active');
+    if (visibility) visibility.value = 'public';
+    if (mediaPreview) mediaPreview.innerHTML = '';
   });
   if (window.innerWidth > 900) updateSidebarCharCount(); else updateCharCount();
 }
@@ -200,6 +228,133 @@ window.handleBoostSubmit = async function (postId, isBoosted) {
   }
 };
 
+window.togglePostMenu = function (postId, triggerBtn) {
+  document.querySelectorAll('.post-dropdown').forEach(m => m.classList.remove('show'));
+  const menu = triggerBtn
+    ? triggerBtn.parentElement.querySelector('.post-dropdown')
+    : $(`post-menu-${postId}`);
+  if (menu) menu.classList.toggle('show');
+};
+
+window.addEventListener('click', () => {
+  document.querySelectorAll('.post-dropdown').forEach(m => m.classList.remove('show'));
+});
+
+window.handleEditInit = async function (postId) {
+  document.querySelectorAll('.post-dropdown').forEach(m => m.classList.remove('show'));
+  if (!state.token) { showToast('Please sign in to edit posts.'); return; }
+
+  try {
+    const [statusResponse, sourceResponse] = await Promise.all([
+      apiGet(`/api/v1/statuses/${postId}`, state.token),
+      apiGet(`/api/v1/statuses/${postId}/source`, state.token)
+    ]);
+
+    const isDesktop = window.innerWidth > 900;
+    const suffix = isDesktop ? '-sidebar' : '';
+
+    composeState.editPostId = postId;
+    composeState.replyToId = null;
+    composeState.replyToAcct = null;
+    composeState.quoteId = null;
+
+    const textarea = $('compose-textarea' + suffix);
+    textarea.innerText = sourceResponse.text || '';
+
+    const cwInput = $('compose-cw-input' + suffix);
+    const cwSection = $('compose-cw-section' + suffix);
+    const cwBtn = $('compose-cw-btn' + suffix);
+    if (sourceResponse.spoiler_text) {
+      cwInput.value = sourceResponse.spoiler_text;
+      cwSection.style.display = 'block';
+      cwBtn.classList.add('active');
+    } else {
+      cwInput.value = '';
+      cwSection.style.display = 'none';
+      cwBtn.classList.remove('active');
+    }
+
+    const visibilitySelect = $('compose-visibility' + suffix);
+    if (statusResponse.visibility) visibilitySelect.value = statusResponse.visibility;
+
+    const mediaFilesKey = suffix === '-sidebar' ? 'sidebarMediaFiles' : 'mediaFiles';
+    const mediaUrlsKey = suffix === '-sidebar' ? 'sidebarMediaUrls' : 'mediaUrls';
+    const mediaDescsKey = suffix === '-sidebar' ? 'sidebarMediaDescriptions' : 'mediaDescriptions';
+    const mediaIdsKey = suffix === '-sidebar' ? 'sidebarMediaIds' : 'mediaIds';
+
+    composeState[mediaFilesKey] = [];
+    composeState[mediaUrlsKey] = [];
+    composeState[mediaDescsKey] = [];
+    composeState[mediaIdsKey] = [];
+    const preview = $('compose-media-preview' + suffix);
+    preview.innerHTML = '';
+
+    if (statusResponse.media_attachments) {
+      statusResponse.media_attachments.forEach(m => {
+        composeState[mediaFilesKey].push(null);
+        composeState[mediaUrlsKey].push(m.url);
+        composeState[mediaDescsKey].push(m.description || '');
+        composeState[mediaIdsKey].push(m.id);
+
+        const item = document.createElement('div');
+        item.className = 'compose-media-item';
+
+        const isVideo = m.type === 'video' || m.type === 'gifv';
+        const mediaEl = isVideo ? document.createElement('video') : document.createElement('img');
+        mediaEl.src = m.preview_url || m.url;
+        if (isVideo) mediaEl.muted = true;
+
+        const altBtn = document.createElement('button');
+        altBtn.className = 'compose-media-item-alt-btn' + (!m.description ? ' missing' : '');
+        altBtn.textContent = 'ALT';
+        altBtn.onclick = () => {
+          const idx = composeState[mediaUrlsKey].indexOf(m.url);
+          openAltModal(m.url, idx, suffix, composeState[mediaDescsKey][idx]);
+        };
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'compose-media-remove';
+        removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        removeBtn.onclick = () => {
+          const index = composeState[mediaUrlsKey].indexOf(m.url);
+          if (index > -1) {
+            composeState[mediaFilesKey].splice(index, 1);
+            composeState[mediaUrlsKey].splice(index, 1);
+            composeState[mediaDescsKey].splice(index, 1);
+            composeState[mediaIdsKey].splice(index, 1);
+          }
+          item.remove();
+          if (isDesktop) updateSidebarCharCount(); else updateCharCount();
+        };
+
+        item.appendChild(mediaEl);
+        if (!isVideo) item.appendChild(altBtn);
+        item.appendChild(removeBtn);
+        preview.appendChild(item);
+      });
+    }
+
+    const bar = $('compose-reply-bar' + suffix);
+    const to = $('compose-reply-to' + suffix);
+    if (bar && to) {
+      const typeNode = $('compose-context-type' + suffix);
+      if (typeNode) typeNode.textContent = 'Editing post';
+      bar.style.display = 'block';
+      to.textContent = '';
+    }
+    const postBtn = $('compose-post-btn' + suffix);
+    if (postBtn) postBtn.textContent = 'Edit';
+
+    if (!isDesktop) openComposeDrawer();
+    else {
+      textarea.focus();
+    }
+    if (isDesktop) updateSidebarCharCount(); else updateCharCount();
+  } catch (err) {
+    showToast('Could not fetch post source: ' + err.message);
+  }
+};
+
 /* ══════════════════════════════════════════════════════════════════════
    COMPOSE DRAWER (mobile)
    ══════════════════════════════════════════════════════════════════════ */
@@ -227,18 +382,7 @@ export function closeComposeDrawer() {
   document.body.style.overflow = '';
   $('compose-textarea').blur();
 
-  // Reset form
-  $('compose-textarea').innerHTML = '';
-  $('compose-cw-input').value = '';
-  $('compose-cw-section').style.display = 'none';
-  $('compose-cw-btn').classList.remove('active');
-  $('compose-visibility').value = 'public';
-  composeState.mediaFiles = [];
-  composeState.mediaUrls = [];
-  composeState.mediaDescriptions = [];
-  $('compose-media-preview').innerHTML = '';
   resetReplyState();
-  updateCharCount();
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -256,6 +400,7 @@ async function doPost(suffix = '') {
   const isSidebar = suffix === '-sidebar';
   const mediaFiles = isSidebar ? composeState.sidebarMediaFiles : composeState.mediaFiles;
   const mediaDescriptions = isSidebar ? composeState.sidebarMediaDescriptions : composeState.mediaDescriptions;
+  const existingMediaIds = isSidebar ? composeState.sidebarMediaIds : composeState.mediaIds;
 
   if (!status && mediaFiles.length === 0) return;
 
@@ -263,31 +408,53 @@ async function doPost(suffix = '') {
   btn.textContent = 'Posting...';
 
   try {
-    const mediaIds = [];
+    const finalMediaIds = [];
+    const mediaAttributes = [];
+
     for (let i = 0; i < mediaFiles.length; i++) {
       const file = mediaFiles[i];
       const desc = mediaDescriptions[i];
-      const formData = new FormData();
-      formData.append('file', file);
-      if (desc) formData.append('description', desc);
-      const res = await fetch(`https://${state.server}/api/v1/media`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${state.token}` },
-        body: formData,
-      });
-      if (!res.ok) throw new Error('Failed to upload media');
-      const media = await res.json();
-      mediaIds.push(media.id);
+
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (desc) formData.append('description', desc);
+        const res = await fetch(`https://${state.server}/api/v1/media`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${state.token}` },
+          body: formData,
+        });
+        if (!res.ok) throw new Error('Failed to upload media');
+        const media = await res.json();
+        finalMediaIds.push(media.id);
+        mediaAttributes.push({ id: media.id, description: desc || '' });
+      } else {
+        const existingId = existingMediaIds[i];
+        finalMediaIds.push(existingId);
+        mediaAttributes.push({ id: existingId, description: desc || '' });
+      }
     }
 
     const postData = { status, visibility };
-    if (composeState.replyToId) postData.in_reply_to_id = composeState.replyToId;
-    if (composeState.quoteId) postData.quoted_status_id = composeState.quoteId;
+    if (!composeState.editPostId) {
+      if (composeState.replyToId) postData.in_reply_to_id = composeState.replyToId;
+      if (composeState.quoteId) postData.quoted_status_id = composeState.quoteId;
+    }
     if (spoilerText) postData.spoiler_text = spoilerText;
-    if (mediaIds.length) postData.media_ids = mediaIds;
+    if (finalMediaIds.length) {
+      postData.media_ids = finalMediaIds;
+      postData.media_attributes = mediaAttributes;
+    }
 
-    const res = await fetch(`https://${state.server}/api/v1/statuses`, {
-      method: 'POST',
+    let method = 'POST';
+    let endpoint = `/api/v1/statuses`;
+    if (composeState.editPostId) {
+      method = 'PUT';
+      endpoint = `/api/v1/statuses/${composeState.editPostId}`;
+    }
+
+    const res = await fetch(`https://${state.server}${endpoint}`, {
+      method,
       headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(postData),
     });
@@ -298,26 +465,8 @@ async function doPost(suffix = '') {
 
     showToast('Posted successfully!');
 
-    // Reset form
-    textarea.innerHTML = '';
-    cwInput.value = '';
-    $('compose-cw-section' + suffix).style.display = 'none';
-    $('compose-cw-btn' + suffix).classList.remove('active');
-    $('compose-visibility' + suffix).value = 'public';
-
-    if (isSidebar) {
-      composeState.sidebarMediaFiles = [];
-      composeState.sidebarMediaUrls.forEach(url => URL.revokeObjectURL(url));
-      composeState.sidebarMediaUrls = [];
-      composeState.sidebarMediaDescriptions = [];
-    } else {
-      composeState.mediaFiles = [];
-      composeState.mediaUrls = [];
-      composeState.mediaDescriptions = [];
-    }
-    $('compose-media-preview' + suffix).innerHTML = '';
+    // Form reset happens largely via resetReplyState
     resetReplyState();
-    if (isSidebar) updateSidebarCharCount(); else updateCharCount();
 
     if (!isSidebar) closeComposeDrawer();
     if (state.activeTab === 'feed') loadFeedTab(false);
@@ -519,10 +668,12 @@ function wireMediaUpload(suffix) {
       removeBtn.onclick = () => {
         const index = composeState[mediaUrlsKey].indexOf(url);
         if (index > -1) {
-          URL.revokeObjectURL(url);
+          if (url.startsWith('blob:')) URL.revokeObjectURL(url);
           composeState[mediaFilesKey].splice(index, 1);
           composeState[mediaUrlsKey].splice(index, 1);
           composeState[mediaDescsKey].splice(index, 1);
+          const idsList = composeState[mediaFilesKey === 'mediaFiles' ? 'mediaIds' : 'sidebarMediaIds'];
+          if (idsList) idsList.splice(index, 1);
         }
         item.remove();
         countFn();

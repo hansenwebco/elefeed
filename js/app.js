@@ -518,7 +518,7 @@ window.addEventListener('touchmove', (e) => {
 
 
 function wrapDrawerClose(fn) {
-  return function(...args) {
+  return function (...args) {
     fn.apply(this, args);
     setTimeout(setOverlayPillVisibility, 10);
   };
@@ -543,7 +543,7 @@ document.addEventListener('keydown', e => {
   }
 });
 // Hide pill when any drawer opens (immediate, no delay)
-['notif-drawer','thread-drawer','profile-drawer','compose-drawer'].forEach(id => {
+['notif-drawer', 'thread-drawer', 'profile-drawer', 'compose-drawer'].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener('transitionstart', setOverlayPillVisibility);
@@ -592,11 +592,20 @@ document.addEventListener('click', e => {
     return;
   }
 
+  /* Post menu button (opens dropdown) */
+  const postMenuBtn = e.target.closest('.post-menu-btn');
+  if (postMenuBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    window.togglePostMenu(postMenuBtn.dataset.postId, postMenuBtn);
+    return;
+  }
+
   /* Reply */
   const replyBtn = e.target.closest('.post-reply-btn');
   if (replyBtn) { e.preventDefault(); handleReply(replyBtn.dataset.postId, replyBtn.dataset.accountAcct); return; }
 
-  /* Boost dropdown item */
+  /* Dropdown item (Boost / Quote / Edit) */
   const boostItem = e.target.closest('.boost-dropdown-item');
   if (boostItem) {
     e.preventDefault();
@@ -605,6 +614,8 @@ document.addEventListener('click', e => {
       window.handleBoostSubmit(boostItem.dataset.postId, boostItem.dataset.isBoosted === 'true');
     } else if (boostItem.dataset.action === 'quote') {
       window.handleQuoteInit(boostItem.dataset.postId, boostItem.dataset.acct);
+    } else if (boostItem.dataset.action === 'edit') {
+      window.handleEditInit(boostItem.dataset.postId);
     }
     return;
   }
