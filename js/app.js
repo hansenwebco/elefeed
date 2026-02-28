@@ -266,7 +266,42 @@ $('login-btn').addEventListener('click', async () => {
   }
 });
 
-/* Quick server buttons */
+/* Server Autocomplete Logic */
+let popularServers = [];
+let selectedSuggestionIndex = -1;
+const autocompleteDropdown = $('server-autocomplete');
+const serverInput = $('server-input');
+const quickServers = $('quick-servers');
+
+async function fetchPopularServers() {
+  try {
+    const res = await fetch('https://api.joinmastodon.org/servers');
+    if (res.ok) {
+      const data = await res.json();
+      // Sort primarily by active users
+      popularServers = data.sort((a, b) => b.total_users - a.total_users);
+
+      // Update quick servers with top 6 dynamically
+      if (quickServers) {
+        quickServers.innerHTML = popularServers.slice(0, 6).map(s =>
+          `<button class="quick-server-btn" data-server="${s.domain}">${s.domain}</button>`
+        ).join('');
+
+        // Re-bind quick server buttons
+        document.querySelectorAll('.quick-server-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            $('server-input').value = btn.dataset.server;
+            $('server-input').focus();
+          });
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to fetch popular Mastodon servers', err);
+  }
+}
+
+// Bind statically rendered quick-server-btns on load
 document.querySelectorAll('.quick-server-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     $('server-input').value = btn.dataset.server;
@@ -274,10 +309,125 @@ document.querySelectorAll('.quick-server-btn').forEach(btn => {
   });
 });
 
-/* Enter key in server input */
-$('server-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') $('login-btn').click();
+function renderAutocomplete(query = '') {
+  if (!popularServers.length) return;
+
+  selectedSuggestionIndex = -1;
+  query = query.toLowerCase().trim();
+
+  if (!query) {
+    if (autocompleteDropdown) autocompleteDropdown.classList.remove('active');
+    return;
+  }
+
+  let matches = popularServers.filter(s =>
+    s.domain.toLowerCase().includes(query) ||
+    (s.description && s.description.toLowerCase().includes(query))
+  );
+
+  // Take top 30 to keep DOM light
+  matches = matches.slice(0, 30);
+
+  if (matches.length === 0) {
+    if (autocompleteDropdown) autocompleteDropdown.classList.remove('active');
+    return;
+  }
+
+  if (autocompleteDropdown) {
+    autocompleteDropdown.innerHTML = matches.map((s, idx) => {
+      const domain = s.domain;
+      const users = s.total_users ? new Intl.NumberFormat().format(s.total_users) + ' users' : '';
+      const thumbUrl = s.proxied_thumbnail || 'favicon.svg';
+      return `
+        <div class="server-suggestion-item" data-server="${domain}" data-index="${idx}">
+          <img src="${thumbUrl}" class="server-suggestion-thumb" alt="" loading="lazy" onerror="this.src='favicon.svg'" />
+          <div class="server-suggestion-info">
+            <div class="server-suggestion-domain">${domain}</div>
+            <div class="server-suggestion-users">${users}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    autocompleteDropdown.classList.add('active');
+  }
+}
+
+function updateSuggestionSelection(items) {
+  items.forEach((item, idx) => {
+    if (idx === selectedSuggestionIndex) {
+      item.classList.add('selected');
+      item.scrollIntoView({ block: 'nearest' });
+    } else {
+      item.classList.remove('selected');
+    }
+  });
+}
+
+if (serverInput) {
+  serverInput.addEventListener('focus', () => renderAutocomplete(serverInput.value));
+  serverInput.addEventListener('input', () => renderAutocomplete(serverInput.value));
+
+  serverInput.addEventListener('keydown', e => {
+    const isVisible = autocompleteDropdown && autocompleteDropdown.classList.contains('active');
+    const items = isVisible ? autocompleteDropdown.querySelectorAll('.server-suggestion-item') : [];
+
+    if (isVisible && items.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedSuggestionIndex = (selectedSuggestionIndex + 1) % items.length;
+        updateSuggestionSelection(items);
+        return;
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedSuggestionIndex = (selectedSuggestionIndex - 1 + items.length) % items.length;
+        updateSuggestionSelection(items);
+        return;
+      } else if (e.key === 'Enter') {
+        if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < items.length) {
+          e.preventDefault();
+          const item = items[selectedSuggestionIndex];
+          serverInput.value = item.dataset.server;
+          autocompleteDropdown.classList.remove('active');
+          selectedSuggestionIndex = -1;
+          return;
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        autocompleteDropdown.classList.remove('active');
+        selectedSuggestionIndex = -1;
+        return;
+      }
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (autocompleteDropdown) autocompleteDropdown.classList.remove('active');
+      $('login-btn').click();
+    }
+  });
+}
+
+document.addEventListener('click', e => {
+  const item = e.target.closest('.server-suggestion-item');
+  if (item && serverInput) {
+    serverInput.value = item.dataset.server;
+    if (autocompleteDropdown) autocompleteDropdown.classList.remove('active');
+    serverInput.focus();
+    return;
+  }
+
+  const inputWrap = e.target.closest('.server-input-wrap');
+  if (inputWrap && serverInput) {
+    serverInput.focus();
+  }
+
+  if (!e.target.closest('#server-input-container')) {
+    if (autocompleteDropdown) autocompleteDropdown.classList.remove('active');
+  }
 });
+
+fetchPopularServers();
 
 /* ══════════════════════════════════════════════════════════════════════
    TAB SWITCHING & DROPDOWNS
