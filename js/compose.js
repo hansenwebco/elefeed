@@ -72,17 +72,42 @@ export function resetReplyState() {
   composeState.replyToAcct = null;
   composeState.quoteId = null;
   composeState.editPostId = null;
+
+  (composeState.mediaUrls || []).forEach(url => { if (url && url.startsWith('blob:')) URL.revokeObjectURL(url); });
+  (composeState.sidebarMediaUrls || []).forEach(url => { if (url && url.startsWith('blob:')) URL.revokeObjectURL(url); });
+
+  composeState.mediaFiles = [];
+  composeState.mediaUrls = [];
+  composeState.mediaDescriptions = [];
+  composeState.mediaIds = [];
+  composeState.sidebarMediaFiles = [];
+  composeState.sidebarMediaUrls = [];
+  composeState.sidebarMediaDescriptions = [];
+  composeState.sidebarMediaIds = [];
+
   ['', '-sidebar'].forEach(suffix => {
     const bar = $('compose-reply-bar' + suffix);
     const nameNode = $('compose-reply-to' + suffix);
     const typeNode = $('compose-context-type' + suffix);
     const textarea = $('compose-textarea' + suffix);
     const postBtn = $('compose-post-btn' + suffix);
+    const cwInput = $('compose-cw-input' + suffix);
+    const cwSection = $('compose-cw-section' + suffix);
+    const cwBtn = $('compose-cw-btn' + suffix);
+    const visibility = $('compose-visibility' + suffix);
+    const mediaPreview = $('compose-media-preview' + suffix);
+
     if (bar) bar.style.display = 'none';
     if (nameNode) nameNode.textContent = '';
     if (typeNode) typeNode.textContent = 'Replying to';
     if (textarea) textarea.innerText = '';
     if (postBtn) postBtn.textContent = 'Post';
+
+    if (cwInput) cwInput.value = '';
+    if (cwSection) cwSection.style.display = 'none';
+    if (cwBtn) cwBtn.classList.remove('active');
+    if (visibility) visibility.value = 'public';
+    if (mediaPreview) mediaPreview.innerHTML = '';
   });
   if (window.innerWidth > 900) updateSidebarCharCount(); else updateCharCount();
 }
@@ -357,19 +382,7 @@ export function closeComposeDrawer() {
   document.body.style.overflow = '';
   $('compose-textarea').blur();
 
-  // Reset form
-  $('compose-textarea').innerHTML = '';
-  $('compose-cw-input').value = '';
-  $('compose-cw-section').style.display = 'none';
-  $('compose-cw-btn').classList.remove('active');
-  $('compose-visibility').value = 'public';
-  composeState.mediaFiles = [];
-  composeState.mediaUrls = [];
-  composeState.mediaDescriptions = [];
-  composeState.mediaIds = [];
-  $('compose-media-preview').innerHTML = '';
   resetReplyState();
-  updateCharCount();
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -452,28 +465,8 @@ async function doPost(suffix = '') {
 
     showToast('Posted successfully!');
 
-    // Reset form
-    textarea.innerHTML = '';
-    cwInput.value = '';
-    $('compose-cw-section' + suffix).style.display = 'none';
-    $('compose-cw-btn' + suffix).classList.remove('active');
-    $('compose-visibility' + suffix).value = 'public';
-
-    if (isSidebar) {
-      composeState.sidebarMediaFiles = [];
-      composeState.sidebarMediaUrls.forEach(url => { if (url.startsWith('blob:')) URL.revokeObjectURL(url); });
-      composeState.sidebarMediaUrls = [];
-      composeState.sidebarMediaDescriptions = [];
-      composeState.sidebarMediaIds = [];
-    } else {
-      composeState.mediaFiles = [];
-      composeState.mediaUrls = [];
-      composeState.mediaDescriptions = [];
-      composeState.mediaIds = [];
-    }
-    $('compose-media-preview' + suffix).innerHTML = '';
+    // Form reset happens largely via resetReplyState
     resetReplyState();
-    if (isSidebar) updateSidebarCharCount(); else updateCharCount();
 
     if (!isSidebar) closeComposeDrawer();
     if (state.activeTab === 'feed') loadFeedTab(false);
