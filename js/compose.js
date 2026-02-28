@@ -487,6 +487,7 @@ let mentionCurrentQuery = '';
 let mentionTargetTextarea = null;
 let mentionSuggestions = [];
 let mentionSelectedIndex = -1;
+let mentionDebounceTimer = null;
 
 function initMentionAutocomplete() {
   const t1 = $('compose-textarea');
@@ -511,10 +512,15 @@ function handleMentionInput(e, textarea) {
   if (range.startContainer.nodeType !== Node.TEXT_NODE) { closeMentionSuggestions(); return; }
   const textBefore = range.startContainer.textContent.substring(0, range.startOffset);
   const match = textBefore.match(/(?:^|\s)@([a-zA-Z0-9_]*)$/);
+
+  clearTimeout(mentionDebounceTimer);
+
   if (match) {
     mentionCurrentQuery = match[1];
     mentionTargetTextarea = textarea;
-    fetchMentions(mentionCurrentQuery);
+    mentionDebounceTimer = setTimeout(() => {
+      fetchMentions(mentionCurrentQuery);
+    }, 300);
   } else {
     closeMentionSuggestions();
   }
@@ -617,6 +623,154 @@ function closeMentionSuggestions() {
   mentionSelectedIndex = -1;
   if (mentionActiveRequest) mentionActiveRequest.abort();
   mentionActiveRequest = null;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HASHTAG AUTOCOMPLETE
+   ══════════════════════════════════════════════════════════════════════ */
+
+let hashtagActiveRequest = null;
+let hashtagCurrentQuery = '';
+let hashtagTargetTextarea = null;
+let hashtagSuggestions = [];
+let hashtagSelectedIndex = -1;
+let hashtagDebounceTimer = null;
+
+function initHashtagAutocomplete() {
+  const t1 = $('compose-textarea');
+  const t2 = $('compose-textarea-sidebar');
+  const list = $('hashtag-suggestions');
+
+  [t1, t2].forEach(textarea => {
+    if (!textarea) return;
+    textarea.addEventListener('input', (e) => handleHashtagInput(e, textarea));
+    textarea.addEventListener('keydown', (e) => handleHashtagKeydown(e, textarea));
+    textarea.addEventListener('scroll', closeHashtagSuggestions);
+  });
+
+  document.addEventListener('click', (e) => { if (!list.contains(e.target)) closeHashtagSuggestions(); });
+  window.addEventListener('scroll', closeHashtagSuggestions, { passive: true });
+}
+
+function handleHashtagInput(e, textarea) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  if (range.startContainer.nodeType !== Node.TEXT_NODE) { closeHashtagSuggestions(); return; }
+  const textBefore = range.startContainer.textContent.substring(0, range.startOffset);
+  const match = textBefore.match(/(?:^|\s)#([a-zA-Z0-9_]*)$/);
+
+  clearTimeout(hashtagDebounceTimer);
+
+  if (match) {
+    hashtagCurrentQuery = match[1];
+    hashtagTargetTextarea = textarea;
+    hashtagDebounceTimer = setTimeout(() => {
+      fetchHashtags(hashtagCurrentQuery);
+    }, 300);
+  } else {
+    closeHashtagSuggestions();
+  }
+}
+
+async function fetchHashtags(q) {
+  if (hashtagActiveRequest) hashtagActiveRequest.abort();
+  const controller = new AbortController();
+  hashtagActiveRequest = controller;
+  try {
+    const results = await apiGet(`/api/v2/search?q=${encodeURIComponent(q)}&type=hashtags&limit=5`, state.token, null, controller.signal);
+    const tags = results.hashtags || [];
+    hashtagSuggestions = tags;
+    renderHashtagSuggestions(tags);
+  } catch (err) {
+    if (err.name !== 'AbortError') console.warn('Hashtag search failed:', err);
+  }
+}
+
+function renderHashtagSuggestions(tags) {
+  const list = $('hashtag-suggestions');
+  if (!tags.length) { closeHashtagSuggestions(); return; }
+
+  list.innerHTML = tags.map((t, i) => `
+    <div class="hashtag-item ${i === 0 ? 'selected' : ''}" data-index="${i}" data-tag="${escapeHTML(t.name)}">
+      <div class="hashtag-icon">#</div>
+      <div class="hashtag-info">
+        <span class="hashtag-name">#${escapeHTML(t.name)}</span>
+        <span class="hashtag-uses">${t.history ? t.history.reduce((sum, day) => sum + parseInt(day.uses || 0), 0) : ''} uses this week</span>
+      </div>
+    </div>
+  `).join('');
+
+  list.style.display = 'flex';
+  hashtagSelectedIndex = tags.length > 0 ? 0 : -1;
+
+  const sel = window.getSelection();
+  if (sel.rangeCount) {
+    const range = sel.getRangeAt(0);
+    const rects = range.getClientRects();
+    if (rects.length > 0) {
+      const rect = rects[0];
+      let top = rect.bottom + 10;
+      let left = rect.left;
+      if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
+      if (top + 300 > window.innerHeight) top = rect.top - (tags.length * 52) - 10;
+      list.style.top = top + 'px';
+      list.style.left = Math.max(10, left) + 'px';
+    }
+  }
+
+  list.querySelectorAll('.hashtag-item').forEach(item => {
+    item.onmousedown = (e) => e.preventDefault();
+    item.onclick = (e) => { e.preventDefault(); e.stopPropagation(); insertHashtag(item.dataset.tag); };
+  });
+}
+
+function handleHashtagKeydown(e) {
+  const list = $('hashtag-suggestions');
+  if (list.style.display === 'none') return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); moveHashtagSelection(1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); moveHashtagSelection(-1); }
+  else if (e.key === 'Enter' || e.key === 'Tab') {
+    if (hashtagSelectedIndex > -1) { e.preventDefault(); insertHashtag(hashtagSuggestions[hashtagSelectedIndex].name); }
+  } else if (e.key === 'Escape') closeHashtagSuggestions();
+}
+
+function moveHashtagSelection(dir) {
+  const items = $('hashtag-suggestions').querySelectorAll('.hashtag-item');
+  if (!items.length) return;
+  items[hashtagSelectedIndex]?.classList.remove('selected');
+  hashtagSelectedIndex = (hashtagSelectedIndex + dir + items.length) % items.length;
+  items[hashtagSelectedIndex].classList.add('selected');
+  items[hashtagSelectedIndex].scrollIntoView({ block: 'nearest' });
+}
+
+function insertHashtag(tag) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  const node = range.startContainer;
+  const text = node.textContent;
+  const textBefore = text.substring(0, range.startOffset);
+  const match = textBefore.match(/#([a-zA-Z0-9_]*)$/);
+  if (match) {
+    const startPos = match.index + (match[0].startsWith('#') ? 0 : 1);
+    const newRange = document.createRange();
+    newRange.setStart(node, startPos);
+    newRange.setEnd(node, range.startOffset);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
+    document.execCommand('insertText', false, `#${tag} `);
+  }
+  closeHashtagSuggestions();
+  if (hashtagTargetTextarea === $('compose-textarea')) updateCharCount();
+  else updateSidebarCharCount();
+}
+
+function closeHashtagSuggestions() {
+  $('hashtag-suggestions').style.display = 'none';
+  hashtagSelectedIndex = -1;
+  if (hashtagActiveRequest) hashtagActiveRequest.abort();
+  hashtagActiveRequest = null;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -818,4 +972,5 @@ export function initCompose() {
 
   // --- Mention autocomplete ---
   initMentionAutocomplete();
+  initHashtagAutocomplete();
 }
