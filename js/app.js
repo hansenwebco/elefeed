@@ -698,7 +698,25 @@ window.addEventListener('online', () => $('offline-bar').classList.remove('visib
    BOOT
    ══════════════════════════════════════════════════════════════════════ */
 
+async function fetchAppVersion() {
+  try {
+    const res = await fetch('https://api.github.com/repos/hansenwebco/elefeed/releases/latest');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.tag_name) {
+      document.querySelectorAll('.sidebar-footer-brand').forEach(el => {
+        el.textContent = `Elefeed ${data.tag_name}`;
+      });
+    }
+  } catch (err) {
+    console.debug('Failed to fetch app version:', err);
+  }
+}
+
 async function boot() {
+  // Fetch latest version from GitHub automatically
+  fetchAppVersion();
+
   // Wire up component init functions
   registerNotifPoller(pollNotifications);
   initCompose();
