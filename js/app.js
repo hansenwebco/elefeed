@@ -65,6 +65,12 @@ function closeAnyDrawer() {
 
 // Listen for popstate to close drawers
 window.addEventListener('popstate', e => {
+  const lightboxBtn = document.querySelector('.lightbox-close');
+  if (lightboxBtn) {
+    lightboxBtn.click();
+    return;
+  }
+
   if (isAnyDrawerOpen()) {
     closeAnyDrawer();
     setTimeout(setOverlayPillVisibility, 10);

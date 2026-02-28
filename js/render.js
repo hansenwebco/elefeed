@@ -367,6 +367,8 @@ window.expandMedia = function expandMedia(mediaItem) {
   overlay.appendChild(closeBtn);
   document.body.appendChild(overlay);
 
+  history.pushState({ mediaViewer: true }, '', '');
+
   requestAnimationFrame(() => overlay.classList.add('open'));
 
   const close = () => {
