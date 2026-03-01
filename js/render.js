@@ -143,12 +143,12 @@ function _buildPostBody(status, s, idPrefix = '') {
     <div class="post-footer">
       <button class="post-stat post-reply-btn" data-post-id="${s.id}" data-account-acct="${s.account.acct}" title="Reply">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l5-5v3c8 0 13 4 13 11-3-4-7-5-13-5v3l-5-5z"></path></svg>
-        <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">${s.replies_count || 0}</span>
+        <span class="post-reply-count">${s.replies_count || 0}</span>
       </button>
       <div style="position:relative;display:inline-flex;">
         <button class="post-stat post-boost-btn ${s.reblogged ? 'boosted' : ''}" data-post-id="${s.id}" title="Boost or Quote">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--boost)"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          <span class="boost-count" style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">${(s.reblogs_count || 0) + (s.quotes_count || 0)}</span>
+          <span class="boost-count">${(s.reblogs_count || 0) + (s.quotes_count || 0)}</span>
         </button>
         <div class="boost-dropdown" id="boost-menu-${s.id}">
           <button class="boost-dropdown-item" data-action="boost" data-post-id="${s.id}" data-is-boosted="${s.reblogged ? 'true' : 'false'}">
