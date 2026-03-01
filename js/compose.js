@@ -946,30 +946,272 @@ function setupContentEditable(editor) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   HASHTAG TAB
+   HASHTAG TAB / MANAGE MODAL
    ══════════════════════════════════════════════════════════════════════ */
 
+let manageHashtagDebounceTimer = null;
+let manageHashtagActiveRequest = null;
+
 function setupHashtagTab() {
-  const input = $('hashtag-search-input');
-  if (input) {
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const val = input.value.trim().replace(/^#/, '');
-        if (val) {
-          state.selectedHashtagFilter = val.toLowerCase();
-          loadFeedTab();
-          input.value = '';
-        }
+  const btn = $('manage-hashtags-btn');
+  const panel = $('manage-inline-panel');
+  const closeBtn = $('manage-hashtags-close');
+  const searchInput = $('manage-hashtag-search-input');
+
+  const viewInput = $('hashtag-search-input');
+  const searchBtn = $('hashtag-search-btn');
+
+  let lookupHashtagDebounceTimer = null;
+  let lookupHashtagActiveRequest = null;
+  const lookupDropdown = $('hashtag-lookup-results');
+  let selectedLookupIndex = -1;
+
+  function doHashtagSearch(val) {
+    if (!viewInput) return;
+    const explicitVal = typeof val === 'string' ? val : null;
+    val = (explicitVal || viewInput.value.trim()).replace(/^#/, '');
+    if (val) {
+      if (lookupDropdown) lookupDropdown.style.display = 'none';
+      state.selectedHashtagFilter = val.toLowerCase();
+      loadFeedTab();
+      if (explicitVal) {
+        viewInput.value = '#' + val;
+      }
+    }
+  }
+
+  function updateLookupSelection(items) {
+    items.forEach((item, idx) => {
+      if (idx === selectedLookupIndex) {
+        item.classList.add('selected');
+        item.scrollIntoView({ block: 'nearest' });
+      } else {
+        item.classList.remove('selected');
       }
     });
   }
 
-  const followBtn = $('hashtag-follow-btn');
-  if (followBtn) {
-    // import handleHashtagFollowToggle at call time to avoid circular import
-    followBtn.addEventListener('click', async () => {
-      const { handleHashtagFollowToggle } = await import('./profile.js');
-      handleHashtagFollowToggle(followBtn);
+  if (viewInput) {
+    viewInput.addEventListener('keydown', (e) => {
+      const isVisible = lookupDropdown && lookupDropdown.style.display !== 'none';
+      const items = isVisible ? lookupDropdown.querySelectorAll('.hashtag-item') : [];
+
+      if (isVisible && items.length > 0) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          selectedLookupIndex = (selectedLookupIndex + 1) % items.length;
+          updateLookupSelection(items);
+          return;
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          selectedLookupIndex = (selectedLookupIndex - 1 + items.length) % items.length;
+          updateLookupSelection(items);
+          return;
+        } else if (e.key === 'Enter') {
+          if (selectedLookupIndex >= 0 && selectedLookupIndex < items.length) {
+            e.preventDefault();
+            items[selectedLookupIndex].click();
+            return;
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          lookupDropdown.style.display = 'none';
+          selectedLookupIndex = -1;
+          return;
+        }
+      }
+
+      if (e.key === 'Enter') doHashtagSearch();
+    });
+
+    viewInput.addEventListener('input', () => {
+      selectedLookupIndex = -1;
+      clearTimeout(lookupHashtagDebounceTimer);
+      const q = viewInput.value.trim().replace(/^#/, '');
+      if (!q) {
+        if (lookupDropdown) lookupDropdown.style.display = 'none';
+        return;
+      }
+      lookupHashtagDebounceTimer = setTimeout(() => {
+        fetchLookupHashtags(q);
+      }, 300);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (lookupDropdown && !e.target.closest('.hashtag-search-wrap')) {
+        lookupDropdown.style.display = 'none';
+      }
+    });
+
+    viewInput.addEventListener('focus', () => {
+      if (viewInput.value.trim().length > 0 && lookupDropdown.innerHTML !== '') {
+        lookupDropdown.style.display = 'flex';
+      }
+    });
+  }
+
+  if (searchBtn) {
+    searchBtn.addEventListener('click', () => doHashtagSearch());
+  }
+
+  async function fetchLookupHashtags(q) {
+    if (lookupHashtagActiveRequest) lookupHashtagActiveRequest.abort();
+    const controller = new AbortController();
+    lookupHashtagActiveRequest = controller;
+    if (lookupDropdown) {
+      lookupDropdown.style.display = 'flex';
+      lookupDropdown.innerHTML = '<div style="padding:10px;text-align:center;"><div class="spinner" style="margin: 0 auto;"></div></div>';
+    }
+    try {
+      const { apiGet } = await import('./api.js');
+      const results = await apiGet(`/api/v2/search?q=${encodeURIComponent(q)}&type=hashtags&limit=5`, state.token, null, controller.signal);
+      renderLookupResults(results.hashtags || []);
+    } catch (err) {
+      if (err.name !== 'AbortError') console.warn('Hashtag lookup search failed:', err);
+    }
+  }
+
+  function renderLookupResults(tags) {
+    selectedLookupIndex = -1;
+    if (!lookupDropdown) return;
+    if (!tags.length) {
+      lookupDropdown.innerHTML = '<div style="padding:10px 12px; font-size:13px; color:var(--text-muted); text-align:center;">No matching hashtags found</div>';
+      return;
+    }
+
+    lookupDropdown.innerHTML = tags.map(t => {
+      const uses = t.history ? t.history.reduce((sum, day) => sum + parseInt(day.uses || 0), 0) : 0;
+      return `
+      <div class="hashtag-item" data-tag="${escapeHTML(t.name)}">
+        <div class="hashtag-icon">#</div>
+        <div class="hashtag-info">
+          <div class="hashtag-name">${escapeHTML(t.name)}</div>
+          <div class="hashtag-uses">${uses} uses this week</div>
+        </div>
+      </div>
+    `}).join('');
+
+    lookupDropdown.querySelectorAll('.hashtag-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const tag = item.dataset.tag;
+        doHashtagSearch(tag);
+      });
+    });
+  }
+
+  if (!btn || !panel) return;
+
+  function openManageHashtagsPanel() {
+    document.body.classList.add('manage-inline-active');
+    renderCurrentlyFollowing();
+    searchInput.value = '';
+    $('manage-hashtag-search-results').innerHTML = '';
+    setTimeout(() => searchInput.focus(), 100);
+  }
+
+  function closeManageHashtagsPanel() {
+    document.body.classList.remove('manage-inline-active');
+    loadFeedTab(); // refresh the dropdown list in the feed bar
+  }
+
+  btn.addEventListener('click', openManageHashtagsPanel);
+  closeBtn.addEventListener('click', closeManageHashtagsPanel);
+
+  function renderCurrentlyFollowing() {
+    const list = $('manage-hashtags-list');
+    const tags = state.followedHashtags || [];
+    if (!tags.length) {
+      list.innerHTML = '<div style="font-size:13px; color:var(--text-muted); padding: 8px 0;">You are not following any hashtags yet.</div>';
+      return;
+    }
+
+    // sort alphabetically
+    const sorted = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+
+    list.innerHTML = sorted.map(t => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:28px; height:28px; border-radius:6px; background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--accent); font-weight:bold; font-size:14px;">#</div>
+          <span style="font-weight:500; font-size:14px;">${escapeHTML(t.name)}</span>
+        </div>
+        <button class="profile-follow-btn following outline" data-tag="${escapeHTML(t.name)}" data-following="true" style="padding:6px 12px; height:auto; min-width:80px; font-size:13px;">Unfollow</button>
+      </div>
+    `).join('');
+
+    // Attach event listeners for unfollow
+    list.querySelectorAll('.profile-follow-btn').forEach(b => {
+      b.addEventListener('click', async () => {
+        const { handleHashtagFollowToggle } = await import('./profile.js');
+        await handleHashtagFollowToggle(b);
+        // re-render list after toggle
+        renderCurrentlyFollowing();
+      });
+    });
+  }
+
+  // Search autocomplete
+  searchInput.addEventListener('input', () => {
+    clearTimeout(manageHashtagDebounceTimer);
+    const q = searchInput.value.trim().replace(/^#/, '');
+    if (!q) {
+      $('manage-hashtag-search-results').innerHTML = '';
+      return;
+    }
+    manageHashtagDebounceTimer = setTimeout(() => {
+      fetchManageHashtags(q);
+    }, 300);
+  });
+
+  async function fetchManageHashtags(q) {
+    if (manageHashtagActiveRequest) manageHashtagActiveRequest.abort();
+    const controller = new AbortController();
+    manageHashtagActiveRequest = controller;
+    try {
+      $('manage-hashtag-search-results').innerHTML = '<div class="spinner" style="margin: 10px auto;"></div>';
+      const { apiGet } = await import('./api.js');
+      const results = await apiGet(`/api/v2/search?q=${encodeURIComponent(q)}&type=hashtags&limit=5`, state.token, null, controller.signal);
+      const tags = results.hashtags || [];
+      renderSearchResults(tags);
+    } catch (err) {
+      if (err.name !== 'AbortError') console.warn('Hashtag search failed:', err);
+    }
+  }
+
+  function renderSearchResults(tags) {
+    const list = $('manage-hashtag-search-results');
+    if (!tags.length) {
+      list.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:8px 0;">No matching hashtags found</div>';
+      return;
+    }
+
+    list.innerHTML = tags.map(t => {
+      const isFollowing = (state.followedHashtags || []).some(ft => ft.name.toLowerCase() === t.name.toLowerCase());
+      const uses = t.history ? t.history.reduce((sum, day) => sum + parseInt(day.uses || 0), 0) : 0;
+      return `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+        <div style="display:flex; flex-direction:column;">
+          <span style="font-weight:500; font-size:14px; color:var(--text); margin-bottom:2px;">#${escapeHTML(t.name)}</span>
+          <span style="font-size:12px; color:var(--text-muted);">${uses} uses this week</span>
+        </div>
+        <button class="profile-follow-btn ${isFollowing ? 'following outline' : ''}" data-tag="${escapeHTML(t.name)}" data-following="${isFollowing ? 'true' : 'false'}" style="padding:6px 12px; height:auto; min-width:80px; font-size:13px;">${isFollowing ? 'Unfollow' : 'Follow'}</button>
+      </div>
+    `}).join('');
+
+    list.querySelectorAll('.profile-follow-btn').forEach(b => {
+      b.addEventListener('click', async () => {
+        const { handleHashtagFollowToggle } = await import('./profile.js');
+        await handleHashtagFollowToggle(b);
+        // Toggle the button style
+        const isFollowing = b.dataset.following === 'true';
+        if (isFollowing) {
+          b.classList.add('following', 'outline');
+          b.textContent = 'Unfollow';
+        } else {
+          b.classList.remove('following', 'outline');
+          b.textContent = 'Follow';
+        }
+        renderCurrentlyFollowing(); // Update the lower list
+      });
     });
   }
 }
