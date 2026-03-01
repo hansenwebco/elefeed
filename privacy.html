@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual" />
+    <title>Privacy Policy - Elefeed</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/base.css" />
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(ellipse 70% 50% at 50% -10%, rgba(155, 127, 255, 0.18) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 30% at 90% 80%, rgba(78, 205, 196, 0.10) 0%, transparent 60%),
+                var(--bg);
+            padding: 40px 20px;
+            min-height: 100dvh;
+        }
+
+        .privacy-card {
+            width: 100%;
+            max-width: 600px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header .wordmark {
+            font-family: var(--font-display);
+            font-size: 42px;
+            letter-spacing: -1px;
+            color: var(--text);
+            line-height: 1;
+            text-decoration: none;
+        }
+
+        .header .wordmark span {
+            color: var(--accent);
+        }
+
+        .header h1 {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 8px;
+            font-family: var(--font-mono);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-weight: normal;
+        }
+
+        .content h2 {
+            font-size: 16px;
+            color: var(--accent2);
+            margin-top: 28px;
+            margin-bottom: 12px;
+            font-family: var(--font-mono);
+            font-weight: 500;
+        }
+
+        .content p {
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .content strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 32px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-family: var(--font-body);
+            font-size: 14px;
+            background: var(--surface2);
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            transition: all var(--trans);
+        }
+
+        .back-link:hover {
+            color: var(--accent2);
+            border-color: var(--accent);
+        }
+
+        @media (max-width: 500px) {
+            body {
+                padding: 20px 16px;
+            }
+
+            .privacy-card {
+                padding: 24px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="privacy-card">
+        <div class="header">
+            <a href="/" class="wordmark"><span>ele</span>feed</a>
+            <h1>Privacy Policy</h1>
+        </div>
+        <div class="content">
+            <p>This Privacy Policy outlines the data processing practices of Elefeed ("the Application").</p>
+
+            <h2>1. Information Collection and Processing</h2>
+            <p>The Application does not collect, process, transmit, or retain any personally identifiable information, usage metrics, diagnostic data, or activity logs on external network infrastructure or proprietary servers.</p>
+
+            <h2>2. Third-Party Analytics and Tracking</h2>
+            <p>The Application strictly prohibits the use of third-party analytics services, external tracking mechanisms, embedded scripts, or tracking cookies. Continuous or aggregated user behavior monitoring is not performed.</p>
+
+            <h2>3. Local Data Storage and Authentication</h2>
+            <p>All operational data required for the Application's functionality, including but not limited to authentication credentials (such as OAuth access tokens) and user-defined application preferences, are maintained exclusively within the Local Storage API of the user's web browser environment. Such data is utilized solely for the purpose of authenticating and securely interacting directly with the user's designated Mastodon instance. No application data leaves the client device to interact with servers affiliated with the Application developers.</p>
+        </div>
+        <div style="text-align: center;">
+            <a href="/" class="back-link">← Return to Elefeed</a>
+        </div>
+    </div>
+</body>
+
+</html>
