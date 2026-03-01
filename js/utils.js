@@ -97,3 +97,17 @@ export function formatCount(n) {
 export function delay(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
+
+/** Places the textual cursor at the very end of a contenteditable element */
+export function placeCursorAtEnd(el) {
+  if (!el) return;
+  el.focus();
+  try {
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  } catch { }
+}
