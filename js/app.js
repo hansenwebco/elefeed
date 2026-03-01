@@ -33,6 +33,7 @@ import {
   initNotifications,
 } from './notifications.js';
 import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply } from './compose.js';
+import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
 
 // Drawer state tracking for history
 function isAnyDrawerOpen() {
@@ -41,7 +42,8 @@ function isAnyDrawerOpen() {
     $('thread-drawer') && $('thread-drawer').classList.contains('open') ||
     $('profile-drawer') && $('profile-drawer').classList.contains('open') ||
     $('compose-drawer') && $('compose-drawer').classList.contains('open') ||
-    $('manage-hashtag-drawer') && $('manage-hashtag-drawer').classList.contains('open')
+    $('manage-hashtag-drawer') && $('manage-hashtag-drawer').classList.contains('open') ||
+    $('search-drawer') && $('search-drawer').classList.contains('open')
   );
 }
 
@@ -62,6 +64,7 @@ function closeAnyDrawer() {
   if ($('thread-drawer') && $('thread-drawer').classList.contains('open')) closeThreadDrawer();
   if ($('profile-drawer') && $('profile-drawer').classList.contains('open')) closeProfileDrawer();
   if ($('compose-drawer') && $('compose-drawer').classList.contains('open')) closeComposeDrawer();
+  if ($('search-drawer') && $('search-drawer').classList.contains('open')) closeSearchDrawer();
   if ($('manage-hashtag-drawer') && $('manage-hashtag-drawer').classList.contains('open')) {
     $('manage-hashtag-drawer').classList.remove('open');
     const bd = $('manage-hashtag-backdrop');
@@ -716,7 +719,7 @@ document.addEventListener('keydown', e => {
   }
 });
 // Hide pill when any drawer opens (immediate, no delay)
-['notif-drawer', 'thread-drawer', 'profile-drawer', 'compose-drawer'].forEach(id => {
+['notif-drawer', 'thread-drawer', 'profile-drawer', 'compose-drawer', 'search-drawer'].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener('transitionstart', setOverlayPillVisibility);
@@ -894,6 +897,34 @@ async function boot() {
   registerNotifPoller(pollNotifications);
   initCompose();
   initNotifications();
+  initSearch();
+
+  // Search button
+  const searchBtn = $('search-btn');
+  if (searchBtn) searchBtn.addEventListener('click', () => openSearchDrawer());
+
+  // Expose helpers so search.js can trigger navigation without circular imports
+  window.__searchHashtagClick = (tag) => {
+    state.selectedHashtagFilter = tag;
+    state.feedFilter = 'hashtags';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'feed'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-feed'));
+    document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(b => b.classList.toggle('active', b.dataset.filter === 'hashtags'));
+    $('hashtag-filter-bar').style.display = '';
+    state.activeTab = 'feed';
+    updateTabLabel('feed');
+    closeProfileDrawer();
+    closeThreadDrawer();
+    closeComposeDrawer();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    loadFeedTab();
+  };
+
+  window.__searchOpenThread = (statusId) => {
+    closeProfileDrawer();
+    closeComposeDrawer();
+    openThreadDrawer(statusId);
+  };
 
   // If we're a popup completing OAuth, run callback and close
   const params = new URLSearchParams(location.search);
