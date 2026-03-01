@@ -295,9 +295,15 @@
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--text);
-    background: rgba(155, 127, 255, 0.12);
+    background: var(--surface2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-left: 3px solid var(--accent);
     border-bottom: 1px solid var(--border);
+    /* Sticky: pins to top of .search-drawer-body until next header pushes it off */
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 /* ── Account row ── */
@@ -477,9 +483,9 @@
     flex: 1;
     min-width: 0;
     display: flex;
-    align-items: baseline;
-    gap: 6px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
 }
 
 .search-status-name {
@@ -527,6 +533,21 @@
     color: var(--text-muted);
     line-height: 1.55;
     margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.search-mention {
+    color: var(--accent2);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.search-mention:hover {
+    text-decoration: underline;
 }
 
 .search-status-media {
