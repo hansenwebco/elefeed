@@ -40,7 +40,8 @@ function isAnyDrawerOpen() {
     $('notif-drawer') && $('notif-drawer').classList.contains('open') ||
     $('thread-drawer') && $('thread-drawer').classList.contains('open') ||
     $('profile-drawer') && $('profile-drawer').classList.contains('open') ||
-    $('compose-drawer') && $('compose-drawer').classList.contains('open')
+    $('compose-drawer') && $('compose-drawer').classList.contains('open') ||
+    $('manage-hashtag-drawer') && $('manage-hashtag-drawer').classList.contains('open')
   );
 }
 
@@ -61,6 +62,13 @@ function closeAnyDrawer() {
   if ($('thread-drawer') && $('thread-drawer').classList.contains('open')) closeThreadDrawer();
   if ($('profile-drawer') && $('profile-drawer').classList.contains('open')) closeProfileDrawer();
   if ($('compose-drawer') && $('compose-drawer').classList.contains('open')) closeComposeDrawer();
+  if ($('manage-hashtag-drawer') && $('manage-hashtag-drawer').classList.contains('open')) {
+    $('manage-hashtag-drawer').classList.remove('open');
+    const bd = $('manage-hashtag-backdrop');
+    if (bd) bd.classList.remove('open');
+    // reload hashtag dropdown in case follows changed
+    if (typeof loadFeedTab === 'function') loadFeedTab();
+  }
 }
 
 // Listen for popstate to close drawers
@@ -585,9 +593,8 @@ $('bookmarks-view-btn').addEventListener('click', () => {
 const manageTagsMenuBtn = $('manage-hashtags-menu-btn');
 if (manageTagsMenuBtn) {
   manageTagsMenuBtn.addEventListener('click', () => {
-    $('profile-dropdown').classList.toggle('show');
-    const manageBtn = $('manage-hashtags-btn');
-    if (manageBtn) manageBtn.click();
+    $('profile-dropdown').classList.remove('show');
+    if (window.openManageHashtagsPanel) window.openManageHashtagsPanel();
   });
 }
 

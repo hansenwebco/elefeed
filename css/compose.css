@@ -461,10 +461,39 @@
   margin-bottom: 24px;
   padding-top: 24px;
   display: flex;
-  justify-content: flex-start;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+@media (max-width: 500px) {
+  .hashtag-filter-bar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Row layout for filter bar rows */
+.hashtag-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Row 1: select + manage — never wraps */
+.hashtag-filter-row--top {
+  flex-wrap: nowrap;
+}
+
+/* Row 2: search stretches to full width */
+.hashtag-filter-row--search {
+  width: 100%;
 }
 
 .hashtag-filter-select {
+  flex: 1;
+  min-width: 0;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -482,6 +511,8 @@
   background-size: 10px auto;
   transition: border-color var(--trans);
   color-scheme: dark;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .hashtag-filter-select option {
@@ -502,10 +533,48 @@
   background-image: none;
 }
 
+/* ─── Manage Hashtags Button ─── */
+.manage-hashtags-btn {
+  flex-shrink: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.manage-hashtags-btn:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent2);
+}
+
+/* On very small screens, hide the label text to save space */
+@media (max-width: 300px) {
+  .manage-btn-text {
+    display: none;
+  }
+
+  .manage-hashtags-btn {
+    padding: 0 10px;
+  }
+}
+
 .hashtag-search-wrap {
   position: relative;
   flex: 1;
-  min-width: 200px;
+  min-width: 0;
+  width: 100%;
 }
 
 .hashtag-search-input {
@@ -524,6 +593,65 @@
   outline: none;
   border-color: var(--accent);
   background: var(--surface);
+}
+
+/* ─── Follow Suggestion Strip (Row 3) ─── */
+.hashtag-filter-row--follow {
+  animation: slideDown 180ms ease;
+}
+
+.hashtag-follow-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: rgba(155, 127, 255, 0.07);
+  border: 1px solid rgba(155, 127, 255, 0.22);
+  border-radius: 7px;
+  padding: 9px 12px;
+  gap: 12px;
+}
+
+.hashtag-follow-strip-text {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text-muted);
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hashtag-follow-strip-text strong {
+  color: var(--accent2);
+  font-weight: 600;
+}
+
+.hashtag-follow-strip-btn {
+  flex-shrink: 0;
+  background: var(--accent);
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 13px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+  font-family: var(--font-body);
+  white-space: nowrap;
+}
+
+.hashtag-follow-strip-btn:hover:not(:disabled) {
+  background: var(--accent2);
+}
+
+.hashtag-follow-strip-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ─── Emoji Picker ─── */

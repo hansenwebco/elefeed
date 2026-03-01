@@ -218,7 +218,57 @@ async function loadHashtagsFeed() {
     filterSelect.appendChild(opt);
   }
 
+  // ── Follow suggestion strip ──────────────────────────────────────
+  const followRow = document.getElementById('hashtag-follow-row');
+  const followStripName = document.getElementById('hashtag-follow-strip-name');
+  const followStripBtn = document.getElementById('hashtag-follow-strip-btn');
+  const selectedTag = state.selectedHashtagFilter;
+  const isAlreadyFollowed = !selectedTag || selectedTag === 'all' ||
+    tags.some(t => t.name.toLowerCase() === selectedTag.toLowerCase());
 
+  if (followRow) {
+    if (!isAlreadyFollowed && selectedTag && selectedTag !== 'all') {
+      // Show strip with tag name
+      if (followStripName) followStripName.textContent = '#' + selectedTag;
+      followRow.style.display = '';
+
+      // Wire Follow button (replace any previous listener cleanly)
+      if (followStripBtn) {
+        const newBtn = followStripBtn.cloneNode(true); // remove old listeners
+        followStripBtn.replaceWith(newBtn);
+        newBtn.addEventListener('click', async () => {
+          newBtn.disabled = true;
+          newBtn.textContent = 'Following…';
+          try {
+            const res = await fetch(`https://${state.server}/api/v1/tags/${encodeURIComponent(selectedTag)}/follow`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+              cache: 'no-store',
+            });
+            if (!res.ok) throw new Error('Failed to follow hashtag');
+            const tagInfo = await res.json();
+            // Update local state
+            if (!state.followedHashtags) state.followedHashtags = [];
+            if (!state.followedHashtags.some(t => t.name.toLowerCase() === selectedTag.toLowerCase())) {
+              state.followedHashtags.push(tagInfo);
+            }
+            const { showToast } = await import('./ui.js');
+            showToast(`Following #${selectedTag}`);
+            // Hide strip and rebuild dropdown to include new tag
+            followRow.style.display = 'none';
+            loadHashtagsFeed();
+          } catch (err) {
+            newBtn.disabled = false;
+            newBtn.textContent = '+ Follow';
+            const { showToast } = await import('./ui.js');
+            showToast('Failed to follow: ' + err.message);
+          }
+        });
+      }
+    } else {
+      followRow.style.display = 'none';
+    }
+  }
 
   let display = [];
   if (state.demoMode) {
