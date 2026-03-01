@@ -582,6 +582,15 @@ $('bookmarks-view-btn').addEventListener('click', () => {
   $('profile-dropdown').classList.toggle('show');
 });
 
+const manageTagsMenuBtn = $('manage-hashtags-menu-btn');
+if (manageTagsMenuBtn) {
+  manageTagsMenuBtn.addEventListener('click', () => {
+    $('profile-dropdown').classList.toggle('show');
+    const manageBtn = $('manage-hashtags-btn');
+    if (manageBtn) manageBtn.click();
+  });
+}
+
 /* Logout */
 $('logout-btn').addEventListener('click', () => {
   store.del('token');

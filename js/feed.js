@@ -218,18 +218,7 @@ async function loadHashtagsFeed() {
     filterSelect.appendChild(opt);
   }
 
-  // Follow button
-  const followBtn = $('hashtag-follow-btn');
-  if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
-    const isFollowing = tags.some(t => t.name.toLowerCase() === state.selectedHashtagFilter);
-    followBtn.style.display = 'block';
-    followBtn.textContent = isFollowing ? 'Following' : `Follow #${state.selectedHashtagFilter}`;
-    followBtn.dataset.tag = state.selectedHashtagFilter;
-    followBtn.dataset.following = isFollowing ? 'true' : 'false';
-    followBtn.classList.toggle('following', isFollowing);
-  } else {
-    followBtn.style.display = 'none';
-  }
+
 
   let display = [];
   if (state.demoMode) {
