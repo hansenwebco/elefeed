@@ -10,6 +10,7 @@ import { apiGet } from './api.js';
 import { showToast } from './ui.js';
 import { escapeHTML, renderCustomEmojis } from './utils.js';
 import { loadFeedTab } from './feed.js';
+import { updateCurrentThread } from './thread.js';
 import { openEmojiPicker, closeEmojiPicker, initEmojiPicker } from './emoji.js';
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -559,6 +560,7 @@ async function doPost(suffix = '') {
 
     if (!isSidebar) closeComposeDrawer();
     if (state.activeTab === 'feed') loadFeedTab(false);
+    updateCurrentThread();
   } catch (err) {
     showToast('Failed to post: ' + err.message);
   } finally {

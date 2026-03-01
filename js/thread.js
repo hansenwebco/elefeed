@@ -11,8 +11,10 @@ import { escapeHTML } from './utils.js';
 /* ── Open / close ──────────────────────────────────────────────────── */
 
 let _savedScrollY = 0;
+export let currentThreadId = null;
 
 export function openThreadDrawer(statusId) {
+  currentThreadId = statusId;
   const isDesktop = window.innerWidth > 900;
 
   if (isDesktop) {
@@ -32,7 +34,7 @@ export function openThreadDrawer(statusId) {
     drawer.setAttribute('aria-hidden', 'false');
     backdrop.classList.add('open');
     document.body.style.overflow = 'hidden';
-     // Push history state for back button
+    // Push history state for back button
     history.pushState({ drawer: 'thread-drawer' }, '', '');
     loadThread(statusId, content);
   }
@@ -57,15 +59,28 @@ export function closeThreadDrawer() {
   if (drawerContent) drawerContent.scrollTop = 0;
 }
 
+export function updateCurrentThread(delay = 1000) {
+  if (!currentThreadId) return;
+  setTimeout(() => {
+    const isDesktop = window.innerWidth > 900;
+    if (isDesktop && document.body.classList.contains('thread-inline-active')) {
+      loadThread(currentThreadId, $('thread-inline-content'), true);
+    } else if (!isDesktop && $('thread-drawer').classList.contains('open')) {
+      loadThread(currentThreadId, $('thread-content'), true);
+    }
+  }, delay);
+}
+
 /* ── Load thread data ──────────────────────────────────────────────── */
 
-async function loadThread(statusId, container) {
+async function loadThread(statusId, container, preserveScroll = false) {
+  const currentScroll = container.scrollTop;
   try {
     const [focalStatus, context] = await Promise.all([
       apiGet(`/api/v1/statuses/${statusId}`, state.token),
       apiGet(`/api/v1/statuses/${statusId}/context`, state.token),
     ]);
-    renderThread(focalStatus, context.ancestors || [], context.descendants || [], container);
+    renderThread(focalStatus, context.ancestors || [], context.descendants || [], container, preserveScroll ? currentScroll : 0);
   } catch (err) {
     container.innerHTML = `
       <div class="thread-status">
@@ -99,7 +114,7 @@ function renderReplyTree(nodes, depth, parentAcct) {
     //      </div>`
     //   : '';
 
-    const postHTML =  renderThreadPost(node.status, 'reply');
+    const postHTML = renderThreadPost(node.status, 'reply');
     const childrenHTML = node.children.length > 0
       ? `<div class="thread-reply-children">${renderReplyTree(node.children, depth + 1, s.account.acct)}</div>`
       : '';
@@ -110,7 +125,7 @@ function renderReplyTree(nodes, depth, parentAcct) {
 
 /* ── Full thread render ────────────────────────────────────────────── */
 
-function renderThread(focalStatus, ancestors, descendants, container) {
+function renderThread(focalStatus, ancestors, descendants, container, prevScroll = 0) {
   const parts = [];
 
   if (ancestors.length > 0) {
@@ -129,5 +144,9 @@ function renderThread(focalStatus, ancestors, descendants, container) {
   }
 
   container.innerHTML = parts.join('');
-  container.scrollTop = 0;
+  if (prevScroll > 0) {
+    container.scrollTop = prevScroll;
+  } else {
+    container.scrollTop = 0;
+  }
 }
