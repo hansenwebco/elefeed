@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="css/drawers.css" />
   <link rel="stylesheet" href="css/trending.css" />
   <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/search.css" />
 </head>
 
 <body>
@@ -150,6 +151,12 @@
         <div class="header-top">
           <div class="header-wordmark" id="header-wordmark-btn" style="cursor:pointer;" title="Refresh feed"><span>e</span>lefeed</div>
           <div class="header-actions">
+            <button class="icon-btn" id="search-btn" title="Search" aria-label="Search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
             <button class="icon-btn" id="compose-btn" title="New post">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 20h9"></path>
@@ -558,6 +565,73 @@
       </div>
     </aside>
   </div>
+
+  <!-- Search Drawer -->
+  <div class="search-backdrop" id="search-backdrop"></div>
+  <aside class="search-drawer" id="search-drawer" aria-hidden="true" aria-label="Search">
+    <div class="search-drawer-header">
+      <div class="search-drawer-top">
+        <span class="search-drawer-title">Search</span>
+        <button class="search-close-btn" id="search-close" aria-label="Close search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="search-input-wrap">
+        <span class="search-input-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </span>
+        <input type="search" id="search-input" class="" placeholder="Search profiles, hashtags, posts…" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <button id="search-clear" aria-label="Clear search">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="search-filters" role="tablist">
+        <button class="search-filter-btn active" role="tab" data-filter="all">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+          </svg>
+          All
+        </button>
+        <button class="search-filter-btn" role="tab" data-filter="accounts">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          Profiles
+        </button>
+        <button class="search-filter-btn" role="tab" data-filter="hashtags">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="4" y1="9" x2="20" y2="9" />
+            <line x1="4" y1="15" x2="20" y2="15" />
+            <line x1="10" y1="3" x2="8" y2="21" />
+            <line x1="16" y1="3" x2="14" y2="21" />
+          </svg>
+          Hashtags
+        </button>
+        <button class="search-filter-btn" role="tab" data-filter="statuses">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Posts
+        </button>
+      </div>
+    </div>
+    <div class="search-drawer-body">
+      <div id="search-results"></div>
+    </div>
+  </aside>
 
   <!-- Toast -->
   <div class="toast" id="toast"></div>
