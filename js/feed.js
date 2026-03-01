@@ -117,19 +117,29 @@ function renderFilteredPosts(displayPosts) {
 
 /* ── Following filter ──────────────────────────────────────────────── */
 
-export async function filterForFollowing(page) {
+export async function fetchRelationships(page) {
   if (state.account && state.account.id) {
     state.knownFollowing.add(state.account.id);
   }
   const idsToCheck = new Set();
   page.forEach(p => {
+    // Add top-level account inherently if this came from home timeline? 
+    // We'll just check what's given.
+    const accountId = p.account.id;
     const authorId = (p.reblog || p).account.id;
+    const quoteAuthorId = (p.reblog || p).quote?.account?.id;
+
+    if (!state.knownFollowing.has(accountId) && !state.knownNotFollowing.has(accountId)) {
+      idsToCheck.add(accountId);
+    }
     if (!state.knownFollowing.has(authorId) && !state.knownNotFollowing.has(authorId)) {
       idsToCheck.add(authorId);
     }
+    if (quoteAuthorId && !state.knownFollowing.has(quoteAuthorId) && !state.knownNotFollowing.has(quoteAuthorId)) {
+      idsToCheck.add(quoteAuthorId);
+    }
   });
 
-  // Removed errant overlayPillDismissed declaration
   const idsArr = Array.from(idsToCheck);
   if (idsArr.length > 0) {
     for (let i = 0; i < idsArr.length; i += 40) {
@@ -142,10 +152,14 @@ export async function filterForFollowing(page) {
           else state.knownNotFollowing.add(r.id);
         });
       } catch {
-        chunk.forEach(id => state.knownFollowing.add(id)); // fail open
+        // fail gracefully, do nothing
       }
     }
   }
+}
+
+export async function filterForFollowing(page) {
+  await fetchRelationships(page);
   return page.filter(p => {
     const inner = p.reblog || p;
     return state.knownFollowing.has(inner.account.id);
@@ -290,6 +304,9 @@ async function loadHashtagsFeed() {
     }
   }
 
+  if (!state.demoMode) {
+    await fetchRelationships(display);
+  }
   renderFilteredPosts(display);
 }
 
@@ -322,6 +339,7 @@ export async function loadFeedTab(scrollTop = true) {
   try {
     if (filter === 'all') {
       await ensureHomeFeedLoaded();
+      if (!state.demoMode) await fetchRelationships(state.homeFeed);
       renderFilteredPosts(state.homeFeed);
     } else if (filter === 'following') {
       await ensureHomeFeedLoaded();
@@ -405,6 +423,10 @@ async function pollForNewPosts() {
       else display = newPosts.filter(p => p._sourceTags && p._sourceTags.length > 0);
     }
     if (!display.length) return;
+
+    if (!state.demoMode && filter !== 'following') {
+      await fetchRelationships(display);
+    }
 
     const feedKey = activeFeedKey();
     state.pendingPosts[feedKey] = [...display, ...(state.pendingPosts[feedKey] || [])];
@@ -521,6 +543,10 @@ export async function handleLoadMore(btn) {
     if (filter === 'following' && !state.demoMode) display = await filterForFollowing(newPosts);
     else if (filter === 'hashtags' && (!state.selectedHashtagFilter || state.selectedHashtagFilter === 'all')) {
       display = newPosts.filter(p => p._sourceTags && p._sourceTags.length > 0);
+    }
+
+    if (!state.demoMode && filter !== 'following') {
+      await fetchRelationships(display);
     }
 
     const html = display.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
