@@ -229,13 +229,14 @@ function renderResults(data, query, filter) {
   if ((filter === 'all' || filter === 'accounts') && accounts.length) {
     html += `
       <div class="search-section">
+        ${filter === 'all' ? `
         <div class="search-section-header">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
           <span>Profiles</span>
-        </div>
+        </div>` : ''}
         ${accounts.slice(0, filter === 'all' ? 3 : 20).map(a => renderAccount(a)).join('')}
         ${filter === 'all' && accounts.length > 3 ? `
           <button class="search-see-all" data-filter="accounts">See all ${accounts.length} profiles →</button>
@@ -247,13 +248,14 @@ function renderResults(data, query, filter) {
   if ((filter === 'all' || filter === 'hashtags') && hashtags.length) {
     html += `
       <div class="search-section">
+        ${filter === 'all' ? `
         <div class="search-section-header">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/>
             <line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
           </svg>
           <span>Hashtags</span>
-        </div>
+        </div>` : ''}
         ${hashtags.slice(0, filter === 'all' ? 4 : 30).map(h => renderHashtag(h)).join('')}
         ${filter === 'all' && hashtags.length > 4 ? `
           <button class="search-see-all" data-filter="hashtags">See all hashtags →</button>
@@ -266,12 +268,13 @@ function renderResults(data, query, filter) {
     const showLimit = filter === 'all' ? 5 : STATUS_PAGE;
     html += `
       <div class="search-section" id="search-posts-section">
+        ${filter === 'all' ? `
         <div class="search-section-header">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
           <span>Posts</span>
-        </div>
+        </div>` : ''}
         <div id="search-posts-list">
           ${statuses.slice(0, showLimit).map(s => renderStatus(s)).join('')}
         </div>
@@ -363,12 +366,68 @@ function buildHashtagSparkline(history) {
   </svg>`;
 }
 
+/**
+ * Convert Mastodon post HTML into a safe preview string that keeps @mention
+ * spans as clickable data-profile-id elements and strips everything else.
+ */
+function buildStatusPreviewHTML(s) {
+  if (!s.content) return '';
+
+  const tmp = document.createElement('div');
+  tmp.innerHTML = s.content;
+
+  // Replace all <a> tags — mentions become clickable spans, others become plain text
+  tmp.querySelectorAll('a').forEach(a => {
+    const isMention = a.classList.contains('mention') ||
+      a.textContent.trim().startsWith('@');
+    if (isMention) {
+      const handle = a.textContent.trim();
+      const username = handle.replace(/^@/, '');
+      // Look up account ID from the status's mentions array
+      const found = (s.mentions || []).find(m =>
+        m.username === username ||
+        m.acct === username ||
+        m.acct.split('@')[0] === username
+      );
+      const span = document.createElement('span');
+      span.className = 'search-mention';
+      span.textContent = handle.startsWith('@') ? handle : `@${handle}`;
+      if (found) {
+        span.dataset.profileId = found.id;
+        span.dataset.profileServer = state.server || '';
+      }
+      a.replaceWith(span);
+    } else {
+      a.replaceWith(document.createTextNode(a.textContent));
+    }
+  });
+
+  // Walk the DOM: keep text nodes + our .search-mention spans; discard all other tags
+  function extract(el) {
+    let out = '';
+    for (const node of el.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        out += escapeHTML(node.textContent);
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        if (node.classList.contains('search-mention')) {
+          out += node.outerHTML;
+        } else {
+          out += extract(node);
+          // Block elements get a space so sentences don't run together
+          if (/^(P|BR|DIV|LI)$/.test(node.tagName)) out += ' ';
+        }
+      }
+    }
+    return out;
+  }
+
+  return extract(tmp).replace(/\s+/g, ' ').trim();
+}
+
 function renderStatus(status) {
   const s = status.reblog || status;
   const server = escapeHTML(state.server || '');
-  const rawContent = s.content ? sanitizeHTML(s.content) : '';
-  const textContent = rawContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  const preview = textContent.length > 140 ? textContent.slice(0, 140) + '…' : textContent;
+  const previewHTML = buildStatusPreviewHTML(s);
 
   const hasMedia = s.media_attachments && s.media_attachments.length > 0;
   const mediaPreview = hasMedia ? `
@@ -383,15 +442,14 @@ function renderStatus(status) {
       <div class="search-status-header">
         <img class="search-status-avatar" src="${escapeHTML(s.account.avatar_static || s.account.avatar)}" alt=""
           data-profile-id="${s.account.id}" data-profile-server="${server}" style="cursor:pointer;" loading="lazy" />
-        <div class="search-status-author">
-          <span class="search-status-name" data-profile-id="${s.account.id}" data-profile-server="${server}"
-            style="cursor:pointer;">${renderCustomEmojis(s.account.display_name || s.account.username, s.account.emojis)}</span>
-          <span class="search-status-acct">@${escapeHTML(s.account.acct)}</span>
+        <div class="search-status-author" data-profile-id="${s.account.id}" data-profile-server="${server}" style="cursor:pointer;">
+          <div class="search-status-name">${renderCustomEmojis(s.account.display_name || s.account.username, s.account.emojis)}</div>
+          <div class="search-status-acct">@${escapeHTML(s.account.acct)}</div>
         </div>
         <span class="search-status-time">${relativeTime(s.created_at)}</span>
       </div>
       ${s.spoiler_text ? `<div class="search-status-cw">CW: ${escapeHTML(s.spoiler_text)}</div>` : ''}
-      <div class="search-status-preview">${escapeHTML(preview)}</div>
+      <div class="search-status-preview">${previewHTML}</div>
       ${mediaPreview}
       <div class="search-status-footer">
         <span class="search-status-stat">
@@ -489,6 +547,14 @@ export function initSearch() {
       filterBtns.forEach(b => b.classList.toggle('active', b.dataset.filter === f));
       _activeFilter = f;
       if (_currentQuery) performSearch(_currentQuery, _activeFilter);
+      return;
+    }
+
+    // Profile click → close search drawer so profile drawer can open
+    const profileTrigger = e.target.closest('[data-profile-id]');
+    if (profileTrigger) {
+      closeSearchDrawer();
+      // Don't call preventDefault/stopPropagation — let app.js delegation open the profile drawer
       return;
     }
 

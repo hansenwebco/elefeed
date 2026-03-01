@@ -22,6 +22,7 @@ export async function apiGet(path, token, server, signal) {
       signal,
     });
   } catch (networkErr) {
+    if (networkErr.name === 'AbortError') throw networkErr;
     throw new Error(`Network error fetching ${path}. Are you online?`);
   }
 
