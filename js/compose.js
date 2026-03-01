@@ -8,7 +8,7 @@
 import { $, state, composeState } from './state.js';
 import { apiGet } from './api.js';
 import { showToast } from './ui.js';
-import { escapeHTML, renderCustomEmojis } from './utils.js';
+import { escapeHTML, renderCustomEmojis, placeCursorAtEnd } from './utils.js';
 import { loadFeedTab } from './feed.js';
 import { updateCurrentThread } from './thread.js';
 import { openEmojiPicker, closeEmojiPicker, initEmojiPicker } from './emoji.js';
@@ -196,23 +196,15 @@ export function handleReply(postId, acct) {
     to.textContent = '@' + acct;
   }
 
-  const mentionText = `@${acct} `;
-  if (!textarea.innerText.includes(mentionText)) {
+  const mentionText = `@${acct}\u00A0`;
+  if (!textarea.innerText.includes(mentionText.trim())) {
     textarea.innerText = mentionText + textarea.innerText;
   }
 
   if (!isDesktop) {
     openComposeDrawer();
   } else {
-    textarea.focus();
-    try {
-      const sel = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(textarea);
-      range.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(range);
-    } catch { }
+    placeCursorAtEnd(textarea);
   }
   if (isDesktop) updateSidebarCharCount(); else updateCharCount();
 }
@@ -247,7 +239,7 @@ window.handleQuoteInit = function (postId, acct) {
   }
 
   if (!isDesktop) openComposeDrawer();
-  else textarea.focus();
+  else placeCursorAtEnd(textarea);
 };
 
 window.handleBoostSubmit = async function (postId, isBoosted) {
@@ -320,7 +312,7 @@ window.handleEditInit = async function (postId) {
     composeState.quoteId = null;
 
     const textarea = $('compose-textarea' + suffix);
-    textarea.innerText = sourceResponse.text || '';
+    textarea.innerText = (sourceResponse.text || '') + '\u00A0';
 
     const cwInput = $('compose-cw-input' + suffix);
     const cwSection = $('compose-cw-section' + suffix);
@@ -435,7 +427,7 @@ window.handleEditInit = async function (postId) {
 
     if (!isDesktop) openComposeDrawer();
     else {
-      textarea.focus();
+      placeCursorAtEnd(textarea);
     }
     if (isDesktop) updateSidebarCharCount(); else updateCharCount();
   } catch (err) {
@@ -458,7 +450,13 @@ export function openComposeDrawer() {
     // Push history state for back button
     history.pushState({ drawer: 'compose-drawer' }, '', '');
   }
-  setTimeout(() => $('compose-textarea').focus(), 300);
+  setTimeout(() => {
+    const textarea = $('compose-textarea');
+    if (!textarea.innerText.endsWith('\u00A0') && !textarea.innerText.endsWith(' ')) {
+      textarea.innerText += '\u00A0';
+    }
+    placeCursorAtEnd(textarea);
+  }, 300);
 }
 
 export function closeComposeDrawer() {

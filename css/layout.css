@@ -62,7 +62,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   flex: 0 1 auto;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 /* Sidebar Footer */
@@ -102,7 +102,9 @@
 }
 
 @media (max-width: 900px) {
-  .compose-sidebar {
+
+  .compose-sidebar,
+  .sidebar-footer {
     display: none !important;
   }
 
