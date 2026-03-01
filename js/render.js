@@ -101,6 +101,9 @@ function _buildPostBody(status, s, idPrefix = '') {
         <div class="post-header" style="margin-bottom:8px;">
           <div class="post-avatar" style="width:24px;height:24px;">
             <img src="${qStatus.account.avatar_static || qStatus.account.avatar}" alt="" loading="lazy"/>
+            ${state.knownFollowing.has(qStatus.account.id) ? `<div class="following-badge" title="Following">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>` : ''}
           </div>
           <div class="post-meta"><div class="post-author" style="font-size:13px;">
             <span class="post-display-name">${renderCustomEmojis(qStatus.account.display_name || qStatus.account.username, qStatus.account.emojis)}</span>
@@ -227,6 +230,9 @@ export function renderPost(status, opts = {}) {
       <div class="post-header">
         <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer">
           <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy"/>
+          ${state.knownFollowing.has(s.account.id) ? `<div class="following-badge" title="Following">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </div>` : ''}
         </div>
         <div class="post-meta">
           <div class="post-author">
@@ -301,6 +307,9 @@ export function renderThreadPost(status, variant) {
         <div class="post-header">
           <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer">
             <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy"/>
+            ${state.knownFollowing.has(s.account.id) ? `<div class="following-badge" title="Following">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>` : ''}
           </div>
           <div class="post-meta">
             <div class="post-author">

@@ -21,9 +21,9 @@ let _currentQuery = '';
 let _activeFilter = 'all'; // 'all' | 'accounts' | 'hashtags' | 'statuses'
 let _abortCtrl = null;
 
-// Post pagination
-let _statusOffset = 0;
-let _hasMorePosts = false;
+// Pagination
+let _offset = 0;
+let _hasMoreResults = false;
 let _loadingMore = false;
 let _scrollObserver = null;  // IntersectionObserver watching the sentinel
 
@@ -75,8 +75,8 @@ async function performSearch(query, filter) {
   _abortCtrl = new AbortController();
 
   // Reset pagination state
-  _statusOffset = 0;
-  _hasMorePosts = false;
+  _offset = 0;
+  _hasMoreResults = false;
   _disconnectObserver();
 
   showLoading();
@@ -86,12 +86,22 @@ async function performSearch(query, filter) {
 
   try {
     const data = await apiGet(url, state.token, state.server, _abortCtrl.signal);
-    _statusOffset = data.statuses ? data.statuses.length : 0;
-    // If we got a full page of statuses, there may be more
-    _hasMorePosts = (filter === 'all' || filter === 'statuses')
-      && data.statuses && data.statuses.length === STATUS_PAGE;
+
+    if (filter === 'accounts') {
+      _offset = data.accounts ? data.accounts.length : 0;
+      _hasMoreResults = data.accounts && data.accounts.length === STATUS_PAGE;
+    } else if (filter === 'hashtags') {
+      _offset = data.hashtags ? data.hashtags.length : 0;
+      _hasMoreResults = data.hashtags && data.hashtags.length === STATUS_PAGE;
+    } else {
+      _offset = data.statuses ? data.statuses.length : 0;
+      // If we got a full page of statuses, there may be more
+      _hasMoreResults = (filter === 'all' || filter === 'statuses')
+        && data.statuses && data.statuses.length === STATUS_PAGE;
+    }
+
     renderResults(data, query, filter);
-    if (_hasMorePosts) _attachObserver(query, filter);
+    if (_hasMoreResults) _attachObserver(query, filter);
   } catch (err) {
     if (err.name === 'AbortError') return;
     renderError(err.message);
@@ -99,10 +109,10 @@ async function performSearch(query, filter) {
 }
 
 /**
- * Load the next page of post results and append them.
+ * Load the next page of results and append them.
  */
-async function loadMorePosts(query, filter) {
-  if (_loadingMore || !_hasMorePosts) return;
+async function loadMoreResults(query, filter) {
+  if (_loadingMore || !_hasMoreResults) return;
   _loadingMore = true;
 
   const sentinel = document.getElementById('search-sentinel');
@@ -112,25 +122,31 @@ async function loadMorePosts(query, filter) {
         <span>Loading more…</span>
       </div>`;
 
-  const typeParam = filter === 'all' || filter === 'statuses' ? '&type=statuses' : '';
-  const url = `/api/v2/search?q=${encodeURIComponent(query)}&limit=${STATUS_PAGE}&offset=${_statusOffset}&resolve=true${typeParam}`;
+  const searchType = filter === 'all' ? 'statuses' : filter;
+  const url = `/api/v2/search?q=${encodeURIComponent(query)}&limit=${STATUS_PAGE}&offset=${_offset}&resolve=true&type=${searchType}`;
 
   try {
     const ctrl = new AbortController();
     const data = await apiGet(url, state.token, state.server, ctrl.signal);
-    const newStatuses = data.statuses || [];
 
-    _statusOffset += newStatuses.length;
-    _hasMorePosts = newStatuses.length === STATUS_PAGE;
+    let newItems = [];
+    if (searchType === 'accounts') newItems = data.accounts || [];
+    else if (searchType === 'hashtags') newItems = data.hashtags || [];
+    else newItems = data.statuses || [];
 
-    if (newStatuses.length > 0) {
-      appendPosts(newStatuses);
+    _offset += newItems.length;
+    _hasMoreResults = newItems.length === STATUS_PAGE;
+
+    if (newItems.length > 0) {
+      if (searchType === 'accounts') appendAccounts(newItems);
+      else if (searchType === 'hashtags') appendHashtags(newItems);
+      else appendPosts(newItems);
     }
 
     // Update or remove sentinel
     const sent = document.getElementById('search-sentinel');
     if (sent) {
-      if (_hasMorePosts) {
+      if (_hasMoreResults) {
         sent.innerHTML = ''; // empty — observer will trigger again
       } else {
         sent.innerHTML = `<div class="search-end-of-results">— end of results —</div>`;
@@ -156,7 +172,7 @@ function _attachObserver(query, filter) {
 
   _scrollObserver = new IntersectionObserver((entries) => {
     if (entries[0].isIntersecting && !_loadingMore) {
-      loadMorePosts(query, filter);
+      loadMoreResults(query, filter);
     }
   }, {
     root: document.querySelector('.search-drawer-body'),
@@ -237,9 +253,13 @@ function renderResults(data, query, filter) {
           </svg>
           <span>Profiles</span>
         </div>` : ''}
-        ${accounts.slice(0, filter === 'all' ? 3 : 20).map(a => renderAccount(a)).join('')}
-        ${filter === 'all' && accounts.length > 3 ? `
+        <div id="search-accounts-list">
+          ${accounts.slice(0, filter === 'all' ? 5 : STATUS_PAGE).map(a => renderAccount(a)).join('')}
+        </div>
+        ${filter === 'all' && accounts.length > 5 ? `
           <button class="search-see-all" data-filter="accounts">See all ${accounts.length} profiles →</button>
+        ` : filter === 'accounts' ? `
+          <div id="search-sentinel"></div>
         ` : ''}
       </div>`;
   }
@@ -256,9 +276,13 @@ function renderResults(data, query, filter) {
           </svg>
           <span>Hashtags</span>
         </div>` : ''}
-        ${hashtags.slice(0, filter === 'all' ? 4 : 30).map(h => renderHashtag(h)).join('')}
-        ${filter === 'all' && hashtags.length > 4 ? `
+        <div id="search-hashtags-list">
+          ${hashtags.slice(0, filter === 'all' ? 5 : STATUS_PAGE).map(h => renderHashtag(h)).join('')}
+        </div>
+        ${filter === 'all' && hashtags.length > 5 ? `
           <button class="search-see-all" data-filter="hashtags">See all hashtags →</button>
+        ` : filter === 'hashtags' ? `
+          <div id="search-sentinel"></div>
         ` : ''}
       </div>`;
   }
@@ -289,9 +313,6 @@ function renderResults(data, query, filter) {
   body.innerHTML = html || `<div class="search-empty"><p>No results</p></div>`;
 }
 
-/**
- * Append additional post rows to the existing posts list (pagination).
- */
 function appendPosts(statuses) {
   const list = document.getElementById('search-posts-list');
   if (!list) return;
@@ -299,6 +320,30 @@ function appendPosts(statuses) {
   statuses.forEach(s => {
     const div = document.createElement('div');
     div.innerHTML = renderStatus(s);
+    while (div.firstChild) frag.appendChild(div.firstChild);
+  });
+  list.appendChild(frag);
+}
+
+function appendAccounts(accounts) {
+  const list = document.getElementById('search-accounts-list');
+  if (!list) return;
+  const frag = document.createDocumentFragment();
+  accounts.forEach(a => {
+    const div = document.createElement('div');
+    div.innerHTML = renderAccount(a);
+    while (div.firstChild) frag.appendChild(div.firstChild);
+  });
+  list.appendChild(frag);
+}
+
+function appendHashtags(hashtags) {
+  const list = document.getElementById('search-hashtags-list');
+  if (!list) return;
+  const frag = document.createDocumentFragment();
+  hashtags.forEach(h => {
+    const div = document.createElement('div');
+    div.innerHTML = renderHashtag(h);
     while (div.firstChild) frag.appendChild(div.firstChild);
   });
   list.appendChild(frag);
