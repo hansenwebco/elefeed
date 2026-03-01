@@ -1099,10 +1099,15 @@ function setupHashtagTab() {
     });
   }
 
-  if (!btn || !panel) return;
+  const drawer = $('manage-hashtag-drawer');
+  const backdrop = $('manage-hashtag-backdrop');
+
+  if (!btn || !drawer) return;
 
   function openManageHashtagsPanel() {
-    document.body.classList.add('manage-inline-active');
+    history.pushState({ drawer: 'manage-hashtag-drawer' }, '', '');
+    drawer.classList.add('open');
+    if (backdrop) backdrop.classList.add('open');
     renderCurrentlyFollowing();
     searchInput.value = '';
     $('manage-hashtag-search-results').innerHTML = '';
@@ -1110,12 +1115,24 @@ function setupHashtagTab() {
   }
 
   function closeManageHashtagsPanel() {
-    document.body.classList.remove('manage-inline-active');
+    drawer.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('open');
     loadFeedTab(); // refresh the dropdown list in the feed bar
   }
 
   btn.addEventListener('click', openManageHashtagsPanel);
-  closeBtn.addEventListener('click', closeManageHashtagsPanel);
+  if (closeBtn) closeBtn.addEventListener('click', closeManageHashtagsPanel);
+  if (backdrop) backdrop.addEventListener('click', closeManageHashtagsPanel);
+
+  // Also close with Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) {
+      closeManageHashtagsPanel();
+    }
+  });
+
+  // Expose so the profile menu button in app.js can open it too
+  window.openManageHashtagsPanel = openManageHashtagsPanel;
 
   function renderCurrentlyFollowing() {
     const list = $('manage-hashtags-list');
