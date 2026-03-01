@@ -4,8 +4,8 @@
  * the OAuth flow, and bootstraps the app.
  */
 
-import { $, state, store, REDIRECT_URI, SCOPES } from './state.js';
-import { delay } from './utils.js';
+import { $, state, store, REDIRECT_URI, SCOPES, urlParams } from './state.js';
+import { delay, updateURLParam } from './utils.js';
 import { apiGet, registerApp, exchangeCode } from './api.js';
 import {
   showScreen, showToast, showLoginError, clearLoginError,
@@ -74,19 +74,43 @@ function closeAnyDrawer() {
   }
 }
 
-// Listen for popstate to close drawers
-window.addEventListener('popstate', e => {
+// Listen for popstate to restore drawers or tabs properly via back/forward
+window.addEventListener('popstate', async e => {
   const lightboxBtn = document.querySelector('.lightbox-close');
   if (lightboxBtn) {
     lightboxBtn.click();
     return;
   }
 
-  if (isAnyDrawerOpen()) {
+  window._isRouting = true;
+  try {
+    const currentParams = new URLSearchParams(window.location.search);
+
+    // Close all current drawers first
     closeAnyDrawer();
+
+    // Re-open appropriately based on URL
+    const threadId = currentParams.get('thread');
+    if (threadId) openThreadDrawer(threadId);
+
+    const profileId = currentParams.get('profile');
+    if (profileId) openProfileDrawer(profileId, state.server);
+
+    if (currentParams.get('bookmarks')) openBookmarksDrawer();
+
+    if (currentParams.get('notifications')) {
+      openNotifDrawer();
+    }
+
+    // Restore tab if it changed
+    const newTab = currentParams.get('tab') || 'feed';
+    if (newTab !== state.activeTab) {
+      document.getElementById(`tab-btn-${newTab}`)?.click();
+    }
+
     setTimeout(setOverlayPillVisibility, 10);
-    // Optionally, push state again to prevent further navigation
-    // history.pushState(null, '', '');
+  } finally {
+    window._isRouting = false;
   }
 });
 
@@ -118,9 +142,60 @@ async function initApp(server, token, demo = false) {
     console.warn('Could not load account info:', err);
   }
 
-  loadFeedTab();
+  // Initial UI state setup from URL params
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === state.activeTab);
+    b.setAttribute('aria-selected', b.dataset.tab === state.activeTab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === `panel-${state.activeTab}`);
+  });
+
+  if (state.feedFilter !== 'all') {
+    document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
+      i.classList.toggle('active', i.dataset.filter === state.feedFilter);
+    });
+    $('hashtag-filter-bar').style.display = (state.feedFilter === 'hashtags') ? '' : 'none';
+  }
+
+  if (state.exploreSubtab !== 'posts') {
+    document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(i => {
+      i.classList.toggle('active', i.dataset.subtab === state.exploreSubtab);
+    });
+    document.querySelectorAll('.trending-subpanel').forEach(p => {
+      p.classList.toggle('active', p.id === `trending-subpanel-${state.exploreSubtab}`);
+    });
+  }
+
+  updateTabLabel('feed');
+  updateTabLabel('explore');
+
+  if (state.activeTab === 'explore') {
+    loadExploreTab();
+  } else {
+    loadFeedTab();
+  }
+
   startPolling();
   pollNotifications();
+
+  // Restore drawer states if query params are present
+  const threadId = urlParams.get('thread');
+  if (threadId) {
+    setTimeout(() => openThreadDrawer(threadId), 300);
+  }
+  const profileId = urlParams.get('profile');
+  if (profileId) {
+    setTimeout(() => openProfileDrawer(profileId, state.server), 300);
+  }
+  const bookmarks = urlParams.get('bookmarks');
+  if (bookmarks) {
+    setTimeout(() => openBookmarksDrawer(), 300);
+  }
+  const notifications = urlParams.get('notifications');
+  if (notifications) {
+    setTimeout(() => openNotifDrawer(), 300);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -459,6 +534,7 @@ function switchToTab(tab) {
   });
 
   state.activeTab = tab;
+  updateURLParam('tab', tab);
   updateTabLabel('feed');
   updateTabLabel('explore');
 
@@ -507,6 +583,8 @@ document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item 
     });
 
     state.feedFilter = filter;
+    updateURLParam('feed', filter);
+
     $('hashtag-filter-bar').style.display = (filter === 'hashtags') ? '' : 'none';
     updateTabLabel('feed');
     closeAllTabDropdowns();
@@ -526,6 +604,9 @@ document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(it
     document.querySelectorAll('.trending-subpanel').forEach(p => {
       p.classList.toggle('active', p.id === `trending-subpanel-${subtab}`);
     });
+
+    state.exploreSubtab = subtab;
+    updateURLParam('explore', subtab);
 
     updateTabLabel('explore');
     closeAllTabDropdowns();
@@ -744,7 +825,7 @@ document.addEventListener('click', e => {
   }
 
   /* Follow / unfollow */
-  const followBtn = e.target.closest('.profile-follow-btn:not(#hashtag-follow-btn)');
+  const followBtn = e.target.closest('.profile-follow-btn[data-account-id]');
   if (followBtn) { e.preventDefault(); handleFollowToggle(followBtn); return; }
 
   /* Notify toggle */

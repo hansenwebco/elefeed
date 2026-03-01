@@ -33,6 +33,8 @@ export const store = {
 
 /* ── Central application state (singleton) ─────────────────────────── */
 
+export const urlParams = new URLSearchParams(window.location.search);
+
 export const state = {
   server: null,
   token: null,
@@ -52,8 +54,9 @@ export const state = {
   knownNotFollowing: new Set(),
 
   /* UI state */
-  activeTab: 'feed',
-  feedFilter: 'all',
+  activeTab: urlParams.get('tab') || 'feed',
+  feedFilter: urlParams.get('feed') || 'all',
+  exploreSubtab: urlParams.get('explore') || 'posts',
   pendingPosts: { feed: [] },
   demoMode: false,
 

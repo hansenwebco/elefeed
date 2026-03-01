@@ -9,7 +9,7 @@ import { apiGet } from './api.js';
 import { showToast } from './ui.js';
 import { renderPost } from './render.js';
 import {
-  escapeHTML, sanitizeHTML, renderCustomEmojis, formatNum,
+  escapeHTML, sanitizeHTML, renderCustomEmojis, formatNum, updateURLParam,
 } from './utils.js';
 
 /* ── Open / close ──────────────────────────────────────────────────── */
@@ -25,8 +25,8 @@ export function openProfileDrawer(accountId, server) {
   backdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
 
-    // Push history state for back button
-  history.pushState({ drawer: 'profile-drawer' }, '', '');
+  // Update URL state
+  updateURLParam('profile', accountId, true);
 
   const srv = server || state.server;
 
@@ -101,8 +101,8 @@ export function openProfileDrawer(accountId, server) {
           </div>
           <div id="${carouselId}">${slides}</div>
           <div class="pinned-dots">${pinned.map((_, i) =>
-            `<button class="pinned-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Post ${i + 1}"></button>`
-          ).join('')}</div>
+        `<button class="pinned-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Post ${i + 1}"></button>`
+      ).join('')}</div>
         </div>`;
     }
 
@@ -128,13 +128,13 @@ export function openProfileDrawer(accountId, server) {
         ${(account.fields && account.fields.length) ? `
           <div class="profile-fields">
             ${account.fields.map(f => {
-              const isVerified = !!f.verified_at;
-              return `<div class="profile-field ${isVerified ? 'verified' : ''}">
+      const isVerified = !!f.verified_at;
+      return `<div class="profile-field ${isVerified ? 'verified' : ''}">
                 <span class="profile-field-name">${escapeHTML(f.name)}</span>
                 <div class="profile-field-value">${sanitizeHTML(f.value)}</div>
                 ${isVerified ? '<svg class="verified-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' : ''}
               </div>`;
-            }).join('')}
+    }).join('')}
           </div>` : ''}
         <div class="profile-joined">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -196,6 +196,8 @@ export function closeProfileDrawer() {
   drawer.setAttribute('aria-hidden', 'true');
   backdrop.classList.remove('open');
   document.body.style.overflow = '';
+  updateURLParam('profile', null);
+  updateURLParam('bookmarks', null);
 }
 
 /* ── Bookmarks drawer ──────────────────────────────────────────────── */
@@ -211,8 +213,8 @@ export function openBookmarksDrawer() {
   backdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  // Push history state for back button
-  history.pushState({ drawer: 'profile-drawer' }, '', '');
+  // Update URL state
+  updateURLParam('bookmarks', 'true', true);
 
   apiGet('/api/v1/bookmarks?limit=40', state.token)
     .then(bookmarks => {

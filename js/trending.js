@@ -185,8 +185,14 @@ export async function loadTrendingNews() {
 export async function loadTrendingTab() {
   window.scrollTo({ top: 0, behavior: 'instant' });
 
-  document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach((b, i) => b.classList.toggle('active', i === 0));
-  document.querySelectorAll('.trending-subpanel').forEach((p, i) => p.classList.toggle('active', i === 0));
+  const activeSubtab = state.exploreSubtab || 'posts';
+
+  document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.subtab === activeSubtab);
+  });
+  document.querySelectorAll('.trending-subpanel').forEach(p => {
+    p.classList.toggle('active', p.id === `trending-subpanel-${activeSubtab}`);
+  });
   updateTabLabel('explore');
 
   state.trendingPostsLoaded = false;

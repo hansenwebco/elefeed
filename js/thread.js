@@ -6,7 +6,7 @@
 import { $, state } from './state.js';
 import { apiGet } from './api.js';
 import { renderThreadPost } from './render.js';
-import { escapeHTML } from './utils.js';
+import { escapeHTML, updateURLParam } from './utils.js';
 
 /* ── Open / close ──────────────────────────────────────────────────── */
 
@@ -34,13 +34,14 @@ export function openThreadDrawer(statusId) {
     drawer.setAttribute('aria-hidden', 'false');
     backdrop.classList.add('open');
     document.body.style.overflow = 'hidden';
-    // Push history state for back button
-    history.pushState({ drawer: 'thread-drawer' }, '', '');
     loadThread(statusId, content);
   }
+  updateURLParam('thread', statusId, true);
 }
 
 export function closeThreadDrawer() {
+  currentThreadId = null;
+  updateURLParam('thread', null);
   const wasInline = document.body.classList.contains('thread-inline-active');
   document.body.classList.remove('thread-inline-active');
   const drawer = $('thread-drawer');

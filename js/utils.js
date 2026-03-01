@@ -111,3 +111,31 @@ export function placeCursorAtEnd(el) {
     sel.addRange(range);
   } catch { }
 }
+
+/** 
+ * History API URL state manager.
+ * Adds, updates, or removes a query parameter and pushes/replaces state.
+ */
+export function updateURLParam(key, value, push = false) {
+  const url = new URL(window.location);
+  if (value === null || value === undefined) {
+    url.searchParams.delete(key);
+  } else {
+    url.searchParams.set(key, value);
+  }
+
+  if (key === 'tab' || key === 'feed' || key === 'explore') {
+    url.searchParams.delete('thread');
+    url.searchParams.delete('profile');
+    url.searchParams.delete('bookmarks');
+    url.searchParams.delete('notifications');
+  }
+
+  if (window._isRouting) return; // Ignore push/replace if we are in the middle of a popstate navigation
+
+  if (push) {
+    window.history.pushState({}, '', url);
+  } else {
+    window.history.replaceState({}, '', url);
+  }
+}
