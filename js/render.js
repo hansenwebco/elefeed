@@ -115,6 +115,41 @@ function _buildPostBody(status, s, idPrefix = '') {
       </div>`;
   }
 
+  /* ── Card (Link Preview) ── */
+  let cardHTML = '';
+  if (s.card && (!s.media_attachments || s.media_attachments.length === 0)) {
+    const isVideo = (s.card.type === 'video' || s.card.type === 'rich') && s.card.html;
+
+    let mediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
+
+    if (isVideo && mediaHTML) {
+      const encodedHtml = encodeURIComponent(s.card.html);
+      const ratio = s.card.width && s.card.height ? `${s.card.width} / ${s.card.height}` : '16 / 9';
+      mediaHTML = `
+        <div class="post-card-video-wrapper" onclick="event.preventDefault(); event.stopPropagation(); window.playCardVideo(this, '${encodedHtml}', '${ratio}')">
+          ${mediaHTML}
+          <div class="post-card-play-overlay">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="8 5 19 12 8 19"></polygon></svg>
+          </div>
+        </div>`;
+    }
+
+    const tag = isVideo ? 'div' : 'a';
+    const hrefAttr = isVideo ? '' : `href="${s.card.url}" target="_blank" rel="noopener"`;
+    const titleText = escapeHTML(s.card.title || '');
+    const titleHTML = s.card.title ? `<div class="post-card-title">${isVideo ? `<a href="${s.card.url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;" onclick="event.stopPropagation()">${titleText}</a>` : titleText}</div>` : '';
+
+    cardHTML = `
+      <${tag} ${hrefAttr} class="post-card" onclick="event.stopPropagation()">
+        ${mediaHTML}
+        <div class="post-card-content">
+          ${titleHTML}
+          ${s.card.description ? `<div class="post-card-description">${escapeHTML(s.card.description)}</div>` : ''}
+          ${s.card.provider_name ? `<div class="post-card-provider">${escapeHTML(s.card.provider_name)}</div>` : ''}
+        </div>
+      </${tag}>`;
+  }
+
   /* ── Content warning wrapper ── */
   const hasCW = (s.spoiler_text && s.spoiler_text.length > 0) || s.sensitive;
   const cwText = s.spoiler_text ? escapeHTML(s.spoiler_text) : 'Sensitive content';
@@ -129,13 +164,13 @@ function _buildPostBody(status, s, idPrefix = '') {
         </div>
         <div class="cw-body" id="${cwId}">
           <div class="post-content">${processContent(sanitizeHTML(s.content))}</div>
-          ${mediaHTML}${pollHTML}${quoteHTML}
+          ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}
         </div>
       </div>`;
   } else {
     contentHTML = `
       <div class="post-content">${processContent(sanitizeHTML(s.content))}</div>
-      ${mediaHTML}${pollHTML}${quoteHTML}`;
+      ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}`;
   }
 
   /* ── Footer: reply, boost, favourite, bookmark, external ── */
@@ -428,4 +463,38 @@ window.toggleCW = function toggleCW(id, btn) {
   const body = document.getElementById(id);
   const expanded = body.classList.toggle('expanded');
   btn.textContent = expanded ? 'hide' : 'show';
+};
+
+/** Load the video iframe within a card */
+window.playCardVideo = function playCardVideo(el, encodedHtml, aspectRatio) {
+  const decoded = decodeURIComponent(encodedHtml);
+
+  // We wrap it in an aspect-ratio preserving container so the layout doesn't jump drastically.
+  const iframeContainer = document.createElement('div');
+  iframeContainer.className = 'post-card-iframe-container';
+  if (aspectRatio) {
+    iframeContainer.style.aspectRatio = aspectRatio;
+  }
+  iframeContainer.innerHTML = decoded;
+
+  const iframe = iframeContainer.querySelector('iframe');
+  if (iframe) {
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.position = 'absolute';
+    iframe.style.top = '0';
+    iframe.style.left = '0';
+    iframe.style.border = 'none';
+
+    // Add autoplay if possible to avoid second click
+    let src = iframe.getAttribute('src');
+    if (src) {
+      if (src.includes('youtube.com') || src.includes('youtu.be')) {
+        src += (src.includes('?') ? '&' : '?') + 'autoplay=1';
+        iframe.setAttribute('src', src);
+      }
+    }
+  }
+
+  el.replaceWith(iframeContainer);
 };
