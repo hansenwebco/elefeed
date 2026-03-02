@@ -1,6 +1,7 @@
 /**
  * @module notifications
  * Notification drawer — loading, rendering, polling, filter tabs, badges.
+ * Also manages the Service Worker bridge for background notifications.
  */
 
 import { $, store, state } from './state.js';
@@ -8,6 +9,100 @@ import { apiGet } from './api.js';
 import { escapeHTML, relativeTime, updateURLParam } from './utils.js';
 import { openProfileDrawer } from './profile.js';
 import { openThreadDrawer } from './thread.js';
+
+/* ── Service Worker messaging ──────────────────────────────────────── */
+
+/**
+ * Send a message to the active service worker.
+ * Silently no-ops if no SW is registered.
+ */
+async function swPost(msg) {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    if (reg.active) reg.active.postMessage(msg);
+  } catch { /* sw unavailable */ }
+}
+
+/**
+ * Start background polling in the service worker with the current credentials.
+ * Called after login and whenever notification settings change.
+ */
+export async function startSwPolling() {
+  if (!state.token || state.demoMode) return;
+  const bgEnabled = store.get('pref_bg_notifications') !== 'false';
+  const intervalMs = parseInt(store.get('pref_bg_poll_interval') || '60000', 10);
+
+  await swPost({
+    type: 'START_POLLING',
+    token: state.token,
+    server: state.server,
+    lastSeenNotifId: state.lastSeenNotifId,
+    interval: intervalMs,
+    enabled: bgEnabled,
+  });
+}
+
+/** Stop background polling in the service worker. */
+export async function stopSwPolling() {
+  await swPost({ type: 'STOP_POLLING' });
+}
+
+/** Tell the SW to sync its lastSeenNotifId (called when drawer is opened). */
+export async function swSyncSeen() {
+  if (state.lastSeenNotifId) {
+    await swPost({ type: 'UPDATE_SEEN', lastSeenNotifId: state.lastSeenNotifId });
+  }
+}
+
+/** Apply updated bg notification settings to a running SW poller. */
+export async function updateSwConfig() {
+  const bgEnabled = store.get('pref_bg_notifications') !== 'false';
+  const intervalMs = parseInt(store.get('pref_bg_poll_interval') || '60000', 10);
+  await swPost({ type: 'UPDATE_CONFIG', enabled: bgEnabled, interval: intervalMs });
+}
+
+/**
+ * Request the Notification permission from the browser.
+ * Returns the resulting permission state: 'granted' | 'denied' | 'default'.
+ */
+export async function requestNotifPermission() {
+  if (!('Notification' in window)) return 'denied';
+  if (Notification.permission === 'granted') return 'granted';
+  if (Notification.permission === 'denied') return 'denied';
+  try {
+    return await Notification.requestPermission();
+  } catch {
+    return 'denied';
+  }
+}
+
+/** Current permission status string — used by the settings panel. */
+export function getNotifPermission() {
+  if (!('Notification' in window)) return 'unsupported';
+  return Notification.permission; // 'default' | 'granted' | 'denied'
+}
+
+/* ── Listen for messages from the SW ───────────────────────────────── */
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', event => {
+    const { type, count, newestId } = event.data || {};
+    if (type === 'SW_NEW_NOTIFS') {
+      // Update the badge so the user sees the red count even after returning to the app
+      if (!state.notifDrawerOpen) {
+        state.notifUnreadCount = (state.notifUnreadCount || 0) + count;
+        updateNotifBadge();
+      }
+      // Update the in-memory lastSeen so the next foreground poll is accurate
+      if (newestId && (!state.lastSeenNotifId || newestId > state.lastSeenNotifId)) {
+        // Don't overwrite lastSeenNotifId — the user hasn't *seen* them yet,
+        // but record that we know they exist so we don't double-count.
+        state._swLastKnownId = newestId;
+      }
+    }
+  });
+}
 
 /* ── Icon / label maps ─────────────────────────────────────────────── */
 
@@ -54,6 +149,8 @@ export function openNotifDrawer() {
     state.notifUnreadCount = 0;
     updateNotifBadge();
     dismissNotifMarker();
+    // Tell the SW the user has seen up to this ID
+    swSyncSeen();
   }
 
   loadNotifications();
