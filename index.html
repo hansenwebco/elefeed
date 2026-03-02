@@ -67,7 +67,7 @@
       <p class="login-footer">
         No account data is stored on any server.<br />
         Your access token lives in your browser only.<br />
-        <a href="https://joinmastodon.org" target="_blank">New to Mastodon?</a> <span>&middot;</span> <a href="privacy.html">Privacy Policy</a>
+        <a href="https://joinmastodon.org" target="_blank">New to Mastodon?</a> <span>&middot;</span> <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
       </p>
     </div>
   </div>
@@ -146,13 +146,12 @@
         </div>
       </div>
       <div class="sidebar-footer">
-        <span class="sidebar-footer-brand">Elefeed v1.0.0</span>
-        <span>&middot;</span>
-        <a href="privacy.html">Privacy Policy</a>
-        <span>&middot;</span>
-        <a href="https://github.com/hansenwebco/elefeed/issues" target="_blank">Report Bug</a>
-        <span>&middot;</span>
-        <a href="https://github.com/hansenwebco/elefeed" target="_blank">Source Code</a>
+        <div class="sidebar-footer-brand">elefeed <span>v1.0.3</span></div>
+        <div class="sidebar-footer-links">
+          <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
+          <a href="https://github.com/hansenwebco/elefeed/issues" target="_blank" rel="noopener">Report Bug</a>
+          <a href="https://github.com/hansenwebco/elefeed" target="_blank" rel="noopener">Source Code</a>
+        </div>
       </div>
     </aside>
 
@@ -575,13 +574,12 @@
         </div>
       </div>
       <div class="sidebar-footer" style="background: transparent; border-top: none; margin-top: 0; padding-bottom: 24px;">
-        <span class="sidebar-footer-brand">Elefeed v1.0.0</span>
-        <span>&middot;</span>
-        <a href="privacy.html">Privacy Policy</a>
-        <span>&middot;</span>
-        <a href="https://github.com/hansenwebco/elefeed/issues" target="_blank">Report Bug</a>
-        <span>&middot;</span>
-        <a href="https://github.com/hansenwebco/elefeed" target="_blank">Source Code</a>
+        <div class="sidebar-footer-brand">elefeed <span>v1.0.3</span></div>
+        <div class="sidebar-footer-links">
+          <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
+          <a href="https://github.com/hansenwebco/elefeed/issues" target="_blank" rel="noopener">Report Bug</a>
+          <a href="https://github.com/hansenwebco/elefeed" target="_blank" rel="noopener">Source Code</a>
+        </div>
       </div>
     </aside>
   </div>
@@ -744,6 +742,42 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy Modal -->
+  <div id="privacy-modal" class="compose-alt-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,13,15,0.85); align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
+    <div style="background:var(--surface); width:min(600px, 100%); margin: 0 16px; border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,0.5); max-height: 90vh;">
+      <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink: 0;">
+        <h3 style="font-size:16px; font-weight:500; font-family:var(--font-display);">ele<span style="color:var(--accent)">feed</span> <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; font-weight:normal; margin-left: 8px;">Privacy Policy</span></h3>
+        <button onclick="document.getElementById('privacy-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div style="padding:24px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
+        <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">This Privacy Policy outlines the data processing practices of Elefeed ("the Application").</p>
+
+        <div>
+          <h2 style="font-size:16px; color:var(--accent2); margin-top:28px; margin-bottom:12px; font-family:var(--font-mono); font-weight:500;">1. Information Collection and Processing</h2>
+          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">The Application does not collect, process, transmit, or retain any personally identifiable information, usage metrics, diagnostic data, or activity logs on external network infrastructure or proprietary servers.</p>
+        </div>
+
+        <div>
+          <h2 style="font-size:16px; color:var(--accent2); margin-top:28px; margin-bottom:12px; font-family:var(--font-mono); font-weight:500;">2. Third-Party Analytics and Tracking</h2>
+          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">The Application strictly prohibits the use of third-party analytics services, external tracking mechanisms, embedded scripts, or tracking cookies. Continuous or aggregated user behavior monitoring is not performed.</p>
+        </div>
+
+        <div>
+          <h2 style="font-size:16px; color:var(--accent2); margin-top:28px; margin-bottom:12px; font-family:var(--font-mono); font-weight:500;">3. Local Data Storage and Authentication</h2>
+          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">All operational data required for the Application's functionality, including but not limited to authentication credentials (such as OAuth access tokens) and user-defined application preferences, are maintained exclusively within the Local Storage API of the user's web browser environment. Such data is utilized solely for the purpose of authenticating and securely interacting directly with the user's designated Mastodon instance. No application data leaves the client device to interact with servers affiliated with the Application developers.</p>
+        </div>
+      </div>
+      <div style="padding:16px; border-top:1px solid var(--border); display:flex; justify-content:center; flex-shrink: 0;">
+        <button onclick="document.getElementById('privacy-modal').style.display='none'" style="padding:10px 20px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:var(--font-body); font-size:14px; cursor:pointer; transition:all var(--trans);" onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text)'">Close</button>
       </div>
     </div>
   </div>
