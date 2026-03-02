@@ -192,7 +192,7 @@
   margin-top: 24px;
   padding: 14px;
   background: var(--accent);
-  color: #0d0d0f;
+  color: var(--surface);
   border: none;
   border-radius: var(--radius);
   font-family: var(--font-body);
@@ -205,6 +205,7 @@
 
 .login-btn:hover {
   background: var(--accent2);
+  color: var(--surface);
   transform: translateY(-1px);
 }
 
