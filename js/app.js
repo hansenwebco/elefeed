@@ -27,6 +27,7 @@ import {
   openProfileDrawer, closeProfileDrawer, openBookmarksDrawer,
   handleFollowToggle, handleNotifyToggle,
   handleFavoriteToggle, handleBookmarkToggle,
+  loadMoreProfilePosts,
 } from './profile.js';
 import {
   openNotifDrawer, closeNotifDrawer, pollNotifications,
@@ -1044,7 +1045,15 @@ document.addEventListener('click', e => {
 
   /* Load More */
   const loadMoreBtn = e.target.closest('.load-more-btn');
-  if (loadMoreBtn) { e.preventDefault(); handleLoadMore(loadMoreBtn); return; }
+  if (loadMoreBtn) {
+    e.preventDefault();
+    if (loadMoreBtn.dataset.feed === 'profile') {
+      loadMoreProfilePosts(loadMoreBtn);
+    } else {
+      handleLoadMore(loadMoreBtn);
+    }
+    return;
+  }
 
   /* Hashtag clicks */
   const hashtagLink = e.target.closest('a.hashtag');

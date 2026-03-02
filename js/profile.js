@@ -12,6 +12,86 @@ import {
   escapeHTML, sanitizeHTML, renderCustomEmojis, formatNum, updateURLParam,
 } from './utils.js';
 
+/* ── Profile pagination state ──────────────────────────────────────── */
+
+const profilePagination = {
+  accountId: null,
+  server: null,
+  maxId: null,
+  loading: false,
+};
+
+let profileScrollListenerAttached = false;
+
+function checkProfileInfiniteScroll() {
+  const inner = document.querySelector('.profile-drawer-inner');
+  if (!inner) return;
+  const btn = inner.querySelector('.load-more-btn[data-feed="profile"]');
+  if (!btn || btn.disabled) return;
+  const rect = btn.getBoundingClientRect();
+  const innerRect = inner.getBoundingClientRect();
+  if (rect.top <= innerRect.bottom + 600) {
+    loadMoreProfilePosts(btn);
+  }
+}
+
+function attachProfileScrollListener() {
+  if (profileScrollListenerAttached) return;
+  profileScrollListenerAttached = true;
+  const inner = document.querySelector('.profile-drawer-inner');
+  if (!inner) return;
+  let raf = null;
+  inner.addEventListener('scroll', () => {
+    if (!raf) {
+      raf = requestAnimationFrame(() => {
+        checkProfileInfiniteScroll();
+        raf = null;
+      });
+    }
+  }, { passive: true });
+}
+
+export async function loadMoreProfilePosts(btn) {
+  if (profilePagination.loading || !profilePagination.maxId) return;
+  profilePagination.loading = true;
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+
+  try {
+    const { accountId, server, maxId } = profilePagination;
+    const newPosts = await apiGet(
+      `/api/v1/accounts/${accountId}/statuses?limit=20&exclude_replies=true&max_id=${maxId}`,
+      state.token,
+      server
+    );
+
+    profilePagination.maxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
+
+    const html = newPosts.map(s => renderPost(s)).join('');
+    const container = btn.parentNode;
+    if (!container) return;
+
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    while (tmp.firstChild) container.insertBefore(tmp.firstChild, btn);
+
+    if (!profilePagination.maxId) {
+      btn.remove();
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Load More';
+      // Check again in case more content is still in view
+      setTimeout(checkProfileInfiniteScroll, 100);
+    }
+  } catch (err) {
+    showToast('Failed to load more: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = 'Load More';
+  } finally {
+    profilePagination.loading = false;
+  }
+}
+
 /* ── Open / close ──────────────────────────────────────────────────── */
 
 export function openProfileDrawer(accountId, server) {
@@ -29,6 +109,13 @@ export function openProfileDrawer(accountId, server) {
   updateURLParam('profile', accountId, true);
 
   const srv = server || state.server;
+
+  // Reset pagination state for this profile
+  profilePagination.accountId = accountId;
+  profilePagination.server = srv;
+  profilePagination.maxId = null;
+  profilePagination.loading = false;
+  profileScrollListenerAttached = false;
 
   Promise.all([
     apiGet(`/api/v1/accounts/${accountId}`, state.token, srv),
@@ -62,8 +149,17 @@ export function openProfileDrawer(accountId, server) {
           data-account-id="${accountId}" data-following="${isFollowing ? 'true' : 'false'}">
           ${isFollowing ? 'Following' : 'Follow'}</button>`;
 
+    // Track cursor for pagination
+    if (statuses.length) {
+      profilePagination.maxId = statuses[statuses.length - 1].id;
+    }
+
+    const loadMoreHtml = (statuses.length === 20 && profilePagination.maxId)
+      ? '<button class="load-more-btn" data-feed="profile">Load More</button>'
+      : '';
+
     const postsHtml = statuses.length
-      ? statuses.map(s => renderPost(s)).join('')
+      ? statuses.map(s => renderPost(s)).join('') + loadMoreHtml
       : '<div class="feed-status"><p style="font-size:13px;">No posts yet.</p></div>';
 
     /* ── Pinned posts ── */
@@ -182,6 +278,9 @@ export function openProfileDrawer(accountId, server) {
         }, { passive: true });
       }
     }
+    // Attach infinite scroll listener to the drawer
+    attachProfileScrollListener();
+    setTimeout(checkProfileInfiniteScroll, 200);
   }).catch(err => {
     content.innerHTML = `<div class="feed-status" style="padding-top:60px;">
       <p style="font-size:13px;font-family:var(--font-mono);color:var(--danger);">Could not load profile.</p>
