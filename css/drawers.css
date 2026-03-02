@@ -50,7 +50,8 @@
 /* ────────────────────────────────────────────────
    MANAGE HASHTAGS DRAWER
    ──────────────────────────────────────────────── */
-.manage-hashtag-backdrop {
+.manage-hashtag-backdrop,
+.settings-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -60,12 +61,14 @@
   transition: opacity 220ms ease;
 }
 
-.manage-hashtag-backdrop.open {
+.manage-hashtag-backdrop.open,
+.settings-backdrop.open {
   opacity: 1;
   pointer-events: all;
 }
 
-.manage-hashtag-drawer {
+.manage-hashtag-drawer,
+.settings-drawer {
   position: fixed;
   top: 0;
   right: 0;
@@ -81,12 +84,15 @@
   flex-direction: column;
 }
 
-.manage-hashtag-drawer.open {
+.manage-hashtag-drawer.open,
+.settings-drawer.open {
   transform: translateX(0);
 }
 
 @media (max-width: 900px) {
-  .manage-hashtag-drawer {
+
+  .manage-hashtag-drawer,
+  .settings-drawer {
     width: 100%;
     border-left: none;
   }
