@@ -733,6 +733,11 @@ if (settingsMenuBtn) {
       hashtagPillsToggle.checked = store.get('pref_hashtag_pills') === 'true';
     }
 
+    const hideCardsToggle = $('settings-hide-cards-toggle');
+    if (hideCardsToggle) {
+      hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
+    }
+
     // Close other drawers
     closeAnyDrawer();
 
@@ -864,6 +869,22 @@ if (_hashtagPillsToggle) {
       document.body.classList.add('hashtag-pills-enabled');
     } else {
       document.body.classList.remove('hashtag-pills-enabled');
+    }
+  });
+}
+
+// Hide Cards
+if (store.get('pref_hide_cards') === 'true') {
+  document.body.classList.add('hide-cards-enabled');
+}
+const _hideCardsToggle = $('settings-hide-cards-toggle');
+if (_hideCardsToggle) {
+  _hideCardsToggle.addEventListener('change', () => {
+    store.set('pref_hide_cards', _hideCardsToggle.checked ? 'true' : 'false');
+    if (_hideCardsToggle.checked) {
+      document.body.classList.add('hide-cards-enabled');
+    } else {
+      document.body.classList.remove('hide-cards-enabled');
     }
   });
 }
