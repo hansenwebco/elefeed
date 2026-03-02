@@ -11,7 +11,7 @@ import { showToast } from './ui.js';
 import { escapeHTML, renderCustomEmojis, placeCursorAtEnd } from './utils.js';
 import { loadFeedTab } from './feed.js';
 import { updateCurrentThread } from './thread.js';
-import { openEmojiPicker, closeEmojiPicker, initEmojiPicker } from './emoji.js';
+import { openEmojiPicker, closeEmojiPicker, initEmojiPicker, initEmojiAutocomplete } from './emoji.js';
 
 /* ══════════════════════════════════════════════════════════════════════
    ALT-TEXT MODAL
@@ -1325,6 +1325,7 @@ export function initCompose() {
 
   // --- Emoji picker ---
   initEmojiPicker();
+  initEmojiAutocomplete();
 
   // --- Mention autocomplete ---
   initMentionAutocomplete();
