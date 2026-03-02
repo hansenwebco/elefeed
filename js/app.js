@@ -142,6 +142,27 @@ async function initApp(server, token, demo = false) {
     console.warn('Could not load account info:', err);
   }
 
+  // Load instance limit
+  try {
+    const v1Data = await apiGet('/api/v1/instance', token, server);
+    let chars = 500;
+    if (v1Data.configuration?.statuses?.max_characters) {
+      chars = v1Data.configuration.statuses.max_characters;
+    } else if (v1Data.max_toot_chars) {
+      chars = v1Data.max_toot_chars;
+    } else {
+      try {
+        const v2Data = await apiGet('/api/v2/instance', token, server);
+        if (v2Data.configuration?.statuses?.max_characters) {
+          chars = v2Data.configuration.statuses.max_characters;
+        }
+      } catch (err2) { }
+    }
+    state.maxTootChars = chars;
+  } catch (err) {
+    console.warn('Could not load instance info:', err);
+  }
+
   // Initial UI state setup from URL params
   document.querySelectorAll('.tab-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === state.activeTab);

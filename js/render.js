@@ -171,7 +171,10 @@ function _buildPostBody(status, s, idPrefix = '') {
       <button class="post-stat post-bookmark-btn ${s.bookmarked ? 'bookmarked' : ''}" data-post-id="${s.id}" data-bookmarked="${s.bookmarked ? 'true' : 'false'}" title="${s.bookmarked ? 'Remove bookmark' : 'Bookmark'}">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
       </button>
-      <a href="${s.url}" target="_blank" rel="noopener" style="margin-left:auto;color:var(--text-dim);font-family:var(--font-mono);font-size:11px;text-decoration:none;" title="Open original">↗</a>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+        ${getVisibilityIcon(status.visibility)}
+        <a href="${s.url}" target="_blank" rel="noopener" style="color:var(--text-dim);font-family:var(--font-mono);font-size:11px;text-decoration:none;" title="Open original">↗</a>
+      </div>
     </div>`;
 
   return { contentHTML, footerHTML };
@@ -180,6 +183,22 @@ function _buildPostBody(status, s, idPrefix = '') {
 /* ══════════════════════════════════════════════════════════════════════
    FEED POST
    ══════════════════════════════════════════════════════════════════════ */
+
+function getVisibilityIcon(visibility) {
+  switch (visibility) {
+    case 'public':
+      return `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><title>Public</title><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
+    case 'unlisted':
+      return `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><title>Unlisted</title><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>`;
+    case 'private':
+      return `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><title>Followers only</title><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+    case 'direct':
+      return `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><title>Direct</title><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>`;
+    default:
+      return '';
+  }
+}
+
 
 /**
  * Render a post for the main feed.
