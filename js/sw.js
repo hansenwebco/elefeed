@@ -25,112 +25,43 @@ self.addEventListener('fetch', event => {
   event.respondWith(fetch(event.request));
 });
 
-/* ── Message handler (from main thread) ────────────────────────────── */
+/* ── Push Notifications ──────────────────────────────────────────────── */
 
-self.addEventListener('message', event => {
-  const { type, ...payload } = event.data || {};
-
-  switch (type) {
-    case 'START_POLLING':
-      pollingConfig = {
-        token: payload.token,
-        server: payload.server,
-        lastSeenNotifId: payload.lastSeenNotifId || null,
-        interval: payload.interval || 60_000,   // default 60 s
-        enabled: payload.enabled !== false,    // opt-in toggle
-      };
-      restartTimer();
-      break;
-
-    case 'STOP_POLLING':
-      stopTimer();
-      pollingConfig = null;
-      break;
-
-    case 'UPDATE_SEEN':
-      if (pollingConfig) {
-        pollingConfig.lastSeenNotifId = payload.lastSeenNotifId;
-      }
-      break;
-
-    case 'UPDATE_CONFIG':
-      if (pollingConfig) {
-        if (payload.interval) pollingConfig.interval = payload.interval;
-        if ('enabled' in payload) pollingConfig.enabled = payload.enabled;
-        restartTimer();
-      }
-      break;
-  }
-});
-
-/* ── Timer management ──────────────────────────────────────────────── */
-
-function restartTimer() {
-  stopTimer();
-  if (!pollingConfig || !pollingConfig.enabled) return;
-  // Fire once immediately, then on the interval
-  pollInBackground();
-  pollTimer = setInterval(pollInBackground, pollingConfig.interval);
-}
-
-function stopTimer() {
-  if (pollTimer !== null) {
-    clearInterval(pollTimer);
-    pollTimer = null;
-  }
-}
-
-/* ── Background poll ───────────────────────────────────────────────── */
-
-async function pollInBackground() {
-  if (!pollingConfig || !pollingConfig.token || !pollingConfig.enabled) return;
-
-  const { token, server, lastSeenNotifId } = pollingConfig;
+self.addEventListener('push', event => {
+  if (!event.data) return;
 
   try {
-    const res = await fetch(`https://${server}/api/v1/notifications?limit=15`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
+    const data = event.data.json();
+    // Mastodon pushes JSON data with title, body, icon etc.
+    const title = data.title || 'Elefeed';
+    const bodyText = data.body || '';
 
-    if (!res.ok) return;
-    const notifs = await res.json();
-    if (!Array.isArray(notifs) || notifs.length === 0) return;
+    const options = {
+      body: bodyText,
+      icon: data.icon || '/icon512x512.png',
+      badge: '/icon512x512.png',
+      tag: `elefeed-notif-${data.notification_id || Date.now()}`,
+      data: { url: '/' } // defaulting to root url
+    };
 
-    // Determine which are new
-    const newNotifs = lastSeenNotifId
-      ? notifs.filter(n => n.id > lastSeenNotifId)
-      : notifs;
-
-    if (newNotifs.length === 0) return;
-
-    // Check if the PWA is currently focused — if so, skip OS notifications
-    // (the main thread's own polling will handle the badge/drawer update)
-    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const isFocused = allClients.some(c => c.focused);
-    if (isFocused) {
-      // Still update lastSeen so we don't re-fire when app comes back to background
-      pollingConfig.lastSeenNotifId = notifs[0].id;
-      return;
+    // Attempt to route notifications slightly better based on type
+    if (data.notification_type === 'mention' || data.notification_type === 'status') {
+      options.data.url = '/?notifications=true';
     }
 
-    // Build and show grouped or individual notification(s)
-    await showNotifications(newNotifs, server);
-
-    // Update the high-water mark
-    pollingConfig.lastSeenNotifId = notifs[0].id;
-
-    // Tell all open (but backgrounded) clients to refresh their badge
-    allClients.forEach(c => {
-      c.postMessage({ type: 'SW_NEW_NOTIFS', count: newNotifs.length, newestId: notifs[0].id });
-    });
-
+    event.waitUntil(
+      self.registration.showNotification(title, options).then(async () => {
+        // Tell all open clients to refresh their badge
+        const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        allClients.forEach(c => {
+          c.postMessage({ type: 'SW_NEW_NOTIFS', count: 1 });
+        });
+      })
+    );
   } catch (err) {
-    // Silently swallow — network may be unavailable
-    console.debug('[SW] Poll error:', err.message);
+    console.debug('[SW] Push event error:', err.message);
   }
-}
-
-/* ── Notification display ──────────────────────────────────────────── */
+});
 
 const TYPE_LABELS = {
   mention: 'mentioned you',
