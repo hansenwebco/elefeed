@@ -34,7 +34,7 @@ import {
   initNotifications, startSwPolling, stopSwPolling,
   requestNotifPermission, getNotifPermission, updateSwConfig,
 } from './notifications.js';
-import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply } from './compose.js';
+import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply, updateCharCount, updateSidebarCharCount } from './compose.js';
 import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
 
 // Drawer state tracking for history
@@ -167,6 +167,8 @@ async function initApp(server, token, demo = false) {
       } catch (err2) { }
     }
     state.maxTootChars = chars;
+    updateCharCount();
+    updateSidebarCharCount();
   } catch (err) {
     console.warn('Could not load instance info:', err);
   }
