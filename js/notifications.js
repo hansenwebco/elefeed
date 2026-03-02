@@ -10,7 +10,19 @@ import { escapeHTML, relativeTime, updateURLParam } from './utils.js';
 import { openProfileDrawer } from './profile.js';
 import { openThreadDrawer } from './thread.js';
 
-/* ── Service Worker messaging ──────────────────────────────────────── */
+/* ── Service Worker messaging / Web Push ─────────────────────────────── */
+
+// Utility to convert VAPID key for PushManager
+function urlB64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 /**
  * Send a message to the active service worker.
@@ -25,27 +37,93 @@ async function swPost(msg) {
 }
 
 /**
- * Start background polling in the service worker with the current credentials.
- * Called after login and whenever notification settings change.
+ * Start Web Push subscription with Mastodon server
  */
 export async function startSwPolling() {
-  if (!state.token || state.demoMode) return;
+  if (!state.token || state.demoMode || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
   const bgEnabled = store.get('pref_bg_notifications') !== 'false';
-  const intervalMs = parseInt(store.get('pref_bg_poll_interval') || '600000', 10);
 
-  await swPost({
-    type: 'START_POLLING',
-    token: state.token,
-    server: state.server,
-    lastSeenNotifId: state.lastSeenNotifId,
-    interval: intervalMs,
-    enabled: bgEnabled,
-  });
+  if (!bgEnabled) {
+    return stopSwPolling(); // Unsubscribe if disabled
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+
+    if (!sub) {
+      let vapidKey = null;
+      try {
+        const res = await apiGet('/api/v2/instance', state.token);
+        vapidKey = res?.configuration?.vapid?.public_key;
+      } catch (e) { }
+
+      if (!vapidKey) {
+        try {
+          const res = await apiGet('/api/v1/instance', state.token);
+          vapidKey = res?.configuration?.vapid?.public_key;
+        } catch (e) { }
+      }
+
+      if (!vapidKey) {
+        console.warn('Could not find VAPID public key from instance.');
+        return;
+      }
+
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlB64ToUint8Array(vapidKey)
+      });
+    }
+
+    // Now send the subscription to Mastodon
+    const p256dh = btoa(String.fromCharCode(...new Uint8Array(sub.getKey('p256dh')))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const auth = btoa(String.fromCharCode(...new Uint8Array(sub.getKey('auth')))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+    const body = new URLSearchParams({
+      'data[alerts][mention]': 'true',
+      'data[alerts][status]': 'true',
+      'data[alerts][reblog]': 'true',
+      'data[alerts][follow]': 'true',
+      'data[alerts][follow_request]': 'true',
+      'data[alerts][favourite]': 'true',
+      'data[alerts][poll]': 'true',
+      'data[alerts][update]': 'true',
+      'data[policy]': 'all',
+      'subscription[endpoint]': sub.endpoint,
+      'subscription[keys][p256dh]': p256dh,
+      'subscription[keys][auth]': auth
+    });
+
+    await fetch(`https://${state.server}/api/v1/push/subscription`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${state.token}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: body.toString()
+    });
+  } catch (err) {
+    console.warn('Push subscription failed:', err);
+  }
 }
 
-/** Stop background polling in the service worker. */
+/** Stop Web Push subscription. */
 export async function stopSwPolling() {
-  await swPost({ type: 'STOP_POLLING' });
+  if (!state.token || state.demoMode || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      await sub.unsubscribe();
+      await fetch(`https://${state.server}/api/v1/push/subscription`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${state.token}` }
+      });
+    }
+  } catch (err) {
+    console.warn('Failed to stop push:', err);
+  }
 }
 
 /** Tell the SW to sync its lastSeenNotifId (called when drawer is opened). */
@@ -55,11 +133,14 @@ export async function swSyncSeen() {
   }
 }
 
-/** Apply updated bg notification settings to a running SW poller. */
+/** Apply updated bg notification settings. */
 export async function updateSwConfig() {
   const bgEnabled = store.get('pref_bg_notifications') !== 'false';
-  const intervalMs = parseInt(store.get('pref_bg_poll_interval') || '600000', 10);
-  await swPost({ type: 'UPDATE_CONFIG', enabled: bgEnabled, interval: intervalMs });
+  if (bgEnabled) {
+    await startSwPolling();
+  } else {
+    await stopSwPolling();
+  }
 }
 
 /**
