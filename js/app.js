@@ -30,7 +30,8 @@ import {
 } from './profile.js';
 import {
   openNotifDrawer, closeNotifDrawer, pollNotifications,
-  initNotifications,
+  initNotifications, startSwPolling, stopSwPolling,
+  requestNotifPermission, getNotifPermission, updateSwConfig,
 } from './notifications.js';
 import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply } from './compose.js';
 import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
@@ -205,6 +206,9 @@ async function initApp(server, token, demo = false) {
 
   startPolling();
   pollNotifications();
+
+  // Start background Service Worker polling
+  startSwPolling();
 
   // Restore drawer states if query params are present
   const threadId = urlParams.get('thread');
@@ -720,6 +724,9 @@ if (settingsMenuBtn) {
       btn.classList.toggle('active', btn.dataset.value === currentTheme);
     });
 
+    // Sync notification permission status and toggles
+    refreshNotifSettingsUI();
+
     // Close other drawers
     closeAnyDrawer();
 
@@ -765,6 +772,80 @@ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e 
   if (t === 'system') applyTheme('system');
 });
 
+/* ── Notification settings ─────────────────────────────────────────── */
+
+/**
+ * Refreshes the notification settings section in the settings panel.
+ * Called every time the panel opens so permission status is always current.
+ */
+function refreshNotifSettingsUI() {
+  const permBtn = $('settings-notif-perm-btn');
+  const permStatus = $('settings-notif-perm-status');
+  const bgToggle = $('settings-bg-notif-toggle');
+  const intervalSel = $('settings-notif-interval');
+
+  if (!permBtn) return;
+
+  const perm = getNotifPermission();
+
+  const permLabels = {
+    granted: '✅ Notifications allowed',
+    denied: '🚫 Blocked — enable in browser/OS settings',
+    default: '⬜ Permission not yet requested',
+    unsupported: '⚠️ Not supported in this browser',
+  };
+  if (permStatus) permStatus.textContent = permLabels[perm] || perm;
+  permBtn.textContent = perm === 'granted' ? 'Permission granted' : 'Enable Notifications';
+  permBtn.disabled = perm === 'granted' || perm === 'denied' || perm === 'unsupported';
+
+  if (bgToggle) {
+    const bgEnabled = store.get('pref_bg_notifications') !== 'false';
+    bgToggle.checked = bgEnabled;
+    bgToggle.disabled = perm !== 'granted';
+  }
+
+  if (intervalSel) {
+    intervalSel.value = store.get('pref_bg_poll_interval') || '60000';
+    intervalSel.disabled = getNotifPermission() !== 'granted';
+  }
+}
+
+// Wire notification settings controls (elements exist in DOM at load time)
+const _permBtn = $('settings-notif-perm-btn');
+const _bgToggle = $('settings-bg-notif-toggle');
+const _intervalSel = $('settings-notif-interval');
+
+if (_permBtn) {
+  _permBtn.addEventListener('click', async () => {
+    _permBtn.disabled = true;
+    _permBtn.textContent = 'Requesting…';
+    const result = await requestNotifPermission();
+    refreshNotifSettingsUI();
+    if (result === 'granted') {
+      showToast('Notifications enabled!');
+      startSwPolling();
+    } else if (result === 'denied') {
+      showToast('Permission denied — check your browser/OS settings.');
+    }
+  });
+}
+
+if (_bgToggle) {
+  _bgToggle.addEventListener('change', () => {
+    store.set('pref_bg_notifications', _bgToggle.checked ? 'true' : 'false');
+    updateSwConfig();
+    showToast(_bgToggle.checked ? 'Background notifications on' : 'Background notifications off');
+  });
+}
+
+if (_intervalSel) {
+  _intervalSel.addEventListener('change', () => {
+    store.set('pref_bg_poll_interval', _intervalSel.value);
+    updateSwConfig();
+    showToast('Poll interval updated');
+  });
+}
+
 /* Logout */
 $('logout-btn').addEventListener('click', () => {
   store.del('token');
@@ -807,6 +888,7 @@ $('logout-btn').addEventListener('click', () => {
   showScreen('login-screen');
   showToast('Signed out.');
   stopPolling();
+  stopSwPolling();
 });
 
 /* ══════════════════════════════════════════════════════════════════════
