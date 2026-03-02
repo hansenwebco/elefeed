@@ -365,6 +365,21 @@
   margin-bottom: 0;
 }
 
+.post-content ul,
+.post-content ol {
+  margin-bottom: 8px;
+  padding-left: 24px;
+}
+
+.post-content li {
+  margin-bottom: 4px;
+}
+
+.post-content ul:last-child,
+.post-content ol:last-child {
+  margin-bottom: 0;
+}
+
 .post-content a {
   color: var(--accent2);
   text-decoration: none;
