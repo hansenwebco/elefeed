@@ -342,6 +342,12 @@
   padding-left: 8px;
 }
 
+.post-vis-icon {
+  opacity: 0.5;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
 /* ─── Post Content ─── */
 .post-content {
   font-size: 14.5px;

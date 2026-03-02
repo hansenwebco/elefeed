@@ -43,7 +43,8 @@ export function updateCharCount() {
   const counter = $('compose-char-count');
   const textLength = textarea.innerText.trim().length;
   const cwLength = cwInput.value.length;
-  const remaining = 500 - textLength - cwLength;
+  const maxChars = state.maxTootChars || 500;
+  const remaining = maxChars - textLength - cwLength;
   counter.textContent = remaining;
   counter.classList.toggle('warning', remaining <= 50 && remaining > 0);
   counter.classList.toggle('error', remaining < 0);
@@ -57,7 +58,8 @@ export function updateSidebarCharCount() {
   const counter = $('compose-char-count' + suffix);
   const textLength = textarea.innerText.trim().length;
   const cwLength = cwInput.value.length;
-  const remaining = 500 - textLength - cwLength;
+  const maxChars = state.maxTootChars || 500;
+  const remaining = maxChars - textLength - cwLength;
   counter.textContent = remaining;
   counter.classList.toggle('warning', remaining <= 50 && remaining > 0);
   counter.classList.toggle('error', remaining < 0);
@@ -111,6 +113,9 @@ export function resetReplyState() {
     if (visBtn) {
       visBtn.dataset.visibility = 'public';
       visBtn.dataset.quote = 'public';
+      visBtn.disabled = false;
+      visBtn.title = "";
+      visBtn.style.opacity = '1';
       const icon = $('compose-visibility-icon' + suffix);
       const text = $('compose-visibility-text' + suffix);
       if (icon) icon.textContent = '🌐';
@@ -350,6 +355,9 @@ window.handleEditInit = async function (postId) {
         finalQuote = policy || 'public';
       }
       visBtn.dataset.quote = finalQuote;
+      visBtn.disabled = true;
+      visBtn.title = "Visibility cannot be changed while editing";
+      visBtn.style.opacity = '0.5';
 
       const iconNode = $('compose-visibility-icon' + suffix);
       const textNode = $('compose-visibility-text' + suffix);
