@@ -728,6 +728,11 @@ if (settingsMenuBtn) {
     // Sync notification permission status and toggles
     refreshNotifSettingsUI();
 
+    const hashtagPillsToggle = $('settings-hashtag-pills-toggle');
+    if (hashtagPillsToggle) {
+      hashtagPillsToggle.checked = store.get('pref_hashtag_pills') === 'true';
+    }
+
     // Close other drawers
     closeAnyDrawer();
 
@@ -844,6 +849,22 @@ if (_intervalSel) {
     store.set('pref_bg_poll_interval', _intervalSel.value);
     updateSwConfig();
     showToast('Poll interval updated');
+  });
+}
+
+// Hashtag pills
+if (store.get('pref_hashtag_pills') === 'true') {
+  document.body.classList.add('hashtag-pills-enabled');
+}
+const _hashtagPillsToggle = $('settings-hashtag-pills-toggle');
+if (_hashtagPillsToggle) {
+  _hashtagPillsToggle.addEventListener('change', () => {
+    store.set('pref_hashtag_pills', _hashtagPillsToggle.checked ? 'true' : 'false');
+    if (_hashtagPillsToggle.checked) {
+      document.body.classList.add('hashtag-pills-enabled');
+    } else {
+      document.body.classList.remove('hashtag-pills-enabled');
+    }
   });
 }
 

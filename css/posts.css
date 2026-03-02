@@ -393,6 +393,25 @@
   color: var(--accent);
 }
 
+.hashtag-pills-enabled .post-content .hashtag {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  font-size: 0.9em;
+  line-height: 1.2;
+  margin: 2px 1px;
+  text-decoration: none;
+  transition: all var(--trans);
+}
+
+.hashtag-pills-enabled .post-content .hashtag:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
 .post-content .mention {
   color: var(--teal);
 }
