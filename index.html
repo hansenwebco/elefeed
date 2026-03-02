@@ -8,6 +8,10 @@
   <script>
     if (window.location.hostname !== 'elefeed.app') {
       document.title = 'Elefeed - Development';
+      window.addEventListener('DOMContentLoaded', () => {
+        const icon = document.querySelector('link[rel="icon"]');
+        if (icon) icon.href = 'favicon-dev.svg';
+      });
     }
     const _t = localStorage.getItem('theme') || 'system';
     if (_t === 'light' || (_t === 'system' && window.matchMedia('(prefers-color-scheme: light)').matches)) {
