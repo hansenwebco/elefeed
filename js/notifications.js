@@ -31,7 +31,7 @@ async function swPost(msg) {
 export async function startSwPolling() {
   if (!state.token || state.demoMode) return;
   const bgEnabled = store.get('pref_bg_notifications') !== 'false';
-  const intervalMs = parseInt(store.get('pref_bg_poll_interval') || '60000', 10);
+  const intervalMs = parseInt(store.get('pref_bg_poll_interval') || '600000', 10);
 
   await swPost({
     type: 'START_POLLING',
@@ -58,7 +58,7 @@ export async function swSyncSeen() {
 /** Apply updated bg notification settings to a running SW poller. */
 export async function updateSwConfig() {
   const bgEnabled = store.get('pref_bg_notifications') !== 'false';
-  const intervalMs = parseInt(store.get('pref_bg_poll_interval') || '60000', 10);
+  const intervalMs = parseInt(store.get('pref_bg_poll_interval') || '600000', 10);
   await swPost({ type: 'UPDATE_CONFIG', enabled: bgEnabled, interval: intervalMs });
 }
 

@@ -805,7 +805,7 @@ function refreshNotifSettingsUI() {
   }
 
   if (intervalSel) {
-    intervalSel.value = store.get('pref_bg_poll_interval') || '60000';
+    intervalSel.value = store.get('pref_bg_poll_interval') || '600000';
     intervalSel.disabled = getNotifPermission() !== 'granted';
   }
 }
