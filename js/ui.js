@@ -24,13 +24,106 @@ export function showScreen(id) {
 
 /* ── Toast ──────────────────────────────────────────────────────────── */
 
-export function showToast(msg, duration = 2500) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), duration);
+/** Ensure the toast region container exists */
+function _getRegion() {
+  let region = document.getElementById('toast-region');
+  if (!region) {
+    region = document.createElement('div');
+    region.id = 'toast-region';
+    region.setAttribute('role', 'status');
+    region.setAttribute('aria-live', 'polite');
+    region.setAttribute('aria-atomic', 'false');
+    document.body.appendChild(region);
+  }
+  return region;
 }
+
+const ICONS = {
+  info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+  error: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+};
+
+/**
+ * Show a toast notification.
+ *
+ * @param {string} msg        - The message to display.
+ * @param {string|number} [typeOrDuration='info'] - 'info' | 'success' | 'error', or a duration (ms) for backward compat.
+ * @param {number} [duration=2800] - How long (ms) to show the toast.
+ */
+export function showToast(msg, typeOrDuration = 'info', duration = 2800) {
+  // Backward-compat: showToast(msg, durationMs)
+  let type = 'info';
+  if (typeof typeOrDuration === 'number') {
+    duration = typeOrDuration;
+  } else if (typeof typeOrDuration === 'string' && ['info', 'success', 'error'].includes(typeOrDuration)) {
+    type = typeOrDuration;
+  }
+
+  // Auto-detect type from message content if still 'info'
+  if (type === 'info') {
+    const lower = msg.toLowerCase();
+    if (/fail|error|denied|could not|unable|permission/.test(lower)) {
+      type = 'error';
+    } else if (/success|posted|bookmarked|bookmark removed|follow|notif|enabled|on$|off$|signed out|refresh|updat|interval/.test(lower)) {
+      type = 'success';
+    }
+  }
+
+  const region = _getRegion();
+
+  // Build DOM
+  const item = document.createElement('div');
+  item.className = `toast-item toast-${type}`;
+  item.setAttribute('role', 'alert');
+
+  const icon = document.createElement('span');
+  icon.className = 'toast-icon';
+  icon.innerHTML = ICONS[type] || ICONS.info;
+
+  const text = document.createElement('span');
+  text.className = 'toast-msg';
+  text.textContent = msg;
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'toast-close';
+  closeBtn.setAttribute('aria-label', 'Dismiss');
+  closeBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+  const progress = document.createElement('div');
+  progress.className = 'toast-progress';
+
+  item.append(icon, text, closeBtn, progress);
+  region.appendChild(item);
+
+  // Animate in (next frame so CSS transition fires)
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => item.classList.add('toast-show'));
+  });
+
+  // Progress bar drain via CSS animation
+  progress.style.transition = `transform ${duration}ms linear`;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      progress.style.transform = 'scaleX(0)';
+    });
+  });
+
+  function dismiss() {
+    item.classList.add('toast-hiding');
+    item.classList.remove('toast-show');
+    item.addEventListener('transitionend', () => item.remove(), { once: true });
+    // Failsafe
+    setTimeout(() => item.remove(), 400);
+  }
+
+  const timer = setTimeout(dismiss, duration);
+  closeBtn.addEventListener('click', () => { clearTimeout(timer); dismiss(); });
+}
+
+// Convenience helpers
+showToast.success = (msg, duration) => showToast(msg, 'success', duration);
+showToast.error = (msg, duration) => showToast(msg, 'error', duration);
 
 /* ── Login error helpers ───────────────────────────────────────────── */
 

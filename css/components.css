@@ -36,46 +36,151 @@
    COMPONENTS — Toast, Error Banner, Load More, Offline, etc.
    ═══════════════════════════════════════════════ */
 
-/* ─── Toast ─── */
+/* ─── Toast System ─── */
+
+/* Hidden legacy element kept for backward compat — do not remove */
 .toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(12px);
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 10px 18px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text);
-  opacity: 0;
-  pointer-events: none;
-  transition: all 250ms ease;
-  z-index: 9999;
-  white-space: nowrap;
-
-  /* Profile dropdown and drawers above pill */
-  #profile-dropdown {
-    position: fixed !important;
-    z-index: 9999 !important;
-    right: 20px !important;
-    left: auto !important;
-    top: 62px !important;
-    margin-top: 0 !important;
-  }
-
-  .notif-drawer,
-  .thread-drawer,
-  .profile-drawer,
-  .compose-drawer {
-    z-index: 1200 !important;
-  }
+  display: none !important;
 }
 
-.toast.show {
+/* Container: stacks toasts bottom-right */
+#toast-region {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  pointer-events: none;
+  max-width: min(360px, calc(100vw - 32px));
+}
+
+/* Individual toast card */
+.toast-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px 14px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.4;
+  pointer-events: all;
+  cursor: default;
+  overflow: hidden;
+  /* enter state */
+  opacity: 0;
+  transform: translateX(110%);
+  transition: opacity 280ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toast-item.toast-show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(0);
+}
+
+.toast-item.toast-hiding {
+  opacity: 0;
+  transform: translateX(110%);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+/* Type-specific left-border colors */
+.toast-item.toast-success {
+  border-left-color: var(--teal);
+}
+
+.toast-item.toast-error {
+  border-left-color: var(--danger);
+}
+
+.toast-item.toast-info {
+  border-left-color: var(--accent);
+}
+
+/* Icon area */
+.toast-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: var(--accent);
+}
+
+.toast-success .toast-icon {
+  color: var(--teal);
+}
+
+.toast-error .toast-icon {
+  color: var(--danger);
+}
+
+/* Message text */
+.toast-msg {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* Close button */
+.toast-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color var(--trans), background var(--trans);
+  margin-top: 1px;
+}
+
+.toast-close:hover {
+  color: var(--text);
+  background: var(--surface2);
+}
+
+/* Progress drain bar */
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  opacity: 0.5;
+}
+
+.toast-success .toast-progress {
+  background: var(--teal);
+}
+
+.toast-error .toast-progress {
+  background: var(--danger);
+}
+
+/* Mobile: pin to bottom, full-width-ish */
+@media (max-width: 480px) {
+  #toast-region {
+    bottom: 16px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
 }
 
 /* ─── Error Banner ─── */
