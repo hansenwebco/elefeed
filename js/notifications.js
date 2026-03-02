@@ -206,8 +206,10 @@ function renderNotifItem(n) {
   const displayName = escapeHTML(account.display_name || account.username);
 
   let preview = '';
-  if (n.status) {
-    const text = n.status.content ? n.status.content.replace(/<[^>]*>/g, '').substring(0, 200) : '';
+  if (n.status && n.status.content) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = n.status.content;
+    const text = (tempDiv.textContent || tempDiv.innerText || '').substring(0, 200);
     if (text) preview = `<div class="notif-preview" data-notif-status="${n.status.id}">${escapeHTML(text)}</div>`;
   }
 
