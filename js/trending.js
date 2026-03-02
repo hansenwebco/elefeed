@@ -195,13 +195,8 @@ export async function loadTrendingTab() {
   });
   updateTabLabel('explore');
 
-  state.trendingPostsLoaded = false;
-  state.trendingHashtagsLoaded = false;
-  state.trendingPeopleLoaded = false;
-  state.trendingNewsLoaded = false;
-
-  loadTrendingPosts();
-  loadTrendingHashtags();
-  loadTrendingPeople();
-  loadTrendingNews();
+  if (activeSubtab === 'posts' && !state.trendingPostsLoaded) loadTrendingPosts();
+  else if (activeSubtab === 'hashtags' && !state.trendingHashtagsLoaded) loadTrendingHashtags();
+  else if (activeSubtab === 'people' && !state.trendingPeopleLoaded) loadTrendingPeople();
+  else if (activeSubtab === 'news' && !state.trendingNewsLoaded) loadTrendingNews();
 }
