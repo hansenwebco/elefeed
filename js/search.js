@@ -421,12 +421,13 @@ function buildStatusPreviewHTML(s) {
   const tmp = document.createElement('div');
   tmp.innerHTML = s.content;
 
-  // Replace all <a> tags — mentions become clickable spans, others become plain text
+  // Replace all <a> tags — mentions become clickable spans, hashtags become clickable spans, others become plain text
   tmp.querySelectorAll('a').forEach(a => {
-    const isMention = a.classList.contains('mention') ||
-      a.textContent.trim().startsWith('@');
+    const text = a.textContent.trim();
+    const isHashtag = a.classList.contains('hashtag') || text.startsWith('#');
+    const isMention = !isHashtag && (a.classList.contains('mention') || text.startsWith('@'));
     if (isMention) {
-      const handle = a.textContent.trim();
+      const handle = text;
       const username = handle.replace(/^@/, '');
       // Look up account ID from the status's mentions array
       const found = (s.mentions || []).find(m =>
@@ -442,8 +443,14 @@ function buildStatusPreviewHTML(s) {
         span.dataset.profileServer = state.server || '';
       }
       a.replaceWith(span);
+    } else if (isHashtag) {
+      const span = document.createElement('span');
+      span.className = 'search-hashtag-link';
+      span.textContent = text;
+      span.dataset.hashtag = text.replace(/^#/, '');
+      a.replaceWith(span);
     } else {
-      a.replaceWith(document.createTextNode(a.textContent));
+      a.replaceWith(document.createTextNode(text));
     }
   });
 
@@ -454,7 +461,7 @@ function buildStatusPreviewHTML(s) {
       if (node.nodeType === Node.TEXT_NODE) {
         out += escapeHTML(node.textContent);
       } else if (node.nodeType === Node.ELEMENT_NODE) {
-        if (node.classList.contains('search-mention')) {
+        if (node.classList.contains('search-mention') || node.classList.contains('search-hashtag-link')) {
           out += node.outerHTML;
         } else {
           out += extract(node);
@@ -603,10 +610,10 @@ export function initSearch() {
       return;
     }
 
-    // Hashtag row → load hashtag feed
-    const hashtagRow = e.target.closest('.search-hashtag-row');
-    if (hashtagRow) {
-      const tag = hashtagRow.dataset.hashtag;
+    // Hashtag row or inline hashtag → load hashtag feed
+    const hashtagTrigger = e.target.closest('.search-hashtag-row') || e.target.closest('.search-hashtag-link');
+    if (hashtagTrigger) {
+      const tag = hashtagTrigger.dataset.hashtag;
       if (tag) {
         window.__searchHashtagClick && window.__searchHashtagClick(tag);
         closeSearchDrawer();
@@ -616,7 +623,7 @@ export function initSearch() {
 
     // Status row → open thread
     const statusRow = e.target.closest('.search-status-row');
-    if (statusRow && !e.target.closest('[data-profile-id]') && !e.target.closest('.search-status-link')) {
+    if (statusRow && !e.target.closest('[data-profile-id]') && !e.target.closest('.search-status-link') && !e.target.closest('.search-hashtag-link')) {
       const id = statusRow.dataset.statusId;
       if (id) {
         window.__searchOpenThread && window.__searchOpenThread(id);

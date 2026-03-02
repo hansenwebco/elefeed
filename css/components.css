@@ -5,19 +5,17 @@
   color: #fff;
   border: none;
   border-radius: 999px;
-  padding: 8px 24px;
-  font-size: 0.92rem;
+  padding: 6px 19px;
+  font-size: 0.74rem;
   font-weight: 500;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s;
   opacity: 0.82;
   z-index: 2000;
   pointer-events: auto;
   left: 50%;
-  /* fallback, will be set by JS */
-  top: 20px;
-  /* fallback, will be set by JS */
+  top: 114px;
   transform: translateX(-50%);
   backdrop-filter: blur(8px);
 }

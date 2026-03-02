@@ -1,11 +1,11 @@
-// Position overlay pill relative to #feed-posts
+// Position overlay pill relative to #feed-posts horizontally
 function positionOverlayPill() {
   const pill = document.getElementById('new-posts-pill');
   const feed = document.getElementById('feed-posts');
   if (!pill || !feed) return;
   const rect = feed.getBoundingClientRect();
   pill.style.left = (rect.left + rect.width / 2) + 'px';
-  pill.style.top = (rect.top + window.scrollY + 20) + 'px';
+  // Use CSS for vertical 'top' position to ensure it stays in same place across views
 }
 
 window.addEventListener('scroll', positionOverlayPill);

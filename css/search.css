@@ -540,13 +540,15 @@
     overflow: hidden;
 }
 
-.search-mention {
+.search-mention,
+.search-hashtag-link {
     color: var(--accent2);
     cursor: pointer;
     font-weight: 500;
 }
 
-.search-mention:hover {
+.search-mention:hover,
+.search-hashtag-link:hover {
     text-decoration: underline;
 }
 
