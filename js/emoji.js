@@ -253,13 +253,37 @@ function positionEmojiSuggestions(list) {
   const rects = range.getClientRects();
   if (!rects.length) return;
   const rect = rects[0];
-  let top = rect.bottom + 8;
-  let left = rect.left;
+  const listW = 280;
   const listH = Math.min(300, emojiAutoResults.length * 45);
-  if (top + listH > window.innerHeight) top = rect.top - listH - 8;
-  if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
-  list.style.top = Math.max(8, top) + 'px';
-  list.style.left = Math.max(8, left) + 'px';
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const isMobile = vw <= 900;
+
+  let top, left;
+
+  if (isMobile) {
+    const spaceRight = vw - rect.right - 8;
+    if (spaceRight >= listW) {
+      left = rect.right + 6;
+      top = rect.top;
+      if (top + listH > vh - 8) top = vh - listH - 8;
+      if (top < 8) top = 8;
+    } else {
+      left = Math.max(8, Math.min(rect.left, vw - listW - 8));
+      top = rect.bottom + 6;
+      if (top + listH > vh - 8) top = Math.max(8, rect.top - listH - 6);
+    }
+  } else {
+    left = rect.left;
+    top = rect.bottom + 8;
+    if (left + listW > vw - 8) left = vw - listW - 8;
+    if (top + listH > vh - 8) top = rect.top - listH - 8;
+    if (top < 8) top = 8;
+    left = Math.max(8, left);
+  }
+
+  list.style.top = top + 'px';
+  list.style.left = left + 'px';
 }
 
 function renderEmojiSuggestions() {
