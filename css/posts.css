@@ -306,8 +306,10 @@
 .post-author {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  flex-wrap: wrap;
+  gap: 4px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .post-display-name {
@@ -331,6 +333,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .post-time {
@@ -816,6 +820,9 @@ body.hide-cards-enabled .post-card {
   font-family: var(--font-mono);
   color: var(--text-muted);
   letter-spacing: 0.03em;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .post-card-favicon {
@@ -839,6 +846,11 @@ body.hide-cards-enabled .post-card {
   color: var(--text-dim);
   font-size: 10.5px;
   letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 /* ─── Poll ─── */
