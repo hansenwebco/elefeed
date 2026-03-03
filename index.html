@@ -831,6 +831,52 @@
         </div>
       </div>
 
+      <!-- Debug Panel (developer only — shown via JS) -->
+      <div id="settings-debug-section" style="display:none; padding:16px; border-top:1px solid var(--border);">
+        <h4 style="font-size:11px; text-transform:uppercase; color:#f59e0b; margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono); display:flex; align-items:center; gap:6px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          Developer Debug
+        </h4>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+
+          <!-- Subscription status -->
+          <div id="debug-sub-status" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:10px; line-height:1.6; word-break:break-all;">
+            Click "Check Status" to inspect subscription…
+          </div>
+
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <!-- Check subscription status -->
+            <button id="debug-check-sub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
+              🔍 Check Status
+            </button>
+
+            <!-- Re-run startSwPolling -->
+            <button id="debug-register-push-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
+              🔄 Re-register Push
+            </button>
+
+            <!-- Clear cached endpoint and re-register -->
+            <button id="debug-force-register-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid #f59e0b44; border-radius:6px; color:#f59e0b; font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
+              ⚡ Force Re-register
+            </button>
+
+            <!-- Fire a local test notification -->
+            <button id="debug-test-notif-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
+              🔔 Test Notification
+            </button>
+
+            <!-- Unsubscribe entirely -->
+            <button id="debug-unsub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:var(--danger); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
+              🗑 Unsubscribe
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
