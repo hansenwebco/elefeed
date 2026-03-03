@@ -271,11 +271,21 @@ export function openProfileDrawer(accountId, server) {
           .addEventListener('click', e => { e.stopPropagation(); goTo(current + 1); });
 
         let touchStartX = 0;
-        carouselEl.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientY; }, { passive: true });
+        let touchStartY = 0;
+        carouselEl.addEventListener('touchstart', e => {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
         carouselEl.addEventListener('touchend', e => {
           const dx = e.changedTouches[0].clientX - touchStartX;
-          if (Math.abs(dx) > 40) goTo(dx < 0 ? current + 1 : current - 1);
-        }, { passive: true });
+          const dy = e.changedTouches[0].clientY - touchStartY;
+          // Only treat as horizontal swipe if mostly horizontal and long enough
+          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+            e.preventDefault();
+            e.stopPropagation();
+            goTo(dx < 0 ? current + 1 : current - 1);
+          }
+        }, { passive: false });
       }
     }
     // Attach infinite scroll listener to the drawer
