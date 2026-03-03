@@ -444,6 +444,178 @@ window.handleEditInit = async function (postId) {
 };
 
 /* ══════════════════════════════════════════════════════════════════════
+   CONFIRM DIALOG
+   ══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Show a styled confirm dialog.
+ * @param {object} opts
+ * @param {string} opts.title
+ * @param {string} opts.message
+ * @param {string} opts.confirmLabel
+ * @param {string} [opts.confirmClass]  extra CSS class on the confirm button
+ * @returns {Promise<boolean>}  resolves true if confirmed, false if cancelled
+ */
+function showConfirmDialog({ title, message, confirmLabel, confirmClass = '' }) {
+  return new Promise(resolve => {
+    // Overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+
+    const dialog = document.createElement('div');
+    dialog.className = 'confirm-dialog';
+    dialog.setAttribute('role', 'alertdialog');
+    dialog.setAttribute('aria-modal', 'true');
+
+    dialog.innerHTML = `
+      <div class="confirm-dialog-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="confirm-dialog-body">
+        <div class="confirm-dialog-title">${title}</div>
+        <div class="confirm-dialog-message">${message}</div>
+        <div class="confirm-dialog-actions">
+          <button class="confirm-dialog-btn confirm-dialog-btn--cancel" id="confirm-cancel-btn">Cancel</button>
+          <button class="confirm-dialog-btn confirm-dialog-btn--confirm ${confirmClass}" id="confirm-ok-btn">${confirmLabel}</button>
+        </div>
+      </div>
+    `;
+
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => overlay.classList.add('confirm-overlay--open'));
+    });
+
+    const cleanup = (result) => {
+      overlay.classList.remove('confirm-overlay--open');
+      overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
+      setTimeout(() => overlay.remove(), 300);
+      resolve(result);
+    };
+
+    dialog.querySelector('#confirm-ok-btn').addEventListener('click', () => cleanup(true));
+    dialog.querySelector('#confirm-cancel-btn').addEventListener('click', () => cleanup(false));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(false); });
+    const handleEsc = (e) => { if (e.key === 'Escape') { document.removeEventListener('keydown', handleEsc); cleanup(false); } };
+    document.addEventListener('keydown', handleEsc);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DELETE  /  DELETE & REDRAFT
+   ══════════════════════════════════════════════════════════════════════ */
+
+window.handleDeleteInit = async function (postId) {
+  document.querySelectorAll('.post-dropdown').forEach(m => m.classList.remove('show'));
+  if (!state.token) { showToast('Please sign in to delete posts.'); return; }
+
+  const confirmed = await showConfirmDialog({
+    title: 'Delete post?',
+    message: 'This will permanently delete the post. This action cannot be undone.',
+    confirmLabel: 'Delete',
+    confirmClass: 'confirm-dialog-btn--danger',
+  });
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch(`https://${state.server}/api/v1/statuses/${postId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${state.token}` },
+    });
+    if (!res.ok) throw new Error('Failed to delete post');
+
+    // Remove from DOM — data-id lives on <article>, data-status-id on thread wrappers
+    document.querySelectorAll(`[data-id="${postId}"]`).forEach(el => {
+      // Feed article: remove the article itself (or its parent .post wrapper if any)
+      el.remove();
+    });
+    document.querySelectorAll(`[data-status-id="${postId}"]`).forEach(el => {
+      // Thread wrapper div — remove it
+      el.remove();
+    });
+
+    showToast('Post deleted.', 'success');
+  } catch (err) {
+    showToast('Could not delete post: ' + err.message, 'error');
+  }
+};
+
+window.handleDeleteRedraftInit = async function (postId) {
+  document.querySelectorAll('.post-dropdown').forEach(m => m.classList.remove('show'));
+  if (!state.token) { showToast('Please sign in to delete posts.'); return; }
+
+  // Fetch source first so we can prefill the compose box
+  let sourceText = '';
+  let spoilerText = '';
+  try {
+    const sourceResponse = await apiGet(`/api/v1/statuses/${postId}/source`, state.token);
+    sourceText = sourceResponse.text || '';
+    spoilerText = sourceResponse.spoiler_text || '';
+  } catch (err) {
+    showToast('Could not fetch post source: ' + err.message, 'error');
+    return;
+  }
+
+  const confirmed = await showConfirmDialog({
+    title: 'Delete & Redraft?',
+    message: 'The post will be deleted and its text placed in the compose box for you to edit and re-post.',
+    confirmLabel: 'Delete & Redraft',
+    confirmClass: 'confirm-dialog-btn--danger',
+  });
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch(`https://${state.server}/api/v1/statuses/${postId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${state.token}` },
+    });
+    if (!res.ok) throw new Error('Failed to delete post');
+
+    // Remove from DOM — data-id lives on <article>, data-status-id on thread wrappers
+    document.querySelectorAll(`[data-id="${postId}"]`).forEach(el => {
+      el.remove();
+    });
+    document.querySelectorAll(`[data-status-id="${postId}"]`).forEach(el => {
+      el.remove();
+    });
+
+    // Pre-fill compose
+    resetReplyState();
+
+    const isDesktop = window.innerWidth > 900;
+    const suffix = isDesktop ? '-sidebar' : '';
+    const textarea = $('compose-textarea' + suffix);
+    textarea.innerText = sourceText + '\u00A0';
+
+    if (spoilerText) {
+      const cwInput = $('compose-cw-input' + suffix);
+      const cwSection = $('compose-cw-section' + suffix);
+      const cwBtn = $('compose-cw-btn' + suffix);
+      if (cwInput) cwInput.value = spoilerText;
+      if (cwSection) cwSection.style.display = 'block';
+      if (cwBtn) cwBtn.classList.add('active');
+    }
+
+    if (!isDesktop) openComposeDrawer();
+    else placeCursorAtEnd(textarea);
+
+    if (isDesktop) updateSidebarCharCount(); else updateCharCount();
+
+    showToast('Post deleted — edit and re-post below.', 'success');
+  } catch (err) {
+    showToast('Could not delete post: ' + err.message, 'error');
+  }
+};
+
+
+
+/* ══════════════════════════════════════════════════════════════════════
    COMPOSE DRAWER (mobile)
    ══════════════════════════════════════════════════════════════════════ */
 

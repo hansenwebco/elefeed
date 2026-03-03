@@ -1216,6 +1216,10 @@ document.addEventListener('click', e => {
       window.handleQuoteInit(boostItem.dataset.postId, boostItem.dataset.acct);
     } else if (boostItem.dataset.action === 'edit') {
       window.handleEditInit(boostItem.dataset.postId);
+    } else if (boostItem.dataset.action === 'delete') {
+      window.handleDeleteInit(boostItem.dataset.postId);
+    } else if (boostItem.dataset.action === 'delete-redraft') {
+      window.handleDeleteRedraftInit(boostItem.dataset.postId);
     }
     return;
   }
