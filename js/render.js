@@ -185,7 +185,11 @@ function _buildPostBody(status, s, idPrefix = '') {
       ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}`;
   }
 
-  /* ── Footer: reply, boost, favourite, bookmark, external ── */
+  const userLang = (navigator.language || 'en').split('-')[0];
+  const postLang = s.language && s.language !== 'und' ? s.language : null;
+  const showTranslate = postLang && postLang !== userLang;
+
+  /* ── Footer: reply, boost, favourite, bookmark, translate, external ── */
   const footerHTML = `
     <div class="post-footer">
       <button class="post-stat post-reply-btn" data-post-id="${s.id}" data-account-acct="${s.account.acct}" title="Reply">
@@ -218,6 +222,13 @@ function _buildPostBody(status, s, idPrefix = '') {
       <button class="post-stat post-bookmark-btn ${s.bookmarked ? 'bookmarked' : ''}" data-post-id="${s.id}" data-bookmarked="${s.bookmarked ? 'true' : 'false'}" title="${s.bookmarked ? 'Remove bookmark' : 'Bookmark'}">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
       </button>
+      ${showTranslate ? `
+      <div class="post-footer-separator"></div>
+      <button class="post-stat post-translate-btn" onclick="event.stopPropagation(); window.translatePost(this, '${s.id}', '${escapeHTML(postLang)}', '${escapeHTML(s.url || '')}')" title="Translate">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span class="post-translate-btn-text">Translate</span>
+      </button>
+      ` : ''}
       <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
         ${getVisibilityIcon(status.visibility)}
         <a href="${s.url}" target="_blank" rel="noopener" style="color:var(--text-dim);font-family:var(--font-mono);font-size:11px;text-decoration:none;" title="Open original">↗</a>
@@ -527,4 +538,75 @@ window.playCardVideo = function playCardVideo(el, encodedHtml, aspectRatio) {
   }
 
   el.replaceWith(iframeContainer);
+};
+
+/**
+ * Translate a post in-place using the Mastodon native /translate API.
+ * Falls back to a Google Translate link.
+ */
+window.translatePost = async function translatePost(btn, statusId, postLang, postUrl) {
+  const article = btn.closest('article');
+  const contentEl = article ? article.querySelector('.post-content') : null;
+  const label = btn.querySelector('.post-translate-btn-text');
+  if (!contentEl) return;
+
+  // Toggle behavior
+  if (btn.dataset.translated === 'true') {
+    contentEl.innerHTML = btn.dataset.originalContent;
+    btn.dataset.translated = 'false';
+    label.textContent = 'Translate';
+    btn.classList.remove('active');
+    return;
+  }
+
+  // Loading state
+  const originalText = label.textContent;
+  label.textContent = '...';
+  btn.disabled = true;
+
+  const targetLang = (navigator.language || 'en').split('-')[0];
+
+  try {
+    const res = await fetch(
+      `https://${state.server}/api/v1/statuses/${encodeURIComponent(statusId)}/translate`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${state.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ lang: targetLang }),
+      }
+    );
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    const translated = data.content;
+    if (!translated) throw new Error('Empty translation');
+
+    // Store original and swap
+    btn.dataset.originalContent = contentEl.innerHTML;
+    btn.dataset.translated = 'true';
+
+    contentEl.innerHTML = translated;
+
+    label.textContent = 'Original';
+    btn.disabled = false;
+    btn.classList.add('active');
+
+  } catch (err) {
+    // Fallback
+    if (postUrl) {
+      window.open(
+        `https://translate.google.com/translate?sl=${encodeURIComponent(postLang)}&tl=${encodeURIComponent(targetLang)}&u=${encodeURIComponent(postUrl)}`,
+        '_blank', 'noopener'
+      );
+      label.textContent = 'Translate';
+      btn.disabled = false;
+    } else {
+      label.textContent = 'Error';
+      btn.disabled = true;
+    }
+  }
 };

@@ -352,6 +352,41 @@
   flex-shrink: 0;
 }
 
+/* ─── Auto-translate info label ─── */
+.post-translate-bar {
+  margin-top: 8px;
+}
+
+.post-translated-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: 0.65;
+}
+
+.post-show-original-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--accent2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.85;
+  transition: opacity var(--trans), color var(--trans);
+}
+
+.post-show-original-btn:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+
+
 /* ─── Post Content ─── */
 .post-content {
   font-size: 14.5px;
@@ -1112,6 +1147,44 @@ body.hide-cards-enabled .post-card {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-dim);
+}
+
+/* ─── Footer Translate Button ─── */
+.post-footer-separator {
+  width: 1px;
+  height: 12px;
+  background: var(--border);
+  opacity: 0.6;
+  margin: 0 4px;
+}
+
+.post-translate-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all var(--trans);
+}
+
+.post-translate-btn:hover {
+  color: var(--accent);
+}
+
+.post-translate-btn:hover svg {
+  opacity: 1;
+}
+
+.post-translate-btn.active {
+  color: var(--accent);
+}
+
+.post-translate-btn.active svg {
+  opacity: 1;
+}
+
+.post-translate-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 /* ─── Responsive ─── */
