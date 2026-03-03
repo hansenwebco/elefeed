@@ -35,18 +35,29 @@ self.addEventListener('push', event => {
 });
 
 async function handlePush(event) {
-  if (!event.data) return;
+  if (!event.data) {
+    return self.registration.showNotification('Elefeed', {
+      body: 'You have a new notification.',
+      icon: '/icon512x512.png',
+      badge: '/icon512x512.png',
+      data: { url: '/?notifications=true' }
+    });
+  }
 
-  let data;
+  let data = {};
   try {
-    data = event.data.json();
+    const text = event.data.text();
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.debug('[SW] Push data not JSON:', e.message);
+    }
   } catch (err) {
-    console.debug('[SW] Push data parse error:', err.message);
-    return;
+    console.debug('[SW] Push data read error:', err.message);
   }
 
   const title = data.title || 'Elefeed';
-  const bodyText = data.body || '';
+  const bodyText = data.body || 'You have a new notification.';
 
   const options = {
     body: bodyText,
@@ -64,8 +75,12 @@ async function handlePush(event) {
   await self.registration.showNotification(title, options);
 
   // Tell any open clients to refresh their badge
-  const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-  allClients.forEach(c => c.postMessage({ type: 'SW_NEW_NOTIFS', count: 1 }));
+  try {
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    allClients.forEach(c => c.postMessage({ type: 'SW_NEW_NOTIFS', count: 1 }));
+  } catch (e) {
+    console.debug('[SW] Clients update error:', e.message);
+  }
 }
 
 /* ── Notification click ────────────────────────────────────────────── */
