@@ -145,7 +145,19 @@ function _buildPostBody(status, s, idPrefix = '') {
         <div class="post-card-content">
           ${titleHTML}
           ${s.card.description ? `<div class="post-card-description">${escapeHTML(s.card.description)}</div>` : ''}
-          ${s.card.provider_name ? `<div class="post-card-provider">${escapeHTML(s.card.provider_name)}</div>` : ''}
+          ${(() => {
+        const providerName = s.card.provider_name || '';
+        let faviconHTML = '';
+        let domain = '';
+        try {
+          domain = new URL(s.card.url).hostname;
+          faviconHTML = `<img class="post-card-favicon" src="https://www.google.com/s2/favicons?domain=${domain}&sz=16" alt="" loading="lazy" onerror="this.style.display='none'">`;
+        } catch (e) { }
+        const domainHTML = domain ? `<span class="post-card-provider-domain"> — ${escapeHTML(domain)}</span>` : '';
+        return providerName
+          ? `<div class="post-card-provider">${faviconHTML}<span class="post-card-provider-name">${escapeHTML(providerName)}</span>${domainHTML}</div>`
+          : '';
+      })()}
         </div>
       </${tag}>`;
   }

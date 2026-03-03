@@ -688,18 +688,32 @@ body.hide-cards-enabled .post-card {
   flex-direction: column;
   margin-top: 12px;
   max-width: 550px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(155, 127, 255, 0.25);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius);
   overflow: hidden;
   text-decoration: none;
   background: var(--surface2);
-  transition: border-color var(--trans), background var(--trans);
+  background-image: linear-gradient(to right,
+      rgba(155, 127, 255, 0.13) 0%,
+      rgba(155, 127, 255, 0.03) 100%);
+  transition:
+    border-color var(--trans),
+    background var(--trans);
   color: var(--text);
 }
 
+/* dark mode: push card surface clearly above the #0d0d0f feed bg */
+:root:not([data-theme="light"]) .post-card {
+  background: #21212d;
+}
+
 .post-card:hover {
-  border-color: var(--text-dim);
-  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(155, 127, 255, 0.35);
+  border-left-color: var(--accent2);
+  background-image: linear-gradient(to right,
+      rgba(155, 127, 255, 0.17) 0%,
+      rgba(155, 127, 255, 0.04) 100%);
 }
 
 .post-card-image {
@@ -764,7 +778,7 @@ body.hide-cards-enabled .post-card {
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 4px;
-  color: var(--text);
+  color: var(--text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -772,9 +786,17 @@ body.hide-cards-enabled .post-card {
   overflow: hidden;
 }
 
+:root:not([data-theme="light"]) .post-card-title {
+  color: #d0d0e0;
+}
+
+:root[data-theme="light"] .post-card-title {
+  color: var(--text);
+}
+
 .post-card-description {
   font-size: 13px;
-  color: var(--text-dim);
+  color: var(--text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;
@@ -784,11 +806,39 @@ body.hide-cards-enabled .post-card {
 }
 
 .post-card-provider {
-  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(155, 127, 255, 0.15);
   font-size: 11px;
   font-family: var(--font-mono);
   color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+
+.post-card-favicon {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.post-card-provider-name {
+  color: var(--accent);
+  opacity: 0.75;
   text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+.post-card-provider-domain {
+  color: var(--text-dim);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
 }
 
 /* ─── Poll ─── */
