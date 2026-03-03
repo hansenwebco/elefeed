@@ -831,12 +831,37 @@ function renderMentionSuggestions(users) {
     const rects = range.getClientRects();
     if (rects.length > 0) {
       const rect = rects[0];
-      let top = rect.bottom + 10;
-      let left = rect.left;
-      if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
-      if (top + 300 > window.innerHeight) top = rect.top - (users.length * 52) - 10;
+      const listW = 280;
+      const listH = Math.min(users.length * 52, 300);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const isMobile = vw <= 900;
+
+      let top, left;
+
+      if (isMobile) {
+        const spaceRight = vw - rect.right - 8;
+        if (spaceRight >= listW) {
+          left = rect.right + 6;
+          top = rect.top;
+          if (top + listH > vh - 8) top = vh - listH - 8;
+          if (top < 8) top = 8;
+        } else {
+          left = Math.max(8, Math.min(rect.left, vw - listW - 8));
+          top = rect.bottom + 6;
+          if (top + listH > vh - 8) top = Math.max(8, rect.top - listH - 6);
+        }
+      } else {
+        left = rect.left;
+        top = rect.bottom + 8;
+        if (left + listW > vw - 8) left = vw - listW - 8;
+        if (top + listH > vh - 8) top = rect.top - listH - 8;
+        if (top < 8) top = 8;
+        left = Math.max(8, left);
+      }
+
       list.style.top = top + 'px';
-      list.style.left = Math.max(10, left) + 'px';
+      list.style.left = left + 'px';
     }
   }
 
@@ -947,8 +972,13 @@ async function fetchHashtags(q) {
   const controller = new AbortController();
   hashtagActiveRequest = controller;
   try {
-    const results = await apiGet(`/api/v2/search?q=${encodeURIComponent(q)}&type=hashtags&limit=5`, state.token, null, controller.signal);
-    const tags = results.hashtags || [];
+    const results = await apiGet(`/api/v2/search?q=${encodeURIComponent(q)}&type=hashtags&limit=8`, state.token, null, controller.signal);
+    // Sort by total uses this week (most popular first)
+    const tags = (results.hashtags || []).sort((a, b) => {
+      const usesA = a.history ? a.history.reduce((s, d) => s + parseInt(d.uses || 0), 0) : 0;
+      const usesB = b.history ? b.history.reduce((s, d) => s + parseInt(d.uses || 0), 0) : 0;
+      return usesB - usesA;
+    }).slice(0, 6);
     hashtagSuggestions = tags;
     renderHashtagSuggestions(tags);
   } catch (err) {
@@ -960,15 +990,17 @@ function renderHashtagSuggestions(tags) {
   const list = $('hashtag-suggestions');
   if (!tags.length) { closeHashtagSuggestions(); return; }
 
-  list.innerHTML = tags.map((t, i) => `
+  list.innerHTML = tags.map((t, i) => {
+    const weeklyUses = t.history ? t.history.reduce((sum, day) => sum + parseInt(day.uses || 0), 0) : null;
+    return `
     <div class="hashtag-item ${i === 0 ? 'selected' : ''}" data-index="${i}" data-tag="${escapeHTML(t.name)}">
       <div class="hashtag-icon">#</div>
       <div class="hashtag-info">
         <span class="hashtag-name">#${escapeHTML(t.name)}</span>
-        <span class="hashtag-uses">${t.history ? t.history.reduce((sum, day) => sum + parseInt(day.uses || 0), 0) : ''} uses this week</span>
+        ${weeklyUses !== null ? `<span class="hashtag-uses">${weeklyUses.toLocaleString()} posts this week</span>` : ''}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   list.style.display = 'flex';
   hashtagSelectedIndex = tags.length > 0 ? 0 : -1;
@@ -979,12 +1011,43 @@ function renderHashtagSuggestions(tags) {
     const rects = range.getClientRects();
     if (rects.length > 0) {
       const rect = rects[0];
-      let top = rect.bottom + 10;
-      let left = rect.left;
-      if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
-      if (top + 300 > window.innerHeight) top = rect.top - (tags.length * 52) - 10;
+      const listW = 280;
+      const listH = Math.min(tags.length * 52, 300);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const isMobile = vw <= 900;
+
+      let top, left;
+
+      if (isMobile) {
+        // On mobile: prefer placing to the right of the cursor so typed text is not covered.
+        // If there's not enough room to the right, place below the cursor.
+        const spaceRight = vw - rect.right - 8;
+        if (spaceRight >= listW) {
+          // anchor to right of cursor
+          left = rect.right + 6;
+          top = rect.top;
+          // clamp vertically
+          if (top + listH > vh - 8) top = vh - listH - 8;
+          if (top < 8) top = 8;
+        } else {
+          // fall back to below cursor, clamped to viewport
+          left = Math.max(8, Math.min(rect.left, vw - listW - 8));
+          top = rect.bottom + 6;
+          if (top + listH > vh - 8) top = Math.max(8, rect.top - listH - 6);
+        }
+      } else {
+        // Desktop: open below cursor, push left if overflowing right edge
+        left = rect.left;
+        top = rect.bottom + 8;
+        if (left + listW > vw - 8) left = vw - listW - 8;
+        if (top + listH > vh - 8) top = rect.top - listH - 8;
+        if (top < 8) top = 8;
+        left = Math.max(8, left);
+      }
+
       list.style.top = top + 'px';
-      list.style.left = Math.max(10, left) + 'px';
+      list.style.left = left + 'px';
     }
   }
 
