@@ -185,9 +185,19 @@ function _buildPostBody(status, s, idPrefix = '') {
       ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}`;
   }
 
-  const userLang = (navigator.language || 'en').split('-')[0];
+  let targetLang = 'browser';
+  try { targetLang = localStorage.getItem('pref_translate_lang') || 'browser'; } catch { }
+  if (targetLang === 'browser') targetLang = (navigator.language || 'en').split('-')[0];
+
   const postLang = s.language && s.language !== 'und' ? s.language : null;
-  const showTranslate = postLang && postLang !== userLang;
+  const showTranslate = postLang && postLang !== targetLang;
+
+  let postLangName = postLang;
+  if (postLang) {
+    try {
+      postLangName = new Intl.DisplayNames([navigator.language || 'en'], { type: 'language' }).of(postLang);
+    } catch (err) { }
+  }
 
   /* ── Footer: reply, boost, favourite, bookmark, translate, external ── */
   const footerHTML = `
@@ -224,9 +234,9 @@ function _buildPostBody(status, s, idPrefix = '') {
       </button>
       ${showTranslate ? `
       <div class="post-footer-separator"></div>
-      <button class="post-stat post-translate-btn" onclick="event.stopPropagation(); window.translatePost(this, '${s.id}', '${escapeHTML(postLang)}', '${escapeHTML(s.url || '')}')" title="Translate">
+      <button class="post-stat post-translate-btn" onclick="event.stopPropagation(); window.translatePost(this, '${s.id}', '${escapeHTML(postLang)}', '${escapeHTML(s.url || '')}')" data-original-label="Translate ${escapeHTML(postLangName)}" title="Translate">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span class="post-translate-btn-text">Translate</span>
+        <span class="post-translate-btn-text">Translate ${escapeHTML(postLangName)}</span>
       </button>
       ` : ''}
       <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
@@ -550,21 +560,24 @@ window.translatePost = async function translatePost(btn, statusId, postLang, pos
   const label = btn.querySelector('.post-translate-btn-text');
   if (!contentEl) return;
 
+  const originalLabelText = btn.dataset.originalLabel || 'Translate';
+
   // Toggle behavior
   if (btn.dataset.translated === 'true') {
     contentEl.innerHTML = btn.dataset.originalContent;
     btn.dataset.translated = 'false';
-    label.textContent = 'Translate';
+    label.textContent = originalLabelText;
     btn.classList.remove('active');
     return;
   }
 
   // Loading state
-  const originalText = label.textContent;
   label.textContent = '...';
   btn.disabled = true;
 
-  const targetLang = (navigator.language || 'en').split('-')[0];
+  let targetLang = 'browser';
+  try { targetLang = localStorage.getItem('pref_translate_lang') || 'browser'; } catch { }
+  if (targetLang === 'browser') targetLang = (navigator.language || 'en').split('-')[0];
 
   try {
     const res = await fetch(
@@ -602,7 +615,7 @@ window.translatePost = async function translatePost(btn, statusId, postLang, pos
         `https://translate.google.com/translate?sl=${encodeURIComponent(postLang)}&tl=${encodeURIComponent(targetLang)}&u=${encodeURIComponent(postUrl)}`,
         '_blank', 'noopener'
       );
-      label.textContent = 'Translate';
+      label.textContent = originalLabelText;
       btn.disabled = false;
     } else {
       label.textContent = 'Error';

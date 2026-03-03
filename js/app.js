@@ -740,6 +740,11 @@ if (settingsMenuBtn) {
       hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
     }
 
+    const translateLangSel = $('settings-translate-lang');
+    if (translateLangSel) {
+      translateLangSel.value = store.get('pref_translate_lang') || 'browser';
+    }
+
     // Close other drawers
     closeAnyDrawer();
 
@@ -1021,6 +1026,14 @@ if (_hideCardsToggle) {
     } else {
       document.body.classList.remove('hide-cards-enabled');
     }
+  });
+}
+
+// Translation language wrapper
+const _translateLangSel = $('settings-translate-lang');
+if (_translateLangSel) {
+  _translateLangSel.addEventListener('change', () => {
+    store.set('pref_translate_lang', _translateLangSel.value);
   });
 }
 
