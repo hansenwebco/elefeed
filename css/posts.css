@@ -1130,8 +1130,7 @@ body.hide-cards-enabled .post-card {
 
   .post-media,
   .post-media-grid,
-  .media-item,
-  .post {
+  .media-item {
     max-width: 100vw;
     box-sizing: border-box;
     overflow-x: hidden;

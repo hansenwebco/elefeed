@@ -550,13 +550,20 @@ window.handleDeleteRedraftInit = async function (postId) {
   document.querySelectorAll('.post-dropdown').forEach(m => m.classList.remove('show'));
   if (!state.token) { showToast('Please sign in to delete posts.'); return; }
 
-  // Fetch source first so we can prefill the compose box
+  // Fetch source AND full status so we can prefill the compose box (including media)
   let sourceText = '';
   let spoilerText = '';
+  let deletedPostMedia = [];
   try {
-    const sourceResponse = await apiGet(`/api/v1/statuses/${postId}/source`, state.token);
+    const [sourceResponse, statusResponse] = await Promise.all([
+      apiGet(`/api/v1/statuses/${postId}/source`, state.token),
+      apiGet(`/api/v1/statuses/${postId}`, state.token),
+    ]);
     sourceText = sourceResponse.text || '';
     spoilerText = sourceResponse.spoiler_text || '';
+    // Unwrap reblogs — the media lives on the inner reblog object if it's a boost
+    const actualStatus = statusResponse.reblog || statusResponse;
+    deletedPostMedia = actualStatus.media_attachments || [];
   } catch (err) {
     showToast('Could not fetch post source: ' + err.message, 'error');
     return;
@@ -570,6 +577,20 @@ window.handleDeleteRedraftInit = async function (postId) {
   });
   if (!confirmed) return;
 
+  // Snapshot whatever is currently in the compose box BEFORE resetting
+  const isDesktop = window.innerWidth > 900;
+  const suffix = isDesktop ? '-sidebar' : '';
+  const mediaFilesKey = suffix === '-sidebar' ? 'sidebarMediaFiles' : 'mediaFiles';
+  const mediaUrlsKey = suffix === '-sidebar' ? 'sidebarMediaUrls' : 'mediaUrls';
+  const mediaDescsKey = suffix === '-sidebar' ? 'sidebarMediaDescriptions' : 'mediaDescriptions';
+  const mediaIdsKey = suffix === '-sidebar' ? 'sidebarMediaIds' : 'mediaIds';
+
+  const savedMediaFiles = [...(composeState[mediaFilesKey] || [])];
+  const savedMediaUrls = [...(composeState[mediaUrlsKey] || [])];
+  const savedMediaDescs = [...(composeState[mediaDescsKey] || [])];
+  const savedMediaIds = [...(composeState[mediaIdsKey] || [])];
+  const savedCw = ($('compose-cw-input' + suffix) || {}).value || '';
+
   try {
     const res = await fetch(`https://${state.server}/api/v1/statuses/${postId}`, {
       method: 'DELETE',
@@ -578,29 +599,97 @@ window.handleDeleteRedraftInit = async function (postId) {
     if (!res.ok) throw new Error('Failed to delete post');
 
     // Remove from DOM — data-id lives on <article>, data-status-id on thread wrappers
-    document.querySelectorAll(`[data-id="${postId}"]`).forEach(el => {
-      el.remove();
-    });
-    document.querySelectorAll(`[data-status-id="${postId}"]`).forEach(el => {
-      el.remove();
-    });
+    document.querySelectorAll(`[data-id="${postId}"]`).forEach(el => el.remove());
+    document.querySelectorAll(`[data-status-id="${postId}"]`).forEach(el => el.remove());
 
-    // Pre-fill compose
+    // resetReplyState wipes & revokes blob URLs — do it before rebuilding media
     resetReplyState();
 
-    const isDesktop = window.innerWidth > 900;
-    const suffix = isDesktop ? '-sidebar' : '';
     const textarea = $('compose-textarea' + suffix);
     textarea.innerText = sourceText + '\u00A0';
 
-    if (spoilerText) {
+    // Restore CW: prefer the deleted post's CW; fall back to whatever was in the box
+    const effectiveCw = spoilerText || savedCw;
+    if (effectiveCw) {
       const cwInput = $('compose-cw-input' + suffix);
       const cwSection = $('compose-cw-section' + suffix);
       const cwBtn = $('compose-cw-btn' + suffix);
-      if (cwInput) cwInput.value = spoilerText;
+      if (cwInput) cwInput.value = effectiveCw;
       if (cwSection) cwSection.style.display = 'block';
       if (cwBtn) cwBtn.classList.add('active');
     }
+
+    // Rebuild media preview: start with whatever was in the compose box, then add
+    // the deleted post's own attachments. Capped at 4 total.
+    const preview = $('compose-media-preview' + suffix);
+
+    /** Build a standard compose-media-item div and wire up remove/alt buttons. */
+    const addMediaItem = (file, url, displayUrl, desc, id, type) => {
+      // Don't add if we're full
+      if (composeState[mediaFilesKey].length >= 4) return;
+
+      composeState[mediaFilesKey].push(file);
+      composeState[mediaUrlsKey].push(url);
+      composeState[mediaDescsKey].push(desc);
+      composeState[mediaIdsKey].push(id);
+
+      const item = document.createElement('div');
+      item.className = 'compose-media-item';
+
+      const isVideo = type === 'video' || type === 'gifv';
+      const mediaEl = isVideo ? document.createElement('video') : document.createElement('img');
+      mediaEl.src = displayUrl;
+      if (isVideo) mediaEl.muted = true;
+
+      // Ensure the media doesn't display as broken if cached differently
+      mediaEl.onerror = () => { mediaEl.style.display = 'none'; };
+
+      if (!isVideo) {
+        const altBtn = document.createElement('button');
+        altBtn.className = 'compose-media-item-alt-btn' + (!desc ? ' missing' : '');
+        altBtn.textContent = 'ALT';
+        altBtn.onclick = () => {
+          const idx = composeState[mediaUrlsKey].indexOf(url);
+          openAltModal(url, idx, suffix, composeState[mediaDescsKey][idx]);
+        };
+        item.appendChild(mediaEl);
+        item.appendChild(altBtn);
+      } else {
+        item.appendChild(mediaEl);
+      }
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'compose-media-remove';
+      removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      removeBtn.onclick = () => {
+        const idx = composeState[mediaUrlsKey].indexOf(url);
+        if (idx > -1) {
+          if (composeState[mediaFilesKey][idx]) URL.revokeObjectURL(url);
+          composeState[mediaFilesKey].splice(idx, 1);
+          composeState[mediaUrlsKey].splice(idx, 1);
+          composeState[mediaDescsKey].splice(idx, 1);
+          composeState[mediaIdsKey].splice(idx, 1);
+        }
+        item.remove();
+        if (isDesktop) updateSidebarCharCount(); else updateCharCount();
+      };
+
+      item.appendChild(removeBtn);
+      preview.appendChild(item);
+    };
+
+    // 1) Restore previously-drafted media from the compose box.
+    //    For local file uploads, file is a File object — create a fresh blob URL.
+    //    For server-hosted media already in the compose box (e.g. from an edit), file is null.
+    savedMediaFiles.forEach((file, i) => {
+      const freshUrl = file ? URL.createObjectURL(file) : savedMediaUrls[i];
+      addMediaItem(file, freshUrl, freshUrl, savedMediaDescs[i], savedMediaIds[i], null); // type null is fine for saved
+    });
+
+    // 2) Add the deleted post's own media attachments (server-hosted, id already exists).
+    deletedPostMedia.forEach(m => {
+      addMediaItem(null, m.url, m.preview_url || m.url, m.description || '', m.id, m.type);
+    });
 
     if (!isDesktop) openComposeDrawer();
     else placeCursorAtEnd(textarea);
@@ -612,6 +701,8 @@ window.handleDeleteRedraftInit = async function (postId) {
     showToast('Could not delete post: ' + err.message, 'error');
   }
 };
+
+
 
 
 
