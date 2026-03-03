@@ -821,6 +821,15 @@ function refreshNotifSettingsUI() {
     intervalSel.value = store.get('pref_bg_poll_interval') || '600000';
     intervalSel.disabled = getNotifPermission() !== 'granted';
   }
+
+  // Show debug panel only for the developer account
+  const debugSection = $('settings-debug-section');
+  if (debugSection) {
+    const acct = state.account?.acct || '';
+    const server = state.server || '';
+    const isDev = acct === 'stonedonkey' && server === 'mastodon.social';
+    debugSection.style.display = isDev ? '' : 'none';
+  }
 }
 
 // Wire notification settings controls (elements exist in DOM at load time)
@@ -856,6 +865,130 @@ if (_intervalSel) {
     store.set('pref_bg_poll_interval', _intervalSel.value);
     updateSwConfig();
     showToast('Poll interval updated');
+  });
+}
+
+/* ── Developer Debug Panel ──────────────────────────────────────────── */
+
+async function debugUpdateStatus(msg) {
+  const el = $('debug-sub-status');
+  if (el) el.innerHTML = msg;
+}
+
+const _debugCheckBtn = $('debug-check-sub-btn');
+const _debugRegisterBtn = $('debug-register-push-btn');
+const _debugForceBtn = $('debug-force-register-btn');
+const _debugTestBtn = $('debug-test-notif-btn');
+const _debugUnsubBtn = $('debug-unsub-btn');
+
+if (_debugCheckBtn) {
+  _debugCheckBtn.addEventListener('click', async () => {
+    debugUpdateStatus('Checking…');
+    try {
+      const hasSW = 'serviceWorker' in navigator;
+      const hasPush = 'PushManager' in window;
+      const perm = Notification?.permission ?? 'unknown';
+      const storedEndpoint = store.get('push_endpoint_' + state.server) || '(none)';
+
+      let subInfo = 'No active subscription';
+      if (hasSW && hasPush) {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          subInfo = `<b>Endpoint:</b> ${sub.endpoint.slice(0, 60)}…`;
+        }
+      }
+
+      debugUpdateStatus(
+        `<b>SW:</b> ${hasSW} &nbsp; <b>PushManager:</b> ${hasPush}<br>` +
+        `<b>Permission:</b> ${perm}<br>` +
+        `<b>SW state:</b> ${(await navigator.serviceWorker.ready).active?.state ?? 'none'}<br>` +
+        `<b>Subscription:</b> ${subInfo}<br>` +
+        `<b>Cached endpoint:</b> ${storedEndpoint.slice(0, 60)}${storedEndpoint.length > 60 ? '…' : ''}`
+      );
+      console.log('[Debug] SW ready:', await navigator.serviceWorker.ready);
+    } catch (err) {
+      debugUpdateStatus('Error: ' + err.message);
+      console.error('[Debug] Check failed:', err);
+    }
+  });
+}
+
+if (_debugRegisterBtn) {
+  _debugRegisterBtn.addEventListener('click', async () => {
+    debugUpdateStatus('Running startSwPolling()…');
+    console.log('[Debug] Manually triggering startSwPolling…');
+    try {
+      await startSwPolling();
+      debugUpdateStatus('startSwPolling() complete — check console for [Elefeed] logs.');
+    } catch (err) {
+      debugUpdateStatus('Error: ' + err.message);
+      console.error('[Debug] startSwPolling failed:', err);
+    }
+  });
+}
+
+if (_debugForceBtn) {
+  _debugForceBtn.addEventListener('click', async () => {
+    debugUpdateStatus('Clearing cached endpoint…');
+    console.log('[Debug] Force re-register: clearing cached endpoint and re-subscribing…');
+    store.del('push_endpoint_' + state.server);
+    // Also unsubscribe from the browser so a fresh subscription is created
+    try {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await sub.unsubscribe();
+          console.log('[Debug] Browser push subscription cleared.');
+        }
+      }
+      await startSwPolling();
+      debugUpdateStatus('Force re-register complete — check console for [Elefeed] logs.');
+    } catch (err) {
+      debugUpdateStatus('Error: ' + err.message);
+      console.error('[Debug] Force re-register failed:', err);
+    }
+  });
+}
+
+if (_debugTestBtn) {
+  _debugTestBtn.addEventListener('click', async () => {
+    debugUpdateStatus('Firing test notification via SW…');
+    console.log('[Debug] Firing local test notification…');
+    try {
+      if (Notification.permission !== 'granted') {
+        debugUpdateStatus('⚠️ No permission — grant notification permission first.');
+        return;
+      }
+      const reg = await navigator.serviceWorker.ready;
+      await reg.showNotification('Elefeed — Test Notification 🔔', {
+        body: 'If you see this, your SW and OS notifications are working correctly.',
+        icon: '/icon512x512.png',
+        badge: '/icon512x512.png',
+        tag: 'elefeed-debug-test',
+        data: { url: '/?notifications=true' }
+      });
+      debugUpdateStatus('✅ Test notification fired — did it appear as an OS alert?');
+      console.log('[Debug] Test notification fired.');
+    } catch (err) {
+      debugUpdateStatus('Error: ' + err.message);
+      console.error('[Debug] Test notification failed:', err);
+    }
+  });
+}
+
+if (_debugUnsubBtn) {
+  _debugUnsubBtn.addEventListener('click', async () => {
+    debugUpdateStatus('Unsubscribing…');
+    console.log('[Debug] Manually triggering stopSwPolling…');
+    try {
+      await stopSwPolling();
+      debugUpdateStatus('Unsubscribed. Click "Force Re-register" to start fresh.');
+    } catch (err) {
+      debugUpdateStatus('Error: ' + err.message);
+      console.error('[Debug] Unsubscribe failed:', err);
+    }
   });
 }
 

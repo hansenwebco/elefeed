@@ -24,6 +24,16 @@ function urlB64ToUint8Array(base64String) {
   return outputArray;
 }
 
+// Safe Uint8Array → base64url without spread (avoids RangeError on large keys)
+function uint8ArrayToBase64url(uint8Array) {
+  let binary = '';
+  for (let i = 0; i < uint8Array.byteLength; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+
 /**
  * Send a message to the active service worker.
  * Silently no-ops if no SW is registered.
@@ -66,19 +76,32 @@ export async function startSwPolling() {
       }
 
       if (!vapidKey) {
-        console.warn('Could not find VAPID public key from instance.');
+        console.warn('[Elefeed] Could not find VAPID public key from instance.');
         return;
       }
 
+      console.log('[Elefeed] Creating new push subscription…');
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlB64ToUint8Array(vapidKey)
       });
+      console.log('[Elefeed] Push subscription created:', sub.endpoint);
     }
 
-    // Now send the subscription to Mastodon
-    const p256dh = btoa(String.fromCharCode(...new Uint8Array(sub.getKey('p256dh')))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    const auth = btoa(String.fromCharCode(...new Uint8Array(sub.getKey('auth')))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    // Only re-register with Mastodon if the endpoint changed or was never registered
+    const storedEndpoint = store.get('push_endpoint_' + state.server);
+    if (storedEndpoint === sub.endpoint) {
+      console.log('[Elefeed] Push subscription unchanged, skipping Mastodon registration.');
+      return;
+    }
+
+    console.log('[Elefeed] Registering push subscription with Mastodon…');
+
+    // Safe key encoding that avoids RangeError on large keys
+    const p256dhKey = sub.getKey('p256dh');
+    const authKey = sub.getKey('auth');
+    const p256dh = uint8ArrayToBase64url(new Uint8Array(p256dhKey));
+    const auth = uint8ArrayToBase64url(new Uint8Array(authKey));
 
     const body = new URLSearchParams({
       'data[alerts][mention]': 'true',
@@ -95,7 +118,7 @@ export async function startSwPolling() {
       'subscription[keys][auth]': auth
     });
 
-    await fetch(`https://${state.server}/api/v1/push/subscription`, {
+    const response = await fetch(`https://${state.server}/api/v1/push/subscription`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${state.token}`,
@@ -103,8 +126,16 @@ export async function startSwPolling() {
       },
       body: body.toString()
     });
+
+    if (response.ok) {
+      store.set('push_endpoint_' + state.server, sub.endpoint);
+      console.log('[Elefeed] Push subscription registered with Mastodon ✓');
+    } else {
+      const errorText = await response.text();
+      console.warn('[Elefeed] Mastodon push registration failed:', response.status, errorText);
+    }
   } catch (err) {
-    console.warn('Push subscription failed:', err);
+    console.warn('[Elefeed] Push subscription failed:', err);
   }
 }
 
@@ -120,9 +151,11 @@ export async function stopSwPolling() {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${state.token}` }
       });
+      store.del('push_endpoint_' + state.server);
+      console.log('[Elefeed] Push subscription removed.');
     }
   } catch (err) {
-    console.warn('Failed to stop push:', err);
+    console.warn('[Elefeed] Failed to stop push:', err);
   }
 }
 
