@@ -316,10 +316,19 @@ export function renderPost(status, opts = {}) {
               <circle cx="5" cy="12" r="1"/>
             </svg>
           </button>
-          <div class="boost-dropdown post-dropdown" id="post-menu-${s.id}" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:150px; transform-origin: top right;">
+          <div class="boost-dropdown post-dropdown" id="post-menu-${s.id}" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:168px; transform-origin: top right;">
             <button class="boost-dropdown-item" data-action="edit" data-post-id="${s.id}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
               <span>Edit</span>
+            </button>
+            <div class="boost-dropdown-separator"></div>
+            <button class="boost-dropdown-item boost-dropdown-item--danger" data-action="delete" data-post-id="${s.id}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              <span>Delete</span>
+            </button>
+            <button class="boost-dropdown-item boost-dropdown-item--redraft" data-action="delete-redraft" data-post-id="${s.id}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <span>Delete &amp; Redraft</span>
             </button>
           </div>
         </div>
@@ -393,10 +402,19 @@ export function renderThreadPost(status, variant) {
                 <circle cx="5" cy="12" r="1"/>
               </svg>
             </button>
-            <div class="boost-dropdown post-dropdown" id="post-menu-${s.id}" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:150px; transform-origin: top right;">
+            <div class="boost-dropdown post-dropdown" id="post-menu-${s.id}" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:168px; transform-origin: top right;">
               <button class="boost-dropdown-item" data-action="edit" data-post-id="${s.id}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                 <span>Edit</span>
+              </button>
+              <div class="boost-dropdown-separator"></div>
+              <button class="boost-dropdown-item boost-dropdown-item--danger" data-action="delete" data-post-id="${s.id}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                <span>Delete</span>
+              </button>
+              <button class="boost-dropdown-item boost-dropdown-item--redraft" data-action="delete-redraft" data-post-id="${s.id}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <span>Delete &amp; Redraft</span>
               </button>
             </div>
           </div>
