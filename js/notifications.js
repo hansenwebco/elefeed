@@ -260,6 +260,9 @@ export function openNotifDrawer() {
     renderNotifications();
     state.lastSeenNotifId = state.notifications[0].id;
     store.set('lastSeenNotifId_' + state.server, state.lastSeenNotifId);
+    // Reset the foreground-alert tracker so the next genuinely new
+    // notification (arriving after the drawer is closed) will alert again.
+    state._lastFiredNotifId = state.lastSeenNotifId;
     state.notifUnreadCount = 0;
     updateNotifBadge();
     dismissNotifMarker();
@@ -461,6 +464,60 @@ export async function pollNotifications() {
 
     updateNotifBadge();
     if (state.notifDrawerOpen) renderNotifications();
+
+    // ── Foreground alert ──────────────────────────────────────────────
+    // Fire an OS notification when new items arrive while the app is open
+    // but the drawer is closed. Conditions:
+    //   1. There are genuinely new (unseen) notifications
+    //   2. The notification drawer is closed
+    //   3. We haven't already alerted for this same notification ID
+    //   4. OS permission is granted
+    //   5. The background-notifications setting is enabled
+    if (
+      state.notifUnreadCount > 0 &&
+      !state.notifDrawerOpen &&
+      notifs.length > 0
+    ) {
+      const newest = notifs[0];
+      const alreadyFired =
+        state._lastFiredNotifId && state._lastFiredNotifId >= newest.id;
+
+      if (!alreadyFired && Notification.permission === 'granted') {
+        const bgEnabled = store.get('pref_bg_notifications') !== 'false';
+        if (bgEnabled) {
+          state._lastFiredNotifId = newest.id;
+
+          const LABELS = {
+            mention: 'mentioned you',
+            reblog: 'boosted your post',
+            favourite: 'favorited your post',
+            follow: 'followed you',
+            follow_request: 'requested to follow you',
+            poll: 'poll ended',
+            update: 'edited a post',
+            status: 'posted',
+          };
+          const who = newest.account?.display_name || newest.account?.username || 'Someone';
+          const action = LABELS[newest.type] || newest.type;
+          const bodyText = state.notifUnreadCount > 1
+            ? `${who} and ${state.notifUnreadCount - 1} other${state.notifUnreadCount > 2 ? 's' : ''}`
+            : `${who} ${action}`;
+
+          try {
+            const reg = await navigator.serviceWorker.ready;
+            await reg.showNotification('Elefeed', {
+              body: bodyText,
+              icon: newest.account?.avatar_static || '/icon512x512.png',
+              badge: '/icon512x512.png',
+              tag: `elefeed-fg-${newest.id}`,
+              data: { url: '/?notifications=true' },
+            });
+          } catch (e) {
+            console.debug('[Elefeed] Foreground notification failed:', e.message);
+          }
+        }
+      }
+    }
   } catch (err) {
     console.warn('Notification poll failed:', err.message);
   }

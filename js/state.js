@@ -75,6 +75,10 @@ export const state = {
   notifUnreadCount: 0,
   lastSeenNotifId: null,
   notifDrawerOpen: false,
+  /** Tracks the newest notif ID for which we've already fired a foreground OS alert. */
+  _lastFiredNotifId: null,
+  /** Latest notif ID seen by the SW (may be ahead of lastSeenNotifId). */
+  _swLastKnownId: null,
 };
 
 /* ── Compose form state (shared between drawer & sidebar) ──────────── */
