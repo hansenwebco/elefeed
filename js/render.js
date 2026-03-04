@@ -487,24 +487,53 @@ window.expandMedia = function expandMedia(mediaItem) {
     if (mediaEl) {
       mediaEl.remove();
     }
+    // Remove any previous badge
+    const prevBadge = content.querySelector('.media-badge');
+    if (prevBadge) prevBadge.remove();
+
     const currentItem = mediaItems[currentIndex];
     const fullUrl = currentItem.dataset.fullUrl;
     const type = currentItem.dataset.type;
 
     if (!fullUrl) return;
 
-    if (type === 'video') {
+    let badge = null;
+    if (type === 'gifv') {
+      mediaEl = document.createElement('video');
+      mediaEl.src = fullUrl;
+      mediaEl.autoplay = true;
+      mediaEl.loop = true;
+      mediaEl.muted = true;
+      mediaEl.playsInline = true;
+      mediaEl.setAttribute('playsinline', '');
+      // No controls for GIFs
+      badge = document.createElement('span');
+      badge.className = 'media-badge media-badge-gif';
+      badge.textContent = 'GIF';
+    } else if (type === 'image') {
+      mediaEl = document.createElement('img');
+      mediaEl.src = fullUrl;
+      badge = document.createElement('span');
+      badge.className = 'media-badge media-badge-image';
+      badge.textContent = 'IMG';
+    } else if (type === 'video') {
       mediaEl = document.createElement('video');
       mediaEl.src = fullUrl;
       mediaEl.controls = true;
       mediaEl.autoplay = true;
+      mediaEl.muted = true;
+      badge = document.createElement('span');
+      badge.className = 'media-badge media-badge-video';
+      badge.textContent = 'VIDEO';
     } else {
+      // fallback
       mediaEl = document.createElement('img');
       mediaEl.src = fullUrl;
     }
     // Prevent clicking the media itself from closing the overlay
     mediaEl.onclick = (e) => e.stopPropagation();
     content.insertBefore(mediaEl, content.firstChild);
+    if (badge) content.insertBefore(badge, mediaEl);
 
     if (prevBtn) prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
     if (nextBtn) nextBtn.style.display = currentIndex < mediaItems.length - 1 ? 'flex' : 'none';
