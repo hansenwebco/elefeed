@@ -41,13 +41,23 @@ function _buildPostBody(status, s, idPrefix = '') {
           <span>sensitive content</span>
         </div>` : '';
 
-      if (m.type === 'image' || m.type === 'gifv') {
+      if (m.type === 'image') {
         return `<div class="media-item" data-full-url="${m.url}" data-type="image" onclick="expandMedia(this)">
+          <span class="media-badge media-badge-image">IMG</span>
           <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy" onload="adjustImageAlignment(this)"/>
           ${overlay}
         </div>`;
+      } else if (m.type === 'gifv') {
+        // GIFV: use <video> with no controls and GIF badge
+        return `<div class="media-item" data-full-url="${m.url}" data-type="gifv" onclick="expandMedia(this)">
+          <span class="media-badge media-badge-gif">GIF</span>
+          <video src="${m.url}" poster="${m.preview_url || ''}" autoplay loop muted playsinline class="${blurClass}"></video>
+          ${overlay}
+        </div>`;
       } else if (m.type === 'video') {
+        // Video: show controls, add VIDEO badge
         return `<div class="media-item" data-full-url="${m.url}" data-type="video" onclick="expandMedia(this)">
+          <span class="media-badge media-badge-video">VIDEO</span>
           <video src="${m.url}" poster="${m.preview_url || ''}" controls muted class="${blurClass}"></video>
           ${overlay}
         </div>`;

@@ -23,7 +23,6 @@ export function openThreadDrawer(statusId) {
     inlineContent.innerHTML = '<div class="thread-status"><div class="spinner"></div></div>';
     document.body.classList.add('thread-inline-active');
     window.scrollTo({ top: 0, behavior: 'instant' });
-    document.body.style.overflow = 'hidden';
     loadThread(statusId, inlineContent);
   } else {
     const drawer = $('thread-drawer');
@@ -49,7 +48,11 @@ export function closeThreadDrawer() {
   drawer.classList.remove('open');
   drawer.setAttribute('aria-hidden', 'true');
   backdrop.classList.remove('open');
-  document.body.style.overflow = '';
+
+  if (!wasInline) {
+    document.body.style.overflow = '';
+  }
+
   if (wasInline) {
     requestAnimationFrame(() => window.scrollTo(0, _savedScrollY));
   }
@@ -147,7 +150,7 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
   if (ancestors.length > 0) {
     const topAncestorId = ancestors[0].reblog ? ancestors[0].reblog.id : ancestors[0].id;
     parts.push(`<div class="thread-section-label context-jump-btn" data-status-id="${topAncestorId}" title="View full context">
-      <span>View full context (${ancestors.length})</span>
+      <span>View full context </span>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
     </div>`);
   }

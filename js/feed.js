@@ -34,10 +34,26 @@ export function activeFeedKey() {
   return 'feed_' + filter;
 }
 
+export function getFilteredPendingPosts(feedKey) {
+  let posts = state.pendingPosts[feedKey] || [];
+  if (!posts.length) return [];
+  const showBoosts = store.get('pref_show_boosts') !== 'false';
+  const showReplies = store.get('pref_show_replies') !== 'false';
+  const showQuotes = store.get('pref_show_quotes') !== 'false';
+
+  return posts.filter(p => {
+    if (!showBoosts && p.reblog) return false;
+    const inner = p.reblog || p;
+    if (!showReplies && inner.in_reply_to_id) return false;
+    if (!showQuotes && inner.quote) return false;
+    return true;
+  });
+}
+
 export function updateTabPill(feedKey) {
   // Overlay pill logic
   const overlayPill = document.getElementById('new-posts-pill');
-  const count = (state.pendingPosts[feedKey] || []).length;
+  const count = getFilteredPendingPosts(feedKey).length;
   if (!overlayPill) return;
   if (count === 0) {
     overlayPill.style.display = 'none';
@@ -77,7 +93,7 @@ function setupOverlayPillScroll() {
     const overlayPill = document.getElementById('new-posts-pill');
     if (!overlayPill) return;
     const feedKey = activeFeedKey();
-    const pending = state.pendingPosts[feedKey] || [];
+    const pending = getFilteredPendingPosts(feedKey);
     if (pending.length === 0) {
       overlayPill.style.display = 'none';
       document.title = 'Elefeed — A Tidy Mastodon Client';
@@ -518,18 +534,7 @@ export function flushPendingPosts(feedKey, scrollToTop) {
   const container = $('feed-posts');
   if (!container) return;
 
-  // Apply feed filters (Boosts, Replies, Quotes)
-  const showBoosts = store.get('pref_show_boosts') !== 'false';
-  const showReplies = store.get('pref_show_replies') !== 'false';
-  const showQuotes = store.get('pref_show_quotes') !== 'false';
-
-  posts = posts.filter(p => {
-    if (!showBoosts && p.reblog) return false;
-    const inner = p.reblog || p;
-    if (!showReplies && inner.in_reply_to_id) return false;
-    if (!showQuotes && inner.quote) return false;
-    return true;
-  });
+  posts = getFilteredPendingPosts(feedKey);
 
   const html = posts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
   state.pendingPosts[feedKey] = [];
@@ -581,7 +586,7 @@ export function handleScrollDirection() {
 
   if (state.activeTab === 'feed') {
     const feedKey = activeFeedKey();
-    const pending = state.pendingPosts[feedKey] || [];
+    const pending = getFilteredPendingPosts(feedKey);
     if (scrollingUp && currentY < 200 && pending.length > 0) {
       flushPendingPosts(feedKey, false);
     }

@@ -1,3 +1,41 @@
+/* Media type badge overlay */
+.media-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 2;
+  background: rgba(40, 40, 50, 0.45);
+  color: #fff;
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  padding: 3px 12px;
+  border-radius: 8px;
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  backdrop-filter: blur(8px) saturate(1.5);
+  -webkit-backdrop-filter: blur(8px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,0.13);
+  opacity: 0.93;
+  transition: opacity 0.2s;
+}
+.media-badge-gif {
+  background: #222b;
+  color: #fff;
+}
+.media-badge-image {
+  background: #222b;
+  color: #fff;
+}
+.media-badge-video {
+  background: #222b;
+  color: #fff;
+}
+.media-item {
+  position: relative;
+}
 /* ═══════════════════════════════════════════════
    POSTS — Post Cards, Media, Polls, Lightbox, Skeletons
    ═══════════════════════════════════════════════
@@ -100,11 +138,17 @@
 .post {
   overflow-anchor: auto;
   border-bottom: 1px solid var(--border);
-  border-left: 2px solid var(--border2);
+  border-left: 1px solid var(--border2);
   padding: 18px 20px 18px 18px;
   transition: background var(--trans), border-color var(--trans);
   position: relative;
   cursor: pointer;
+
+  /* attempted fix of rendering posts on top of each other */
+  border-top: 1px solid var(--border);
+  margin-top: -1px;
+
+
 }
 
 .post:hover {
