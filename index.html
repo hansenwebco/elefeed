@@ -356,6 +356,44 @@
               </button>
             </div>
           </div>
+          <div style="position:relative; display:inline-flex; align-items:center; margin-left:auto;">
+            <button class="icon-btn" id="feed-filter-btn" title="Feed Filters" style="width:28px; height:28px; color:var(--text-dim);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line>
+                <line x1="9" y1="8" x2="15" y2="8"></line>
+                <line x1="17" y1="16" x2="23" y2="16"></line>
+              </svg>
+            </button>
+            <div id="feed-filter-dropdown" class="boost-dropdown" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:180px; transform-origin: top right; z-index:300;">
+              <label style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 14px; cursor:pointer; width:100%; box-sizing:border-box;" class="boost-dropdown-item" onclick="event.stopPropagation()">
+                <span style="font-size:13px; margin:0; color:var(--text);">Show Boosts</span>
+                <div class="settings-toggle">
+                  <input type="checkbox" id="filter-show-boosts" checked />
+                  <span class="settings-toggle-track"></span>
+                </div>
+              </label>
+              <label style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 14px; cursor:pointer; width:100%; box-sizing:border-box;" class="boost-dropdown-item" onclick="event.stopPropagation()">
+                <span style="font-size:13px; margin:0; color:var(--text);">Show Replies</span>
+                <div class="settings-toggle">
+                  <input type="checkbox" id="filter-show-replies" checked />
+                  <span class="settings-toggle-track"></span>
+                </div>
+              </label>
+              <label style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 14px; cursor:pointer; width:100%; box-sizing:border-box;" class="boost-dropdown-item" onclick="event.stopPropagation()">
+                <span style="font-size:13px; margin:0; color:var(--text);">Show Quotes</span>
+                <div class="settings-toggle">
+                  <input type="checkbox" id="filter-show-quotes" checked />
+                  <span class="settings-toggle-track"></span>
+                </div>
+              </label>
+            </div>
+          </div>
         </div>
       </header>
 
