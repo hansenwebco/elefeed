@@ -853,17 +853,6 @@ body.manage-inline-active .manage-inline-panel {
   position: relative;
 }
 
-.thread-post-ancestor::after {
-  content: '';
-  position: absolute;
-  left: 36px;
-  bottom: 0;
-  width: 2px;
-  height: 12px;
-  background: var(--border2);
-  pointer-events: none;
-  z-index: 2;
-}
 
 .thread-post-reply {
   border-bottom: 1px solid var(--border);
