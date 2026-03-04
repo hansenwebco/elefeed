@@ -173,6 +173,16 @@ async function initApp(server, token, demo = false) {
     console.warn('Could not load instance info:', err);
   }
 
+  // Update footer server info display
+  document.querySelectorAll('.footer-account-name').forEach(el => {
+    if (state.account) {
+      el.innerHTML = `@${state.account.username}<span style="opacity:0.6;">@${server}</span>`;
+      el.parentElement.style.display = 'block';
+    } else {
+      el.parentElement.style.display = 'none';
+    }
+  });
+
   // Initial UI state setup from URL params
   document.querySelectorAll('.tab-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === state.activeTab);
