@@ -636,6 +636,32 @@ document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item 
   });
 });
 
+/* Feed Filter Settings */
+const feedFilterBtn = $('feed-filter-btn');
+const feedFilterDropdown = $('feed-filter-dropdown');
+
+if (feedFilterBtn && feedFilterDropdown) {
+  feedFilterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeAllTabDropdowns();
+    document.querySelectorAll('.boost-dropdown').forEach(m => {
+      if (m !== feedFilterDropdown) m.classList.remove('show');
+    });
+    feedFilterDropdown.classList.toggle('show');
+  });
+
+  ['boosts', 'replies', 'quotes'].forEach(type => {
+    const cb = $(`filter-show-${type}`);
+    if (cb) {
+      if (store.get(`pref_show_${type}`) === 'false') cb.checked = false;
+      cb.addEventListener('change', () => {
+        store.set(`pref_show_${type}`, cb.checked);
+        loadFeedTab(false); // Reload without scrolling to top
+      });
+    }
+  });
+}
+
 /* Explore dropdown items */
 document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(item => {
   item.addEventListener('click', (e) => {
@@ -662,7 +688,12 @@ document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(it
 });
 
 /* Close dropdown when clicking outside */
-document.addEventListener('click', () => closeAllTabDropdowns());
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.boost-dropdown')) {
+    document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
+  }
+  closeAllTabDropdowns();
+});
 
 /* Resize: recompute tab labels for mobile ↔ desktop */
 window.addEventListener('resize', (() => {

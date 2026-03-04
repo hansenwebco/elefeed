@@ -16,7 +16,7 @@ window.addEventListener('resize', positionOverlayPill);
  * Home feed: loading, filtering, polling, pagination, pending-post buffering.
  */
 
-import { $, state } from './state.js';
+import { $, state, store } from './state.js';
 import { apiGet } from './api.js';
 import { setLoading, setError, showToast, updateTabLabel } from './ui.js';
 import { renderPost } from './render.js';
@@ -95,6 +95,19 @@ function setupOverlayPillScroll() {
 function renderFilteredPosts(displayPosts) {
   const container = $('feed-posts');
   const filter = state.feedFilter;
+
+  // Apply feed filters (Boosts, Replies, Quotes)
+  const showBoosts = store.get('pref_show_boosts') !== 'false';
+  const showReplies = store.get('pref_show_replies') !== 'false';
+  const showQuotes = store.get('pref_show_quotes') !== 'false';
+
+  displayPosts = displayPosts.filter(p => {
+    if (!showBoosts && p.reblog) return false;
+    const inner = p.reblog || p;
+    if (!showReplies && inner.in_reply_to_id) return false;
+    if (!showQuotes && inner.quote) return false;
+    return true;
+  });
 
   if (!displayPosts.length) {
     let msg = 'Nothing here yet.';
@@ -489,6 +502,19 @@ export function flushPendingPosts(feedKey, scrollToTop) {
 
   const container = $('feed-posts');
   if (!container) return;
+
+  // Apply feed filters (Boosts, Replies, Quotes)
+  const showBoosts = store.get('pref_show_boosts') !== 'false';
+  const showReplies = store.get('pref_show_replies') !== 'false';
+  const showQuotes = store.get('pref_show_quotes') !== 'false';
+
+  posts = posts.filter(p => {
+    if (!showBoosts && p.reblog) return false;
+    const inner = p.reblog || p;
+    if (!showReplies && inner.in_reply_to_id) return false;
+    if (!showQuotes && inner.quote) return false;
+    return true;
+  });
 
   const html = posts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
   state.pendingPosts[feedKey] = [];
