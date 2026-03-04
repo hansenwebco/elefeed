@@ -47,9 +47,9 @@
   <script>
     if (window.location.hostname !== 'elefeed.app') {
       document.title = 'Elefeed - Development';
-      window.addEventListener('DOMContentLoaded', () => {
-        const icon = document.querySelector('link[rel="icon"]');
-        if (icon) icon.href = 'favicon-dev.svg';
+      document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(i => {
+        i.href = 'favicon-dev.svg';
+        i.removeAttribute('type');
       });
     }
     const _t = localStorage.getItem('theme') || 'system';
