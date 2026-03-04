@@ -54,10 +54,15 @@ export function updateTabPill(feedKey) {
 function setupOverlayPill() {
   const overlayPill = document.getElementById('new-posts-pill');
   if (!overlayPill) return;
-  overlayPill.onclick = () => {
+
+  // Clean up any old listener using replaceWith
+  const newPill = overlayPill.cloneNode(true);
+  overlayPill.parentNode.replaceChild(newPill, overlayPill);
+
+  newPill.addEventListener('click', (e) => {
+    e.preventDefault();
     flushPendingPosts(activeFeedKey(), true);
-    // Do not hide here; updateTabPill will handle visibility
-  };
+  });
 }
 
 let scrollPillListenerAttached = false;
@@ -79,7 +84,7 @@ function setupOverlayPillScroll() {
     const feed = document.getElementById('feed-posts');
     if (feed) {
       const rect = feed.getBoundingClientRect();
-      if (rect.top >= 0 && rect.top < 100) {
+      if (rect.top >= 0 && rect.top < 150 && scrollingUp) {
         overlayPillDismissed = true;
         overlayPill.style.display = 'none';
         return;
@@ -497,7 +502,7 @@ async function pollForNewPosts() {
 /* ── Pending post flushing ─────────────────────────────────────────── */
 
 export function flushPendingPosts(feedKey, scrollToTop) {
-  const posts = state.pendingPosts[feedKey] || [];
+  let posts = state.pendingPosts[feedKey] || [];
   if (!posts.length) return;
 
   const container = $('feed-posts');
@@ -527,7 +532,11 @@ export function flushPendingPosts(feedKey, scrollToTop) {
 
   if (scrollToTop) {
     container.insertBefore(frag, container.firstChild);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      window.scrollTo(0, 0); // fallback for older browsers
+    }
   } else {
     document.documentElement.style.overflowAnchor = 'none';
     const currentScroll = window.scrollY || document.documentElement.scrollTop;
