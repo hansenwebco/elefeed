@@ -23,7 +23,6 @@ export function openThreadDrawer(statusId) {
     inlineContent.innerHTML = '<div class="thread-status"><div class="spinner"></div></div>';
     document.body.classList.add('thread-inline-active');
     window.scrollTo({ top: 0, behavior: 'instant' });
-    document.body.style.overflow = 'hidden';
     loadThread(statusId, inlineContent);
   } else {
     const drawer = $('thread-drawer');
@@ -49,7 +48,11 @@ export function closeThreadDrawer() {
   drawer.classList.remove('open');
   drawer.setAttribute('aria-hidden', 'true');
   backdrop.classList.remove('open');
-  document.body.style.overflow = '';
+
+  if (!wasInline) {
+    document.body.style.overflow = '';
+  }
+
   if (wasInline) {
     requestAnimationFrame(() => window.scrollTo(0, _savedScrollY));
   }
