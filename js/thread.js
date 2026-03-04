@@ -93,31 +93,44 @@ async function loadThread(statusId, container, preserveScroll = false) {
 
 /* ── Tree building ─────────────────────────────────────────────────── */
 
-function buildReplyTree(descendants, rootId) {
+function buildFullTree(ancestors, focalStatus, descendants) {
+  const allPosts = [...ancestors, focalStatus, ...descendants];
   const map = {};
   const roots = [];
-  descendants.forEach(s => { map[s.id] = { status: s, children: [] }; });
-  descendants.forEach(s => {
-    if (s.in_reply_to_id === rootId) roots.push(map[s.id]);
-    else if (map[s.in_reply_to_id]) map[s.in_reply_to_id].children.push(map[s.id]);
-    else roots.push(map[s.id]);
+
+  const focalId = focalStatus.reblog ? focalStatus.reblog.id : focalStatus.id;
+  const ancestorIds = new Set(ancestors.map(a => a.reblog ? a.reblog.id : a.id));
+
+  allPosts.forEach(s => {
+    const id = s.reblog ? s.reblog.id : s.id;
+    let variant = 'reply';
+    if (id === focalId) variant = 'focal';
+    else if (ancestorIds.has(id)) variant = 'ancestor';
+
+    map[id] = { status: s, variant, children: [] };
   });
+
+  allPosts.forEach(s => {
+    const id = s.reblog ? s.reblog.id : s.id;
+    const parentId = s.reblog ? s.reblog.in_reply_to_id : s.in_reply_to_id;
+
+    if (parentId && map[parentId]) {
+      map[parentId].children.push(map[id]);
+    } else {
+      roots.push(map[id]);
+    }
+  });
+
   return roots;
 }
 
-function renderReplyTree(nodes, depth, parentAcct) {
+function renderTree(nodes, depth) {
   return nodes.map(node => {
     const s = node.status.reblog ? node.status.reblog : node.status;
-    // const replyToTag = (depth > 1 && parentAcct)
-    //   ? `<div class="thread-reply-to">
-    //        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 10l5-5v3c8 0 13 4 13 11-3-4-7-5-13-5v3l-5-5z"/></svg>
-    //        Replying to <span class="thread-reply-to-acct">@${escapeHTML(parentAcct)}</span>
-    //      </div>`
-    //   : '';
 
-    const postHTML = renderThreadPost(node.status, 'reply');
+    const postHTML = renderThreadPost(node.status, node.variant);
     const childrenHTML = node.children.length > 0
-      ? `<div class="thread-reply-children">${renderReplyTree(node.children, depth + 1, s.account.acct)}</div>`
+      ? `<div class="thread-reply-children">${renderTree(node.children, depth + 1)}</div>`
       : '';
 
     return postHTML + childrenHTML;
@@ -127,20 +140,21 @@ function renderReplyTree(nodes, depth, parentAcct) {
 /* ── Full thread render ────────────────────────────────────────────── */
 
 function renderThread(focalStatus, ancestors, descendants, container, prevScroll = 0) {
+  const treeNodes = buildFullTree(ancestors, focalStatus, descendants);
+
   const parts = [];
 
   if (ancestors.length > 0) {
-    parts.push(`<div class="thread-section-label">Context (${ancestors.length})</div>`);
-    ancestors.forEach(s => parts.push(renderThreadPost(s, 'ancestor')));
+    const topAncestorId = ancestors[0].reblog ? ancestors[0].reblog.id : ancestors[0].id;
+    parts.push(`<div class="thread-section-label context-jump-btn" data-status-id="${topAncestorId}" title="View full context">
+      <span>View full context (${ancestors.length})</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    </div>`);
   }
 
-  parts.push(renderThreadPost(focalStatus, 'focal'));
+  parts.push(renderTree(treeNodes, 1));
 
-  if (descendants.length > 0) {
-    parts.push(`<div class="thread-section-label">Replies (${descendants.length})</div>`);
-    const focalId = focalStatus.reblog ? focalStatus.reblog.id : focalStatus.id;
-    parts.push(renderReplyTree(buildReplyTree(descendants, focalId), 1, null));
-  } else {
+  if (descendants.length === 0) {
     parts.push('<div class="thread-status" style="padding:24px;"><span style="font-size:12px;font-family:var(--font-mono);opacity:0.6;">No replies yet</span></div>');
   }
 
