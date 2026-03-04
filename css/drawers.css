@@ -897,6 +897,34 @@ body.manage-inline-active .manage-inline-panel {
   border-bottom: 1px solid var(--border);
 }
 
+.thread-section-label.context-jump-btn {
+  cursor: pointer;
+  transition: all var(--trans);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  background: rgba(155, 127, 255, 0.04);
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.thread-section-label.context-jump-btn:hover {
+  background: rgba(155, 127, 255, 0.08);
+  color: var(--accent2);
+}
+
+.thread-section-label.context-jump-btn svg {
+  opacity: 0.8;
+  transition: transform var(--trans);
+}
+
+.thread-section-label.context-jump-btn:hover svg {
+  transform: translate(2px, -2px);
+  opacity: 1;
+}
+
 .thread-focal-label {
   display: flex;
   align-items: center;

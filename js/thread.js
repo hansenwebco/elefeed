@@ -145,7 +145,11 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
   const parts = [];
 
   if (ancestors.length > 0) {
-    parts.push(`<div class="thread-section-label">Context (${ancestors.length})</div>`);
+    const topAncestorId = ancestors[0].reblog ? ancestors[0].reblog.id : ancestors[0].id;
+    parts.push(`<div class="thread-section-label context-jump-btn" data-status-id="${topAncestorId}" title="View full context">
+      <span>View full context (${ancestors.length})</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    </div>`);
   }
 
   parts.push(renderTree(treeNodes, 1));

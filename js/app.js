@@ -1247,6 +1247,15 @@ document.addEventListener('click', e => {
     return;
   }
 
+  /* Context Jump */
+  const contextJump = e.target.closest('.context-jump-btn');
+  if (contextJump) {
+    e.preventDefault();
+    e.stopPropagation();
+    openThreadDrawer(contextJump.dataset.statusId);
+    return;
+  }
+
   /* Load More */
   const loadMoreBtn = e.target.closest('.load-more-btn');
   if (loadMoreBtn) {
