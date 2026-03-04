@@ -43,7 +43,6 @@ function _buildPostBody(status, s, idPrefix = '') {
 
       if (m.type === 'image') {
         return `<div class="media-item" data-full-url="${m.url}" data-type="image" onclick="expandMedia(this)">
-          <span class="media-badge media-badge-image">IMG</span>
           <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy" onload="adjustImageAlignment(this)"/>
           ${overlay}
         </div>`;
@@ -513,9 +512,6 @@ window.expandMedia = function expandMedia(mediaItem) {
     } else if (type === 'image') {
       mediaEl = document.createElement('img');
       mediaEl.src = fullUrl;
-      badge = document.createElement('span');
-      badge.className = 'media-badge media-badge-image';
-      badge.textContent = 'IMG';
     } else if (type === 'video') {
       mediaEl = document.createElement('video');
       mediaEl.src = fullUrl;

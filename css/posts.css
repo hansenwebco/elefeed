@@ -14,28 +14,28 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
   backdrop-filter: blur(8px) saturate(1.5);
   -webkit-backdrop-filter: blur(8px) saturate(1.5);
-  border: 1px solid rgba(255,255,255,0.13);
+  border: 1px solid rgba(255, 255, 255, 0.13);
   opacity: 0.93;
   transition: opacity 0.2s;
 }
+
 .media-badge-gif {
   background: #222b;
   color: #fff;
 }
-.media-badge-image {
-  background: #222b;
-  color: #fff;
-}
+
 .media-badge-video {
   background: #222b;
   color: #fff;
 }
+
 .media-item {
   position: relative;
 }
+
 /* ═══════════════════════════════════════════════
    POSTS — Post Cards, Media, Polls, Lightbox, Skeletons
    ═══════════════════════════════════════════════
