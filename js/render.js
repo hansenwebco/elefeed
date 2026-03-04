@@ -234,9 +234,9 @@ function _buildPostBody(status, s, idPrefix = '') {
       </button>
       ${showTranslate ? `
       <div class="post-footer-separator"></div>
-      <button class="post-stat post-translate-btn" onclick="event.stopPropagation(); window.translatePost(this, '${s.id}', '${escapeHTML(postLang)}', '${escapeHTML(s.url || '')}')" data-original-label="Translate ${escapeHTML(postLangName)}" title="Translate">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span class="post-translate-btn-text">Translate ${escapeHTML(postLangName)}</span>
+      <button class="post-stat post-translate-btn" onclick="event.stopPropagation(); window.translatePost(this, '${s.id}', '${escapeHTML(postLang)}', '${escapeHTML(s.url || '')}')" data-original-label="Translate" title="Translate">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="m14 18h6"/></svg>
+        <span class="post-translate-btn-text">Translate</span>
       </button>
       ` : ''}
       <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
