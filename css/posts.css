@@ -100,11 +100,17 @@
 .post {
   overflow-anchor: auto;
   border-bottom: 1px solid var(--border);
-  border-left: 2px solid var(--border2);
+  border-left: 1px solid var(--border2);
   padding: 18px 20px 18px 18px;
   transition: background var(--trans), border-color var(--trans);
   position: relative;
   cursor: pointer;
+
+  /* attempted fix of rendering posts on top of each other */
+  border-top: 1px solid var(--border);
+  margin-top: -1px;
+
+
 }
 
 .post:hover {
