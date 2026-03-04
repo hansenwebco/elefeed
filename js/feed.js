@@ -42,10 +42,12 @@ export function updateTabPill(feedKey) {
   if (count === 0) {
     overlayPill.style.display = 'none';
     overlayPill.textContent = 'New posts';
+    document.title = 'Elefeed — A Tidy Mastodon Client';
     return;
   }
   overlayPill.textContent = count > 99 ? '99+ new posts' : `${count} new post${count > 1 ? 's' : ''}`;
   overlayPill.style.display = '';
+  document.title = `Elefeed (${count > 99 ? '99+' : count}) — A Tidy Mastodon Client`;
   positionOverlayPill();
 }
 
@@ -78,6 +80,7 @@ function setupOverlayPillScroll() {
     const pending = state.pendingPosts[feedKey] || [];
     if (pending.length === 0) {
       overlayPill.style.display = 'none';
+      document.title = 'Elefeed — A Tidy Mastodon Client';
       return;
     }
     // If the user scrolls to the top of the feed (where new posts would be), dismiss the pill
@@ -87,10 +90,17 @@ function setupOverlayPillScroll() {
       if (rect.top >= 0 && rect.top < 150 && scrollingUp) {
         overlayPillDismissed = true;
         overlayPill.style.display = 'none';
+        document.title = 'Elefeed — A Tidy Mastodon Client';
         return;
       }
     }
     overlayPill.style.display = pending.length > 0 && !overlayPillDismissed ? '' : 'none';
+    if (overlayPill.style.display === 'none') {
+      document.title = 'Elefeed — A Tidy Mastodon Client';
+    } else {
+      const count = pending.length;
+      document.title = `Elefeed (${count > 99 ? '99+' : count}) — A Tidy Mastodon Client`;
+    }
     positionOverlayPill();
   });
 }
