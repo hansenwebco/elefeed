@@ -54,14 +54,20 @@ export function renderCustomEmojis(text, emojis = []) {
   return escaped;
 }
 
-/** Human-friendly relative timestamp (e.g. "3m", "2h", "Jan 5"). */
+/** Human-friendly relative timestamp (e.g. "3m", "2h", "Jan 5", "Jan 5, 2023"). */
 export function relativeTime(dateStr) {
-  const diff = (Date.now() - new Date(dateStr)) / 1000;
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = (now - date) / 1000;
   if (diff < 60) return `${Math.floor(diff)}s`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
-  return new Date(dateStr).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+
+  if (date.getFullYear() !== now.getFullYear()) {
+    return date.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  return date.toLocaleDateString('en', { month: 'short', day: 'numeric' });
 }
 
 /** Format large numbers compactly (e.g. 1234 → "1.2K"). Hides trailing .0 */
