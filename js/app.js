@@ -1215,7 +1215,6 @@ document.addEventListener('click', e => {
   const trigger = e.target.closest('[data-profile-id]');
   if (trigger) {
     e.preventDefault();
-    closeThreadDrawer();
     closeComposeDrawer();
     openProfileDrawer(trigger.dataset.profileId, trigger.dataset.profileServer);
     return;
@@ -1351,7 +1350,7 @@ document.addEventListener('click', e => {
   /* Post article click → open thread */
   const INTERACTIVE = 'a, button, input, select, textarea, [data-profile-id], .post-footer, .cw-wrapper, .post-quote, .media-item, .boost-dropdown, video, .sensitive-overlay';
   const postArticle = e.target.closest('article.post');
-  if (postArticle && !e.target.closest(INTERACTIVE) && !e.target.closest('.thread-drawer')) {
+  if (postArticle && !e.target.closest(INTERACTIVE) && !e.target.closest('.thread-drawer, .thread-inline-panel')) {
     e.preventDefault();
     const statusId = postArticle.dataset.id;
     if (statusId) {

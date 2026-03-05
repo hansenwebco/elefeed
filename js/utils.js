@@ -17,13 +17,33 @@ export function escapeHTML(str) {
  * Sanitize user-generated HTML: mark hashtag/mention links
  * and force all links to open in a new tab.
  */
-export function sanitizeHTML(html) {
+export function sanitizeHTML(html, context = null) {
   const div = document.createElement('div');
   div.innerHTML = html;
   div.querySelectorAll('a').forEach(a => {
-    const text = a.textContent;
+    const text = a.textContent.trim();
+    let isMention = false;
     if (text.startsWith('#')) a.classList.add('hashtag');
-    else if (text.startsWith('@')) a.classList.add('mention');
+    else if (text.startsWith('@')) {
+      a.classList.add('mention');
+      isMention = true;
+    }
+
+    if (isMention && context && context.mentions) {
+      const username = text.replace(/^@/, '');
+      const found = context.mentions.find(m =>
+        m.username === username ||
+        m.acct === username ||
+        m.acct.split('@')[0] === username
+      );
+      if (found) {
+        a.setAttribute('data-profile-id', found.id);
+        if (context.server) {
+          a.setAttribute('data-profile-server', context.server);
+        }
+      }
+    }
+
     a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
   });
@@ -54,14 +74,20 @@ export function renderCustomEmojis(text, emojis = []) {
   return escaped;
 }
 
-/** Human-friendly relative timestamp (e.g. "3m", "2h", "Jan 5"). */
+/** Human-friendly relative timestamp (e.g. "3m", "2h", "Jan 5", "Jan 5, 2023"). */
 export function relativeTime(dateStr) {
-  const diff = (Date.now() - new Date(dateStr)) / 1000;
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = (now - date) / 1000;
   if (diff < 60) return `${Math.floor(diff)}s`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
-  return new Date(dateStr).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+
+  if (date.getFullYear() !== now.getFullYear()) {
+    return date.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  return date.toLocaleDateString('en', { month: 'short', day: 'numeric' });
 }
 
 /** Format large numbers compactly (e.g. 1234 → "1.2K"). Hides trailing .0 */

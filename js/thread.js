@@ -165,6 +165,21 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
   if (prevScroll > 0) {
     container.scrollTop = prevScroll;
   } else {
-    container.scrollTop = 0;
+    requestAnimationFrame(() => {
+      const focalPost = container.querySelector('.thread-post-focal');
+      if (focalPost) {
+        if (window.innerWidth > 900) {
+          const y = focalPost.getBoundingClientRect().top + window.scrollY - 120;
+          window.scrollTo({ top: y, behavior: 'auto' });
+        } else {
+          const containerRect = container.getBoundingClientRect();
+          const focalRect = focalPost.getBoundingClientRect();
+          container.scrollTop += (focalRect.top - containerRect.top - 16);
+        }
+      } else {
+        if (window.innerWidth > 900) window.scrollTo(0, 0);
+        else container.scrollTop = 0;
+      }
+    });
   }
 }

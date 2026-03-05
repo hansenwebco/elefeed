@@ -96,11 +96,11 @@ function _buildPostBody(status, s, idPrefix = '') {
             <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this)">show</button>
           </div>
           <div class="cw-body" id="${qCwId}">
-            <div class="post-content">${processContent(sanitizeHTML(qStatus.content))}</div>
+            <div class="post-content">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>
           </div>
         </div>`;
     } else {
-      qContentHTML = `<div class="post-content" style="margin-bottom:0">${processContent(sanitizeHTML(qStatus.content))}</div>`;
+      qContentHTML = `<div class="post-content" style="margin-bottom:0">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>`;
     }
 
     quoteHTML = `
@@ -182,13 +182,13 @@ function _buildPostBody(status, s, idPrefix = '') {
           <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this)">show</button>
         </div>
         <div class="cw-body" id="${cwId}">
-          <div class="post-content">${processContent(sanitizeHTML(s.content))}</div>
+          <div class="post-content">${processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server }))}</div>
           ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}
         </div>
       </div>`;
   } else {
     contentHTML = `
-      <div class="post-content">${processContent(sanitizeHTML(s.content))}</div>
+      <div class="post-content">${processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server }))}</div>
       ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}`;
   }
 
