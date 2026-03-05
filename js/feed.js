@@ -8,8 +8,9 @@ function positionOverlayPill() {
   // Use CSS for vertical 'top' position to ensure it stays in same place across views
 }
 
-window.addEventListener('scroll', positionOverlayPill);
 window.addEventListener('resize', positionOverlayPill);
+// Call once on load to position initially
+positionOverlayPill();
 
 /**
  * @module feed
@@ -565,16 +566,28 @@ export function flushPendingPosts(feedKey, scrollToTop) {
 
 /* ── Scroll / infinite scroll ──────────────────────────────────────── */
 
+let loadMoreObserver = null;
+
 export function checkInfiniteScroll() {
   const activePanel = document.querySelector('.tab-panel.active');
   if (!activePanel) return;
   const btn = activePanel.querySelector('.load-more-btn');
-  if (btn && !btn.disabled) {
-    const rect = btn.getBoundingClientRect();
-    if (rect.top > 0 && rect.top <= window.innerHeight + 800) {
-      handleLoadMore(btn);
-    }
+  
+  if (!loadMoreObserver) {
+    loadMoreObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !entry.target.disabled) {
+          handleLoadMore(entry.target);
+        }
+      });
+    }, {
+      rootMargin: '800px'
+    });
   }
+  
+  // Disconnect old button and observe new one
+  const buttons = document.querySelectorAll('.load-more-btn');
+  buttons.forEach(b => loadMoreObserver.observe(b));
 }
 
 let lastScrollY = 0;
