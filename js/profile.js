@@ -23,6 +23,26 @@ function renderProfileBannerFollowLabel(relationship) {
     label.remove();
   }
 }
+
+// Toggle profile more menu visibility
+export function toggleProfileMoreMenu(btn) {
+  const accountId = btn.dataset.accountId;
+  const menu = document.querySelector(`.profile-more-menu[data-account-id="${accountId}"]`);
+  if (!menu) return;
+  
+  // Close any other open menus
+  document.querySelectorAll('.profile-more-menu.open').forEach(m => {
+    if (m !== menu) m.classList.remove('open');
+  });
+  
+  menu.classList.toggle('open');
+}
+
+// Close all profile more menus
+export function closeAllProfileMoreMenus() {
+  document.querySelectorAll('.profile-more-menu.open').forEach(m => m.classList.remove('open'));
+}
+
 /**
  * @module profile
  * Profile drawer — loads and renders a user's profile, statuses, pinned posts.
@@ -171,6 +191,8 @@ export function openProfileDrawer(accountId, server) {
 
     const isSelf = state.account && state.account.id === accountId;
     const isNotifying = relationship && relationship.notifying;
+    const isBlocked = relationship && relationship.blocking;
+    const isMuted = relationship && relationship.muting;
 
     const notifyButton = !isSelf
       ? `<button class="profile-notify-btn ${isNotifying ? 'notifying' : ''}"
@@ -180,11 +202,30 @@ export function openProfileDrawer(accountId, server) {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="${isNotifying ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>`
       : '';
 
+    const moreMenu = !isSelf
+      ? `<div class="profile-more-menu-wrapper">
+          <button class="profile-more-menu-btn" data-account-id="${accountId}" title="More options">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
+          <div class="profile-more-menu" data-account-id="${accountId}">
+            <button class="profile-mute-btn ${isMuted ? 'muted' : ''}"
+              data-account-id="${accountId}" data-muted="${isMuted ? 'true' : 'false'}"
+              title="${isMuted ? 'Unmute user' : 'Mute user'}">
+              ${isMuted ? '✓ Muted' : 'Mute user'}</button>
+            <button class="profile-block-btn ${isBlocked ? 'blocked' : ''}"
+              data-account-id="${accountId}" data-blocked="${isBlocked ? 'true' : 'false'}"
+              title="${isBlocked ? 'Unblock user' : 'Block user'}">
+              ${isBlocked ? '✓ Blocked' : 'Block user'}</button>
+          </div>
+        </div>`
+      : '';
+
     const followButton = isSelf
       ? `<a class="profile-edit-btn" href="https://${srv}/settings/profile" target="_blank" rel="noopener">Edit Profile</a>`
-      : `<button class="profile-follow-btn ${isFollowing ? 'following' : ''}"
-          data-account-id="${accountId}" data-following="${isFollowing ? 'true' : 'false'}">
-          ${isFollowing ? 'Following' : 'Follow'}</button>`;
+      : `<button class="profile-follow-btn ${isFollowing ? 'following' : ''} ${isBlocked ? 'blocked' : ''} ${isMuted ? 'muted' : ''}" ${isBlocked || isMuted ? 'disabled' : ''}
+          data-account-id="${accountId}" data-following="${isFollowing ? 'true' : 'false'}"
+          title="${isBlocked ? 'User blocked' : isMuted ? 'User muted' : isFollowing ? 'Unfollow' : 'Follow'}">
+          ${isBlocked ? 'Blocked' : isMuted ? 'Muted' : isFollowing ? 'Following' : 'Follow'}</button>`;
 
     const movedBanner = account.moved ? `
       <div class="profile-moved-banner">
@@ -256,7 +297,7 @@ export function openProfileDrawer(accountId, server) {
       <div class="profile-identity">
         <div class="profile-avatar-wrap">
           <img class="profile-avatar-large" src="${escapeHTML(account.avatar_static || account.avatar)}" alt=""/>
-          <div class="profile-action-group">${followButton}${notifyButton}</div>
+          <div class="profile-action-group">${followButton}${notifyButton}${moreMenu}</div>
         </div>
         <div class="profile-name-row">
           <div>
@@ -494,6 +535,136 @@ export async function handleNotifyToggle(btn) {
     btn.title = isNotifying ? 'Stop post notifications' : 'Get notified about posts';
     if (svg) svg.setAttribute('fill', isNotifying ? 'currentColor' : 'none');
     showToast('Failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+export async function handleBlockToggle(btn) {
+  if (btn.disabled) return;
+  const accountId = btn.dataset.accountId;
+  const isBlocked = btn.dataset.blocked === 'true';
+
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = '...';
+
+  try {
+    // If blocking and user is muted, unmute them first
+    const muteBtn = document.querySelector(`.profile-mute-btn[data-account-id="${accountId}"]`);
+    const isMuted = muteBtn && muteBtn.dataset.muted === 'true';
+    
+    if (!isBlocked && isMuted) {
+      // Blocking and they're muted, so unmute them
+      await fetch(`https://${state.server}/api/v1/accounts/${accountId}/unmute`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+        cache: 'no-store',
+      });
+      if (muteBtn) {
+        muteBtn.dataset.muted = 'false';
+        muteBtn.textContent = 'Mute user';
+        muteBtn.classList.remove('muted');
+      }
+    }
+
+    const endpoint = isBlocked
+      ? `/api/v1/accounts/${accountId}/unblock`
+      : `/api/v1/accounts/${accountId}/block`;
+
+    const res = await fetch(`https://${state.server}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Failed to update block status');
+
+    const relationship = await res.json();
+    const nowBlocked = relationship.blocking || false;
+
+    btn.dataset.blocked = nowBlocked ? 'true' : 'false';
+    btn.textContent = nowBlocked ? '✓ Blocked' : 'Block user';
+    btn.classList.toggle('blocked', nowBlocked);
+
+    // Update the follow button
+    const followBtn = document.querySelector(`.profile-follow-btn[data-account-id="${accountId}"]`);
+    if (followBtn) {
+      followBtn.classList.toggle('blocked', nowBlocked);
+      followBtn.classList.remove('muted');
+      followBtn.disabled = nowBlocked;
+      followBtn.textContent = nowBlocked ? 'Blocked' : followBtn.dataset.following === 'true' ? 'Following' : 'Follow';
+      followBtn.title = nowBlocked ? 'User blocked' : followBtn.dataset.following === 'true' ? 'Unfollow' : 'Follow';
+    }
+
+    showToast(nowBlocked ? 'User blocked' : 'User unblocked');
+  } catch (err) {
+    btn.textContent = originalText;
+    showToast('Action failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+export async function handleMuteToggle(btn) {
+  if (btn.disabled) return;
+  const accountId = btn.dataset.accountId;
+  const isMuted = btn.dataset.muted === 'true';
+
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = '...';
+
+  try {
+    // If muting and user is blocked, unblock them first
+    const blockBtn = document.querySelector(`.profile-block-btn[data-account-id="${accountId}"]`);
+    const isBlocked = blockBtn && blockBtn.dataset.blocked === 'true';
+    
+    if (!isMuted && isBlocked) {
+      // Muting and they're blocked, so unblock them
+      await fetch(`https://${state.server}/api/v1/accounts/${accountId}/unblock`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+        cache: 'no-store',
+      });
+      if (blockBtn) {
+        blockBtn.dataset.blocked = 'false';
+        blockBtn.textContent = 'Block user';
+        blockBtn.classList.remove('blocked');
+      }
+    }
+
+    const endpoint = isMuted
+      ? `/api/v1/accounts/${accountId}/unmute`
+      : `/api/v1/accounts/${accountId}/mute`;
+
+    const res = await fetch(`https://${state.server}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Failed to update mute status');
+
+    const relationship = await res.json();
+    const nowMuted = relationship.muting || false;
+
+    btn.dataset.muted = nowMuted ? 'true' : 'false';
+    btn.textContent = nowMuted ? '✓ Muted' : 'Mute user';
+    btn.classList.toggle('muted', nowMuted);
+
+    // Update the follow button
+    const followBtn = document.querySelector(`.profile-follow-btn[data-account-id="${accountId}"]`);
+    if (followBtn) {
+      followBtn.classList.toggle('muted', nowMuted);
+      followBtn.classList.remove('blocked');
+      followBtn.disabled = nowMuted;
+      followBtn.textContent = nowMuted ? 'Muted' : followBtn.dataset.following === 'true' ? 'Following' : 'Follow';
+      followBtn.title = nowMuted ? 'User muted' : followBtn.dataset.following === 'true' ? 'Unfollow' : 'Follow';
+    }
+
+    showToast(nowMuted ? 'User muted' : 'User unmuted');
+  } catch (err) {
+    btn.textContent = originalText;
+    showToast('Action failed: ' + err.message);
   } finally {
     btn.disabled = false;
   }
