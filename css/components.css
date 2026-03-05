@@ -1,3 +1,24 @@
+/* Profile banner follow/mutual label */
+.profile-header-img-wrap {
+  position: relative;
+}
+
+.profile-banner-follow-label {
+  position: absolute;
+  bottom: 10px;
+  right: 14px;
+  padding: 2.5px 9px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(40, 32, 64, 0.38);
+  border-radius: 6px;
+  backdrop-filter: blur(6px) saturate(1.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  z-index: 3;
+  pointer-events: none;
+  letter-spacing: 0.01em;
+}
 /* Overlay pill for new posts */
 .overlay-pill {
   position: fixed;

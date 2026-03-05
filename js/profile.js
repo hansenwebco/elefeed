@@ -1,3 +1,28 @@
+// Utility to render or update the follow/mutual label in the profile banner
+function renderProfileBannerFollowLabel(relationship) {
+  const headerWrap = document.querySelector('.profile-header-img-wrap');
+  if (!headerWrap) return;
+  let label = headerWrap.querySelector('.profile-banner-follow-label');
+  // Determine label text
+  let text = '';
+  if (relationship) {
+    if (relationship.following && relationship.followed_by) {
+      text = 'Following Each Other';
+    } else if (relationship.followed_by) {
+      text = 'Following You';
+    }
+  }
+  if (text) {
+    if (!label) {
+      label = document.createElement('div');
+      label.className = 'profile-banner-follow-label';
+      headerWrap.appendChild(label);
+    }
+    label.textContent = text;
+  } else if (label) {
+    label.remove();
+  }
+}
 /**
  * @module profile
  * Profile drawer — loads and renders a user's profile, statuses, pinned posts.
@@ -126,9 +151,21 @@ export function openProfileDrawer(accountId, server) {
     const relationship = relationships && relationships.length ? relationships[0] : null;
     const isFollowing = relationship && relationship.following;
 
-    const headerImg = account.header && !account.header.includes('missing')
-      ? `<img class="profile-header-img" src="${escapeHTML(account.header)}" alt="" loading="lazy"/>`
-      : '<div class="profile-header-img empty"></div>';
+    // Profile banner (label will be rendered after DOM insert)
+    let headerImg = '';
+    if (account.header && !account.header.includes('missing')) {
+      headerImg = `
+        <div class="profile-header-img-wrap">
+          <img class="profile-header-img" src="${escapeHTML(account.header)}" alt="" loading="lazy"/>
+        </div>
+      `;
+    } else {
+      headerImg = `
+        <div class="profile-header-img-wrap">
+          <div class="profile-header-img empty"></div>
+        </div>
+      `;
+    }
 
     const bio = account.note ? `<div class="profile-bio">${account.note}</div>` : '';
 
@@ -262,6 +299,9 @@ export function openProfileDrawer(accountId, server) {
       ${pinnedHtml}
       <div class="profile-posts-header">recent posts</div>
       ${postsHtml}`;
+
+    // Render the follow/mutual label after DOM is inserted
+    renderProfileBannerFollowLabel(relationship);
 
     // Wire pinned carousel
     if (pinned.length > 1) {
@@ -400,6 +440,9 @@ export async function handleFollowToggle(btn) {
 
     const notifyBtn = btn.closest('.profile-action-group')?.querySelector('.profile-notify-btn');
     if (notifyBtn) notifyBtn.style.display = nowFollowing ? '' : 'none';
+
+    // Update the follow/mutual label in the banner
+    renderProfileBannerFollowLabel(relationship);
 
     showToast(nowFollowing ? 'Now following' : 'Unfollowed');
   } catch (err) {
