@@ -25,9 +25,9 @@ import {
 import { openThreadDrawer, closeThreadDrawer } from './thread.js';
 import {
   openProfileDrawer, closeProfileDrawer, openBookmarksDrawer,
-  handleFollowToggle, handleNotifyToggle,
+  handleFollowToggle, handleNotifyToggle, handleBlockToggle, handleMuteToggle,
   handleFavoriteToggle, handleBookmarkToggle,
-  loadMoreProfilePosts,
+  loadMoreProfilePosts, toggleProfileMoreMenu, closeAllProfileMoreMenus,
 } from './profile.js';
 import {
   openNotifDrawer, closeNotifDrawer, pollNotifications,
@@ -1206,6 +1206,12 @@ document.addEventListener('keydown', e => {
 });
 setTimeout(setOverlayPillVisibility, 100);
 
+/* Close profile more menu when clicking outside */
+document.addEventListener('click', e => {
+  const menu = e.target.closest('.profile-more-menu, .profile-more-menu-btn');
+  if (!menu) closeAllProfileMoreMenus();
+});
+
 /* ══════════════════════════════════════════════════════════════════════
    DELEGATION (clicks on dynamic content)
    ══════════════════════════════════════════════════════════════════════ */
@@ -1222,11 +1228,23 @@ document.addEventListener('click', e => {
 
   /* Follow / unfollow */
   const followBtn = e.target.closest('.profile-follow-btn[data-account-id]');
-  if (followBtn) { e.preventDefault(); handleFollowToggle(followBtn); return; }
+  if (followBtn) { e.preventDefault(); closeAllProfileMoreMenus(); handleFollowToggle(followBtn); return; }
 
   /* Notify toggle */
   const notifyBtn = e.target.closest('.profile-notify-btn');
-  if (notifyBtn) { e.preventDefault(); handleNotifyToggle(notifyBtn); return; }
+  if (notifyBtn) { e.preventDefault(); closeAllProfileMoreMenus(); handleNotifyToggle(notifyBtn); return; }
+
+  /* Profile more menu button */
+  const profileMoreBtn = e.target.closest('.profile-more-menu-btn');
+  if (profileMoreBtn) { e.preventDefault(); e.stopPropagation(); toggleProfileMoreMenu(profileMoreBtn); return; }
+
+  /* Block toggle */
+  const blockBtn = e.target.closest('.profile-block-btn');
+  if (blockBtn) { e.preventDefault(); handleBlockToggle(blockBtn); closeAllProfileMoreMenus(); return; }
+
+  /* Mute toggle */
+  const muteBtn = e.target.closest('.profile-mute-btn');
+  if (muteBtn) { e.preventDefault(); handleMuteToggle(muteBtn); closeAllProfileMoreMenus(); return; }
 
   /* Favorite */
   const favBtn = e.target.closest('.post-fav-btn');

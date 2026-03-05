@@ -319,6 +319,35 @@
   color: #ff8080;
 }
 
+.profile-follow-btn.blocked {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: var(--danger);
+  color: var(--danger);
+  cursor: not-allowed;
+}
+
+.profile-follow-btn.blocked:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--danger);
+}
+
+.profile-follow-btn.muted {
+  background: rgba(107, 114, 128, 0.12);
+  border-color: rgba(107, 114, 128, 0.6);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.profile-follow-btn.muted:hover {
+  background: rgba(107, 114, 128, 0.2);
+  border-color: rgba(107, 114, 128, 0.6);
+}
+
+.profile-follow-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .profile-follow-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -358,6 +387,94 @@
 
 .profile-notify-btn.ringing svg {
   animation: bellRing 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+.profile-more-menu-wrapper {
+  position: relative;
+}
+
+.profile-more-menu-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--trans);
+}
+
+.profile-more-menu-btn:hover {
+  background: var(--surface2);
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+.profile-more-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 140px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: all 200ms ease;
+  z-index: 1000;
+}
+
+.profile-more-menu.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.profile-block-btn,
+.profile-mute-btn {
+  width: 100%;
+  display: block;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  transition: all var(--trans);
+}
+
+.profile-block-btn:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.profile-mute-btn:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.profile-block-btn:hover,
+.profile-mute-btn:hover {
+  background: var(--surface2);
+  color: var(--danger);
+}
+
+.profile-block-btn.blocked,
+.profile-mute-btn.muted {
+  color: var(--danger);
+}
+
+.profile-block-btn:disabled,
+.profile-mute-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .profile-action-group {
