@@ -218,7 +218,9 @@
 }
 
 .profile-avatar-wrap {
-  margin-top: -28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 10px;
 }
 
@@ -229,6 +231,39 @@
   border: 3px solid var(--surface);
   background: var(--surface2);
   object-fit: cover;
+  margin-top: -28px;
+}
+
+/* Badges */
+.profile-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.profile-badge-bot {
+  background: rgba(78, 205, 196, 0.15);
+  color: var(--teal);
+}
+
+.profile-badge-locked {
+  background: var(--surface2);
+  color: var(--text-dim);
 }
 
 .profile-display-name {
@@ -330,6 +365,7 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+  margin-top: 12px;
 }
 
 .profile-edit-btn {
@@ -486,6 +522,58 @@
 .profile-open-link:hover {
   border-color: var(--accent);
   color: var(--accent2);
+}
+
+/* Moved Banner */
+.profile-moved-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: rgba(255, 107, 107, 0.08);
+  /* Using danger color faintly */
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.profile-moved-banner svg {
+  color: var(--danger);
+  flex-shrink: 0;
+}
+
+.moved-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.moved-text {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+.moved-text strong {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.moved-btn {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity var(--trans);
+  flex-shrink: 0;
+}
+
+.moved-btn:hover {
+  opacity: 0.8;
 }
 
 /* Posts section */

@@ -47,16 +47,14 @@ function _buildPostBody(status, s, idPrefix = '') {
           ${overlay}
         </div>`;
       } else if (m.type === 'gifv') {
-        // GIFV: use <video> with no controls and GIF badge
+        // GIFV: use <video> with no controls
         return `<div class="media-item" data-full-url="${m.url}" data-type="gifv" onclick="expandMedia(this)">
-          <span class="media-badge media-badge-gif">GIF</span>
           <video src="${m.url}" poster="${m.preview_url || ''}" autoplay loop muted playsinline class="${blurClass}"></video>
           ${overlay}
         </div>`;
       } else if (m.type === 'video') {
-        // Video: show controls, add VIDEO badge
+        // Video: show controls
         return `<div class="media-item" data-full-url="${m.url}" data-type="video" onclick="expandMedia(this)">
-          <span class="media-badge media-badge-video">VIDEO</span>
           <video src="${m.url}" poster="${m.preview_url || ''}" controls muted class="${blurClass}"></video>
           ${overlay}
         </div>`;
@@ -486,17 +484,12 @@ window.expandMedia = function expandMedia(mediaItem) {
     if (mediaEl) {
       mediaEl.remove();
     }
-    // Remove any previous badge
-    const prevBadge = content.querySelector('.media-badge');
-    if (prevBadge) prevBadge.remove();
-
     const currentItem = mediaItems[currentIndex];
     const fullUrl = currentItem.dataset.fullUrl;
     const type = currentItem.dataset.type;
 
     if (!fullUrl) return;
 
-    let badge = null;
     if (type === 'gifv') {
       mediaEl = document.createElement('video');
       mediaEl.src = fullUrl;
@@ -506,9 +499,6 @@ window.expandMedia = function expandMedia(mediaItem) {
       mediaEl.playsInline = true;
       mediaEl.setAttribute('playsinline', '');
       // No controls for GIFs
-      badge = document.createElement('span');
-      badge.className = 'media-badge media-badge-gif';
-      badge.textContent = 'GIF';
     } else if (type === 'image') {
       mediaEl = document.createElement('img');
       mediaEl.src = fullUrl;
@@ -518,9 +508,6 @@ window.expandMedia = function expandMedia(mediaItem) {
       mediaEl.controls = true;
       mediaEl.autoplay = true;
       mediaEl.muted = true;
-      badge = document.createElement('span');
-      badge.className = 'media-badge media-badge-video';
-      badge.textContent = 'VIDEO';
     } else {
       // fallback
       mediaEl = document.createElement('img');
@@ -529,7 +516,6 @@ window.expandMedia = function expandMedia(mediaItem) {
     // Prevent clicking the media itself from closing the overlay
     mediaEl.onclick = (e) => e.stopPropagation();
     content.insertBefore(mediaEl, content.firstChild);
-    if (badge) content.insertBefore(badge, mediaEl);
 
     if (prevBtn) prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
     if (nextBtn) nextBtn.style.display = currentIndex < mediaItems.length - 1 ? 'flex' : 'none';

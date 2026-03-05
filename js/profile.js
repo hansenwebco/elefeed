@@ -149,6 +149,16 @@ export function openProfileDrawer(accountId, server) {
           data-account-id="${accountId}" data-following="${isFollowing ? 'true' : 'false'}">
           ${isFollowing ? 'Following' : 'Follow'}</button>`;
 
+    const movedBanner = account.moved ? `
+      <div class="profile-moved-banner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        <div>
+          <div class="moved-title">This account has moved</div>
+          <div class="moved-text">Its new profile is <strong>@${escapeHTML(account.moved.acct)}</strong></div>
+        </div>
+        <button class="moved-btn" data-profile-id="${account.moved.id}" data-profile-server="${srv}">View</button>
+      </div>` : '';
+
     // Track cursor for pagination
     if (statuses.length) {
       profilePagination.maxId = statuses[statuses.length - 1].id;
@@ -204,17 +214,24 @@ export function openProfileDrawer(accountId, server) {
     }
 
     content.innerHTML = `
+      ${movedBanner}
       ${headerImg}
       <div class="profile-identity">
         <div class="profile-avatar-wrap">
           <img class="profile-avatar-large" src="${escapeHTML(account.avatar_static || account.avatar)}" alt=""/>
+          <div class="profile-action-group">${followButton}${notifyButton}</div>
         </div>
         <div class="profile-name-row">
           <div>
-            <div class="profile-display-name">${renderCustomEmojis(account.display_name || account.username, account.emojis)}</div>
+            <div class="profile-display-name">
+              ${renderCustomEmojis(account.display_name || account.username, account.emojis)}
+              ${(account.bot || account.locked) ? `<span class="profile-badges">
+                ${account.bot ? `<span class="profile-badge profile-badge-bot" title="Bot"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2v2h4a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4V4a2 2 0 0 1 2-2z"/><path d="M9 13v.01"/><path d="M15 13v.01"/><path d="M10 17h4"/></svg> Bot</span>` : ''}
+                ${account.locked ? `<span class="profile-badge profile-badge-locked" title="Locked (requires approval to follow)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>` : ''}
+              </span>` : ''}
+            </div>
             <div class="profile-acct">@${escapeHTML(account.acct)}</div>
           </div>
-          <div class="profile-action-group">${followButton}${notifyButton}</div>
         </div>
         ${bio}
         <div class="profile-stats">
