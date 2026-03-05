@@ -1215,7 +1215,6 @@ document.addEventListener('click', e => {
   const trigger = e.target.closest('[data-profile-id]');
   if (trigger) {
     e.preventDefault();
-    closeThreadDrawer();
     closeComposeDrawer();
     openProfileDrawer(trigger.dataset.profileId, trigger.dataset.profileServer);
     return;

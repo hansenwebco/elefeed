@@ -17,13 +17,33 @@ export function escapeHTML(str) {
  * Sanitize user-generated HTML: mark hashtag/mention links
  * and force all links to open in a new tab.
  */
-export function sanitizeHTML(html) {
+export function sanitizeHTML(html, context = null) {
   const div = document.createElement('div');
   div.innerHTML = html;
   div.querySelectorAll('a').forEach(a => {
-    const text = a.textContent;
+    const text = a.textContent.trim();
+    let isMention = false;
     if (text.startsWith('#')) a.classList.add('hashtag');
-    else if (text.startsWith('@')) a.classList.add('mention');
+    else if (text.startsWith('@')) {
+      a.classList.add('mention');
+      isMention = true;
+    }
+
+    if (isMention && context && context.mentions) {
+      const username = text.replace(/^@/, '');
+      const found = context.mentions.find(m =>
+        m.username === username ||
+        m.acct === username ||
+        m.acct.split('@')[0] === username
+      );
+      if (found) {
+        a.setAttribute('data-profile-id', found.id);
+        if (context.server) {
+          a.setAttribute('data-profile-server', context.server);
+        }
+      }
+    }
+
     a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
   });

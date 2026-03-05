@@ -256,6 +256,9 @@ export function openNotifDrawer() {
   // Update URL state
   updateURLParam('notifications', 'true', true);
 
+  // Track what was seen BEFORE this open, to highlight new items
+  state._lastSeenAtOpen = store.get('lastSeenNotifId_' + state.server) || state.lastSeenNotifId || 0;
+
   if (state.notifications.length > 0) {
     renderNotifications();
     state.lastSeenNotifId = state.notifications[0].id;
@@ -427,8 +430,11 @@ function renderNotifItem(n) {
     if (text) preview = `<div class="notif-preview" data-notif-status="${n.status.id}">${escapeHTML(text)}</div>`;
   }
 
+  const isNew = state._lastSeenAtOpen && n.id > state._lastSeenAtOpen;
+  const itemClass = isNew ? 'notif-item unread' : 'notif-item';
+
   return `
-    <div class="notif-item">
+    <div class="${itemClass}">
       <div class="notif-icon ${typeClass}">${icon}</div>
       <div class="notif-body">
         <div class="notif-meta">
