@@ -1210,19 +1210,15 @@ body.manage-inline-active .manage-inline-panel {
   border-bottom: 1px solid var(--border);
   transition: background var(--trans);
   cursor: default;
-  position: relative;
 }
 
-.notif-item.unread::before {
-  content: '';
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 2px var(--surface);
+.notif-item.unread .notif-icon {
+  background: currentColor;
+  box-shadow: 0 0 12px -2px currentColor;
+}
+
+.notif-item.unread .notif-icon svg {
+  color: var(--surface);
 }
 
 .notif-item:hover {
