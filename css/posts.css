@@ -224,11 +224,13 @@
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  min-width: 0;
 }
 
 .boost-text svg {
   color: var(--boost);
   margin-right: 2px;
+  flex-shrink: 0;
 }
 
 .boost-text .post-display-name {
@@ -240,6 +242,13 @@
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.boost-text span:last-child {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ─── Post Header ─── */
