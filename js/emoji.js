@@ -239,75 +239,55 @@ function getEmojiAllList() {
 }
 
 function closeEmojiSuggestions() {
-  const el = $('emoji-suggestions');
-  if (el) el.style.display = 'none';
+  [$('compose-suggestions-strip'), $('compose-suggestions-strip-sidebar')].forEach(s => { if (s) s.style.display = 'none'; });
   emojiAutoSelectedIndex = -1;
   emojiAutoResults = [];
   emojiAutoCurrentQuery = '';
 }
 
-function positionEmojiSuggestions(list) {
-  const sel = window.getSelection();
-  if (!sel.rangeCount) return;
-  const range = sel.getRangeAt(0);
-  const rects = range.getClientRects();
-  if (!rects.length) return;
-  const rect = rects[0];
-  const listW = 280;
-  const listH = Math.min(300, emojiAutoResults.length * 45);
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const isMobile = vw <= 900;
-
-  let top, left;
-
-  if (isMobile) {
-    const spaceRight = vw - rect.right - 8;
-    if (spaceRight >= listW) {
-      left = rect.right + 6;
-      top = rect.top;
-      if (top + listH > vh - 8) top = vh - listH - 8;
-      if (top < 8) top = 8;
-    } else {
-      left = Math.max(8, Math.min(rect.left, vw - listW - 8));
-      top = rect.bottom + 6;
-      if (top + listH > vh - 8) top = Math.max(8, rect.top - listH - 6);
-    }
-  } else {
-    left = rect.left;
-    top = rect.bottom + 8;
-    if (left + listW > vw - 8) left = vw - listW - 8;
-    if (top + listH > vh - 8) top = rect.top - listH - 8;
-    if (top < 8) top = 8;
-    left = Math.max(8, left);
+function positionSuggestionsStrip(strip, textarea) {
+  if (window.innerWidth <= 900) {
+    strip.style.position = '';
+    strip.style.top = '';
+    strip.style.left = '';
+    strip.style.width = '';
+    return;
   }
+  const rect = textarea.getBoundingClientRect();
+  strip.style.position = 'fixed';
+  strip.style.top = rect.bottom + 'px';
+  strip.style.left = rect.left + 'px';
+  strip.style.width = rect.width + 'px';
+}
 
-  list.style.top = top + 'px';
-  list.style.left = left + 'px';
+function getEmojiSuggestionsStrip(ta) {
+  if (!ta) return null;
+  if (ta.id === 'compose-textarea') return $('compose-suggestions-strip');
+  if (ta.id === 'compose-textarea-sidebar') return $('compose-suggestions-strip-sidebar');
+  return null;
 }
 
 function renderEmojiSuggestions() {
-  const list = $('emoji-suggestions');
-  if (!list || !emojiAutoResults.length) { closeEmojiSuggestions(); return; }
+  const strip = getEmojiSuggestionsStrip(emojiAutoCurrentTextarea);
+  if (!strip || !emojiAutoResults.length) { closeEmojiSuggestions(); return; }
 
-  list.innerHTML = emojiAutoResults.map((e, i) => {
+  const track = strip.querySelector('.suggestions-strip-track');
+  track.innerHTML = emojiAutoResults.map((e, i) => {
     const swatch = e.type === 'custom'
       ? `<img src="${e.url}" loading="lazy" />`
       : e.char;
     const label = e.type === 'custom' ? `:${e.shortcode}:` : `:${e.name}:`;
-    return `<div class="emoji-suggestion-item${i === 0 ? ' selected' : ''}" data-index="${i}">
-      <div class="emoji-suggestion-swatch">${swatch}</div>
-      <div class="emoji-suggestion-info">
-        <span class="emoji-suggestion-name">${label}</span>
-      </div>
+    return `<div class="suggestion-chip${i === 0 ? ' selected' : ''}" data-index="${i}">
+      <span class="suggestion-chip-swatch">${swatch}</span>
+      <span class="suggestion-chip-label">${label}</span>
     </div>`;
   }).join('');
 
-  list.style.display = 'flex';
+  strip.style.display = 'block';
+  positionSuggestionsStrip(strip, emojiAutoCurrentTextarea);
   emojiAutoSelectedIndex = 0;
-  positionEmojiSuggestions(list);
 
-  list.querySelectorAll('.emoji-suggestion-item').forEach(item => {
+  track.querySelectorAll('.suggestion-chip').forEach(item => {
     item.onmousedown = ev => ev.preventDefault();
     item.onclick = ev => {
       ev.preventDefault();
@@ -318,11 +298,11 @@ function renderEmojiSuggestions() {
 }
 
 function updateEmojiAutoSelection() {
-  const list = $('emoji-suggestions');
-  if (!list) return;
-  list.querySelectorAll('.emoji-suggestion-item').forEach((item, idx) => {
+  const strip = getEmojiSuggestionsStrip(emojiAutoCurrentTextarea);
+  if (!strip) return;
+  strip.querySelectorAll('.suggestion-chip').forEach((item, idx) => {
     item.classList.toggle('selected', idx === emojiAutoSelectedIndex);
-    if (idx === emojiAutoSelectedIndex) item.scrollIntoView({ block: 'nearest' });
+    if (idx === emojiAutoSelectedIndex) item.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   });
 }
 
@@ -385,7 +365,12 @@ async function handleEmojiAutocompleteInput(textarea) {
   if (!match) { closeEmojiSuggestions(); return; }
 
   const query = match[1].toLowerCase();
-  if (query === emojiAutoCurrentQuery) return; // no change
+  // Skip re-render only if query is unchanged AND the strip is already visible
+  const stripAlreadyOpen = (() => {
+    const s = getEmojiSuggestionsStrip(textarea);
+    return s && s.style.display !== 'none';
+  })();
+  if (query === emojiAutoCurrentQuery && stripAlreadyOpen) return;
   emojiAutoCurrentQuery = query;
   emojiAutoCurrentTextarea = textarea;
 
@@ -399,13 +384,13 @@ async function handleEmojiAutocompleteInput(textarea) {
 }
 
 function handleEmojiAutocompleteKeydown(e) {
-  const list = $('emoji-suggestions');
-  if (!list || list.style.display === 'none') return;
-  if (e.key === 'ArrowDown') {
+  const strip = getEmojiSuggestionsStrip(emojiAutoCurrentTextarea);
+  if (!strip || strip.style.display === 'none') return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
     e.preventDefault();
     emojiAutoSelectedIndex = (emojiAutoSelectedIndex + 1) % emojiAutoResults.length;
     updateEmojiAutoSelection();
-  } else if (e.key === 'ArrowUp') {
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
     e.preventDefault();
     emojiAutoSelectedIndex = (emojiAutoSelectedIndex - 1 + emojiAutoResults.length) % emojiAutoResults.length;
     updateEmojiAutoSelection();
@@ -432,7 +417,7 @@ export function initEmojiAutocomplete() {
     ta.addEventListener('scroll', closeEmojiSuggestions);
   });
   document.addEventListener('click', e => {
-    if (!e.target.closest('#emoji-suggestions')) closeEmojiSuggestions();
+    if (!e.target.closest('.compose-suggestions-strip')) closeEmojiSuggestions();
   });
 }
 

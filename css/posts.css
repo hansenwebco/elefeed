@@ -133,12 +133,14 @@
   background: rgba(155, 127, 255, 0.07);
 }
 
-.post.post--boost {
+.post.post--boost,
+.post.post--following {
   border-left-color: rgba(78, 205, 196, 0.5);
   background: rgba(78, 205, 196, 0.04);
 }
 
-.post.post--boost:hover {
+.post.post--boost:hover,
+.post.post--following:hover {
   border-left-color: rgba(78, 205, 196, 0.7);
   background: rgba(78, 205, 196, 0.07);
 }
