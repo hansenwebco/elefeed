@@ -217,11 +217,26 @@
   position: relative;
 }
 
+/* Mobile: tighter padding while keeping readability */
+@media (max-width: 600px) {
+  .profile-identity {
+    padding: 0 16px 12px;
+  }
+}
+
 .profile-avatar-wrap {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 10px;
+}
+
+/* Mobile: better alignment for avatar and actions */
+@media (max-width: 600px) {
+  .profile-avatar-wrap {
+    align-items: center;
+    gap: 12px;
+  }
 }
 
 .profile-avatar-large {
@@ -300,6 +315,14 @@
   padding: 6px 16px;
   cursor: pointer;
   transition: all var(--trans);
+}
+
+/* Mobile: adjust button sizing for better fit */
+@media (max-width: 600px) {
+  .profile-follow-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
 }
 
 .profile-follow-btn:hover {
@@ -485,6 +508,15 @@
   margin-top: 12px;
 }
 
+/* Mobile: allow buttons to wrap and flex properly */
+@media (max-width: 600px) {
+  .profile-action-group {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+}
+
 .profile-edit-btn {
   flex-shrink: 0;
   background: transparent;
@@ -570,6 +602,13 @@
   position: relative;
 }
 
+/* Mobile: slightly more padding for better readability */
+@media (max-width: 600px) {
+  .profile-field {
+    padding: 10px 12px;
+  }
+}
+
 .profile-field.verified {
   background: rgba(78, 205, 196, 0.04);
 }
@@ -593,6 +632,16 @@
 .profile-field-value a {
   color: var(--accent2);
   text-decoration: none;
+}
+
+/* Mobile: allow field values to wrap */
+@media (max-width: 600px) {
+  .profile-field-value {
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+  }
 }
 
 .profile-field.verified .profile-field-name {
