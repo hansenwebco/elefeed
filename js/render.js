@@ -313,8 +313,9 @@ export function renderPost(status, opts = {}) {
 
   /* ── Context class ── */
   let contextClass = '';
-  if (boostBy) contextClass = ' post--boost';
-  else if (state.knownFollowing.has(s.account.id)) contextClass = ' post--following';
+  if (boostBy) {
+    if (state.knownFollowing.has(boostBy.id)) contextClass = ' post--boost';
+  } else if (state.knownFollowing.has(s.account.id)) contextClass = ' post--following';
   else if (isHashtagPost) contextClass = ' post--hashtag';
   else if (s.in_reply_to_id) contextClass = ' post--reply';
 
@@ -402,8 +403,9 @@ export function renderThreadPost(status, variant) {
 
   /* Use the same context classes as feed posts */
   let contextClass = '';
-  if (boostBy) contextClass = ' post--boost';
-  else if (state.knownFollowing.has(s.account.id)) contextClass = ' post--following';
+  if (boostBy) {
+    if (state.knownFollowing.has(boostBy.id)) contextClass = ' post--boost';
+  } else if (state.knownFollowing.has(s.account.id)) contextClass = ' post--following';
   else if (s.in_reply_to_id) contextClass = ' post--reply';
 
   return `

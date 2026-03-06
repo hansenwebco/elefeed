@@ -145,6 +145,7 @@ function renderFilteredPosts(displayPosts) {
     let msg = 'Nothing here yet.';
     if (filter === 'following') msg = 'No recent posts from people you follow.';
     if (filter === 'hashtags') msg = 'No recent posts matching your hashtags.';
+    if (filter === 'live') msg = 'No recent posts on this server.';
     container.innerHTML = `<div class="feed-status"><div class="status-icon">📭</div><p>${msg}</p></div>`;
     return;
   }
@@ -152,6 +153,8 @@ function renderFilteredPosts(displayPosts) {
   let maxId = state.homeMaxId;
   if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
     maxId = state.hashtagMaxId;
+  } else if (filter === 'live') {
+    maxId = state.localMaxId;
   }
 
   const html = displayPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
@@ -210,6 +213,16 @@ export async function filterForFollowing(page) {
     const inner = p.reblog || p;
     return state.knownFollowing.has(inner.account.id);
   });
+}
+
+/* ── Ensure local feed is fetched ─────────────────────────────────── */
+
+async function ensureLocalFeedLoaded() {
+  if (!state.localFeed) {
+    const posts = await apiGet('/api/v1/timelines/public?local=true&limit=40', state.token);
+    state.localFeed = posts;
+    state.localMaxId = posts.length ? posts[posts.length - 1].id : null;
+  }
 }
 
 /* ── Ensure home feed is fetched ───────────────────────────────────── */
@@ -410,6 +423,8 @@ export async function loadFeedTab(scrollTop = true) {
   if (state.pendingPosts[feedKey] && state.pendingPosts[feedKey].length > 0) {
     if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
       state.hashtagFeed = [...state.pendingPosts[feedKey], ...(state.hashtagFeed || [])];
+    } else if (filter === 'live') {
+      state.localFeed = [...state.pendingPosts[feedKey], ...(state.localFeed || [])];
     } else {
       state.homeFeed = [...state.pendingPosts[feedKey], ...(state.homeFeed || [])];
     }
@@ -438,6 +453,10 @@ export async function loadFeedTab(scrollTop = true) {
       renderFilteredPosts(display);
     } else if (filter === 'hashtags') {
       await loadHashtagsFeed();
+    } else if (filter === 'live') {
+      await ensureLocalFeedLoaded();
+      if (!state.demoMode) await fetchRelationships(state.localFeed);
+      renderFilteredPosts(state.localFeed);
     }
   } catch (err) {
     setError('feed', 'Failed to load feed: ' + err.message);
@@ -469,6 +488,8 @@ export function stopPolling() {
   notifPollInterval = null;
 }
 
+
+
 async function pollForNewPosts() {
   if (!state.token || state.demoMode || state.activeTab !== 'feed') return;
   const filter = state.feedFilter;
@@ -476,6 +497,8 @@ async function pollForNewPosts() {
   let minIdToUse = state.homeFeed && state.homeFeed.length > 0 ? state.homeFeed[0].id : null;
   if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
     minIdToUse = state.hashtagFeed && state.hashtagFeed.length > 0 ? state.hashtagFeed[0].id : null;
+  } else if (filter === 'live') {
+    minIdToUse = state.localFeed && state.localFeed.length > 0 ? state.localFeed[0].id : null;
   }
   if (!minIdToUse) return;
 
@@ -488,19 +511,25 @@ async function pollForNewPosts() {
       newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
       if (newPosts.length > 0) state.hashtagFeed = [...newPosts, ...state.hashtagFeed];
     } else {
-      newPosts = await apiGet(`/api/v1/timelines/home?limit=40&min_id=${minIdToUse}`, state.token);
-      const followedTagNames = new Set((state.followedHashtags || []).map(t => t.name.toLowerCase()));
-      newPosts.forEach(p => {
-        p._sourceTags = [];
-        const inner = p.reblog || p;
-        if (inner.tags && Array.isArray(inner.tags)) {
-          inner.tags.forEach(t => {
-            if (followedTagNames.has(t.name.toLowerCase())) p._sourceTags.push(t.name.toLowerCase());
-          });
-        }
-      });
-      newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
-      if (newPosts.length > 0) state.homeFeed = [...newPosts, ...state.homeFeed];
+      if (filter === 'live') {
+        newPosts = await apiGet(`/api/v1/timelines/public?local=true&limit=40&min_id=${minIdToUse}`, state.token);
+        newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
+        if (newPosts.length > 0) state.localFeed = [...newPosts, ...state.localFeed];
+      } else {
+        newPosts = await apiGet(`/api/v1/timelines/home?limit=40&min_id=${minIdToUse}`, state.token);
+        const followedTagNames = new Set((state.followedHashtags || []).map(t => t.name.toLowerCase()));
+        newPosts.forEach(p => {
+          p._sourceTags = [];
+          const inner = p.reblog || p;
+          if (inner.tags && Array.isArray(inner.tags)) {
+            inner.tags.forEach(t => {
+              if (followedTagNames.has(t.name.toLowerCase())) p._sourceTags.push(t.name.toLowerCase());
+            });
+          }
+        });
+        newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
+        if (newPosts.length > 0) state.homeFeed = [...newPosts, ...state.homeFeed];
+      }
     }
 
     if (!newPosts.length) return;
@@ -614,6 +643,8 @@ export async function handleLoadMore(btn) {
   let maxIdToUse = state.homeMaxId;
   if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
     maxIdToUse = state.hashtagMaxId;
+  } else if (filter === 'live') {
+    maxIdToUse = state.localMaxId;
   }
   if (!maxIdToUse) return;
 
@@ -629,6 +660,11 @@ export async function handleLoadMore(btn) {
       state.hashtagFeed = [...(state.hashtagFeed || []), ...newPosts];
       state.hashtagMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
       maxIdToUse = state.hashtagMaxId;
+    } else if (filter === 'live') {
+      newPosts = await apiGet(`/api/v1/timelines/public?local=true&limit=40&max_id=${maxIdToUse}`, state.token);
+      state.localFeed = [...(state.localFeed || []), ...newPosts];
+      state.localMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
+      maxIdToUse = state.localMaxId;
     } else {
       newPosts = await apiGet(`/api/v1/timelines/home?limit=40&max_id=${state.homeMaxId}`, state.token);
       const followedTagNames = new Set((state.followedHashtags || []).map(t => t.name.toLowerCase()));

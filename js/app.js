@@ -146,11 +146,12 @@ async function initApp(server, token, demo = false) {
     const avatarEl = $('user-avatar');
     avatarEl.src = state.account.avatar_static || state.account.avatar;
     avatarEl.alt = state.account.display_name || state.account.username;
+    applyFollowingFeedFlag();
   } catch (err) {
     console.warn('Could not load account info:', err);
   }
 
-  // Load instance limit
+  // Load instance limit and check streaming support
   try {
     const v1Data = await apiGet('/api/v1/instance', token, server);
     let chars = 500;
@@ -172,6 +173,17 @@ async function initApp(server, token, demo = false) {
   } catch (err) {
     console.warn('Could not load instance info:', err);
   }
+
+  // Probe the local public timeline — some servers (e.g. mastodon.social) return
+  // HTTP 200 with [] when the local timeline is intentionally disabled, so we
+  // require at least one post in the response before enabling the option.
+  fetch(`https://${server}/api/v1/timelines/public?local=true&limit=1`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  }).then(async res => {
+    if (!res.ok) { applyLiveFeedFlag(false); return; }
+    const data = await res.json();
+    applyLiveFeedFlag(Array.isArray(data) && data.length > 0);
+  }).catch(() => applyLiveFeedFlag(false));
 
   // Update footer server info display
   document.querySelectorAll('.footer-account-name').forEach(el => {
@@ -718,6 +730,7 @@ const doRefresh = () => {
   if (tab === 'feed') {
     state.homeFeed = null;
     state.hashtagFeed = null;
+    state.localFeed = null;
     loadFeedTab();
   } else if (tab === 'explore') {
     state.trendingPostsLoaded = false;
@@ -887,11 +900,29 @@ function refreshNotifSettingsUI() {
   }
 }
 
+// Show or hide the Live Feeds dropdown item based on streaming availability
+function applyLiveFeedFlag(supported) {
+  const btn = document.querySelector('#tab-dropdown-feed .tab-dropdown-item[data-filter="live"]');
+  if (!btn) return;
+  btn.style.display = supported ? '' : 'none';
+  // If the user was on the live feed but streaming is gone, fall back to all
+  if (!supported && state.feedFilter === 'live') {
+    state.feedFilter = 'all';
+    document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach((b, i) => {
+      b.classList.toggle('active', i === 0);
+    });
+    updateTabLabel('feed');
+  }
+}
+
 // Apply the "From Following" feature flag to the tab button visibility
 function applyFollowingFeedFlag() {
   const btn = document.querySelector('#tab-dropdown-explore .tab-dropdown-item[data-subtab="following"]');
   if (!btn) return;
-  const enabled = store.get('pref_following_feed') === 'true';
+  const acct = state.account?.acct || '';
+  const srv = state.server || '';
+  const isDev = acct === 'stonedonkey' && srv === 'mastodon.social';
+  const enabled = isDev && store.get('pref_following_feed') === 'true';
   btn.style.display = enabled ? '' : 'none';
 }
 applyFollowingFeedFlag();
@@ -1117,6 +1148,7 @@ $('logout-btn').addEventListener('click', () => {
   state.homeFeed = null;
   state.followingFeed = null;
   state.hashtagFeed = null;
+  state.localFeed = null;
   state.followedHashtags = null;
   state.activeTab = 'feed';
   state.feedFilter = 'all';
