@@ -360,6 +360,13 @@
                 </svg>
                 Trending News
               </button>
+              <button class="tab-dropdown-item" data-subtab="following" style="display:none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                From Following
+              </button>
             </div>
           </div>
           <div style="position:relative; display:inline-flex; align-items:center; margin-left:auto;">
@@ -524,6 +531,17 @@
             <div class="trending-section">
               <div id="trending-news-list" class="trending-links-list"></div>
             </div>
+          </div>
+          <div class="trending-subpanel" id="trending-subpanel-following">
+            <div class="feed-loading" id="trending-following-loading" style="display:none;">
+              <div class="skeleton-posts" id="trending-following-skeleton"></div>
+              <div class="trending-following-progress" id="trending-following-progress"></div>
+            </div>
+            <div class="error-banner" id="trending-following-error"></div>
+            <div class="trending-following-header" id="trending-following-header" style="display:none;">
+              <span class="trending-following-count" id="trending-following-count"></span>
+            </div>
+            <div id="trending-following-list"></div>
           </div>
         </div>
       </main>
@@ -904,6 +922,23 @@
             </div>
             <label class="settings-toggle" style="flex-shrink:0;" title="Hide link previews">
               <input type="checkbox" id="settings-hide-cards-toggle" />
+              <span class="settings-toggle-track"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Flags -->
+      <div id="settings-feature-flags-section" style="display:none; padding:16px; border-bottom:1px solid var(--border);">
+        <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Feature Flags</h4>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">From Following digest</span>
+              <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a ranked feed of top posts from people you follow in Explore.</span>
+            </div>
+            <label class="settings-toggle" style="flex-shrink:0;" title="Enable From Following digest">
+              <input type="checkbox" id="debug-following-feed-toggle" />
               <span class="settings-toggle-track"></span>
             </label>
           </div>
