@@ -433,9 +433,6 @@ export async function loadFeedTab(scrollTop = true) {
   }
   updateTabPill(feedKey);
 
-  // Stop live stream when not on the live feed
-  if (filter !== 'live') stopLiveStream();
-
   // Setup overlay pill handlers
   setupOverlayPill();
   setupOverlayPillScroll();
@@ -460,7 +457,6 @@ export async function loadFeedTab(scrollTop = true) {
       await ensureLocalFeedLoaded();
       if (!state.demoMode) await fetchRelationships(state.localFeed);
       renderFilteredPosts(state.localFeed);
-      startLiveStream(); // fire & forget — runs indefinitely
     }
   } catch (err) {
     setError('feed', 'Failed to load feed: ' + err.message);
@@ -473,8 +469,6 @@ export async function loadFeedTab(scrollTop = true) {
 let pollInterval = null;
 let notifPollInterval = null;
 let _pollNotifications = null;
-let _liveStreamController = null;
-let _liveStreamReconnectTimer = null;
 
 /** Provide the notifications poll fn to avoid circular import. */
 export function registerNotifPoller(fn) { _pollNotifications = fn; }
@@ -492,105 +486,19 @@ export function stopPolling() {
   pollInterval = null;
   if (notifPollInterval) clearInterval(notifPollInterval);
   notifPollInterval = null;
-  stopLiveStream();
 }
 
-/* ── Live stream (SSE) ─────────────────────────────────────────────── */
 
-export function stopLiveStream() {
-  if (_liveStreamReconnectTimer) {
-    clearTimeout(_liveStreamReconnectTimer);
-    _liveStreamReconnectTimer = null;
-  }
-  if (_liveStreamController) {
-    _liveStreamController.abort();
-    _liveStreamController = null;
-  }
-}
-
-export async function startLiveStream() {
-  stopLiveStream();
-  if (!state.token || !state.server || state.demoMode) return;
-
-  _liveStreamController = new AbortController();
-  const signal = _liveStreamController.signal;
-
-  const dot = document.getElementById('live-dot');
-  const statusText = document.getElementById('live-stream-status-text');
-  if (dot) dot.className = 'live-dot connecting';
-  if (statusText) statusText.textContent = `Connecting to ${state.server}…`;
-
-  try {
-    const res = await fetch(`https://${state.server}/api/v1/streaming/public/local`, {
-      headers: { Authorization: `Bearer ${state.token}` },
-      signal,
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    if (dot) dot.className = 'live-dot connected';
-    if (statusText) statusText.textContent = `Live · ${state.server}`;
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done || signal.aborted) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const events = buffer.split('\n\n');
-      buffer = events.pop() || '';
-
-      for (const eventText of events) {
-        if (!eventText.trim()) continue;
-        let eventType = '', data = '';
-        for (const line of eventText.split('\n')) {
-          if (line.startsWith('event: ')) eventType = line.slice(7).trim();
-          else if (line.startsWith('data: ')) data = line.slice(6).trim();
-        }
-
-        if (eventType === 'update' && data) {
-          try {
-            const post = JSON.parse(data);
-            if (state.localFeed) state.localFeed = [post, ...state.localFeed];
-            if (state.feedFilter === 'live' && state.activeTab === 'feed') {
-              const feedKey = 'feed_live';
-              state.pendingPosts[feedKey] = [post, ...(state.pendingPosts[feedKey] || [])];
-              overlayPillDismissed = false;
-              updateTabPill(feedKey);
-            }
-          } catch { /* ignore parse errors */ }
-        } else if (eventType === 'delete' && data) {
-          if (state.localFeed) state.localFeed = state.localFeed.filter(p => p.id !== data);
-          const el = document.querySelector(`article.post[data-id="${data}"]`);
-          if (el) el.remove();
-        }
-      }
-    }
-  } catch (err) {
-    if (err.name === 'AbortError') return;
-    console.warn('[Live] Stream error:', err.message);
-    if (dot) dot.className = 'live-dot disconnected';
-    if (statusText) statusText.textContent = `Disconnected — retrying in 5s…`;
-    if (!signal.aborted) {
-      _liveStreamReconnectTimer = setTimeout(() => {
-        _liveStreamReconnectTimer = null;
-        if (state.feedFilter === 'live' && state.activeTab === 'feed') startLiveStream();
-      }, 5000);
-    }
-  }
-}
 
 async function pollForNewPosts() {
   if (!state.token || state.demoMode || state.activeTab !== 'feed') return;
   const filter = state.feedFilter;
-  if (filter === 'live') return; // stream handles new posts
 
   let minIdToUse = state.homeFeed && state.homeFeed.length > 0 ? state.homeFeed[0].id : null;
   if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
     minIdToUse = state.hashtagFeed && state.hashtagFeed.length > 0 ? state.hashtagFeed[0].id : null;
+  } else if (filter === 'live') {
+    minIdToUse = state.localFeed && state.localFeed.length > 0 ? state.localFeed[0].id : null;
   }
   if (!minIdToUse) return;
 
@@ -603,19 +511,25 @@ async function pollForNewPosts() {
       newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
       if (newPosts.length > 0) state.hashtagFeed = [...newPosts, ...state.hashtagFeed];
     } else {
-      newPosts = await apiGet(`/api/v1/timelines/home?limit=40&min_id=${minIdToUse}`, state.token);
-      const followedTagNames = new Set((state.followedHashtags || []).map(t => t.name.toLowerCase()));
-      newPosts.forEach(p => {
-        p._sourceTags = [];
-        const inner = p.reblog || p;
-        if (inner.tags && Array.isArray(inner.tags)) {
-          inner.tags.forEach(t => {
-            if (followedTagNames.has(t.name.toLowerCase())) p._sourceTags.push(t.name.toLowerCase());
-          });
-        }
-      });
-      newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
-      if (newPosts.length > 0) state.homeFeed = [...newPosts, ...state.homeFeed];
+      if (filter === 'live') {
+        newPosts = await apiGet(`/api/v1/timelines/public?local=true&limit=40&min_id=${minIdToUse}`, state.token);
+        newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
+        if (newPosts.length > 0) state.localFeed = [...newPosts, ...state.localFeed];
+      } else {
+        newPosts = await apiGet(`/api/v1/timelines/home?limit=40&min_id=${minIdToUse}`, state.token);
+        const followedTagNames = new Set((state.followedHashtags || []).map(t => t.name.toLowerCase()));
+        newPosts.forEach(p => {
+          p._sourceTags = [];
+          const inner = p.reblog || p;
+          if (inner.tags && Array.isArray(inner.tags)) {
+            inner.tags.forEach(t => {
+              if (followedTagNames.has(t.name.toLowerCase())) p._sourceTags.push(t.name.toLowerCase());
+            });
+          }
+        });
+        newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
+        if (newPosts.length > 0) state.homeFeed = [...newPosts, ...state.homeFeed];
+      }
     }
 
     if (!newPosts.length) return;
