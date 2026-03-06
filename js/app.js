@@ -19,8 +19,8 @@ import {
   registerNotifPoller,
 } from './feed.js';
 import {
-  loadTrendingTab, loadTrendingHashtags,
-  loadTrendingPeople, loadTrendingNews,
+  loadTrendingTab, loadTrendingPosts, loadTrendingHashtags,
+  loadTrendingPeople, loadTrendingNews, loadTrendingFollowing,
 } from './trending.js';
 import { openThreadDrawer, closeThreadDrawer } from './thread.js';
 import {
@@ -681,9 +681,11 @@ document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(it
     updateTabLabel('explore');
     closeAllTabDropdowns();
 
-    if (subtab === 'hashtags' && !state.trendingHashtagsLoaded) loadTrendingHashtags();
+    if (subtab === 'posts' && !state.trendingPostsLoaded) loadTrendingPosts();
+    else if (subtab === 'hashtags' && !state.trendingHashtagsLoaded) loadTrendingHashtags();
     else if (subtab === 'people' && !state.trendingPeopleLoaded) loadTrendingPeople();
     else if (subtab === 'news' && !state.trendingNewsLoaded) loadTrendingNews();
+    else if (subtab === 'following' && !state.trendingFollowingLoaded) loadTrendingFollowing();
   });
 });
 
@@ -722,6 +724,7 @@ const doRefresh = () => {
     state.trendingHashtagsLoaded = false;
     state.trendingPeopleLoaded = false;
     state.trendingNewsLoaded = false;
+    state.trendingFollowingLoaded = false;
     loadExploreTab();
   }
   showToast('Refreshing…');
@@ -868,14 +871,39 @@ function refreshNotifSettingsUI() {
     intervalSel.disabled = getNotifPermission() !== 'granted';
   }
 
-  // Show debug panel only for the developer account
+  // Show debug panel and feature flags section only for the developer account
   const debugSection = $('settings-debug-section');
-  if (debugSection) {
-    const acct = state.account?.acct || '';
-    const server = state.server || '';
-    const isDev = acct === 'stonedonkey' && server === 'mastodon.social';
-    debugSection.style.display = isDev ? '' : 'none';
+  const featureFlagsSection = $('settings-feature-flags-section');
+  const acct = state.account?.acct || '';
+  const server = state.server || '';
+  const isDev = acct === 'stonedonkey' && server === 'mastodon.social';
+  if (debugSection) debugSection.style.display = isDev ? '' : 'none';
+  if (featureFlagsSection) featureFlagsSection.style.display = isDev ? '' : 'none';
+
+  // Sync the feature flag toggle state
+  const followingToggle = $('debug-following-feed-toggle');
+  if (followingToggle) {
+    followingToggle.checked = store.get('pref_following_feed') === 'true';
   }
+}
+
+// Apply the "From Following" feature flag to the tab button visibility
+function applyFollowingFeedFlag() {
+  const btn = document.querySelector('#tab-dropdown-explore .tab-dropdown-item[data-subtab="following"]');
+  if (!btn) return;
+  const enabled = store.get('pref_following_feed') === 'true';
+  btn.style.display = enabled ? '' : 'none';
+}
+applyFollowingFeedFlag();
+
+// Wire the debug toggle
+const _followingFeedToggle = $('debug-following-feed-toggle');
+if (_followingFeedToggle) {
+  _followingFeedToggle.addEventListener('change', () => {
+    store.set('pref_following_feed', _followingFeedToggle.checked ? 'true' : 'false');
+    applyFollowingFeedFlag();
+    showToast(_followingFeedToggle.checked ? '"From Following" tab enabled' : '"From Following" tab hidden');
+  });
 }
 
 // Wire notification settings controls (elements exist in DOM at load time)

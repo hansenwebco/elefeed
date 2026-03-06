@@ -317,3 +317,28 @@
 .trending-subpanel.active {
   display: block;
 }
+
+/* Trending from Following — digest header */
+.trending-following-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 6px;
+  gap: 8px;
+}
+
+.trending-following-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.trending-following-progress {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 8px 0 4px;
+  letter-spacing: 0.04em;
+}

@@ -8,6 +8,7 @@ import { apiGet } from './api.js';
 import { makeSkeleton, updateTabLabel } from './ui.js';
 import { renderPost } from './render.js';
 import { escapeHTML, renderCustomEmojis, formatCount } from './utils.js';
+import { fetchRelationships } from './feed.js';
 
 /* ── Sparkline builder ─────────────────────────────────────────────── */
 
@@ -180,6 +181,127 @@ export async function loadTrendingNews() {
   }
 }
 
+/* ── Trending from Following ───────────────────────────────────────── */
+
+export async function loadTrendingFollowing() {
+  const HOURS = 6;
+  const cutoff = Date.now() - HOURS * 60 * 60 * 1000;
+
+  const container = $('trending-following-list');
+  const loading = $('trending-following-loading');
+  const progress = $('trending-following-progress');
+  const errEl = $('trending-following-error');
+  const header = $('trending-following-header');
+
+  errEl.classList.remove('visible');
+  container.innerHTML = '';
+  if (header) header.style.display = 'none';
+  $('trending-following-skeleton').innerHTML = makeSkeleton(5);
+  loading.style.display = 'flex';
+  if (progress) progress.textContent = 'Fetching your timeline\u2026';
+
+  if (state.demoMode) {
+    loading.style.display = 'none';
+    container.innerHTML = `<div class="feed-status"><div class="status-icon">📈</div><p>Trending from following is not available in demo mode.</p></div>`;
+    state.trendingFollowingLoaded = true;
+    return;
+  }
+
+  try {
+    const allPosts = [];
+    const seenIds = new Set();
+
+    // Seed from the already-cached home feed page to avoid a redundant request
+    if (state.homeFeed && state.homeFeed.length > 0) {
+      state.homeFeed.forEach(p => {
+        if (!seenIds.has(p.id)) { seenIds.add(p.id); allPosts.push(p); }
+      });
+    }
+
+    let maxId = allPosts.length ? allPosts[allPosts.length - 1].id : null;
+    let pageNum = allPosts.length > 0 ? 1 : 0;
+    let done = false;
+
+    // Check whether cached posts already cover the full window
+    if (allPosts.length > 0) {
+      const oldest = new Date(allPosts[allPosts.length - 1].created_at).getTime();
+      if (oldest < cutoff) done = true;
+    }
+
+    while (!done) {
+      pageNum++;
+      if (progress) progress.textContent = `Loading page ${pageNum}\u2026`;
+      const url = '/api/v1/timelines/home?limit=40' + (maxId ? `&max_id=${maxId}` : '');
+      const posts = await apiGet(url, state.token);
+
+      if (!Array.isArray(posts) || posts.length === 0) break;
+
+      posts.forEach(p => {
+        if (!seenIds.has(p.id)) { seenIds.add(p.id); allPosts.push(p); }
+      });
+      maxId = posts[posts.length - 1].id;
+
+      const oldest = new Date(posts[posts.length - 1].created_at).getTime();
+      if (oldest < cutoff) done = true;
+    }
+
+    // Resolve follow status for all accounts that appeared in the timeline.
+    // fetchRelationships populates state.knownFollowing / state.knownNotFollowing.
+    if (progress) progress.textContent = 'Checking follow status…';
+    await fetchRelationships(allPosts);
+
+    // Unwrap every timeline entry to its original post, deduplicating by original ID.
+    // Only include originals whose author the user directly follows — boosts from followed
+    // accounts that point to non-followed authors are used purely for the engagement signal,
+    // but the original must itself be authored by a followed account to appear in the digest.
+    const originalsMap = new Map(); // original post id → original Status object
+    for (const p of allPosts) {
+      // Respect the time window on the timeline entry's timestamp
+      if (new Date(p.created_at).getTime() < cutoff) continue;
+
+      const original = p.reblog || p;
+
+      // Skip quotes (original.quote means this original itself is a quote post)
+      if (original.quote) continue;
+
+      // Only include if the original's author is someone we follow
+      if (!state.knownFollowing.has(original.account.id)) continue;
+
+      if (!originalsMap.has(original.id)) {
+        originalsMap.set(original.id, original);
+      }
+    }
+
+    const windowPosts = Array.from(originalsMap.values());
+
+    // Score using full network-wide engagement counts on the original post
+    const scored = windowPosts.map(p => {
+      return { ...p, _score: (p.reblogs_count * 2) + p.favourites_count };
+    }).filter(p => p._score > 0);
+
+    scored.sort((a, b) => b._score - a._score);
+    const top = scored;
+
+    state.trendingFollowingLoaded = true;
+    loading.style.display = 'none';
+
+    if (!top.length) {
+      container.innerHTML = `<div class="feed-status"><div class="status-icon">📈</div><p>No highly-engaged original posts from your network in the last 6 hours.</p></div>`;
+    } else {
+      if (header) {
+        $('trending-following-count').textContent =
+          `${top.length} posts ranked by engagement \u00b7 last 6h`;
+        header.style.display = '';
+      }
+      container.innerHTML = top.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
+    }
+  } catch (err) {
+    loading.style.display = 'none';
+    errEl.textContent = 'Could not load posts: ' + err.message;
+    errEl.classList.add('visible');
+  }
+}
+
 /* ── Tab-level loader (resets sub-panels and kicks off all fetches) ── */
 
 export async function loadTrendingTab() {
@@ -199,4 +321,5 @@ export async function loadTrendingTab() {
   else if (activeSubtab === 'hashtags' && !state.trendingHashtagsLoaded) loadTrendingHashtags();
   else if (activeSubtab === 'people' && !state.trendingPeopleLoaded) loadTrendingPeople();
   else if (activeSubtab === 'news' && !state.trendingNewsLoaded) loadTrendingNews();
+  else if (activeSubtab === 'following' && !state.trendingFollowingLoaded) loadTrendingFollowing();
 }
