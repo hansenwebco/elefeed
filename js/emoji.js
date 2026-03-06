@@ -390,7 +390,7 @@ async function handleEmojiAutocompleteInput(textarea) {
 
 function handleEmojiAutocompleteKeydown(e) {
   const strip = getEmojiSuggestionsStrip(emojiAutoCurrentTextarea);
-  if (!strip || strip.style.display === 'none') return;
+  if (!strip || strip.style.display === 'none' || emojiAutoSelectedIndex < 0) return;
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
     e.preventDefault();
     emojiAutoSelectedIndex = (emojiAutoSelectedIndex + 1) % emojiAutoResults.length;
@@ -419,7 +419,6 @@ export function initEmojiAutocomplete() {
     if (!ta) return;
     ta.addEventListener('input', () => handleEmojiAutocompleteInput(ta));
     ta.addEventListener('keydown', handleEmojiAutocompleteKeydown);
-    ta.addEventListener('scroll', closeEmojiSuggestions);
   });
   document.addEventListener('click', e => {
     if (!e.target.closest('.compose-suggestions-strip')) closeEmojiSuggestions();

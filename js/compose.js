@@ -879,7 +879,6 @@ function initMentionAutocomplete() {
     if (!textarea) return;
     textarea.addEventListener('input', (e) => handleMentionInput(e, textarea));
     textarea.addEventListener('keydown', (e) => handleMentionKeydown(e, textarea));
-    textarea.addEventListener('scroll', closeMentionSuggestions);
   });
 
   document.addEventListener('click', (e) => { if (!e.target.closest('.compose-suggestions-strip')) closeMentionSuggestions(); });
@@ -950,7 +949,7 @@ function renderMentionSuggestions(users) {
 
 function handleMentionKeydown(e, textarea) {
   const strip = getSuggestionsStrip(textarea);
-  if (!strip || strip.style.display === 'none') return;
+  if (!strip || strip.style.display === 'none' || mentionSelectedIndex < 0) return;
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); moveMentionSelection(1, textarea); }
   else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); moveMentionSelection(-1, textarea); }
   else if (e.key === 'Enter' || e.key === 'Tab') {
@@ -1017,7 +1016,6 @@ function initHashtagAutocomplete() {
     if (!textarea) return;
     textarea.addEventListener('input', (e) => handleHashtagInput(e, textarea));
     textarea.addEventListener('keydown', (e) => handleHashtagKeydown(e, textarea));
-    textarea.addEventListener('scroll', closeHashtagSuggestions);
   });
 
   document.addEventListener('click', (e) => { if (!e.target.closest('.compose-suggestions-strip')) closeHashtagSuggestions(); });
@@ -1096,7 +1094,7 @@ function renderHashtagSuggestions(tags) {
 
 function handleHashtagKeydown(e, textarea) {
   const strip = getSuggestionsStrip(textarea);
-  if (!strip || strip.style.display === 'none') return;
+  if (!strip || strip.style.display === 'none' || hashtagSelectedIndex < 0) return;
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); moveHashtagSelection(1, textarea); }
   else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); moveHashtagSelection(-1, textarea); }
   else if (e.key === 'Enter' || e.key === 'Tab') {
