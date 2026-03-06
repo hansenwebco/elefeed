@@ -285,6 +285,7 @@ function renderEmojiSuggestions() {
 
   strip.style.display = 'block';
   positionSuggestionsStrip(strip, emojiAutoCurrentTextarea);
+  track.scrollLeft = 0;
   emojiAutoSelectedIndex = 0;
 
   track.querySelectorAll('.suggestion-chip').forEach(item => {
