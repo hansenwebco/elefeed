@@ -935,7 +935,10 @@ function renderMentionSuggestions(users) {
 
   strip.style.display = 'block';
   positionSuggestionsStrip(strip, mentionTargetTextarea);
+  track.style.scrollBehavior = 'auto';
   track.scrollLeft = 0;
+  track.scrollTop = 0;
+  track.style.scrollBehavior = '';
   mentionSelectedIndex = 0;
 
   track.querySelectorAll('.suggestion-chip').forEach(chip => {
@@ -1077,7 +1080,10 @@ function renderHashtagSuggestions(tags) {
 
   strip.style.display = 'block';
   positionSuggestionsStrip(strip, hashtagTargetTextarea);
+  track.style.scrollBehavior = 'auto';
   track.scrollLeft = 0;
+  track.scrollTop = 0;
+  track.style.scrollBehavior = '';
   hashtagSelectedIndex = 0;
 
   track.querySelectorAll('.suggestion-chip').forEach(chip => {
