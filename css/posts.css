@@ -489,7 +489,7 @@
 }
 
 .post-content .hashtag {
-  color: var(--accent);
+  color: var(--green);
 }
 
 .hashtag-pills-enabled .post-content .hashtag {
@@ -512,7 +512,7 @@
 }
 
 .post-content .mention {
-  color: var(--teal);
+  color: var(--accent);
 }
 
 .custom-emoji {

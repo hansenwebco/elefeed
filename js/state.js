@@ -49,6 +49,8 @@ export const state = {
   followingFeed: null,
   hashtagFeed: null,
   hashtagMaxId: null,
+  localFeed: null,
+  localMaxId: null,
   followedHashtags: [],
   selectedHashtagFilter: 'all',
   knownFollowing: new Set(),
