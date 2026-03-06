@@ -609,11 +609,6 @@
   position: relative;
   background: transparent;
   cursor: pointer;
-  transition: transform var(--trans);
-}
-
-.media-item:hover {
-  transform: scale(1.02);
 }
 
 .count-1 .media-item {
