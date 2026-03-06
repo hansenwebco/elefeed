@@ -403,7 +403,10 @@ export function closeProfileDrawer() {
   drawer.classList.remove('open');
   drawer.setAttribute('aria-hidden', 'true');
   backdrop.classList.remove('open');
-  document.body.style.overflow = '';
+  delete drawer.dataset.fromAnalytics;
+  // Don't clear the scroll lock if the analytics drawer is still open behind us
+  const analyticsOpen = document.getElementById('post-analytics-drawer')?.classList.contains('open');
+  if (!analyticsOpen) document.body.style.overflow = '';
   updateURLParam('profile', null);
   updateURLParam('bookmarks', null);
 }
@@ -474,10 +477,12 @@ export async function handleFollowToggle(btn) {
 
     const relationship = await res.json();
     const nowFollowing = relationship.following;
+    const nowRequested = relationship.requested;
 
     btn.dataset.following = nowFollowing ? 'true' : 'false';
-    btn.textContent = nowFollowing ? 'Following' : 'Follow';
     btn.classList.toggle('following', nowFollowing);
+    btn.classList.toggle('requested', !nowFollowing && !!nowRequested);
+    btn.textContent = nowFollowing ? 'Following' : (nowRequested ? 'Requested' : 'Follow');
 
     const notifyBtn = btn.closest('.profile-action-group')?.querySelector('.profile-notify-btn');
     if (notifyBtn) notifyBtn.style.display = nowFollowing ? '' : 'none';

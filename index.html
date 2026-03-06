@@ -560,6 +560,10 @@
     <!-- Profile Drawer -->
     <div class="profile-backdrop" id="profile-backdrop"></div>
     <aside class="profile-drawer" id="profile-drawer" aria-hidden="true">
+      <button class="profile-back-analytics-btn" id="profile-back-analytics" aria-label="Back to insights">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        Back to list
+      </button>
       <button class="profile-close" id="profile-close" aria-label="Close profile">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -775,6 +779,22 @@
     </div>
     <div class="search-drawer-body">
       <div id="search-results"></div>
+    </div>
+  </aside>
+
+  <!-- Post Analytics Drawer (who replied / boosted / favorited a focal post) -->
+  <div class="post-analytics-backdrop" id="post-analytics-backdrop"></div>
+  <aside class="post-analytics-drawer" id="post-analytics-drawer" aria-hidden="true" aria-label="Post insights">
+    <div class="thread-drawer-header">
+      <button class="thread-close-btn" id="post-analytics-close" aria-label="Close insights">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <span class="thread-drawer-title" id="post-analytics-title">Insights</span>
+    </div>
+    <div class="post-analytics-drawer-inner" id="post-analytics-content">
     </div>
   </aside>
 
