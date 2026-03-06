@@ -935,6 +935,7 @@ function renderMentionSuggestions(users) {
 
   strip.style.display = 'block';
   positionSuggestionsStrip(strip, mentionTargetTextarea);
+  void track.offsetWidth; // force reflow so scroll reset takes effect
   track.style.scrollBehavior = 'auto';
   track.scrollLeft = 0;
   track.scrollTop = 0;
@@ -1080,6 +1081,7 @@ function renderHashtagSuggestions(tags) {
 
   strip.style.display = 'block';
   positionSuggestionsStrip(strip, hashtagTargetTextarea);
+  void track.offsetWidth; // force reflow so scroll reset takes effect
   track.style.scrollBehavior = 'auto';
   track.scrollLeft = 0;
   track.scrollTop = 0;
