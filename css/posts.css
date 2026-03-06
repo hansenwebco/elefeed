@@ -1025,7 +1025,7 @@ body.hide-cards-enabled .post-card {
 .post-footer {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 2px;
   margin-top: 12px;
 }
 
@@ -1036,6 +1036,17 @@ body.hide-cards-enabled .post-card {
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text-dim);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all var(--trans);
+}
+
+.post-stat:hover {
+  border-color: var(--border);
+  background: var(--surface2);
 }
 
 .post-stat svg {
@@ -1044,9 +1055,6 @@ body.hide-cards-enabled .post-card {
 
 /* Reply */
 .post-reply-btn {
-  background: none;
-  border: none;
-  padding: 0;
   cursor: pointer;
   transition: all var(--trans);
 }
@@ -1061,9 +1069,6 @@ body.hide-cards-enabled .post-card {
 
 /* Boost */
 .post-boost-btn {
-  background: none;
-  border: none;
-  padding: 0;
   cursor: pointer;
   transition: all var(--trans);
   position: relative;
@@ -1122,9 +1127,6 @@ body.hide-cards-enabled .post-card {
 
 /* Favorite */
 .post-fav-btn {
-  background: none;
-  border: none;
-  padding: 0;
   cursor: pointer;
   transition: all var(--trans);
 }
@@ -1175,9 +1177,6 @@ body.hide-cards-enabled .post-card {
 
 /* Bookmark */
 .post-bookmark-btn {
-  background: none;
-  border: none;
-  padding: 0;
   cursor: pointer;
   transition: all var(--trans);
   color: var(--text-muted);
@@ -1245,9 +1244,6 @@ body.hide-cards-enabled .post-card {
 }
 
 .post-translate-btn {
-  background: none;
-  border: none;
-  padding: 0;
   cursor: pointer;
   transition: all var(--trans);
 }
@@ -1271,6 +1267,23 @@ body.hide-cards-enabled .post-card {
 .post-translate-btn:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+/* External link & visibility pill */
+.post-external-link {
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.post-vis-btn svg {
+  display: block;
+  opacity: 0.55;
+}
+
+.post-vis-btn:hover {
+  border-color: transparent !important;
+  background: transparent !important;
 }
 
 /* ─── Responsive ─── */

@@ -36,6 +36,7 @@ import {
 } from './notifications.js';
 import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply, updateCharCount, updateSidebarCharCount } from './compose.js';
 import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
+import { openPostAnalyticsDrawer, closePostAnalyticsDrawer, appendMoreAnalyticsUsers } from './analytics.js';
 
 // Drawer state tracking for history
 function isAnyDrawerOpen() {
@@ -46,7 +47,8 @@ function isAnyDrawerOpen() {
     $('compose-drawer') && $('compose-drawer').classList.contains('open') ||
     $('manage-hashtag-drawer') && $('manage-hashtag-drawer').classList.contains('open') ||
     $('settings-drawer') && $('settings-drawer').classList.contains('open') ||
-    $('search-drawer') && $('search-drawer').classList.contains('open')
+    $('search-drawer') && $('search-drawer').classList.contains('open') ||
+    $('post-analytics-drawer') && $('post-analytics-drawer').classList.contains('open')
   );
 }
 
@@ -68,6 +70,7 @@ function closeAnyDrawer() {
   if ($('profile-drawer') && $('profile-drawer').classList.contains('open')) closeProfileDrawer();
   if ($('compose-drawer') && $('compose-drawer').classList.contains('open')) closeComposeDrawer();
   if ($('search-drawer') && $('search-drawer').classList.contains('open')) closeSearchDrawer();
+  if ($('post-analytics-drawer') && $('post-analytics-drawer').classList.contains('open')) closePostAnalyticsDrawer();
   if ($('manage-hashtag-drawer') && $('manage-hashtag-drawer').classList.contains('open')) {
     $('manage-hashtag-drawer').classList.remove('open');
     const bd = $('manage-hashtag-backdrop');
@@ -1240,10 +1243,14 @@ function wrapDrawerClose(fn) {
 
 $('profile-close').addEventListener('click', wrapDrawerClose(closeProfileDrawer));
 $('profile-backdrop').addEventListener('click', wrapDrawerClose(closeProfileDrawer));
+$('profile-back-analytics')?.addEventListener('click', wrapDrawerClose(closeProfileDrawer));
 
 $('thread-close-btn').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
 $('thread-backdrop').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
 $('thread-back-btn').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
+
+$('post-analytics-close')?.addEventListener('click', wrapDrawerClose(closePostAnalyticsDrawer));
+$('post-analytics-backdrop')?.addEventListener('click', wrapDrawerClose(closePostAnalyticsDrawer));
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
@@ -1257,7 +1264,7 @@ document.addEventListener('keydown', e => {
   }
 });
 // Hide pill when any drawer opens (immediate, no delay)
-['notif-drawer', 'thread-drawer', 'profile-drawer', 'compose-drawer', 'search-drawer'].forEach(id => {
+['notif-drawer', 'thread-drawer', 'profile-drawer', 'compose-drawer', 'search-drawer', 'post-analytics-drawer'].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener('transitionstart', setOverlayPillVisibility);
@@ -1282,6 +1289,12 @@ document.addEventListener('click', e => {
   if (trigger) {
     e.preventDefault();
     closeComposeDrawer();
+    const profileDrawer = $('profile-drawer');
+    if ($('post-analytics-drawer')?.classList.contains('open')) {
+      profileDrawer.dataset.fromAnalytics = 'true';
+    } else {
+      delete profileDrawer.dataset.fromAnalytics;
+    }
     openProfileDrawer(trigger.dataset.profileId, trigger.dataset.profileServer);
     return;
   }
@@ -1313,6 +1326,27 @@ document.addEventListener('click', e => {
   /* Bookmark */
   const bookmarkBtn = e.target.closest('.post-bookmark-btn');
   if (bookmarkBtn) { e.preventDefault(); handleBookmarkToggle(bookmarkBtn); return; }
+
+  /* Analytics icon button → toggle the insights menu */
+  const analyticsBtn = e.target.closest('.post-analytics-btn');
+  if (analyticsBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
+    const menu = analyticsBtn.parentElement.querySelector('.post-analytics-menu');
+    if (menu) menu.classList.toggle('show');
+    return;
+  }
+
+  /* Analytics menu item → open the analytics drawer */
+  const analyticsItem = e.target.closest('.post-analytics-item');
+  if (analyticsItem) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
+    openPostAnalyticsDrawer(analyticsItem.dataset.postId, analyticsItem.dataset.action);
+    return;
+  }
 
   /* Boost button (opens dropdown) */
   const boostBtn = e.target.closest('.post-boost-btn');
@@ -1368,7 +1402,9 @@ document.addEventListener('click', e => {
   const loadMoreBtn = e.target.closest('.load-more-btn');
   if (loadMoreBtn) {
     e.preventDefault();
-    if (loadMoreBtn.dataset.feed === 'profile') {
+    if (loadMoreBtn.classList.contains('analytics-load-more-btn')) {
+      appendMoreAnalyticsUsers(loadMoreBtn);
+    } else if (loadMoreBtn.dataset.feed === 'profile') {
       loadMoreProfilePosts(loadMoreBtn);
     } else {
       handleLoadMore(loadMoreBtn);

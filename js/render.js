@@ -27,7 +27,7 @@ import {
  *
  * Returns { contentHTML, footerHTML }
  */
-function _buildPostBody(status, s, idPrefix = '') {
+function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   /* ── Media ── */
   let mediaHTML = '';
   if (s.media_attachments && s.media_attachments.length > 0) {
@@ -246,9 +246,10 @@ function _buildPostBody(status, s, idPrefix = '') {
         <span class="post-translate-btn-text">Translate</span>
       </button>
       ` : ''}
-      <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+      <div style="margin-left:auto;display:flex;align-items:center;gap:2px;">
+        ${analyticsHTML}
         ${getVisibilityIcon(status.visibility)}
-        <a href="${s.url}" target="_blank" rel="noopener" style="color:var(--text-dim);font-family:var(--font-mono);font-size:11px;text-decoration:none;" title="Open original">↗</a>
+        <a href="${s.url}" target="_blank" rel="noopener" class="post-stat post-external-link" title="Open original">↗</a>
       </div>
     </div>`;
 
@@ -260,15 +261,17 @@ function _buildPostBody(status, s, idPrefix = '') {
    ══════════════════════════════════════════════════════════════════════ */
 
 function getVisibilityIcon(visibility) {
+  const wrap = (title, svg) =>
+    `<span class="post-stat post-vis-btn" title="${title}" style="cursor:default;">${svg}</span>`;
   switch (visibility) {
     case 'public':
-      return `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><title>Public</title><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
+      return wrap('Public', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`);
     case 'unlisted':
-      return `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><title>Unlisted</title><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>`;
+      return wrap('Unlisted', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>`);
     case 'private':
-      return `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><title>Followers only</title><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+      return wrap('Followers only', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`);
     case 'direct':
-      return `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><title>Direct</title><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>`;
+      return wrap('Direct', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>`);
     default:
       return '';
   }
@@ -385,7 +388,46 @@ export function renderThreadPost(status, variant) {
   const boostBy = isBoost ? status.account : null;
   const profileServer = escapeHTML(state.server || '');
 
-  const { contentHTML, footerHTML } = _buildPostBody(status, s, 'thread-');
+  /* ── Analytics button + dropdown (focal posts only) ── */
+  const isFocal = variant === 'focal';
+  const isOwnPost = !!(state.account && s.account.id === state.account.id);
+
+  const analyticsMenuHTML = isFocal ? `
+    <div style="position:relative;display:inline-flex;">
+      <button class="icon-btn post-analytics-btn"
+        data-post-id="${s.id}"
+        data-replies="${s.replies_count || 0}"
+        data-boosts="${s.reblogs_count || 0}"
+        data-favs="${s.favourites_count || 0}"
+        title="Post insights"
+        style="color:var(--text-dim);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      </button>
+      <div class="boost-dropdown post-analytics-menu" id="post-analytics-menu-${s.id}"
+        style="right:0;left:auto;top:auto;bottom:100%;margin-bottom:8px;min-width:188px;transform-origin:bottom right;">
+        <button class="boost-dropdown-item post-analytics-item" data-action="replies" data-post-id="${s.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l5-5v3c8 0 13 4 13 11-3-4-7-5-13-5v3l-5-5z"></path></svg>
+          <span>Replies</span>
+          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.replies_count || 0}</span>
+        </button>
+        <button class="boost-dropdown-item post-analytics-item" data-action="boosts" data-post-id="${s.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          <span>Boosts</span>
+          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
+        </button>
+        <button class="boost-dropdown-item post-analytics-item" data-action="favs" data-post-id="${s.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>Favorites</span>
+          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.favourites_count || 0}</span>
+        </button>
+      </div>
+    </div>` : '';
+
+  const { contentHTML, footerHTML } = _buildPostBody(status, s, 'thread-', analyticsMenuHTML);
 
   const boostLabelHTML = boostBy ? `
     <div class="boost-divider">
@@ -408,6 +450,34 @@ export function renderThreadPost(status, variant) {
   } else if (state.knownFollowing.has(s.account.id)) contextClass = ' post--following';
   else if (s.in_reply_to_id) contextClass = ' post--reply';
 
+  /* Right-side header: post-menu (own focal posts only) */
+  const rightHeaderHTML = isOwnPost
+    ? `<div style="position:relative; margin-left:auto; display:inline-flex; gap:2px; align-items:center;">
+        <button class="icon-btn post-menu-btn" data-post-id="${s.id}" title="Post options" style="margin-right:-8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="opacity:0.6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="1"/>
+            <circle cx="19" cy="12" r="1"/>
+            <circle cx="5" cy="12" r="1"/>
+          </svg>
+        </button>
+        <div class="boost-dropdown post-dropdown" id="post-menu-${s.id}" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:168px; transform-origin: top right;">
+          <button class="boost-dropdown-item" data-action="edit" data-post-id="${s.id}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            <span>Edit</span>
+          </button>
+          <div class="boost-dropdown-separator"></div>
+          <button class="boost-dropdown-item boost-dropdown-item--danger" data-action="delete" data-post-id="${s.id}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            <span>Delete</span>
+          </button>
+          <button class="boost-dropdown-item boost-dropdown-item--redraft" data-action="delete-redraft" data-post-id="${s.id}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span>Delete &amp; Redraft</span>
+          </button>
+        </div>
+      </div>`
+    : '';
+
   return `
     <div class="${variantClass}" data-status-id="${s.id}">
       <article class="post${contextClass}" data-id="${status.id}">
@@ -426,32 +496,7 @@ export function renderThreadPost(status, variant) {
               <span class="post-time">${relativeTime(s.created_at)}</span>
             </div>
           </div>
-          ${state.account && s.account.id === state.account.id ? `
-          <div style="position:relative; margin-left:auto; display:inline-flex;">
-            <button class="icon-btn post-menu-btn" data-post-id="${s.id}" title="Post options" style="margin-right:-8px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="opacity:0.6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="1"/>
-                <circle cx="19" cy="12" r="1"/>
-                <circle cx="5" cy="12" r="1"/>
-              </svg>
-            </button>
-            <div class="boost-dropdown post-dropdown" id="post-menu-${s.id}" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:168px; transform-origin: top right;">
-              <button class="boost-dropdown-item" data-action="edit" data-post-id="${s.id}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                <span>Edit</span>
-              </button>
-              <div class="boost-dropdown-separator"></div>
-              <button class="boost-dropdown-item boost-dropdown-item--danger" data-action="delete" data-post-id="${s.id}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                <span>Delete</span>
-              </button>
-              <button class="boost-dropdown-item boost-dropdown-item--redraft" data-action="delete-redraft" data-post-id="${s.id}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                <span>Delete &amp; Redraft</span>
-              </button>
-            </div>
-          </div>
-          ` : ''}
+          ${rightHeaderHTML}
         </div>
         ${contentHTML}
         ${footerHTML}
