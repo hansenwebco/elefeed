@@ -285,6 +285,7 @@ function renderEmojiSuggestions() {
 
   strip.style.display = 'block';
   positionSuggestionsStrip(strip, emojiAutoCurrentTextarea);
+  void track.offsetWidth; // force reflow so scroll reset takes effect
   track.style.scrollBehavior = 'auto';
   track.scrollLeft = 0;
   track.scrollTop = 0;
