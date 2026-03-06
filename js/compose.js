@@ -849,10 +849,31 @@ let mentionSuggestions = [];
 let mentionSelectedIndex = -1;
 let mentionDebounceTimer = null;
 
+function positionSuggestionsStrip(strip, textarea) {
+  if (window.innerWidth <= 900) {
+    strip.style.position = '';
+    strip.style.top = '';
+    strip.style.left = '';
+    strip.style.width = '';
+    return;
+  }
+  const rect = textarea.getBoundingClientRect();
+  strip.style.position = 'fixed';
+  strip.style.top = rect.bottom + 'px';
+  strip.style.left = rect.left + 'px';
+  strip.style.width = rect.width + 'px';
+}
+
+function getSuggestionsStrip(textarea) {
+  if (!textarea) return null;
+  if (textarea.id === 'compose-textarea') return $('compose-suggestions-strip');
+  if (textarea.id === 'compose-textarea-sidebar') return $('compose-suggestions-strip-sidebar');
+  return null;
+}
+
 function initMentionAutocomplete() {
   const t1 = $('compose-textarea');
   const t2 = $('compose-textarea-sidebar');
-  const list = $('mention-suggestions');
 
   [t1, t2].forEach(textarea => {
     if (!textarea) return;
@@ -861,7 +882,7 @@ function initMentionAutocomplete() {
     textarea.addEventListener('scroll', closeMentionSuggestions);
   });
 
-  document.addEventListener('click', (e) => { if (!list.contains(e.target)) closeMentionSuggestions(); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.compose-suggestions-strip')) closeMentionSuggestions(); });
   window.addEventListener('scroll', closeMentionSuggestions, { passive: true });
 }
 
@@ -900,85 +921,47 @@ async function fetchMentions(q) {
 }
 
 function renderMentionSuggestions(users) {
-  const list = $('mention-suggestions');
-  if (!users.length) { closeMentionSuggestions(); return; }
+  const strip = getSuggestionsStrip(mentionTargetTextarea);
+  if (!strip || !users.length) { closeMentionSuggestions(); return; }
 
-  list.innerHTML = users.map((u, i) => `
-    <div class="mention-item ${i === 0 ? 'selected' : ''}" data-index="${i}" data-acct="${escapeHTML(u.acct)}">
-      <img src="${u.avatar_static || u.avatar}" class="mention-avatar" loading="lazy" />
-      <div class="mention-info">
-        <span class="mention-name">${renderCustomEmojis(u.display_name || u.username, u.emojis)}</span>
-        <span class="mention-acct">@${escapeHTML(u.acct)}</span>
-      </div>
+  const track = strip.querySelector('.suggestions-strip-track');
+  track.innerHTML = users.map((u, i) => `
+    <div class="suggestion-chip ${i === 0 ? 'selected' : ''}" data-index="${i}" data-acct="${escapeHTML(u.acct)}">
+      <img src="${u.avatar_static || u.avatar}" class="suggestion-chip-avatar" loading="lazy" />
+      <span class="suggestion-chip-label">${renderCustomEmojis(u.display_name || u.username, u.emojis)}</span>
+      <span class="suggestion-chip-sub">@${escapeHTML(u.acct)}</span>
     </div>
   `).join('');
 
-  list.style.display = 'flex';
-  mentionSelectedIndex = users.length > 0 ? 0 : -1;
+  strip.style.display = 'block';
+  positionSuggestionsStrip(strip, mentionTargetTextarea);
+  mentionSelectedIndex = 0;
 
-  const sel = window.getSelection();
-  if (sel.rangeCount) {
-    const range = sel.getRangeAt(0);
-    const rects = range.getClientRects();
-    if (rects.length > 0) {
-      const rect = rects[0];
-      const listW = 280;
-      const listH = Math.min(users.length * 52, 300);
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const isMobile = vw <= 900;
-
-      let top, left;
-
-      if (isMobile) {
-        const spaceRight = vw - rect.right - 8;
-        if (spaceRight >= listW) {
-          left = rect.right + 6;
-          top = rect.top;
-          if (top + listH > vh - 8) top = vh - listH - 8;
-          if (top < 8) top = 8;
-        } else {
-          left = Math.max(8, Math.min(rect.left, vw - listW - 8));
-          top = rect.bottom + 6;
-          if (top + listH > vh - 8) top = Math.max(8, rect.top - listH - 6);
-        }
-      } else {
-        left = rect.left;
-        top = rect.bottom + 8;
-        if (left + listW > vw - 8) left = vw - listW - 8;
-        if (top + listH > vh - 8) top = rect.top - listH - 8;
-        if (top < 8) top = 8;
-        left = Math.max(8, left);
-      }
-
-      list.style.top = top + 'px';
-      list.style.left = left + 'px';
-    }
-  }
-
-  list.querySelectorAll('.mention-item').forEach(item => {
-    item.onmousedown = (e) => e.preventDefault();
-    item.onclick = (e) => { e.preventDefault(); e.stopPropagation(); insertMention(item.dataset.acct); };
+  track.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.onmousedown = (e) => e.preventDefault();
+    chip.onclick = (e) => { e.preventDefault(); e.stopPropagation(); insertMention(chip.dataset.acct); };
   });
 }
 
-function handleMentionKeydown(e) {
-  const list = $('mention-suggestions');
-  if (list.style.display === 'none') return;
-  if (e.key === 'ArrowDown') { e.preventDefault(); moveMentionSelection(1); }
-  else if (e.key === 'ArrowUp') { e.preventDefault(); moveMentionSelection(-1); }
+function handleMentionKeydown(e, textarea) {
+  const strip = getSuggestionsStrip(textarea);
+  if (!strip || strip.style.display === 'none') return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); moveMentionSelection(1, textarea); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); moveMentionSelection(-1, textarea); }
   else if (e.key === 'Enter' || e.key === 'Tab') {
     if (mentionSelectedIndex > -1) { e.preventDefault(); insertMention(mentionSuggestions[mentionSelectedIndex].acct); }
   } else if (e.key === 'Escape') closeMentionSuggestions();
 }
 
-function moveMentionSelection(dir) {
-  const items = $('mention-suggestions').querySelectorAll('.mention-item');
+function moveMentionSelection(dir, textarea) {
+  const strip = getSuggestionsStrip(textarea);
+  if (!strip) return;
+  const items = strip.querySelectorAll('.suggestion-chip');
   if (!items.length) return;
   items[mentionSelectedIndex]?.classList.remove('selected');
   mentionSelectedIndex = (mentionSelectedIndex + dir + items.length) % items.length;
   items[mentionSelectedIndex].classList.add('selected');
-  items[mentionSelectedIndex].scrollIntoView({ block: 'nearest' });
+  items[mentionSelectedIndex].scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 
 function insertMention(acct) {
@@ -1004,7 +987,7 @@ function insertMention(acct) {
 }
 
 function closeMentionSuggestions() {
-  $('mention-suggestions').style.display = 'none';
+  [$('compose-suggestions-strip'), $('compose-suggestions-strip-sidebar')].forEach(s => { if (s) s.style.display = 'none'; });
   mentionSelectedIndex = -1;
   if (mentionActiveRequest) mentionActiveRequest.abort();
   mentionActiveRequest = null;
@@ -1024,7 +1007,6 @@ let hashtagDebounceTimer = null;
 function initHashtagAutocomplete() {
   const t1 = $('compose-textarea');
   const t2 = $('compose-textarea-sidebar');
-  const list = $('hashtag-suggestions');
 
   [t1, t2].forEach(textarea => {
     if (!textarea) return;
@@ -1033,7 +1015,7 @@ function initHashtagAutocomplete() {
     textarea.addEventListener('scroll', closeHashtagSuggestions);
   });
 
-  document.addEventListener('click', (e) => { if (!list.contains(e.target)) closeHashtagSuggestions(); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.compose-suggestions-strip')) closeHashtagSuggestions(); });
   window.addEventListener('scroll', closeHashtagSuggestions, { passive: true });
 }
 
@@ -1043,7 +1025,7 @@ function handleHashtagInput(e, textarea) {
   const range = sel.getRangeAt(0);
   if (range.startContainer.nodeType !== Node.TEXT_NODE) { closeHashtagSuggestions(); return; }
   const textBefore = range.startContainer.textContent.substring(0, range.startOffset);
-  const match = textBefore.match(/(?:^|\s)#([a-zA-Z0-9_]*)$/);
+  const match = textBefore.match(/(?:^|\s)#([a-zA-Z0-9_]+)$/);
 
   clearTimeout(hashtagDebounceTimer);
 
@@ -1052,23 +1034,23 @@ function handleHashtagInput(e, textarea) {
     hashtagTargetTextarea = textarea;
     hashtagDebounceTimer = setTimeout(() => {
       fetchHashtags(hashtagCurrentQuery);
-    }, 300);
+    }, 150);
   } else {
     closeHashtagSuggestions();
   }
 }
 
 async function fetchHashtags(q) {
+  if (!q) return;
   if (hashtagActiveRequest) hashtagActiveRequest.abort();
   const controller = new AbortController();
   hashtagActiveRequest = controller;
   try {
-    const results = await apiGet(`/api/v2/search?q=${encodeURIComponent(q)}&type=hashtags&limit=8`, state.token, null, controller.signal);
-    // Sort by total uses this week (most popular first)
+    const results = await apiGet(`/api/v2/search?q=${encodeURIComponent(q)}&type=hashtags&limit=10&resolve=false`, state.token, null, controller.signal);
     const tags = (results.hashtags || []).sort((a, b) => {
-      const usesA = a.history ? a.history.reduce((s, d) => s + parseInt(d.uses || 0), 0) : 0;
-      const usesB = b.history ? b.history.reduce((s, d) => s + parseInt(d.uses || 0), 0) : 0;
-      return usesB - usesA;
+      const scoreA = a.history ? a.history.reduce((s, d) => s + parseInt(d.uses || 0), 0) : 0;
+      const scoreB = b.history ? b.history.reduce((s, d) => s + parseInt(d.uses || 0), 0) : 0;
+      return scoreB - scoreA;
     }).slice(0, 6);
     hashtagSuggestions = tags;
     renderHashtagSuggestions(tags);
@@ -1078,93 +1060,49 @@ async function fetchHashtags(q) {
 }
 
 function renderHashtagSuggestions(tags) {
-  const list = $('hashtag-suggestions');
-  if (!tags.length) { closeHashtagSuggestions(); return; }
+  const strip = getSuggestionsStrip(hashtagTargetTextarea);
+  if (!strip || !tags.length) { closeHashtagSuggestions(); return; }
 
-  list.innerHTML = tags.map((t, i) => {
+  const track = strip.querySelector('.suggestions-strip-track');
+  track.innerHTML = tags.map((t, i) => {
     const weeklyUses = t.history ? t.history.reduce((sum, day) => sum + parseInt(day.uses || 0), 0) : null;
     return `
-    <div class="hashtag-item ${i === 0 ? 'selected' : ''}" data-index="${i}" data-tag="${escapeHTML(t.name)}">
-      <div class="hashtag-icon">#</div>
-      <div class="hashtag-info">
-        <span class="hashtag-name">#${escapeHTML(t.name)}</span>
-        ${weeklyUses !== null ? `<span class="hashtag-uses">${weeklyUses.toLocaleString()} posts this week</span>` : ''}
-      </div>
+    <div class="suggestion-chip ${i === 0 ? 'selected' : ''}" data-index="${i}" data-tag="${escapeHTML(t.name)}">
+      <span class="suggestion-chip-icon">#</span>
+      <span class="suggestion-chip-label">#${escapeHTML(t.name)}</span>
+      ${weeklyUses !== null ? `<span class="suggestion-chip-sub">${weeklyUses.toLocaleString()}</span>` : ''}
     </div>`;
   }).join('');
 
-  list.style.display = 'flex';
-  hashtagSelectedIndex = tags.length > 0 ? 0 : -1;
+  strip.style.display = 'block';
+  positionSuggestionsStrip(strip, hashtagTargetTextarea);
+  hashtagSelectedIndex = 0;
 
-  const sel = window.getSelection();
-  if (sel.rangeCount) {
-    const range = sel.getRangeAt(0);
-    const rects = range.getClientRects();
-    if (rects.length > 0) {
-      const rect = rects[0];
-      const listW = 280;
-      const listH = Math.min(tags.length * 52, 300);
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const isMobile = vw <= 900;
-
-      let top, left;
-
-      if (isMobile) {
-        // On mobile: prefer placing to the right of the cursor so typed text is not covered.
-        // If there's not enough room to the right, place below the cursor.
-        const spaceRight = vw - rect.right - 8;
-        if (spaceRight >= listW) {
-          // anchor to right of cursor
-          left = rect.right + 6;
-          top = rect.top;
-          // clamp vertically
-          if (top + listH > vh - 8) top = vh - listH - 8;
-          if (top < 8) top = 8;
-        } else {
-          // fall back to below cursor, clamped to viewport
-          left = Math.max(8, Math.min(rect.left, vw - listW - 8));
-          top = rect.bottom + 6;
-          if (top + listH > vh - 8) top = Math.max(8, rect.top - listH - 6);
-        }
-      } else {
-        // Desktop: open below cursor, push left if overflowing right edge
-        left = rect.left;
-        top = rect.bottom + 8;
-        if (left + listW > vw - 8) left = vw - listW - 8;
-        if (top + listH > vh - 8) top = rect.top - listH - 8;
-        if (top < 8) top = 8;
-        left = Math.max(8, left);
-      }
-
-      list.style.top = top + 'px';
-      list.style.left = left + 'px';
-    }
-  }
-
-  list.querySelectorAll('.hashtag-item').forEach(item => {
-    item.onmousedown = (e) => e.preventDefault();
-    item.onclick = (e) => { e.preventDefault(); e.stopPropagation(); insertHashtag(item.dataset.tag); };
+  track.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.onmousedown = (e) => e.preventDefault();
+    chip.onclick = (e) => { e.preventDefault(); e.stopPropagation(); insertHashtag(chip.dataset.tag); };
   });
 }
 
-function handleHashtagKeydown(e) {
-  const list = $('hashtag-suggestions');
-  if (list.style.display === 'none') return;
-  if (e.key === 'ArrowDown') { e.preventDefault(); moveHashtagSelection(1); }
-  else if (e.key === 'ArrowUp') { e.preventDefault(); moveHashtagSelection(-1); }
+function handleHashtagKeydown(e, textarea) {
+  const strip = getSuggestionsStrip(textarea);
+  if (!strip || strip.style.display === 'none') return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); moveHashtagSelection(1, textarea); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); moveHashtagSelection(-1, textarea); }
   else if (e.key === 'Enter' || e.key === 'Tab') {
     if (hashtagSelectedIndex > -1) { e.preventDefault(); insertHashtag(hashtagSuggestions[hashtagSelectedIndex].name); }
   } else if (e.key === 'Escape') closeHashtagSuggestions();
 }
 
-function moveHashtagSelection(dir) {
-  const items = $('hashtag-suggestions').querySelectorAll('.hashtag-item');
+function moveHashtagSelection(dir, textarea) {
+  const strip = getSuggestionsStrip(textarea);
+  if (!strip) return;
+  const items = strip.querySelectorAll('.suggestion-chip');
   if (!items.length) return;
   items[hashtagSelectedIndex]?.classList.remove('selected');
   hashtagSelectedIndex = (hashtagSelectedIndex + dir + items.length) % items.length;
   items[hashtagSelectedIndex].classList.add('selected');
-  items[hashtagSelectedIndex].scrollIntoView({ block: 'nearest' });
+  items[hashtagSelectedIndex].scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 
 function insertHashtag(tag) {
@@ -1190,7 +1128,7 @@ function insertHashtag(tag) {
 }
 
 function closeHashtagSuggestions() {
-  $('hashtag-suggestions').style.display = 'none';
+  [$('compose-suggestions-strip'), $('compose-suggestions-strip-sidebar')].forEach(s => { if (s) s.style.display = 'none'; });
   hashtagSelectedIndex = -1;
   if (hashtagActiveRequest) hashtagActiveRequest.abort();
   hashtagActiveRequest = null;
@@ -1651,9 +1589,11 @@ export function initCompose() {
 
   // --- Emoji picker ---
   initEmojiPicker();
-  initEmojiAutocomplete();
 
-  // --- Mention autocomplete ---
+  // --- Mention / Hashtag autocomplete (must register before emoji so emoji fires last) ---
   initMentionAutocomplete();
   initHashtagAutocomplete();
+
+  // --- Emoji autocomplete (registered last so it has the final say on the strip) ---
+  initEmojiAutocomplete();
 }

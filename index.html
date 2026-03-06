@@ -153,7 +153,13 @@
           <button id="compose-reply-cancel-sidebar" onclick="resetReplyState()" style="margin-left:8px;background:none;border:none;color:var(--danger);cursor:pointer;font-size:11px;">Cancel</button>
         </div>
 
-        <div class="compose-textarea" id="compose-textarea-sidebar" contenteditable="true" placeholder="What's on your mind?" style="min-height:90px;"></div>
+        <div class="compose-textarea-wrap">
+          <div class="compose-textarea" id="compose-textarea-sidebar" contenteditable="true" placeholder="What's on your mind?" style="min-height:90px;"></div>
+
+          <div class="compose-suggestions-strip" id="compose-suggestions-strip-sidebar" style="display:none;">
+            <div class="suggestions-strip-track" id="compose-suggestions-track-sidebar"></div>
+          </div>
+        </div>
 
         <div class="compose-media-preview" id="compose-media-preview-sidebar"></div>
 
@@ -614,7 +620,13 @@
             <span id="compose-context-type">Replying to</span> <span id="compose-reply-to" style="color:var(--accent2);font-weight:500;"></span>
             <button id="compose-reply-cancel" onclick="resetReplyState()" style="margin-left:8px;background:none;border:none;color:var(--danger);cursor:pointer;font-size:11px;">Cancel</button>
           </div>
-          <div class="compose-textarea" id="compose-textarea" contenteditable="true" placeholder="What's on your mind?"></div>
+          <div class="compose-textarea-wrap">
+            <div class="compose-textarea" id="compose-textarea" contenteditable="true" placeholder="What's on your mind?"></div>
+
+            <div class="compose-suggestions-strip" id="compose-suggestions-strip" style="display:none;">
+              <div class="suggestions-strip-track" id="compose-suggestions-track"></div>
+            </div>
+          </div>
 
           <div class="compose-media-preview" id="compose-media-preview"></div>
 
