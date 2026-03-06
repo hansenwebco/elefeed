@@ -321,19 +321,20 @@ export function renderPost(status, opts = {}) {
     <article class="post${contextClass}" data-id="${s.id}">
       ${boostLabelHTML}
       ${hashtagBanner}
-      <div class="post-header">
-        <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer">
+      <div class="post-header post-header--with-server">
+        <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer; align-self:center;">
           <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy"/>
           ${state.knownFollowing.has(s.account.id) ? `<div class="following-badge" title="Following">
             <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
           </div>` : ''}
         </div>
-        <div class="post-meta">
-          <div class="post-author">
+        <div class="post-meta post-meta--with-server">
+          <div class="post-author post-author--with-server">
             <span class="post-display-name" data-profile-id="${s.account.id}" data-profile-server="${profileServer}">${renderCustomEmojis(s.account.display_name || s.account.username, s.account.emojis)}</span>
             <span class="post-acct">@${escapeHTML(s.account.acct)}</span>
             <span class="post-time">${relativeTime(s.created_at)}</span>
           </div>
+          <div class="post-server-address">${escapeHTML((s.account.url || '').split('/')[2] || '')}</div>
         </div>
         ${state.account && s.account.id === state.account.id ? `
         <div style="position:relative; margin-left:auto; display:inline-flex;">
