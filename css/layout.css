@@ -24,6 +24,8 @@
   justify-content: center;
   gap: 24px;
   padding: 0 20px;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 #app-screen.active {
@@ -34,9 +36,10 @@
   flex: 1;
   max-width: 680px;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  /* overflow-x: hidden; */
+  overflow: hidden;
 }
 
 /* Compose sidebar (desktop only) */
@@ -158,10 +161,10 @@
   }
 }
 
-/* ─── Sticky Header ─── */
+/* ─── Header (locked via viewport layout, no sticky needed) ─── */
 .app-header {
-  position: sticky;
-  top: 0;
+  position: relative;
+  flex-shrink: 0;
   z-index: 100;
   background: var(--bg);
   background: color-mix(in srgb, var(--bg) 92%, transparent);
@@ -169,8 +172,6 @@
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
   width: 100%;
-  /* Prevent horizontal scroll on sticky header */
-  left: 0;
 }
 
 .header-top {
@@ -409,6 +410,9 @@
   padding: 0 0 60px;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .tab-panel {
