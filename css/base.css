@@ -65,6 +65,10 @@
   --fav: #e5a400;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   background: var(--bg);
   color: var(--text);
