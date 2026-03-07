@@ -113,6 +113,7 @@
   gap: 8px;
   pointer-events: none;
   max-width: min(360px, calc(100vw - 32px));
+  overflow: hidden;
 }
 
 /* Individual toast card */
