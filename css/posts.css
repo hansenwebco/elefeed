@@ -1308,3 +1308,148 @@ body.hide-cards-enabled .post-card {
     overflow-x: hidden;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   CUSTOM VIDEO PLAYER
+   ═══════════════════════════════════════════════ */
+
+/* Wrapper — disables the default browser chrome */
+.video-player-wrap { cursor: default; }
+.video-player-wrap video { pointer-events: none; display: block; }
+
+/* Big centered play overlay — visible while paused */
+.vid-overlay-play {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.video-player-wrap.vp-playing .vid-overlay-play {
+  opacity: 0;
+  pointer-events: none;
+}
+.vid-overlay-btn {
+  width: 52px;
+  height: 52px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: background 0.15s, transform 0.15s;
+}
+.vid-overlay-btn svg { width: 22px; height: 22px; margin-left: 3px; fill: currentColor; }
+.video-player-wrap:hover .vid-overlay-btn {
+  background: rgba(0, 0, 0, 0.7);
+  transform: scale(1.08);
+}
+
+/* Bottom controls bar */
+.vid-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 10px 8px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.video-player-wrap:hover .vid-controls,
+.video-player-wrap.vp-playing .vid-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Small icon buttons */
+.vid-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: color 0.1s, transform 0.1s;
+}
+.vid-btn:hover { color: #fff; transform: scale(1.15); }
+.vid-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+/* Progress scrubber */
+.vid-progress {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 99px;
+  cursor: pointer;
+  position: relative;
+  transition: height 0.15s;
+}
+.video-player-wrap:hover .vid-progress { height: 4px; }
+.vid-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: #fff;
+  width: 0%;
+  pointer-events: none;
+  transition: width 0.08s linear;
+}
+
+/* Time readout */
+.vid-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+/* Icon visibility — controlled via CSS classes */
+.video-player-wrap .vp-icon-pause { display: none; }
+.video-player-wrap.vp-playing .vp-icon-play { display: none; }
+.video-player-wrap.vp-playing .vp-icon-pause { display: block; }
+
+.video-player-wrap .vp-icon-mute { display: none; }
+.video-player-wrap.vp-muted .vp-icon-sound { display: none; }
+.video-player-wrap.vp-muted .vp-icon-mute { display: block; }
+
+/* Lightbox video player wrapper */
+.vid-lightbox-wrap {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8);
+  background: #000;
+  max-width: min(90vw, 960px);
+  max-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+}
+.vid-lightbox-wrap video {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 130px);
+  width: auto;
+  height: auto;
+  background: #000;
+  cursor: default;
+  border-radius: 0;
+  box-shadow: none;
+}

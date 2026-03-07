@@ -53,9 +53,24 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           ${overlay}
         </div>`;
       } else if (m.type === 'video') {
-        // Video: show controls
-        return `<div class="media-item" data-full-url="${m.url}" data-type="video" onclick="expandMedia(this)">
-          <video src="${m.url}" poster="${m.preview_url || ''}" controls muted class="${blurClass}"></video>
+        // Video: custom minimal player (consistent across all browsers)
+        return `<div class="media-item video-player-wrap vp-muted" data-full-url="${m.url}" data-type="video" onclick="vpWrapperClick(event,this)">
+          <video src="${m.url}" poster="${m.preview_url || ''}" muted playsinline class="${blurClass}"></video>
+          <div class="vid-overlay-play" onclick="event.stopPropagation();vpTogglePlay(this.closest('.video-player-wrap'))">
+            <div class="vid-overlay-btn"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg></div>
+          </div>
+          <div class="vid-controls" onclick="event.stopPropagation()">
+            <button class="vid-btn" onclick="vpTogglePlay(this.closest('.video-player-wrap'))">
+              <svg class="vp-icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg>
+              <svg class="vp-icon-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            </button>
+            <div class="vid-progress" onclick="vpSeek(event,this.closest('.video-player-wrap'))"><div class="vid-progress-fill"></div></div>
+            <span class="vid-time">0:00</span>
+            <button class="vid-btn" onclick="vpToggleMute(this.closest('.video-player-wrap'))">
+              <svg class="vp-icon-sound" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              <svg class="vp-icon-mute" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+          </div>
           ${overlay}
         </div>`;
       }
@@ -553,11 +568,43 @@ window.expandMedia = function expandMedia(mediaItem) {
       mediaEl = document.createElement('img');
       mediaEl.src = fullUrl;
     } else if (type === 'video') {
-      mediaEl = document.createElement('video');
-      mediaEl.src = fullUrl;
-      mediaEl.controls = true;
-      mediaEl.autoplay = true;
-      mediaEl.muted = true;
+      // Custom minimal player in the lightbox
+      const wrap = document.createElement('div');
+      wrap.className = 'vid-lightbox-wrap video-player-wrap vp-muted';
+
+      const vid = document.createElement('video');
+      vid.src = fullUrl;
+      vid.autoplay = true;
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.setAttribute('playsinline', '');
+      wrap.appendChild(vid);
+
+      // Build controls via DOM to preserve vid's event listeners
+      const overlayPlay = document.createElement('div');
+      overlayPlay.className = 'vid-overlay-play';
+      overlayPlay.innerHTML = '<div class="vid-overlay-btn"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg></div>';
+      overlayPlay.onclick = (e) => { e.stopPropagation(); window.vpTogglePlay(wrap); };
+      wrap.appendChild(overlayPlay);
+
+      const controls = document.createElement('div');
+      controls.className = 'vid-controls';
+      controls.onclick = (e) => e.stopPropagation();
+      controls.innerHTML = `
+        <button class="vid-btn" onclick="vpTogglePlay(this.closest('.video-player-wrap'))">
+          <svg class="vp-icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg>
+          <svg class="vp-icon-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        </button>
+        <div class="vid-progress" onclick="vpSeek(event,this.closest('.video-player-wrap'))"><div class="vid-progress-fill"></div></div>
+        <span class="vid-time">0:00</span>
+        <button class="vid-btn" onclick="vpToggleMute(this.closest('.video-player-wrap'))">
+          <svg class="vp-icon-sound" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          <svg class="vp-icon-mute" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>`;
+      wrap.appendChild(controls);
+
+      wrap.onclick = (e) => e.stopPropagation();
+      mediaEl = wrap;
     } else {
       // fallback
       mediaEl = document.createElement('img');
@@ -645,6 +692,75 @@ window.adjustImageAlignment = function adjustImageAlignment(img) {
     img.onload = () => adjustImageAlignment(img);
   }
 };
+
+/* ── Custom Video Player helpers ───────────────────── */
+
+function _vpFormatTime(s) {
+  if (!s || isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+}
+
+window.vpTogglePlay = function(wrap) {
+  const vid = wrap && wrap.querySelector('video');
+  if (!vid) return;
+  vid.paused ? vid.play() : vid.pause();
+};
+
+window.vpToggleMute = function(wrap) {
+  const vid = wrap && wrap.querySelector('video');
+  if (!vid) return;
+  vid.muted = !vid.muted;
+  wrap.classList.toggle('vp-muted', vid.muted);
+};
+
+window.vpSeek = function(e, wrap) {
+  const bar = wrap && wrap.querySelector('.vid-progress');
+  const vid = wrap && wrap.querySelector('video');
+  if (!bar || !vid || !vid.duration) return;
+  const rect = bar.getBoundingClientRect();
+  vid.currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * vid.duration;
+};
+
+/** Wrapper click: if already playing — pause; if paused — open lightbox. */
+window.vpWrapperClick = function(e, wrap) {
+  const vid = wrap && wrap.querySelector('video');
+  if (vid && !vid.paused) {
+    vid.pause();
+  } else {
+    window.expandMedia(wrap);
+  }
+};
+
+// Capture-phase listeners keep the progress bar & icons in sync
+// across all players without requiring per-element setup.
+document.addEventListener('timeupdate', (e) => {
+  if (!(e.target instanceof HTMLVideoElement)) return;
+  const wrap = e.target.closest('.video-player-wrap');
+  if (!wrap) return;
+  const fill = wrap.querySelector('.vid-progress-fill');
+  const timeEl = wrap.querySelector('.vid-time');
+  if (fill && e.target.duration) {
+    fill.style.width = (e.target.currentTime / e.target.duration * 100) + '%';
+  }
+  if (timeEl) {
+    timeEl.textContent = e.target.duration
+      ? _vpFormatTime(e.target.currentTime) + ' / ' + _vpFormatTime(e.target.duration)
+      : _vpFormatTime(e.target.currentTime);
+  }
+}, true);
+
+document.addEventListener('play', (e) => {
+  if (!(e.target instanceof HTMLVideoElement)) return;
+  const wrap = e.target.closest('.video-player-wrap');
+  if (wrap) wrap.classList.add('vp-playing');
+}, true);
+
+document.addEventListener('pause', (e) => {
+  if (!(e.target instanceof HTMLVideoElement)) return;
+  const wrap = e.target.closest('.video-player-wrap');
+  if (wrap) wrap.classList.remove('vp-playing');
+}, true);
 
 /** Toggle a content-warning body open/closed. */
 window.toggleCW = function toggleCW(id, btn) {
