@@ -8,6 +8,26 @@ function positionOverlayPill() {
   // Use CSS for vertical 'top' position to ensure it stays in same place across views
 }
 
+// Returns the active scroll container: feed-container on mobile, window on desktop
+export function getScrollContainer() {
+  if (window.innerWidth <= 900) return document.getElementById('feed-container');
+  return null; // null = use window
+}
+
+export function getScrollTop() {
+  const sc = getScrollContainer();
+  return sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
+}
+
+export function scrollContainerTo(top, behavior = 'smooth') {
+  const sc = getScrollContainer();
+  if (sc) {
+    sc.scrollTo({ top, behavior });
+  } else {
+    try { window.scrollTo({ top, behavior }); } catch (e) { window.scrollTo(0, top); }
+  }
+}
+
 window.addEventListener('resize', positionOverlayPill);
 // Call once on load to position initially
 positionOverlayPill();
@@ -90,7 +110,8 @@ let scrollPillListenerAttached = false;
 function setupOverlayPillScroll() {
   if (scrollPillListenerAttached) return;
   scrollPillListenerAttached = true;
-  window.addEventListener('scroll', () => {
+
+  const handler = () => {
     const overlayPill = document.getElementById('new-posts-pill');
     if (!overlayPill) return;
     const feedKey = activeFeedKey();
@@ -100,16 +121,12 @@ function setupOverlayPillScroll() {
       document.title = 'Elefeed — A Tidy Mastodon Client';
       return;
     }
-    // If the user scrolls to the top of the feed (where new posts would be), dismiss the pill
-    const feed = document.getElementById('feed-posts');
-    if (feed) {
-      const rect = feed.getBoundingClientRect();
-      if (rect.top >= 0 && rect.top < 150 && scrollingUp) {
-        overlayPillDismissed = true;
-        overlayPill.style.display = 'none';
-        document.title = 'Elefeed — A Tidy Mastodon Client';
-        return;
-      }
+    const currentY = getScrollTop();
+    if (currentY < 150 && scrollingUp) {
+      overlayPillDismissed = true;
+      overlayPill.style.display = 'none';
+      document.title = 'Elefeed — A Tidy Mastodon Client';
+      return;
     }
     overlayPill.style.display = pending.length > 0 && !overlayPillDismissed ? '' : 'none';
     if (overlayPill.style.display === 'none') {
@@ -119,7 +136,11 @@ function setupOverlayPillScroll() {
       document.title = `Elefeed (${count > 99 ? '99+' : count}) — A Tidy Mastodon Client`;
     }
     positionOverlayPill();
-  });
+  };
+
+  window.addEventListener('scroll', handler);
+  const fc = document.getElementById('feed-container');
+  if (fc) fc.addEventListener('scroll', handler);
 }
 
 /* ── Rendering ─────────────────────────────────────────────────────── */
@@ -415,7 +436,7 @@ async function loadHashtagsFeed() {
 /* ── Main feed tab loader ──────────────────────────────────────────── */
 
 export async function loadFeedTab(scrollTop = true) {
-  if (scrollTop) window.scrollTo({ top: 0, behavior: 'instant' });
+  if (scrollTop) scrollContainerTo(0, 'instant');
   const filter = state.feedFilter;
   const feedKey = activeFeedKey();
 
@@ -577,19 +598,21 @@ export function flushPendingPosts(feedKey, scrollToTop) {
 
   if (scrollToTop) {
     container.insertBefore(frag, container.firstChild);
-    try {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (e) {
-      window.scrollTo(0, 0); // fallback for older browsers
-    }
+    scrollContainerTo(0, 'smooth');
   } else {
-    document.documentElement.style.overflowAnchor = 'none';
-    const currentScroll = window.scrollY || document.documentElement.scrollTop;
-    const originalHeight = document.documentElement.scrollHeight;
+    const sc = getScrollContainer();
+    const scrollEl = sc || document.documentElement;
+    const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
+    const originalHeight = scrollEl.scrollHeight;
+    scrollEl.style.overflowAnchor = 'none';
     container.insertBefore(frag, container.firstChild);
-    const newHeight = document.documentElement.scrollHeight;
-    window.scrollTo(0, currentScroll + (newHeight - originalHeight));
-    document.documentElement.style.overflowAnchor = '';
+    const newHeight = scrollEl.scrollHeight;
+    if (sc) {
+      sc.scrollTop = currentScroll + (newHeight - originalHeight);
+    } else {
+      window.scrollTo(0, currentScroll + (newHeight - originalHeight));
+    }
+    scrollEl.style.overflowAnchor = '';
   }
 }
 
@@ -623,7 +646,7 @@ let lastScrollY = 0;
 let scrollingUp = false;
 
 export function handleScrollDirection() {
-  const currentY = window.scrollY || document.documentElement.scrollTop;
+  const currentY = getScrollTop();
   scrollingUp = currentY < lastScrollY;
 
   if (state.activeTab === 'feed') {

@@ -16,7 +16,7 @@ import {
   loadFeedTab, startPolling, stopPolling,
   updateTabPill, flushPendingPosts, handleScrollDirection,
   checkInfiniteScroll, handleLoadMore, activeFeedKey,
-  registerNotifPoller,
+  registerNotifPoller, getScrollContainer, getScrollTop,
 } from './feed.js';
 import {
   loadTrendingTab, loadTrendingPosts, loadTrendingHashtags,
@@ -1191,19 +1191,28 @@ $('logout-btn').addEventListener('click', () => {
    ══════════════════════════════════════════════════════════════════════ */
 
 let scrollTimeout = null;
-window.addEventListener('scroll', () => {
-  if (!scrollTimeout) {
-    scrollTimeout = requestAnimationFrame(() => {
-      checkInfiniteScroll();
-      handleScrollDirection();
-      scrollTimeout = null;
-    });
-  }
-}, { passive: true });
+function attachScrollListener() {
+  const sc = getScrollContainer();
+  const target = sc || window;
+  target.addEventListener('scroll', () => {
+    if (!scrollTimeout) {
+      scrollTimeout = requestAnimationFrame(() => {
+        checkInfiniteScroll();
+        handleScrollDirection();
+        scrollTimeout = null;
+      });
+    }
+  }, { passive: true });
+}
+attachScrollListener();
+window.addEventListener('resize', () => {
+  scrollTimeout = null;
+  attachScrollListener();
+});
 
 window.addEventListener('wheel', (e) => {
   if (state.activeTab !== 'feed') return;
-  const currentY = window.scrollY || document.documentElement.scrollTop;
+  const currentY = getScrollTop();
   if (currentY < 5 && e.deltaY < 0) {
     const feedKey = activeFeedKey();
     const pending = state.pendingPosts[feedKey] || [];
@@ -1215,7 +1224,7 @@ let touchStartY = 0;
 window.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
 window.addEventListener('touchmove', (e) => {
   if (state.activeTab !== 'feed') return;
-  const currentY = window.scrollY || document.documentElement.scrollTop;
+  const currentY = getScrollTop();
   if (currentY < 5) {
     const touchDelta = e.touches[0].clientY - touchStartY;
     if (touchDelta > 30) {
