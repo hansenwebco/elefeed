@@ -226,13 +226,16 @@
                 <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
               </svg>
             </button>
-            <button class="icon-btn" id="refresh-btn" title="Refresh feed">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="23 4 23 10 17 10"></polyline>
-                <polyline points="1 20 1 14 7 14"></polyline>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-              </svg>
-            </button>
+            <div class="refresh-btn-wrap">
+              <button class="icon-btn" id="refresh-btn" title="Refresh feed">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+              </button>
+              <span class="refresh-badge" id="refresh-badge"></span>
+            </div>
             <div class="notif-bell-wrap">
               <button class="icon-btn" id="notif-btn" title="Notifications">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -953,6 +956,17 @@
               <input type="checkbox" id="settings-hide-cards-toggle" />
               <span class="settings-toggle-track"></span>
             </label>
+          </div>
+          <!-- New post notification style -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">New post indicator</span>
+              <span style="font-size:11px; color:var(--text-muted);">How to show new posts waiting in your feed.</span>
+            </div>
+            <div class="theme-selector" id="settings-newpost-style-group">
+              <button class="theme-segment-btn" data-value="badge">Refresh Notification</button>
+              <button class="theme-segment-btn" data-value="pill">Floating Pill</button>
+            </div>
           </div>
         </div>
       </div>

@@ -17,6 +17,7 @@ import {
   updateTabPill, flushPendingPosts, handleScrollDirection,
   checkInfiniteScroll, handleLoadMore, activeFeedKey,
   registerNotifPoller, getScrollContainer, getScrollTop,
+  getFilteredPendingPosts, resetOverlayPillDismissed,
 } from './feed.js';
 import {
   loadTrendingTab, loadTrendingPosts, loadTrendingHashtags,
@@ -728,6 +729,11 @@ window.addEventListener('resize', (() => {
 const doRefresh = () => {
   const tab = state.activeTab;
   const feedKey = activeFeedKey();
+  // If there are buffered new posts, act like clicking the pill
+  if (tab === 'feed' && getFilteredPendingPosts(feedKey).length > 0) {
+    flushPendingPosts(feedKey, true);
+    return;
+  }
   state.pendingPosts[feedKey] = [];
   updateTabPill(feedKey);
   if (tab === 'feed') {
@@ -795,6 +801,11 @@ if (settingsMenuBtn) {
       hashtagPillsToggle.checked = store.get('pref_hashtag_pills') === 'true';
     }
 
+    const newpostStyleCurrent = store.get('pref_newpost_style') || 'badge'; // default: Refresh Notification
+    document.querySelectorAll('#settings-newpost-style-group .theme-segment-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.value === newpostStyleCurrent);
+    });
+
     const hideCardsToggle = $('settings-hide-cards-toggle');
     if (hideCardsToggle) {
       hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
@@ -836,10 +847,10 @@ function applyTheme(t) {
   }
 }
 
-document.querySelectorAll('.theme-segment-btn').forEach(btn => {
+document.querySelectorAll('#settings-theme-group .theme-segment-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
     const value = e.currentTarget.dataset.value;
-    document.querySelectorAll('.theme-segment-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#settings-theme-group .theme-segment-btn').forEach(b => b.classList.remove('active'));
     e.currentTarget.classList.add('active');
     applyTheme(value);
   });
@@ -1099,6 +1110,20 @@ if (_debugUnsubBtn) {
     }
   });
 }
+
+// New post indicator style
+document.querySelectorAll('#settings-newpost-style-group .theme-segment-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const value = btn.dataset.value;
+    store.set('pref_newpost_style', value);
+    document.querySelectorAll('#settings-newpost-style-group .theme-segment-btn').forEach(b => b.classList.toggle('active', b === btn));
+    // Re-apply to current feed; reset dismissed flag so pill can show immediately
+    if (value === 'pill') {
+      resetOverlayPillDismissed();
+    }
+    updateTabPill(activeFeedKey());
+  });
+});
 
 // Hashtag pills
 if (store.get('pref_hashtag_pills') === 'true') {

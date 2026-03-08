@@ -46,6 +46,7 @@ import { getDemoHomePosts, getDemoHashtagData } from './demo.js';
 /* ── Key helpers ───────────────────────────────────────────────────── */
 
 export let overlayPillDismissed = false;
+export function resetOverlayPillDismissed() { overlayPillDismissed = false; }
 
 export function activeFeedKey() {
   const filter = state.feedFilter || 'all';
@@ -72,20 +73,29 @@ export function getFilteredPendingPosts(feedKey) {
 }
 
 export function updateTabPill(feedKey) {
-  // Overlay pill logic
   const overlayPill = document.getElementById('new-posts-pill');
+  const refreshBadge = document.getElementById('refresh-badge');
   const count = getFilteredPendingPosts(feedKey).length;
+  const style = store.get('pref_newpost_style') || 'badge'; // default: Refresh Notification
   if (!overlayPill) return;
   if (count === 0) {
     overlayPill.style.display = 'none';
     overlayPill.textContent = 'New posts';
     document.title = 'Elefeed — A Tidy Mastodon Client';
+    if (refreshBadge) { refreshBadge.textContent = ''; refreshBadge.classList.remove('visible'); }
     return;
   }
-  overlayPill.textContent = count > 99 ? '99+ new posts' : `${count} new post${count > 1 ? 's' : ''}`;
-  overlayPill.style.display = '';
-  document.title = `Elefeed (${count > 99 ? '99+' : count}) — A Tidy Mastodon Client`;
-  positionOverlayPill();
+  const label = count > 99 ? '99+' : String(count);
+  document.title = `Elefeed (${label}) — A Tidy Mastodon Client`;
+  if (style === 'pill') {
+    overlayPill.textContent = count > 99 ? '99+ new posts' : `${count} new post${count > 1 ? 's' : ''}`;
+    overlayPill.style.display = '';
+    if (refreshBadge) { refreshBadge.textContent = ''; refreshBadge.classList.remove('visible'); }
+    positionOverlayPill();
+  } else {
+    overlayPill.style.display = 'none';
+    if (refreshBadge) { refreshBadge.textContent = label; refreshBadge.classList.add('visible'); }
+  }
 }
 
 // ...existing code...
@@ -114,6 +124,11 @@ function setupOverlayPillScroll() {
   const handler = () => {
     const overlayPill = document.getElementById('new-posts-pill');
     if (!overlayPill) return;
+    // Only drive pill visibility when the pill style is active
+    if ((store.get('pref_newpost_style') || 'badge') !== 'pill') {
+      overlayPill.style.display = 'none';
+      return;
+    }
     const feedKey = activeFeedKey();
     const pending = getFilteredPendingPosts(feedKey);
     if (pending.length === 0) {
