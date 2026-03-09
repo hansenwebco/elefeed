@@ -770,13 +770,16 @@ window.expandMedia = function expandMedia(mediaItem) {
   closeBtn.onclick = (e) => { e.stopPropagation(); close(); };
   document.addEventListener('keydown', handleKeydown);
 
-  // Touch swipe to navigate between images
-  let touchStartX = 0, touchStartY = 0;
+  // Touch swipe to navigate between images; ignore multi-touch (pinch) gestures.
+  let touchStartX = 0, touchStartY = 0, touchIsMulti = false;
   overlay.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 1) { touchIsMulti = true; return; }
+    touchIsMulti = false;
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
   }, { passive: true });
   overlay.addEventListener('touchend', (e) => {
+    if (touchIsMulti) return;
     const dx = e.changedTouches[0].clientX - touchStartX;
     const dy = e.changedTouches[0].clientY - touchStartY;
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
