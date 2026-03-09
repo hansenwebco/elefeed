@@ -106,13 +106,21 @@
 
         <button class="login-btn" id="login-btn">Log in with Mastodon →</button>
         <div id="login-error" style="display:none;margin-top:14px;background:rgba(255,107,107,0.10);border:1px solid rgba(255,107,107,0.25);border-radius:6px;color:#ff8080;font-family:var(--font-mono);font-size:11.5px;padding:10px 12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;"></div>
+        <div class="login-divider"><span>new to mastodon?</span></div>
+        <a href="https://joinmastodon.org" target="_blank" class="login-new-account-btn">Create an account →</a>
       </div>
 
-      <p class="login-footer">
-        No account data is stored on any server.<br />
-        Your access token lives in your browser only.<br />
-        <a href="https://joinmastodon.org" target="_blank">New to Mastodon?</a> <span>&middot;</span> <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
-      </p>
+      <footer class="login-footer">
+        <div class="login-footer-security">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Your access token never leaves your browser
+        </div>
+        <div class="login-footer-links">
+          <span class="sidebar-footer-brand" style="font-family:inherit;font-size:inherit;color:inherit;">Elefeed</span>
+          <span class="login-footer-dot">&middot;</span>
+          <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
+        </div>
+      </footer>
     </div>
   </div>
 
