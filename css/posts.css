@@ -11,7 +11,7 @@
 
 /* ─── Loading Skeletons ─── */
 .feed-loading {
-  padding: 40px 20px;
+  padding: 12px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;

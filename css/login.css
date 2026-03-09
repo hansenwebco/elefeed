@@ -5,6 +5,7 @@
 #login-screen {
   align-items: center;
   justify-content: center;
+  overflow-y: auto;
   background:
     radial-gradient(ellipse 70% 50% at 50% -10%, rgba(155, 127, 255, 0.18) 0%, transparent 70%),
     radial-gradient(ellipse 40% 30% at 90% 80%, rgba(78, 205, 196, 0.10) 0%, transparent 60%),
@@ -14,7 +15,7 @@
 .login-card {
   width: 100%;
   max-width: 420px;
-  padding: 0 20px;
+  padding: 32px 20px;
 }
 
 .login-logo {
@@ -213,19 +214,85 @@
   transform: translateY(0);
 }
 
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 16px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.login-new-account-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--trans);
+  box-sizing: border-box;
+}
+
+.login-new-account-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent2);
+}
+
 .login-footer {
   text-align: center;
-  margin-top: 24px;
-  font-size: 12px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login-footer-security {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 11px;
   color: var(--text-dim);
 }
 
-.login-footer a {
+.login-footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.login-footer-dot {
+  color: var(--border);
+}
+
+.login-footer-links a {
   color: var(--text-muted);
   text-decoration: none;
 }
 
-.login-footer a:hover {
+.login-footer-links a:hover {
   color: var(--accent2);
 }
 
