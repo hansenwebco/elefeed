@@ -182,6 +182,9 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
         </div>`;
     }
 
+    // Sensitive link cards with media are rendered as <div> (not <a>) so the
+    // browser can never auto-navigate. Navigation is handled via window.open.
+    let sensitiveCardLocked = false;
     if (cardSensitive && mediaHTML) {
       const cardPill = `<button class="sensitive-pill" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
         <div class="sp-card"><span class="sp-card-title">Sensitive content</span><span class="sp-card-sub">Click to show</span></div>
@@ -189,15 +192,23 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
         <span class="sp-revealed-label">hide</span>
       </button>`;
       mediaHTML = `<div class="post-card-img-wrap">${mediaHTML}${cardPill}</div>`;
+      sensitiveCardLocked = true;
     }
 
-    const tag = isVideo ? 'div' : 'a';
-    const hrefAttr = isVideo ? '' : `href="${s.card.url}" target="_blank" rel="noopener"`;
+    const tag = (isVideo || sensitiveCardLocked) ? 'div' : 'a';
+    const hrefAttr = isVideo
+      ? ''
+      : (sensitiveCardLocked
+          ? `data-card-url="${s.card.url}"`
+          : `href="${s.card.url}" target="_blank" rel="noopener"`);
     const titleText = escapeHTML(s.card.title || '');
     const titleHTML = s.card.title ? `<div class="post-card-title">${isVideo ? `<a href="${s.card.url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;" onclick="event.stopPropagation()">${titleText}</a>` : titleText}</div>` : '';
+    const cardOnclick = sensitiveCardLocked
+      ? 'handleSensitiveCardClick(event, this)'
+      : 'event.stopPropagation()';
 
     cardHTML = `
-      <${tag} ${hrefAttr} class="post-card" onclick="event.stopPropagation()">
+      <${tag} ${hrefAttr} class="post-card" onclick="${cardOnclick}">
         ${mediaHTML}
         <div class="post-card-content">
           ${titleHTML}
@@ -905,6 +916,24 @@ window.toggleSensitiveMedia = function(btn) {
   const anyBlurred = [...allMedia].some(el => el.classList.contains('media-sensitive-blur'));
   allMedia.forEach(el => el.classList.toggle('media-sensitive-blur', !anyBlurred));
   btn.classList.toggle('sp-revealed', anyBlurred);
+};
+
+/**
+ * Click handler for sensitive link cards (rendered as <div data-card-url="...">).
+ * The card is always a <div> while sensitive so the browser can never auto-navigate.
+ * First click (while blurred): reveal the content. Subsequent clicks: open the URL.
+ */
+window.handleSensitiveCardClick = function(e, el) {
+  e.stopPropagation();
+  if (e.target.closest('.sensitive-pill')) return;
+  const img = el.querySelector('img.post-card-image');
+  if (img && img.classList.contains('media-sensitive-blur')) {
+    const pill = el.querySelector('.sensitive-pill:not(.sp-revealed)');
+    if (pill) toggleSensitiveMedia(pill);
+  } else {
+    const url = el.dataset.cardUrl;
+    if (url) window.open(url, '_blank', 'noopener');
+  }
 };
 
 /** Toggle a content-warning body open/closed. */
