@@ -718,6 +718,17 @@ export function openComposeDrawer() {
   backdrop.classList.add('open');
   if (window.innerWidth <= 900) {
     document.body.style.overflow = 'hidden';
+    // Sync drawer size to the visual viewport so it stays above the soft keyboard
+    if (window.visualViewport) {
+      const syncToViewport = () => {
+        drawer.style.height = window.visualViewport.height + 'px';
+        drawer.style.top = window.visualViewport.offsetTop + 'px';
+      };
+      drawer._vpHandler = syncToViewport;
+      window.visualViewport.addEventListener('resize', syncToViewport);
+      window.visualViewport.addEventListener('scroll', syncToViewport);
+      syncToViewport();
+    }
     // Push history state for back button
     history.pushState({ drawer: 'compose-drawer' }, '', '');
   }
@@ -738,6 +749,15 @@ export function closeComposeDrawer() {
   backdrop.classList.remove('open');
   document.body.style.overflow = '';
   $('compose-textarea').blur();
+
+  // Remove visualViewport listener and reset inline size overrides
+  if (drawer._vpHandler && window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', drawer._vpHandler);
+    window.visualViewport.removeEventListener('scroll', drawer._vpHandler);
+    delete drawer._vpHandler;
+  }
+  drawer.style.height = '';
+  drawer.style.top = '';
 
   resetReplyState();
 }
