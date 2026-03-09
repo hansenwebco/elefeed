@@ -300,22 +300,6 @@ async function handleCallback(code) {
   const isPopup = !!(window.opener && window.opener !== window);
 
   if (!server || !clientId || !clientSecret) {
-    // Storage was partitioned (Firefox ETP / Safari ITP / COOP header severed the
-    // browsing context): relay the code back to the opener tab via BroadcastChannel
-    // so it can complete the exchange using its own, unpartitioned localStorage.
-    if ('BroadcastChannel' in window) {
-      const bc = new BroadcastChannel('elefeed_oauth');
-      bc.postMessage({ type: 'oauth_code', code });
-      bc.close();
-      document.body.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#0d0d0f;color:#8888a0;font-family:'DM Mono',monospace;font-size:13px;gap:16px;">
-          <div style="width:28px;height:28px;border:2px solid #2a2a34;border-top-color:#9b7fff;border-radius:50%;animation:spin 700ms linear infinite;"></div>
-          <p>Completing sign-in…</p>
-          <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-        </div>`;
-      setTimeout(() => window.close(), 5000);
-      return;
-    }
     if (isPopup) { window.close(); return; }
     showScreen('login-screen');
     showLoginError('Auth state lost. Please try again.');
@@ -425,54 +409,14 @@ $('login-btn').addEventListener('click', async () => {
 
     $('login-btn').textContent = 'Waiting for sign-in…';
 
-    // BroadcastChannel fallback: if the popup's localStorage is partitioned by the
-    // browser (Firefox ETP, Safari ITP, or COOP), it sends the raw code here so
-    // the main window can complete the exchange with its own pending_* values.
-    let poll;
-    let oauthBC = null;
-    if ('BroadcastChannel' in window) {
-      oauthBC = new BroadcastChannel('elefeed_oauth');
-      oauthBC.onmessage = async (e) => {
-        if (e.data?.type !== 'oauth_code') return;
-        oauthBC.close(); oauthBC = null;
-        clearInterval(poll);
-        const relayCode = e.data.code;
-        const pendSrv = store.get('pending_server');
-        const pendCid = store.get('pending_client_id');
-        const pendSec = store.get('pending_client_secret');
-        if (!pendSrv || !pendCid || !pendSec) {
-          $('login-btn').textContent = 'Log in with Mastodon →';
-          $('login-btn').disabled = false;
-          showLoginError('Auth state lost. Please try again.');
-          return;
-        }
-        try {
-          const tokenData = await exchangeCode(pendSrv, pendCid, pendSec, relayCode);
-          store.del('pending_server'); store.del('pending_client_id'); store.del('pending_client_secret');
-          store.set('token', tokenData.access_token);
-          store.set('server', pendSrv);
-          store.set('token_scopes', SCOPES);
-          try { popup.close(); } catch {}
-          $('login-btn').textContent = 'Log in with Mastodon →';
-          $('login-btn').disabled = false;
-          await initApp(pendSrv, tokenData.access_token);
-        } catch (err2) {
-          $('login-btn').textContent = 'Log in with Mastodon →';
-          $('login-btn').disabled = false;
-          showLoginError('Sign-in failed: ' + err2.message + '\n\nPlease try again.');
-        }
-      };
-    }
-
     // Poll for the popup writing the token to localStorage, or for it closing
-    poll = setInterval(async () => {
+    const poll = setInterval(async () => {
       const token = store.get('oauth_done_token');
       const srv = store.get('oauth_done_server');
       const scopes = store.get('oauth_done_scopes');
 
       if (token && srv) {
         clearInterval(poll);
-        if (oauthBC) { oauthBC.close(); oauthBC = null; }
         store.del('oauth_done_token');
         store.del('oauth_done_server');
         store.del('oauth_done_scopes');
@@ -490,7 +434,6 @@ $('login-btn').addEventListener('click', async () => {
 
       if (popup.closed) {
         clearInterval(poll);
-        if (oauthBC) { oauthBC.close(); oauthBC = null; }
         const tabToken = store.get('token');
         const tabServer = store.get('server');
         if (tabToken && tabServer) {
