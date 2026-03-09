@@ -742,12 +742,14 @@ window.expandMedia = function expandMedia(mediaItem) {
 
   requestAnimationFrame(() => overlay.classList.add('open'));
 
-  // Allow pinch-to-zoom in lightbox on Android/Chrome (which respects user-scalable=no).
-  // iOS Safari ignores user-scalable, so the global touchmove handler handles that.
+  // Signal to the global touchmove handler (iOS) and swap viewport meta (Android)
+  // so pinch-to-zoom is allowed while the lightbox is open.
+  window._lightboxOpen = true;
   const viewportMeta = document.querySelector('meta[name="viewport"]');
   if (viewportMeta) viewportMeta.content = 'width=device-width, initial-scale=1.0, user-scalable=yes, interactive-widget=resizes-visual';
 
   const close = () => {
+    window._lightboxOpen = false;
     overlay.classList.remove('open');
     setTimeout(() => overlay.remove(), 250);
     document.removeEventListener('keydown', handleKeydown);
