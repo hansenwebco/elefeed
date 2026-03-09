@@ -983,13 +983,13 @@
           <!-- Sensitive content — grouped with a subtle inset -->
           <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
             <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Sensitive Content</span>
-            <!-- Hide sensitive media -->
+            <!-- Show sensitive media -->
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Blur sensitive media</span>
-                <span style="font-size:11px; color:var(--text-muted);">Blur sensitive images and videos until you choose to reveal them.</span>
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Show sensitive media</span>
+                <span style="font-size:11px; color:var(--text-muted);">Display sensitive images and videos without blurring them.</span>
               </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Blur sensitive media by default">
+              <label class="settings-toggle" style="flex-shrink:0;" title="Show sensitive media without blurring">
                 <input type="checkbox" id="settings-hide-sensitive-media-toggle" />
                 <span class="settings-toggle-track"></span>
               </label>
@@ -1005,23 +1005,6 @@
                 <span class="settings-toggle-track"></span>
               </label>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Feature Flags -->
-      <div id="settings-feature-flags-section" style="display:none; padding:16px; border-bottom:1px solid var(--border);">
-        <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Feature Flags</h4>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">From Following digest</span>
-              <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a ranked feed of top posts from people you follow in Explore.</span>
-            </div>
-            <label class="settings-toggle" style="flex-shrink:0;" title="Enable From Following digest">
-              <input type="checkbox" id="debug-following-feed-toggle" />
-              <span class="settings-toggle-track"></span>
-            </label>
           </div>
         </div>
       </div>
@@ -1119,37 +1102,59 @@
         </h4>
         <div style="display:flex; flex-direction:column; gap:10px;">
 
-          <!-- Subscription status -->
-          <div id="debug-sub-status" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:10px; line-height:1.6; word-break:break-all;">
-            Click "Check Status" to inspect subscription…
+          <!-- Feature Flags -->
+          <div>
+            <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.08em; font-family:var(--font-mono);">Feature Flags</h5>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">From Following digest</span>
+                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a ranked feed of top posts from people you follow in Explore.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Enable From Following digest">
+                  <input type="checkbox" id="debug-following-feed-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+            </div>
           </div>
 
-          <div style="display:flex; flex-wrap:wrap; gap:8px;">
-            <!-- Check subscription status -->
-            <button id="debug-check-sub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
-              🔍 Check Status
-            </button>
+          <!-- Notification Testing -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin:0 0 0 0; letter-spacing:0.08em; font-family:var(--font-mono);">Notification Testing</h5>
 
-            <!-- Re-run startSwPolling -->
-            <button id="debug-register-push-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
-              🔄 Re-register Push
-            </button>
+            <!-- Subscription status -->
+            <div id="debug-sub-status" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:10px; line-height:1.6; word-break:break-all;">
+              Click "Check Status" to inspect subscription…
+            </div>
 
-            <!-- Clear cached endpoint and re-register -->
-            <button id="debug-force-register-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid #f59e0b44; border-radius:6px; color:#f59e0b; font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
-              ⚡ Force Re-register
-            </button>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <!-- Check subscription status -->
+              <button id="debug-check-sub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
+                🔍 Check Status
+              </button>
 
-            <!-- Fire a local test notification -->
-            <button id="debug-test-notif-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
-              🔔 Test Notification
-            </button>
+              <!-- Re-run startSwPolling -->
+              <button id="debug-register-push-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
+                🔄 Re-register Push
+              </button>
 
-            <!-- Unsubscribe entirely -->
-            <button id="debug-unsub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:var(--danger); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
-              🗑 Unsubscribe
-            </button>
-          </div>
+              <!-- Clear cached endpoint and re-register -->
+              <button id="debug-force-register-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid #f59e0b44; border-radius:6px; color:#f59e0b; font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
+                ⚡ Force Re-register
+              </button>
+
+              <!-- Fire a local test notification -->
+              <button id="debug-test-notif-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
+                🔔 Test Notification
+              </button>
+
+              <!-- Unsubscribe entirely -->
+              <button id="debug-unsub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:var(--danger); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
+                🗑 Unsubscribe
+              </button>
+            </div>
+          </div><!-- /Notification Testing -->
         </div>
       </div>
 

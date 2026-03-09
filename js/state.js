@@ -52,7 +52,7 @@ export const state = {
   localFeed: null,
   localMaxId: null,
   followedHashtags: [],
-  selectedHashtagFilter: 'all',
+  selectedHashtagFilter: urlParams.get('tag') || 'all',
   knownFollowing: new Set(),
   knownNotFollowing: new Set(),
 
