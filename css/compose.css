@@ -198,9 +198,9 @@
     flex-shrink: 0;
   }
 
-  /* Lift toolbar above the soft keyboard */
+  /* Breathing room + iPhone home-bar clearance when keyboard is hidden */
   .compose-drawer .compose-footer {
-    padding-bottom: max(12px, env(keyboard-inset-height, 0px));
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
   }
 }
 
