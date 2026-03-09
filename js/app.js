@@ -601,9 +601,9 @@ document.addEventListener('click', e => {
 
 fetchPopularServers();
 
-// Prevent pinch-to-zoom globally; allow it only inside the lightbox overlay.
+// Prevent pinch-to-zoom globally; allow it only when the lightbox is open.
 document.addEventListener('touchmove', (e) => {
-  if (e.touches.length > 1 && !e.target.closest('.lightbox-overlay')) {
+  if (e.touches.length > 1 && !window._lightboxOpen) {
     e.preventDefault();
   }
 }, { passive: false });
