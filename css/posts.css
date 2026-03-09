@@ -696,6 +696,7 @@
   padding: 20px;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: pinch-zoom;
 }
 
 .lightbox-overlay.open {
