@@ -32,6 +32,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   let mediaHTML = '';
   if (s.media_attachments && s.media_attachments.length > 0) {
     const count = Math.min(s.media_attachments.length, 4);
+    let isNarrowSingle = false;
     const items = s.media_attachments.slice(0, 4).map(m => {
       const sensitive = s.sensitive;
       const blurClass = sensitive ? 'media-sensitive-blur' : '';
@@ -41,15 +42,17 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           <span>sensitive content</span>
         </div>` : '';
 
-      // For single-image posts, derive a clamped aspect-ratio from the
-      // attachment metadata so the container is the right shape before
-      // the image loads — no layout reflow, no FOUC.
-      // Portrait cap: 4:3. Landscape cap: 16:9.
+      // For single-image posts, wide images (>= 600px) keep a clamped
+      // aspect-ratio so they fill the feed column without cropping oddly.
+      // Narrow images are shown at their natural size (left-aligned, border
+      // wraps the image) capped at 350px tall via CSS.
       let itemStyle = '';
       if (count === 1) {
         const origW = m.meta?.original?.width  || m.meta?.small?.width;
         const origH = m.meta?.original?.height || m.meta?.small?.height;
-        if (origW > 0 && origH > 0) {
+        if (origW && origW < 600) {
+          isNarrowSingle = true; // handled entirely in CSS
+        } else if (origW > 0 && origH > 0) {
           const clamped = Math.max(4 / 3, Math.min(16 / 9, origW / origH));
           itemStyle = ` style="aspect-ratio: ${clamped.toFixed(4)} / 1"`;
         }
@@ -91,7 +94,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
       return '';
     }).join('');
 
-    mediaHTML = `<div class="post-media"><div class="post-media-grid count-${count}">${items}</div></div>`;
+    mediaHTML = `<div class="post-media${isNarrowSingle ? ' post-media--narrow' : ''}"><div class="post-media-grid count-${count}">${items}</div></div>`;
   }
 
   /* ── Poll ── */
