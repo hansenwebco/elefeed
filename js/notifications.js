@@ -103,15 +103,16 @@ export async function startSwPolling() {
     const p256dh = uint8ArrayToBase64url(new Uint8Array(p256dhKey));
     const auth = uint8ArrayToBase64url(new Uint8Array(authKey));
 
+    const alertOn = type => store.get('pref_alert_' + type) !== 'false';
     const body = new URLSearchParams({
-      'data[alerts][mention]': 'true',
-      'data[alerts][status]': 'true',
-      'data[alerts][reblog]': 'true',
-      'data[alerts][follow]': 'true',
-      'data[alerts][follow_request]': 'true',
-      'data[alerts][favourite]': 'true',
-      'data[alerts][poll]': 'true',
-      'data[alerts][update]': 'true',
+      'data[alerts][mention]': alertOn('mention') ? 'true' : 'false',
+      'data[alerts][status]': alertOn('status') ? 'true' : 'false',
+      'data[alerts][reblog]': alertOn('reblog') ? 'true' : 'false',
+      'data[alerts][follow]': alertOn('follow') ? 'true' : 'false',
+      'data[alerts][follow_request]': alertOn('follow_request') ? 'true' : 'false',
+      'data[alerts][favourite]': alertOn('favourite') ? 'true' : 'false',
+      'data[alerts][poll]': alertOn('poll') ? 'true' : 'false',
+      'data[alerts][update]': alertOn('update') ? 'true' : 'false',
       'data[policy]': 'all',
       'subscription[endpoint]': sub.endpoint,
       'subscription[keys][p256dh]': p256dh,

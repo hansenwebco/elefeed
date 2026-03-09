@@ -17,6 +17,7 @@ import {
   updateTabPill, flushPendingPosts, handleScrollDirection,
   checkInfiniteScroll, handleLoadMore, activeFeedKey,
   registerNotifPoller, getScrollContainer, getScrollTop,
+  getFilteredPendingPosts, resetOverlayPillDismissed,
 } from './feed.js';
 import {
   loadTrendingTab, loadTrendingPosts, loadTrendingHashtags,
@@ -728,6 +729,11 @@ window.addEventListener('resize', (() => {
 const doRefresh = () => {
   const tab = state.activeTab;
   const feedKey = activeFeedKey();
+  // If there are buffered new posts, act like clicking the pill
+  if (tab === 'feed' && getFilteredPendingPosts(feedKey).length > 0) {
+    flushPendingPosts(feedKey, true);
+    return;
+  }
   state.pendingPosts[feedKey] = [];
   updateTabPill(feedKey);
   if (tab === 'feed') {
@@ -795,6 +801,11 @@ if (settingsMenuBtn) {
       hashtagPillsToggle.checked = store.get('pref_hashtag_pills') === 'true';
     }
 
+    const newpostStyleCurrent = store.get('pref_newpost_style') || 'badge'; // default: Refresh Notification
+    document.querySelectorAll('#settings-newpost-style-group .theme-segment-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.value === newpostStyleCurrent);
+    });
+
     const hideCardsToggle = $('settings-hide-cards-toggle');
     if (hideCardsToggle) {
       hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
@@ -807,6 +818,9 @@ if (settingsMenuBtn) {
 
     // Close other drawers
     closeAnyDrawer();
+
+    // Push a history entry so the back button closes the settings drawer
+    history.pushState({ drawer: 'settings-drawer' }, '', '');
 
     // Open settings drawer
     $('settings-backdrop').classList.add('open');
@@ -836,10 +850,10 @@ function applyTheme(t) {
   }
 }
 
-document.querySelectorAll('.theme-segment-btn').forEach(btn => {
+document.querySelectorAll('#settings-theme-group .theme-segment-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
     const value = e.currentTarget.dataset.value;
-    document.querySelectorAll('.theme-segment-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#settings-theme-group .theme-segment-btn').forEach(b => b.classList.remove('active'));
     e.currentTarget.classList.add('active');
     applyTheme(value);
   });
@@ -885,6 +899,16 @@ function refreshNotifSettingsUI() {
   if (intervalSel) {
     intervalSel.value = store.get('pref_bg_poll_interval') || '600000';
     intervalSel.disabled = getNotifPermission() !== 'granted';
+  }
+
+  const alertTypes = ['mention', 'follow', 'reblog', 'favourite', 'follow_request', 'poll', 'status', 'update'];
+  const alertGranted = getNotifPermission() === 'granted';
+  for (const type of alertTypes) {
+    const elId = type === 'follow_request' ? 'settings-alert-follow-request' : `settings-alert-${type}`;
+    const el = $(elId);
+    if (!el) continue;
+    el.checked = store.get('pref_alert_' + type) !== 'false';
+    el.disabled = !alertGranted;
   }
 
   // Show debug panel and feature flags section only for the developer account
@@ -973,6 +997,20 @@ if (_intervalSel) {
     store.set('pref_bg_poll_interval', _intervalSel.value);
     updateSwConfig();
     showToast('Poll interval updated');
+  });
+}
+
+// Alert type toggles — changing them forces a push subscription update
+const _alertTypes = ['mention', 'follow', 'reblog', 'favourite', 'follow_request', 'poll', 'status', 'update'];
+for (const type of _alertTypes) {
+  const elId = type === 'follow_request' ? 'settings-alert-follow-request' : `settings-alert-${type}`;
+  const el = $(elId);
+  if (!el) continue;
+  el.addEventListener('change', () => {
+    store.set('pref_alert_' + type, el.checked ? 'true' : 'false');
+    // Force push re-registration so Mastodon receives the updated alert list
+    store.del('push_endpoint_' + state.server);
+    updateSwConfig();
   });
 }
 
@@ -1099,6 +1137,20 @@ if (_debugUnsubBtn) {
     }
   });
 }
+
+// New post indicator style
+document.querySelectorAll('#settings-newpost-style-group .theme-segment-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const value = btn.dataset.value;
+    store.set('pref_newpost_style', value);
+    document.querySelectorAll('#settings-newpost-style-group .theme-segment-btn').forEach(b => b.classList.toggle('active', b === btn));
+    // Re-apply to current feed; reset dismissed flag so pill can show immediately
+    if (value === 'pill') {
+      resetOverlayPillDismissed();
+    }
+    updateTabPill(activeFeedKey());
+  });
+});
 
 // Hashtag pills
 if (store.get('pref_hashtag_pills') === 'true') {
@@ -1429,6 +1481,9 @@ document.addEventListener('click', e => {
     const rawText = tagSourceEl ? tagSourceEl.textContent : hashtagLink.textContent;
     const tag = rawText.replace(/^#/, '').split(/\s+/)[0].toLowerCase();
 
+    // Snapshot current URL so back returns to wherever the user was
+    history.pushState({}, '', location.href);
+
     state.selectedHashtagFilter = tag;
     state.feedFilter = 'hashtags';
 
@@ -1452,6 +1507,9 @@ document.addEventListener('click', e => {
   if (trendingTagLink) {
     e.preventDefault();
     const tag = trendingTagLink.dataset.trendingTag.toLowerCase();
+
+    // Snapshot current URL so back returns to wherever the user was
+    history.pushState({}, '', location.href);
 
     state.selectedHashtagFilter = tag;
     state.feedFilter = 'hashtags';
