@@ -599,7 +599,12 @@
 }
 
 .post-media-grid.count-3 {
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 200px 200px;
+}
+
+.count-3 .media-item:first-child {
+  grid-row: span 2;
 }
 
 .post-media-grid.count-4 {
@@ -613,44 +618,31 @@
   cursor: pointer;
 }
 
-/* Single-image container: honour the aspect-ratio set inline from
-   attachment metadata (clamped 4:3 portrait → 16:9 landscape).
-   Falls back to 16:9 when no metadata is available. */
-.count-1 .media-item {
-  aspect-ratio: 16 / 9;
-}
-
-/* Narrow single images (< 600px wide): shrink the border to fit the
-   image and left-align it inside the post. */
-.post-media--narrow {
+/* Single-image post: JS sets aspect-ratio + max-width inline from
+   attachment metadata so the container matches the image's true shape.
+   The wrapper shrinks to the image's natural width (capped at feed width).
+   Falls back to 16:9 when metadata is unavailable.
+   max-height prevents very tall/portrait images from dominating the feed. */
+.post-media--single {
   width: fit-content;
   max-width: 100%;
 }
 
-.post-media--narrow .count-1 .media-item {
-  aspect-ratio: auto;
+.post-media--single .count-1 .media-item {
+  aspect-ratio: 16 / 9; /* fallback: no metadata */
+  max-height: 500px;
 }
 
-.post-media--narrow .media-item img,
-.post-media--narrow .media-item video {
-  width: auto;
-  height: auto;
-  max-height: 500px;
-  max-width: 100%;
-  object-fit: initial;
+.post-media--single .media-item img,
+.post-media--single .media-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .count-2 .media-item,
 .count-4 .media-item {
   height: 200px;
-}
-
-.count-3 .media-item {
-  height: 200px;
-}
-
-.count-3 .media-item:first-child {
-  height: 300px;
 }
 
 .media-item img,

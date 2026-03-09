@@ -35,7 +35,6 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   let mediaHTML = '';
   if (s.media_attachments && s.media_attachments.length > 0) {
     const count = Math.min(s.media_attachments.length, 4);
-    let isNarrowSingle = false;
     const sensitive = s.sensitive;
     const startBlurred = sensitive && hideSensitiveMedia;
     const pill = sensitive ? `
@@ -51,19 +50,15 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
     const items = s.media_attachments.slice(0, 4).map(m => {
       const blurClass = startBlurred ? 'media-sensitive-blur' : '';
 
-      // For single-image posts, wide images (>= 600px) keep a clamped
-      // aspect-ratio so they fill the feed column without cropping oddly.
-      // Narrow images are shown at their natural size (left-aligned, border
-      // wraps the image) capped at 350px tall via CSS.
+      // Single-image post: set the true aspect ratio and natural width from
+      // metadata so the container matches the image's real shape exactly.
+      // CSS caps the height at 500 px and shrinks the border to fit.
       let itemStyle = '';
       if (count === 1) {
-        const origW = m.meta?.original?.width  || m.meta?.small?.width;
+        const origW = m.meta?.original?.width || m.meta?.small?.width;
         const origH = m.meta?.original?.height || m.meta?.small?.height;
-        if (origW && origW < 600) {
-          isNarrowSingle = true; // handled entirely in CSS
-        } else if (origW > 0 && origH > 0) {
-          const clamped = Math.max(4 / 3, Math.min(16 / 9, origW / origH));
-          itemStyle = ` style="aspect-ratio: ${clamped.toFixed(4)} / 1"`;
+        if (origW > 0 && origH > 0) {
+          itemStyle = ` style="aspect-ratio: ${origW} / ${origH}; max-width: ${origW}px"`;
         }
       }
 
@@ -100,7 +95,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
       return '';
     }).join('');
 
-    mediaHTML = `<div class="post-media${isNarrowSingle ? ' post-media--narrow' : ''}"><div class="post-media-grid count-${count}">${items}</div>${pill}</div>`;
+    mediaHTML = `<div class="post-media${count === 1 ? ' post-media--single' : ''}"><div class="post-media-grid count-${count}">${items}</div>${pill}</div>`;
   }
 
   /* ── Poll ── */
