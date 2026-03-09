@@ -547,7 +547,7 @@ window.expandMedia = function expandMedia(mediaItem) {
   let altBadge = null;
   let altPanel = null;
 
-  const renderCurrentMedia = () => {
+  const renderCurrentMedia = (direction = null) => {
     if (mediaEl) { mediaEl.remove(); }
     if (altBadge) { altBadge.remove(); altBadge = null; }
     if (altPanel) { altPanel.remove(); altPanel = null; }
@@ -618,6 +618,13 @@ window.expandMedia = function expandMedia(mediaItem) {
     mediaEl.onclick = (e) => e.stopPropagation();
     content.insertBefore(mediaEl, content.firstChild);
 
+    // Slide animation when navigating between images
+    if (direction) {
+      const animClass = direction === 'right' ? 'lb-slide-from-right' : 'lb-slide-from-left';
+      mediaEl.classList.add(animClass);
+      mediaEl.addEventListener('animationend', () => mediaEl.classList.remove(animClass), { once: true });
+    }
+
     // Sample dominant color from images and apply a tinted background
     if (mediaEl instanceof HTMLImageElement) {
       const doExtract = () => {
@@ -682,45 +689,50 @@ window.expandMedia = function expandMedia(mediaItem) {
       overlay.appendChild(altBadge);
     }
 
-    if (prevBtn) prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
-    if (nextBtn) nextBtn.style.display = currentIndex < mediaItems.length - 1 ? 'flex' : 'none';
+    dotEls.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
   };
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'lightbox-close';
   closeBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
 
-  let prevBtn = null;
-  let nextBtn = null;
+  const mediaWrap = document.createElement('div');
+  mediaWrap.className = 'lightbox-media-wrap';
+  mediaWrap.appendChild(content);
+  mediaWrap.onclick = (e) => e.stopPropagation();
+
+  const dotEls = [];
 
   if (mediaItems.length > 1) {
-    prevBtn = document.createElement('button');
-    prevBtn.className = 'lightbox-nav lightbox-prev';
-    prevBtn.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
-    prevBtn.onclick = (e) => {
+    const dotsEl = document.createElement('div');
+    dotsEl.className = 'lightbox-dots';
+    mediaItems.forEach((_, i) => {
+      const dot = document.createElement('span');
+      dot.className = 'lightbox-dot' + (i === currentIndex ? ' active' : '');
+      dotsEl.appendChild(dot);
+      dotEls.push(dot);
+    });
+    mediaWrap.appendChild(dotsEl);
+
+    const tapPrev = document.createElement('div');
+    tapPrev.className = 'lightbox-tap-prev';
+    tapPrev.onclick = (e) => {
       e.stopPropagation();
-      if (currentIndex > 0) {
-        currentIndex--;
-        renderCurrentMedia();
-      }
+      if (currentIndex > 0) { currentIndex--; renderCurrentMedia('left'); }
     };
 
-    nextBtn = document.createElement('button');
-    nextBtn.className = 'lightbox-nav lightbox-next';
-    nextBtn.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-    nextBtn.onclick = (e) => {
+    const tapNext = document.createElement('div');
+    tapNext.className = 'lightbox-tap-next';
+    tapNext.onclick = (e) => {
       e.stopPropagation();
-      if (currentIndex < mediaItems.length - 1) {
-        currentIndex++;
-        renderCurrentMedia();
-      }
+      if (currentIndex < mediaItems.length - 1) { currentIndex++; renderCurrentMedia('right'); }
     };
 
-    overlay.appendChild(prevBtn);
-    overlay.appendChild(nextBtn);
+    overlay.appendChild(tapPrev);
+    overlay.appendChild(tapNext);
   }
 
-  overlay.appendChild(content);
+  overlay.appendChild(mediaWrap);
   overlay.appendChild(closeBtn);
   document.body.appendChild(overlay);
 
@@ -740,9 +752,9 @@ window.expandMedia = function expandMedia(mediaItem) {
     if (e.key === 'Escape') {
       e.stopPropagation(); close();
     } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
-      e.stopPropagation(); currentIndex--; renderCurrentMedia();
+      e.stopPropagation(); currentIndex--; renderCurrentMedia('left');
     } else if (e.key === 'ArrowRight' && currentIndex < mediaItems.length - 1) {
-      e.stopPropagation(); currentIndex++; renderCurrentMedia();
+      e.stopPropagation(); currentIndex++; renderCurrentMedia('right');
     }
   };
 
@@ -760,8 +772,8 @@ window.expandMedia = function expandMedia(mediaItem) {
     const dx = e.changedTouches[0].clientX - touchStartX;
     const dy = e.changedTouches[0].clientY - touchStartY;
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-      if (dx < 0 && currentIndex < mediaItems.length - 1) { currentIndex++; renderCurrentMedia(); }
-      else if (dx > 0 && currentIndex > 0) { currentIndex--; renderCurrentMedia(); }
+      if (dx < 0 && currentIndex < mediaItems.length - 1) { currentIndex++; renderCurrentMedia('right'); }
+      else if (dx > 0 && currentIndex > 0) { currentIndex--; renderCurrentMedia('left'); }
     }
   }, { passive: true });
 };

@@ -694,16 +694,27 @@
   opacity: 0;
   transition: opacity 200ms ease, background-color 600ms ease;
   padding: 20px;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .lightbox-overlay.open {
   opacity: 1;
 }
 
+.lightbox-media-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  max-width: 100%;
+  max-height: calc(100vh - 40px);
+}
+
 .lightbox-content {
   position: relative;
   max-width: 100%;
-  max-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -720,7 +731,7 @@
 .lightbox-content video {
   display: block;
   max-width: 100%;
-  max-height: calc(100vh - 40px);
+  max-height: calc(100vh - 90px);
   width: auto;
   height: auto;
   border-radius: 4px;
@@ -751,35 +762,60 @@
   transform: rotate(90deg);
 }
 
-.lightbox-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  cursor: pointer;
+/* Dot indicators */
+.lightbox-dots {
   display: flex;
+  gap: 7px;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
   z-index: 3100;
+  pointer-events: none;
+  flex-shrink: 0;
 }
 
-.lightbox-nav:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-50%) scale(1.1);
+.lightbox-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: background 0.25s ease, transform 0.25s ease;
 }
 
-.lightbox-prev {
-  left: 24px;
+.lightbox-dot.active {
+  background: rgba(255, 255, 255, 0.92);
+  transform: scale(1.3);
 }
 
-.lightbox-next {
-  right: 24px;
+/* Invisible tap zones for prev/next navigation */
+.lightbox-tap-prev,
+.lightbox-tap-next {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  z-index: 3060;
+  cursor: pointer;
+}
+
+.lightbox-tap-prev { left: 0; }
+.lightbox-tap-next { right: 0; }
+
+/* Slide-in animations */
+@keyframes lb-slide-from-right {
+  from { transform: translateX(52px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes lb-slide-from-left {
+  from { transform: translateX(-52px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+.lb-slide-from-right {
+  animation: lb-slide-from-right 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.lb-slide-from-left {
+  animation: lb-slide-from-left 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 .lightbox-alt-badge {
