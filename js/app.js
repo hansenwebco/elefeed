@@ -16,7 +16,8 @@ import {
   loadFeedTab, startPolling, stopPolling,
   updateTabPill, flushPendingPosts, handleScrollDirection,
   checkInfiniteScroll, handleLoadMore, activeFeedKey,
-  registerNotifPoller, getScrollContainer, getScrollTop,
+  registerNotifPoller, getScrollContainer, getScrollTop, scrollContainerTo,
+  getScrollAnchor, restoreScrollAnchor,
   getFilteredPendingPosts, resetOverlayPillDismissed,
 } from './feed.js';
 import {
@@ -143,7 +144,11 @@ window.addEventListener('popstate', async e => {
     } else if (newTab === 'feed' && state.feedFilter !== prevFeedFilter) {
       // Same tab but filter changed — reload the feed
       updateTabLabel('feed');
-      loadFeedTab();
+      const anchor = prevFeedFilter === 'hashtags' ? e.state?.scrollAnchor : null;
+      await loadFeedTab(!anchor);
+      if (anchor) {
+        requestAnimationFrame(() => requestAnimationFrame(() => restoreScrollAnchor(anchor)));
+      }
     }
 
     setTimeout(setOverlayPillVisibility, 10);
@@ -1524,6 +1529,7 @@ document.addEventListener('click', e => {
     _hashNext.searchParams.delete('profile');
     _hashNext.searchParams.delete('bookmarks');
     _hashNext.searchParams.delete('notifications');
+    history.replaceState({ scrollAnchor: getScrollAnchor() }, '');
     history.pushState({}, '', _hashNext);
 
     state.selectedHashtagFilter = tag;
@@ -1539,7 +1545,6 @@ document.addEventListener('click', e => {
     closeProfileDrawer();
     closeThreadDrawer();
     closeComposeDrawer();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     loadFeedTab();
     return;
   }
@@ -1559,6 +1564,7 @@ document.addEventListener('click', e => {
     _trendNext.searchParams.delete('profile');
     _trendNext.searchParams.delete('bookmarks');
     _trendNext.searchParams.delete('notifications');
+    history.replaceState({ scrollAnchor: getScrollAnchor() }, '');
     history.pushState({}, '', _trendNext);
 
     state.selectedHashtagFilter = tag;
@@ -1573,7 +1579,6 @@ document.addEventListener('click', e => {
     closeProfileDrawer();
     closeThreadDrawer();
     closeComposeDrawer();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     loadFeedTab();
     return; // ← added so we don't fall through to the article handler
   }
@@ -1643,6 +1648,7 @@ async function boot() {
     _searchNext.searchParams.delete('profile');
     _searchNext.searchParams.delete('bookmarks');
     _searchNext.searchParams.delete('notifications');
+    history.replaceState({ scrollAnchor: getScrollAnchor() }, '');
     history.pushState({}, '', _searchNext);
 
     state.selectedHashtagFilter = tag;
@@ -1656,7 +1662,6 @@ async function boot() {
     closeProfileDrawer();
     closeThreadDrawer();
     closeComposeDrawer();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     loadFeedTab();
   };
 

@@ -28,6 +28,35 @@ export function scrollContainerTo(top, behavior = 'smooth') {
   }
 }
 
+// Returns an anchor { id, offset } identifying the topmost visible post and
+// how many pixels its top edge has been scrolled past the container top.
+export function getScrollAnchor() {
+  const sc = getScrollContainer();
+  const containerTop = sc ? sc.getBoundingClientRect().top : 0;
+  const articles = document.querySelectorAll('#feed-posts article[data-id]');
+  for (const article of articles) {
+    const rect = article.getBoundingClientRect();
+    if (rect.bottom > containerTop) {
+      return { id: article.dataset.id, offset: containerTop - rect.top };
+    }
+  }
+  return null;
+}
+
+// Restores scroll to a previously saved anchor.
+export function restoreScrollAnchor(anchor) {
+  if (!anchor) return;
+  const el = document.querySelector(`#feed-posts article[data-id="${anchor.id}"]`);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'instant', block: 'start' });
+  const sc = getScrollContainer();
+  if (sc) {
+    sc.scrollTop += anchor.offset;
+  } else {
+    window.scrollBy(0, anchor.offset);
+  }
+}
+
 window.addEventListener('resize', positionOverlayPill);
 // Call once on load to position initially
 positionOverlayPill();
