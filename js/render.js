@@ -742,15 +742,10 @@ window.expandMedia = function expandMedia(mediaItem) {
 
   requestAnimationFrame(() => overlay.classList.add('open'));
 
-  // Allow pinch-to-zoom inside the lightbox
-  const viewportMeta = document.querySelector('meta[name="viewport"]');
-  if (viewportMeta) viewportMeta.content = 'width=device-width, initial-scale=1.0, user-scalable=yes, interactive-widget=resizes-visual';
-
   const close = () => {
     overlay.classList.remove('open');
     setTimeout(() => overlay.remove(), 250);
     document.removeEventListener('keydown', handleKeydown);
-    if (viewportMeta) viewportMeta.content = 'width=device-width, initial-scale=1.0, user-scalable=no, interactive-widget=resizes-visual';
   };
 
   const handleKeydown = (e) => {
