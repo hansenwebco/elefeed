@@ -15,6 +15,9 @@ export function openPostAnalyticsDrawer(postId, type) {
   const drawer = $('post-analytics-drawer');
   if (!backdrop || !drawer) return;
 
+  // Push a history entry so the back button closes this drawer
+  history.pushState({ drawer: 'post-analytics-drawer' }, '', '');
+
   backdrop.classList.add('open');
   drawer.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');

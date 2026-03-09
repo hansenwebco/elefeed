@@ -819,6 +819,9 @@ if (settingsMenuBtn) {
     // Close other drawers
     closeAnyDrawer();
 
+    // Push a history entry so the back button closes the settings drawer
+    history.pushState({ drawer: 'settings-drawer' }, '', '');
+
     // Open settings drawer
     $('settings-backdrop').classList.add('open');
     $('settings-drawer').classList.add('open');
@@ -896,6 +899,16 @@ function refreshNotifSettingsUI() {
   if (intervalSel) {
     intervalSel.value = store.get('pref_bg_poll_interval') || '600000';
     intervalSel.disabled = getNotifPermission() !== 'granted';
+  }
+
+  const alertTypes = ['mention', 'follow', 'reblog', 'favourite', 'follow_request', 'poll', 'status', 'update'];
+  const alertGranted = getNotifPermission() === 'granted';
+  for (const type of alertTypes) {
+    const elId = type === 'follow_request' ? 'settings-alert-follow-request' : `settings-alert-${type}`;
+    const el = $(elId);
+    if (!el) continue;
+    el.checked = store.get('pref_alert_' + type) !== 'false';
+    el.disabled = !alertGranted;
   }
 
   // Show debug panel and feature flags section only for the developer account
@@ -984,6 +997,20 @@ if (_intervalSel) {
     store.set('pref_bg_poll_interval', _intervalSel.value);
     updateSwConfig();
     showToast('Poll interval updated');
+  });
+}
+
+// Alert type toggles — changing them forces a push subscription update
+const _alertTypes = ['mention', 'follow', 'reblog', 'favourite', 'follow_request', 'poll', 'status', 'update'];
+for (const type of _alertTypes) {
+  const elId = type === 'follow_request' ? 'settings-alert-follow-request' : `settings-alert-${type}`;
+  const el = $(elId);
+  if (!el) continue;
+  el.addEventListener('change', () => {
+    store.set('pref_alert_' + type, el.checked ? 'true' : 'false');
+    // Force push re-registration so Mastodon receives the updated alert list
+    store.del('push_endpoint_' + state.server);
+    updateSwConfig();
   });
 }
 
@@ -1454,6 +1481,9 @@ document.addEventListener('click', e => {
     const rawText = tagSourceEl ? tagSourceEl.textContent : hashtagLink.textContent;
     const tag = rawText.replace(/^#/, '').split(/\s+/)[0].toLowerCase();
 
+    // Snapshot current URL so back returns to wherever the user was
+    history.pushState({}, '', location.href);
+
     state.selectedHashtagFilter = tag;
     state.feedFilter = 'hashtags';
 
@@ -1477,6 +1507,9 @@ document.addEventListener('click', e => {
   if (trendingTagLink) {
     e.preventDefault();
     const tag = trendingTagLink.dataset.trendingTag.toLowerCase();
+
+    // Snapshot current URL so back returns to wherever the user was
+    history.pushState({}, '', location.href);
 
     state.selectedHashtagFilter = tag;
     state.feedFilter = 'hashtags';

@@ -1034,6 +1034,38 @@
             </select>
           </div>
 
+          <!-- Alert types -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <span style="font-size:12px; color:var(--text); font-weight:500;">Alert types</span>
+            <span style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Choose which events trigger a background push notification.</span>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                <input type="checkbox" id="settings-alert-mention" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Mentions
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                <input type="checkbox" id="settings-alert-follow" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follows
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                <input type="checkbox" id="settings-alert-reblog" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Boosts
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                <input type="checkbox" id="settings-alert-favourite" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Favorites
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                <input type="checkbox" id="settings-alert-follow-request" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follow requests
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                <input type="checkbox" id="settings-alert-poll" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Polls ended
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                <input type="checkbox" id="settings-alert-status" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Posts (followed)
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                <input type="checkbox" id="settings-alert-update" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Edits
+              </label>
+            </div>
+          </div>
+
         </div>
       </div>
 
