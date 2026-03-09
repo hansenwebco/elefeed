@@ -849,6 +849,16 @@ if (settingsMenuBtn) {
       hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
     }
 
+    const autoOpenSensitiveToggle = $('settings-auto-open-sensitive-toggle');
+    if (autoOpenSensitiveToggle) {
+      autoOpenSensitiveToggle.checked = store.get('pref_auto_open_sensitive') === 'true';
+    }
+
+    const hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
+    if (hideSensitiveMediaToggle) {
+      hideSensitiveMediaToggle.checked = store.get('pref_hide_sensitive_media') !== 'false'; // default: true
+    }
+
     const translateLangSel = $('settings-translate-lang');
     if (translateLangSel) {
       translateLangSel.value = store.get('pref_translate_lang') || 'browser';
@@ -1219,6 +1229,22 @@ if (_hideCardsToggle) {
     } else {
       document.body.classList.remove('hide-cards-enabled');
     }
+  });
+}
+
+// Auto-open sensitive content
+const _autoOpenSensitiveToggle = $('settings-auto-open-sensitive-toggle');
+if (_autoOpenSensitiveToggle) {
+  _autoOpenSensitiveToggle.addEventListener('change', () => {
+    store.set('pref_auto_open_sensitive', _autoOpenSensitiveToggle.checked ? 'true' : 'false');
+  });
+}
+
+// Hide sensitive media (default: true)
+const _hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
+if (_hideSensitiveMediaToggle) {
+  _hideSensitiveMediaToggle.addEventListener('change', () => {
+    store.set('pref_hide_sensitive_media', _hideSensitiveMediaToggle.checked ? 'true' : 'false');
   });
 }
 

@@ -873,55 +873,59 @@
       <!-- Appearance -->
       <div style="padding:16px; border-bottom:1px solid var(--border);">
         <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Appearance</h4>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          <div class="theme-selector" id="settings-theme-group">
-            <button class="theme-segment-btn" data-value="light">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="5"></circle>
-                <line x1="12" y1="1" x2="12" y2="3"></line>
-                <line x1="12" y1="21" x2="12" y2="23"></line>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                <line x1="1" y1="12" x2="3" y2="12"></line>
-                <line x1="21" y1="12" x2="23" y2="12"></line>
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-              </svg>
-              Light
-            </button>
-            <button class="theme-segment-btn" data-value="dark">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-              </svg>
-              Dark
-            </button>
-            <button class="theme-segment-btn" data-value="system">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
-              System
-            </button>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <!-- Theme -->
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-size:13px; color:var(--text); font-weight:500;">Theme</span>
+            <div class="theme-selector" id="settings-theme-group">
+              <button class="theme-segment-btn" data-value="light">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                Light
+              </button>
+              <button class="theme-segment-btn" data-value="dark">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                Dark
+              </button>
+              <button class="theme-segment-btn" data-value="system">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                System
+              </button>
+            </div>
+          </div>
+          <!-- New post indicator -->
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">New post indicator</span>
+              <span style="font-size:11px; color:var(--text-muted);">How to show new posts waiting in your feed.</span>
+            </div>
+            <div class="theme-selector" id="settings-newpost-style-group">
+              <button class="theme-segment-btn" data-value="badge">Refresh Notification</button>
+              <button class="theme-segment-btn" data-value="pill">Floating Pill</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Feed -->
+      <!-- Content -->
       <div style="padding:16px; border-bottom:1px solid var(--border);">
-        <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Feed Settings</h4>
+        <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Content</h4>
         <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- Hashtag Pills -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Hashtag pills</span>
-              <span style="font-size:11px; color:var(--text-muted);">Show hashtags as bordered pills.</span>
-            </div>
-            <label class="settings-toggle" style="flex-shrink:0;" title="Enable hashtag pills">
-              <input type="checkbox" id="settings-hashtag-pills-toggle" />
-              <span class="settings-toggle-track"></span>
-            </label>
-          </div>
           <!-- Translation Target Language -->
           <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
             <div style="display:flex; flex-direction:column; gap:2px;">
@@ -954,26 +958,52 @@
               <option value="no">Norwegian</option>
             </select>
           </div>
+          <!-- Hashtag Pills -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">Hashtag pills</span>
+              <span style="font-size:11px; color:var(--text-muted);">Show hashtags as bordered pills.</span>
+            </div>
+            <label class="settings-toggle" style="flex-shrink:0;" title="Enable hashtag pills">
+              <input type="checkbox" id="settings-hashtag-pills-toggle" />
+              <span class="settings-toggle-track"></span>
+            </label>
+          </div>
           <!-- Hide Cards -->
           <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
             <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Hide cards</span>
-              <span style="font-size:11px; color:var(--text-muted);">Hide content cards within posts, this will hide some post preview content and make your feed lighter.</span>
+              <span style="font-size:13px; color:var(--text); font-weight:500;">Hide link previews</span>
+              <span style="font-size:11px; color:var(--text-muted);">Hide link preview cards within posts for a lighter feed.</span>
             </div>
             <label class="settings-toggle" style="flex-shrink:0;" title="Hide link previews">
               <input type="checkbox" id="settings-hide-cards-toggle" />
               <span class="settings-toggle-track"></span>
             </label>
           </div>
-          <!-- New post notification style -->
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">New post indicator</span>
-              <span style="font-size:11px; color:var(--text-muted);">How to show new posts waiting in your feed.</span>
+          <!-- Sensitive content — grouped with a subtle inset -->
+          <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Sensitive Content</span>
+            <!-- Hide sensitive media -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Blur sensitive media</span>
+                <span style="font-size:11px; color:var(--text-muted);">Blur sensitive images and videos until you choose to reveal them.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Blur sensitive media by default">
+                <input type="checkbox" id="settings-hide-sensitive-media-toggle" />
+                <span class="settings-toggle-track"></span>
+              </label>
             </div>
-            <div class="theme-selector" id="settings-newpost-style-group">
-              <button class="theme-segment-btn" data-value="badge">Refresh Notification</button>
-              <button class="theme-segment-btn" data-value="pill">Floating Pill</button>
+            <!-- Auto-open sensitive content -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Auto-expand content warnings</span>
+                <span style="font-size:11px; color:var(--text-muted);">Automatically show content behind warnings without requiring a click.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Auto-expand content warnings">
+                <input type="checkbox" id="settings-auto-open-sensitive-toggle" />
+                <span class="settings-toggle-track"></span>
+              </label>
             </div>
           </div>
         </div>

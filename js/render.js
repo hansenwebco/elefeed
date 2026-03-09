@@ -33,10 +33,12 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   if (s.media_attachments && s.media_attachments.length > 0) {
     const count = Math.min(s.media_attachments.length, 4);
     let isNarrowSingle = false;
+    let hideSensitiveMedia = true;
+    try { hideSensitiveMedia = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
     const items = s.media_attachments.slice(0, 4).map(m => {
       const sensitive = s.sensitive;
-      const blurClass = sensitive ? 'media-sensitive-blur' : '';
-      const overlay = sensitive ? `
+      const blurClass = (sensitive && hideSensitiveMedia) ? 'media-sensitive-blur' : '';
+      const overlay = (sensitive && hideSensitiveMedia) ? `
         <div class="sensitive-overlay" onclick="event.stopPropagation(); this.parentElement.querySelector('img,video').classList.remove('media-sensitive-blur'); this.style.display='none'">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
           <span>sensitive content</span>
@@ -116,7 +118,9 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   let quoteHTML = '';
   const qStatus = s.quote && (s.quote.quoted_status || (s.quote.account ? s.quote : null));
   if (qStatus) {
-    const qHasCW = (qStatus.spoiler_text && qStatus.spoiler_text.length > 0) || qStatus.sensitive;
+    let autoOpenSensitive = false;
+    try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
+    const qHasCW = !autoOpenSensitive && ((qStatus.spoiler_text && qStatus.spoiler_text.length > 0) || qStatus.sensitive);
     const qCwText = qStatus.spoiler_text ? escapeHTML(qStatus.spoiler_text) : 'Sensitive content';
     const qCwId = `qcw-${idPrefix}${qStatus.id}-${status.id}`;
     let qContentHTML = '';
@@ -202,7 +206,9 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   }
 
   /* ── Content warning wrapper ── */
-  const hasCW = (s.spoiler_text && s.spoiler_text.length > 0) || s.sensitive;
+  let autoOpenSensitive = false;
+  try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
+  const hasCW = !autoOpenSensitive && ((s.spoiler_text && s.spoiler_text.length > 0) || s.sensitive);
   const cwText = s.spoiler_text ? escapeHTML(s.spoiler_text) : 'Sensitive content';
   const cwId = `cw-${idPrefix}${status.id}`;
   let contentHTML = '';
