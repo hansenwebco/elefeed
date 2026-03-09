@@ -720,7 +720,7 @@
 /* When revealed: collapse to a small corner pill */
 .sensitive-pill.sp-revealed {
   inset: auto;
-  bottom: 8px;
+  top: 8px;
   right: 8px;
   width: auto;
   flex-direction: row;

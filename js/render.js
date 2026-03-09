@@ -72,9 +72,9 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy"/>
         </div>`;
       } else if (m.type === 'gifv') {
-        // GIFV: use <video> with no controls
+        // GIFV: use <video> with no controls; don't autoplay while hidden behind a sensitive warning
         return `<div class="media-item" data-full-url="${m.url}" data-type="gifv" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)"${itemStyle}>
-          <video src="${m.url}" poster="${m.preview_url || ''}" autoplay loop muted playsinline class="${blurClass}"></video>
+          <video src="${m.url}" poster="${m.preview_url || ''}" ${startBlurred ? '' : 'autoplay '}loop muted playsinline class="${blurClass}"></video>
         </div>`;
       } else if (m.type === 'video') {
         // Video: custom minimal player (consistent across all browsers)
@@ -916,6 +916,14 @@ window.toggleSensitiveMedia = function(btn) {
   const anyBlurred = [...allMedia].some(el => el.classList.contains('media-sensitive-blur'));
   allMedia.forEach(el => el.classList.toggle('media-sensitive-blur', !anyBlurred));
   btn.classList.toggle('sp-revealed', anyBlurred);
+  // Play GIFVs when revealing, pause all videos when hiding
+  postMedia.querySelectorAll('video').forEach(vid => {
+    if (anyBlurred) {
+      if (vid.closest('[data-type="gifv"]')) vid.play();
+    } else {
+      vid.pause();
+    }
+  });
 };
 
 /**
