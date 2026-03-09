@@ -28,21 +28,28 @@ import {
  * Returns { contentHTML, footerHTML }
  */
 function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
+  let hideSensitiveMedia = true;
+  try { hideSensitiveMedia = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
+
   /* ── Media ── */
   let mediaHTML = '';
   if (s.media_attachments && s.media_attachments.length > 0) {
     const count = Math.min(s.media_attachments.length, 4);
     let isNarrowSingle = false;
-    let hideSensitiveMedia = true;
-    try { hideSensitiveMedia = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
+    const sensitive = s.sensitive;
+    const startBlurred = sensitive && hideSensitiveMedia;
+    const pill = sensitive ? `
+      <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
+        <div class="sp-card">
+          <span class="sp-card-title">Sensitive content</span>
+          <span class="sp-card-sub">Click to show</span>
+        </div>
+        <svg class="sp-icon sp-icon-eye" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span class="sp-revealed-label">hide</span>
+      </button>` : '';
+
     const items = s.media_attachments.slice(0, 4).map(m => {
-      const sensitive = s.sensitive;
-      const blurClass = (sensitive && hideSensitiveMedia) ? 'media-sensitive-blur' : '';
-      const overlay = (sensitive && hideSensitiveMedia) ? `
-        <div class="sensitive-overlay" onclick="event.stopPropagation(); this.parentElement.querySelector('img,video').classList.remove('media-sensitive-blur'); this.style.display='none'">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          <span>sensitive content</span>
-        </div>` : '';
+      const blurClass = startBlurred ? 'media-sensitive-blur' : '';
 
       // For single-image posts, wide images (>= 600px) keep a clamped
       // aspect-ratio so they fill the feed column without cropping oddly.
@@ -63,13 +70,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
       if (m.type === 'image') {
         return `<div class="media-item" data-full-url="${m.url}" data-type="image" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)"${itemStyle}>
           <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy"/>
-          ${overlay}
         </div>`;
       } else if (m.type === 'gifv') {
         // GIFV: use <video> with no controls
         return `<div class="media-item" data-full-url="${m.url}" data-type="gifv" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)"${itemStyle}>
           <video src="${m.url}" poster="${m.preview_url || ''}" autoplay loop muted playsinline class="${blurClass}"></video>
-          ${overlay}
         </div>`;
       } else if (m.type === 'video') {
         // Video: custom minimal player (consistent across all browsers)
@@ -90,13 +95,12 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
               <svg class="vp-icon-mute" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
-          ${overlay}
         </div>`;
       }
       return '';
     }).join('');
 
-    mediaHTML = `<div class="post-media${isNarrowSingle ? ' post-media--narrow' : ''}"><div class="post-media-grid count-${count}">${items}</div></div>`;
+    mediaHTML = `<div class="post-media${isNarrowSingle ? ' post-media--narrow' : ''}"><div class="post-media-grid count-${count}">${items}</div>${pill}</div>`;
   }
 
   /* ── Poll ── */
@@ -162,8 +166,9 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   let cardHTML = '';
   if (s.card && (!s.media_attachments || s.media_attachments.length === 0)) {
     const isVideo = (s.card.type === 'video' || s.card.type === 'rich') && s.card.html;
+    const cardSensitive = s.sensitive && hideSensitiveMedia;
 
-    let mediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
+    let mediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image${cardSensitive ? ' media-sensitive-blur' : ''}" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
 
     if (isVideo && mediaHTML) {
       const encodedHtml = encodeURIComponent(s.card.html);
@@ -175,6 +180,15 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
             <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="8 5 19 12 8 19"></polygon></svg>
           </div>
         </div>`;
+    }
+
+    if (cardSensitive && mediaHTML) {
+      const cardPill = `<button class="sensitive-pill" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
+        <div class="sp-card"><span class="sp-card-title">Sensitive content</span><span class="sp-card-sub">Click to show</span></div>
+        <svg class="sp-icon sp-icon-eye" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span class="sp-revealed-label">hide</span>
+      </button>`;
+      mediaHTML = `<div class="post-card-img-wrap">${mediaHTML}${cardPill}</div>`;
     }
 
     const tag = isVideo ? 'div' : 'a';
@@ -883,6 +897,15 @@ document.addEventListener('pause', (e) => {
   const wrap = e.target.closest('.video-player-wrap');
   if (wrap) wrap.classList.remove('vp-playing');
 }, true);
+
+/** Toggle blur on all sensitive media in the post on/off. */
+window.toggleSensitiveMedia = function(btn) {
+  const postMedia = btn.closest('.post-media, .post-card-img-wrap');
+  const allMedia = postMedia.querySelectorAll('img, video');
+  const anyBlurred = [...allMedia].some(el => el.classList.contains('media-sensitive-blur'));
+  allMedia.forEach(el => el.classList.toggle('media-sensitive-blur', !anyBlurred));
+  btn.classList.toggle('sp-revealed', anyBlurred);
+};
 
 /** Toggle a content-warning body open/closed. */
 window.toggleCW = function toggleCW(id, btn) {

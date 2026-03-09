@@ -582,6 +582,7 @@
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
+  position: relative;
 }
 
 .post-media-grid {
@@ -665,27 +666,99 @@
   filter: blur(20px);
 }
 
-.sensitive-overlay {
+.sensitive-pill {
   position: absolute;
   inset: 0;
-  background: rgba(13, 13, 15, 0.6);
+  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: opacity var(--trans);
+  transition: opacity 0.15s;
 }
 
-.sensitive-overlay:hover {
-  opacity: 0.8;
+.sensitive-pill:hover {
+  opacity: 0.85;
 }
 
-.sensitive-overlay span {
-  color: var(--text-muted);
+.sp-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: rgba(10, 10, 12, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 14px 22px;
+  pointer-events: none;
+}
+
+.sp-card-title {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-ui, var(--font));
+  letter-spacing: 0.01em;
+}
+
+.sp-card-sub {
+  color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
+  font-family: var(--font-ui, var(--font));
+}
+
+/* Icons hidden in card state; only used in revealed pill state */
+.sensitive-pill .sp-icon {
+  display: none;
+}
+
+/* When revealed: collapse to a small corner pill */
+.sensitive-pill.sp-revealed {
+  inset: auto;
+  bottom: 8px;
+  right: 8px;
+  width: auto;
+  flex-direction: row;
+  gap: 5px;
+  padding: 4px 10px 4px 7px;
+  background: rgba(13, 13, 15, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 11px;
   font-family: var(--font-mono);
+}
+
+.sensitive-pill.sp-revealed:hover {
+  background: rgba(30, 30, 35, 0.92);
+  opacity: 1;
+}
+
+.sensitive-pill.sp-revealed .sp-card {
+  display: none;
+}
+
+.sensitive-pill.sp-revealed .sp-icon-eye {
+  display: block;
+}
+
+.sensitive-pill.sp-revealed .sp-icon-slash {
+  display: none;
+}
+
+.sensitive-pill .sp-revealed-label {
+  display: none;
+}
+
+.sensitive-pill.sp-revealed .sp-revealed-label {
+  display: inline;
 }
 
 /* ─── Lightbox ─── */
@@ -935,6 +1008,11 @@ body.hide-cards-enabled .post-card {
   background-image: linear-gradient(to right,
       rgba(155, 127, 255, 0.17) 0%,
       rgba(155, 127, 255, 0.04) 100%);
+}
+
+.post-card-img-wrap {
+  position: relative;
+  overflow: hidden;
 }
 
 .post-card-image {

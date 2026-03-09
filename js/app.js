@@ -866,7 +866,7 @@ if (settingsMenuBtn) {
 
     const hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
     if (hideSensitiveMediaToggle) {
-      hideSensitiveMediaToggle.checked = store.get('pref_hide_sensitive_media') !== 'false'; // default: true
+      hideSensitiveMediaToggle.checked = store.get('pref_hide_sensitive_media') === 'false'; // default: off (blur)
     }
 
     const translateLangSel = $('settings-translate-lang');
@@ -969,14 +969,12 @@ function refreshNotifSettingsUI() {
     el.disabled = !alertGranted;
   }
 
-  // Show debug panel and feature flags section only for the developer account
+  // Show debug panel (includes feature flags) only for the developer account
   const debugSection = $('settings-debug-section');
-  const featureFlagsSection = $('settings-feature-flags-section');
   const acct = state.account?.acct || '';
   const server = state.server || '';
   const isDev = acct === 'stonedonkey' && server === 'mastodon.social';
   if (debugSection) debugSection.style.display = isDev ? '' : 'none';
-  if (featureFlagsSection) featureFlagsSection.style.display = isDev ? '' : 'none';
 
   // Sync the feature flag toggle state
   const followingToggle = $('debug-following-feed-toggle');
@@ -1250,11 +1248,11 @@ if (_autoOpenSensitiveToggle) {
   });
 }
 
-// Hide sensitive media (default: true)
+// Show sensitive media (default: off → blur by default)
 const _hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
 if (_hideSensitiveMediaToggle) {
   _hideSensitiveMediaToggle.addEventListener('change', () => {
-    store.set('pref_hide_sensitive_media', _hideSensitiveMediaToggle.checked ? 'true' : 'false');
+    store.set('pref_hide_sensitive_media', _hideSensitiveMediaToggle.checked ? 'false' : 'true');
   });
 }
 
