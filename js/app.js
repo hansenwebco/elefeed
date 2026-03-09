@@ -601,6 +601,13 @@ document.addEventListener('click', e => {
 
 fetchPopularServers();
 
+// Prevent pinch-to-zoom globally; allow it only inside the lightbox overlay.
+document.addEventListener('touchmove', (e) => {
+  if (e.touches.length > 1 && !e.target.closest('.lightbox-overlay')) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
 /* ══════════════════════════════════════════════════════════════════════
    TAB SWITCHING & DROPDOWNS
    ══════════════════════════════════════════════════════════════════════ */
