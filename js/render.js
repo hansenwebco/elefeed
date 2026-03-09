@@ -41,20 +41,34 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           <span>sensitive content</span>
         </div>` : '';
 
+      // For single-image posts, derive a clamped aspect-ratio from the
+      // attachment metadata so the container is the right shape before
+      // the image loads — no layout reflow, no FOUC.
+      // Portrait cap: 4:3. Landscape cap: 16:9.
+      let itemStyle = '';
+      if (count === 1) {
+        const origW = m.meta?.original?.width  || m.meta?.small?.width;
+        const origH = m.meta?.original?.height || m.meta?.small?.height;
+        if (origW > 0 && origH > 0) {
+          const clamped = Math.max(4 / 3, Math.min(16 / 9, origW / origH));
+          itemStyle = ` style="aspect-ratio: ${clamped.toFixed(4)} / 1"`;
+        }
+      }
+
       if (m.type === 'image') {
-        return `<div class="media-item" data-full-url="${m.url}" data-type="image" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)">
-          <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy" onload="adjustImageAlignment(this)"/>
+        return `<div class="media-item" data-full-url="${m.url}" data-type="image" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)"${itemStyle}>
+          <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy"/>
           ${overlay}
         </div>`;
       } else if (m.type === 'gifv') {
         // GIFV: use <video> with no controls
-        return `<div class="media-item" data-full-url="${m.url}" data-type="gifv" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)">
+        return `<div class="media-item" data-full-url="${m.url}" data-type="gifv" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)"${itemStyle}>
           <video src="${m.url}" poster="${m.preview_url || ''}" autoplay loop muted playsinline class="${blurClass}"></video>
           ${overlay}
         </div>`;
       } else if (m.type === 'video') {
         // Video: custom minimal player (consistent across all browsers)
-        return `<div class="media-item video-player-wrap vp-muted" data-full-url="${m.url}" data-type="video" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="vpWrapperClick(event,this)">
+        return `<div class="media-item video-player-wrap vp-muted" data-full-url="${m.url}" data-type="video" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="vpWrapperClick(event,this)"${itemStyle}>
           <video src="${m.url}" poster="${m.preview_url || ''}" muted playsinline class="${blurClass}"></video>
           <div class="vid-overlay-play" onclick="event.stopPropagation();vpTogglePlay(this.closest('.video-player-wrap'))">
             <div class="vid-overlay-btn"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg></div>
@@ -789,15 +803,8 @@ window.expandMedia = function expandMedia(mediaItem) {
   }, { passive: true });
 };
 
-/** Classify an image as vertical or horizontal after it loads. */
-window.adjustImageAlignment = function adjustImageAlignment(img) {
-  if (img.complete) {
-    const aspectRatio = img.naturalWidth / img.naturalHeight;
-    img.classList.add(aspectRatio < 1 ? 'vertical-image' : 'horizontal-image');
-  } else {
-    img.onload = () => adjustImageAlignment(img);
-  }
-};
+// adjustImageAlignment removed — single-image containers now use CSS
+// aspect-ratio set from attachment metadata at render time.
 
 /* ── Custom Video Player helpers ───────────────────── */
 
