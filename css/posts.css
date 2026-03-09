@@ -105,7 +105,7 @@
   overflow-anchor: auto;
   border-bottom: 1px solid var(--border);
   border-left: 1px solid var(--border2);
-  padding: 18px 20px 18px 18px;
+  padding: 18px 20px 7px 18px;
   transition: background var(--trans), border-color var(--trans);
   position: relative;
   cursor: pointer;
@@ -1368,8 +1368,11 @@ body.hide-cards-enabled .post-card {
 /* External link & visibility pill */
 .post-external-link {
   text-decoration: none;
-  font-family: var(--font-mono);
-  font-size: 11px;
+}
+
+.post-external-link svg {
+  display: block;
+  opacity: 0.55;
 }
 
 .post-vis-btn svg {
@@ -1385,7 +1388,7 @@ body.hide-cards-enabled .post-card {
 /* ─── Responsive ─── */
 @media (max-width: 500px) {
   .post {
-    padding: 16px 14px 16px 12px;
+    padding: 16px 14px 7px 12px;
   }
 
   .section-header {
