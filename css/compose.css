@@ -689,7 +689,7 @@
 /* ─── Emoji Picker ─── */
 .emoji-picker {
   position: fixed;
-  z-index: 1000;
+  z-index: 2000;
   width: 300px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -934,23 +934,15 @@
   flex-direction: column;
 }
 
-/* Close the double flex-gap (wrap→media-preview and media-preview→toolbar)
-   only when the strip is actually visible on mobile */
-@media (max-width: 900px) {
-  .compose-textarea-wrap:has(.compose-suggestions-strip[style*="block"]) {
-    margin-bottom: -12px;
-  }
 
-  .compose-body:has(.compose-suggestions-strip[style*="block"]) .compose-media-preview:empty,
-  .compose-sidebar-body:has(.compose-suggestions-strip[style*="block"]) .compose-media-preview:empty {
-    margin-top: -12px;
-  }
-}
 
 /* ── Mobile: inline ribbon below the textarea ── */
 .compose-suggestions-strip {
   border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   overflow: hidden;
+  margin-bottom: -12px;
 }
 
 .suggestions-strip-track {

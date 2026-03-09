@@ -203,7 +203,9 @@ export async function openEmojiPicker(btn, textarea, updateCb) {
   picker.style.top = (rect.bottom + 250 > window.innerHeight)
     ? (rect.top - 280) + 'px'
     : (rect.bottom + 10) + 'px';
-  picker.style.left = Math.max(10, rect.left - 100) + 'px';
+  const pickerWidth = 300;
+  const rawLeft = Math.max(10, rect.left - 100);
+  picker.style.left = Math.min(rawLeft, window.innerWidth - pickerWidth - 10) + 'px';
 
   $('emoji-search').value = '';
 
