@@ -613,10 +613,30 @@
 }
 
 /* Single-image container: honour the aspect-ratio set inline from
-   attachment metadata (clamped 4:5 portrait → 16:9 landscape).
+   attachment metadata (clamped 4:3 portrait → 16:9 landscape).
    Falls back to 16:9 when no metadata is available. */
 .count-1 .media-item {
   aspect-ratio: 16 / 9;
+}
+
+/* Narrow single images (< 600px wide): shrink the border to fit the
+   image and left-align it inside the post. */
+.post-media--narrow {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.post-media--narrow .count-1 .media-item {
+  aspect-ratio: auto;
+}
+
+.post-media--narrow .media-item img,
+.post-media--narrow .media-item video {
+  width: auto;
+  height: auto;
+  max-height: 500px;
+  max-width: 100%;
+  object-fit: initial;
 }
 
 .count-2 .media-item,
