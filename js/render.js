@@ -42,19 +42,19 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
         </div>` : '';
 
       if (m.type === 'image') {
-        return `<div class="media-item" data-full-url="${m.url}" data-type="image" onclick="expandMedia(this)">
+        return `<div class="media-item" data-full-url="${m.url}" data-type="image" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)">
           <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy" onload="adjustImageAlignment(this)"/>
           ${overlay}
         </div>`;
       } else if (m.type === 'gifv') {
         // GIFV: use <video> with no controls
-        return `<div class="media-item" data-full-url="${m.url}" data-type="gifv" onclick="expandMedia(this)">
+        return `<div class="media-item" data-full-url="${m.url}" data-type="gifv" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)">
           <video src="${m.url}" poster="${m.preview_url || ''}" autoplay loop muted playsinline class="${blurClass}"></video>
           ${overlay}
         </div>`;
       } else if (m.type === 'video') {
         // Video: custom minimal player (consistent across all browsers)
-        return `<div class="media-item video-player-wrap vp-muted" data-full-url="${m.url}" data-type="video" onclick="vpWrapperClick(event,this)">
+        return `<div class="media-item video-player-wrap vp-muted" data-full-url="${m.url}" data-type="video" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="vpWrapperClick(event,this)">
           <video src="${m.url}" poster="${m.preview_url || ''}" muted playsinline class="${blurClass}"></video>
           <div class="vid-overlay-play" onclick="event.stopPropagation();vpTogglePlay(this.closest('.video-player-wrap'))">
             <div class="vid-overlay-btn"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg></div>
@@ -544,11 +544,13 @@ window.expandMedia = function expandMedia(mediaItem) {
   content.className = 'lightbox-content';
 
   let mediaEl = null;
+  let altBadge = null;
+  let altPanel = null;
 
   const renderCurrentMedia = () => {
-    if (mediaEl) {
-      mediaEl.remove();
-    }
+    if (mediaEl) { mediaEl.remove(); }
+    if (altBadge) { altBadge.remove(); altBadge = null; }
+    if (altPanel) { altPanel.remove(); altPanel = null; }
     const currentItem = mediaItems[currentIndex];
     const fullUrl = currentItem.dataset.fullUrl;
     const type = currentItem.dataset.type;
@@ -566,6 +568,7 @@ window.expandMedia = function expandMedia(mediaItem) {
       // No controls for GIFs
     } else if (type === 'image') {
       mediaEl = document.createElement('img');
+      mediaEl.crossOrigin = 'anonymous';
       mediaEl.src = fullUrl;
     } else if (type === 'video') {
       // Custom minimal player in the lightbox
@@ -608,11 +611,76 @@ window.expandMedia = function expandMedia(mediaItem) {
     } else {
       // fallback
       mediaEl = document.createElement('img');
+      mediaEl.crossOrigin = 'anonymous';
       mediaEl.src = fullUrl;
     }
     // Prevent clicking the media itself from closing the overlay
     mediaEl.onclick = (e) => e.stopPropagation();
     content.insertBefore(mediaEl, content.firstChild);
+
+    // Sample dominant color from images and apply a tinted background
+    if (mediaEl instanceof HTMLImageElement) {
+      const doExtract = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 48; canvas.height = 48;
+        try {
+          ctx.drawImage(mediaEl, 0, 0, 48, 48);
+          const d = ctx.getImageData(0, 0, 48, 48).data;
+          // Convert each pixel to HSL individually, then use a saturation-weighted
+          // circular mean for hue so vivid pixels (e.g. sky blue, sunset orange)
+          // dominate over grey/near-white noise.
+          let sinSum = 0, cosSum = 0, satSum = 0, n = 0;
+          for (let i = 0; i < d.length; i += 4) {
+            const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            const l = (max + min) / 2;
+            if (l < 0.08 || l > 0.93) continue; // skip near-black / near-white
+            const delta = max - min;
+            if (delta < 0.08) continue; // skip near-grey pixels
+            const s = delta / (1 - Math.abs(2 * l - 1));
+            let h = 0;
+            if (max === r)      h = 60 * (((g - b) / delta) % 6);
+            else if (max === g) h = 60 * ((b - r) / delta + 2);
+            else                h = 60 * ((r - g) / delta + 4);
+            if (h < 0) h += 360;
+            const rad = h * Math.PI / 180;
+            // Weight by saturation so the most vivid pixels steer the average hue
+            sinSum += Math.sin(rad) * s;
+            cosSum += Math.cos(rad) * s;
+            satSum += s;
+            n++;
+          }
+          if (n === 0 || satSum === 0) return;
+          const avgHue = (Math.atan2(sinSum, cosSum) * 180 / Math.PI + 360) % 360;
+          const avgSat = satSum / n; // 0-1
+          // Dark but clearly tinted background: saturation scaled up so it's visible
+          const bgSat = Math.round(Math.min(avgSat * 100, 65));
+          overlay.style.backgroundColor = `hsl(${Math.round(avgHue)}, ${bgSat}%, 15%)`;
+        } catch (e) { /* cross-origin taint — keep default */ }
+      };
+      if (mediaEl.complete && mediaEl.naturalWidth > 0) doExtract();
+      else mediaEl.addEventListener('load', doExtract, { once: true });
+    } else {
+      overlay.style.backgroundColor = '';
+    }
+
+    // Alt text badge
+    const altText = currentItem.dataset.alt;
+    if (altText && altText.trim()) {
+      altPanel = document.createElement('div');
+      altPanel.className = 'lightbox-alt-panel';
+      altPanel.textContent = altText;
+      altPanel.onclick = (e) => e.stopPropagation();
+
+      altBadge = document.createElement('button');
+      altBadge.className = 'lightbox-alt-badge';
+      altBadge.textContent = 'ALT';
+      altBadge.onclick = (e) => { e.stopPropagation(); altPanel.classList.toggle('visible'); };
+
+      overlay.appendChild(altPanel);
+      overlay.appendChild(altBadge);
+    }
 
     if (prevBtn) prevBtn.style.display = currentIndex > 0 ? 'flex' : 'none';
     if (nextBtn) nextBtn.style.display = currentIndex < mediaItems.length - 1 ? 'flex' : 'none';
@@ -681,6 +749,21 @@ window.expandMedia = function expandMedia(mediaItem) {
   overlay.onclick = close;
   closeBtn.onclick = (e) => { e.stopPropagation(); close(); };
   document.addEventListener('keydown', handleKeydown);
+
+  // Touch swipe to navigate between images
+  let touchStartX = 0, touchStartY = 0;
+  overlay.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  overlay.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0 && currentIndex < mediaItems.length - 1) { currentIndex++; renderCurrentMedia(); }
+      else if (dx > 0 && currentIndex > 0) { currentIndex--; renderCurrentMedia(); }
+    }
+  }, { passive: true });
 };
 
 /** Classify an image as vertical or horizontal after it loads. */
