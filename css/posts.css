@@ -692,7 +692,7 @@
   justify-content: center;
   cursor: zoom-out;
   opacity: 0;
-  transition: opacity 200ms ease;
+  transition: opacity 200ms ease, background-color 600ms ease;
   padding: 20px;
 }
 
@@ -724,7 +724,7 @@
   width: auto;
   height: auto;
   border-radius: 4px;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
   background: var(--bg);
 }
 
@@ -780,6 +780,56 @@
 
 .lightbox-next {
   right: 24px;
+}
+
+.lightbox-alt-badge {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 3100;
+  transition: background 0.15s;
+}
+
+.lightbox-alt-badge:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.lightbox-alt-panel {
+  position: absolute;
+  bottom: 60px;
+  right: 24px;
+  left: 24px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: white;
+  font-size: 14px;
+  line-height: 1.55;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 3100;
+  max-height: 35vh;
+  overflow-y: auto;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.lightbox-alt-panel.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 /* Hide Mastodon's native fallback quote inline text */
