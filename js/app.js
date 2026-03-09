@@ -114,10 +114,36 @@ window.addEventListener('popstate', async e => {
       openNotifDrawer();
     }
 
+    // Restore or clear hashtag filter state based on URL params
+    const feedParam = currentParams.get('feed');
+    const tagParam  = currentParams.get('tag');
+    const prevFeedFilter = state.feedFilter;
+
+    if (feedParam === 'hashtags' && tagParam) {
+      // Navigating forward into a hashtag view
+      state.selectedHashtagFilter = tagParam;
+      state.feedFilter = 'hashtags';
+      document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(b =>
+        b.classList.toggle('active', b.dataset.filter === 'hashtags'));
+      $('hashtag-filter-bar').style.display = '';
+    } else if (state.feedFilter === 'hashtags') {
+      // Navigating back out of a hashtag view — reset filter
+      state.feedFilter = feedParam || 'all';
+      state.selectedHashtagFilter = null;
+      document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(b =>
+        b.classList.toggle('active', b.dataset.filter === state.feedFilter));
+      $('hashtag-filter-bar').style.display = 'none';
+    }
+
     // Restore tab if it changed
     const newTab = currentParams.get('tab') || 'feed';
     if (newTab !== state.activeTab) {
+      // switchToTab (called by the click) will reload the appropriate tab
       document.getElementById(`tab-btn-${newTab}`)?.click();
+    } else if (newTab === 'feed' && state.feedFilter !== prevFeedFilter) {
+      // Same tab but filter changed — reload the feed
+      updateTabLabel('feed');
+      loadFeedTab();
     }
 
     setTimeout(setOverlayPillVisibility, 10);
@@ -1481,8 +1507,17 @@ document.addEventListener('click', e => {
     const rawText = tagSourceEl ? tagSourceEl.textContent : hashtagLink.textContent;
     const tag = rawText.replace(/^#/, '').split(/\s+/)[0].toLowerCase();
 
-    // Snapshot current URL so back returns to wherever the user was
-    history.pushState({}, '', location.href);
+    // Push a history entry encoding the hashtag destination so the previous
+    // location is preserved as a true back entry the popstate handler can restore.
+    const _hashNext = new URL(window.location);
+    _hashNext.searchParams.set('tab', 'feed');
+    _hashNext.searchParams.set('feed', 'hashtags');
+    _hashNext.searchParams.set('tag', tag);
+    _hashNext.searchParams.delete('thread');
+    _hashNext.searchParams.delete('profile');
+    _hashNext.searchParams.delete('bookmarks');
+    _hashNext.searchParams.delete('notifications');
+    history.pushState({}, '', _hashNext);
 
     state.selectedHashtagFilter = tag;
     state.feedFilter = 'hashtags';
@@ -1508,8 +1543,16 @@ document.addEventListener('click', e => {
     e.preventDefault();
     const tag = trendingTagLink.dataset.trendingTag.toLowerCase();
 
-    // Snapshot current URL so back returns to wherever the user was
-    history.pushState({}, '', location.href);
+    // Push a history entry encoding the hashtag destination (same pattern as a.hashtag)
+    const _trendNext = new URL(window.location);
+    _trendNext.searchParams.set('tab', 'feed');
+    _trendNext.searchParams.set('feed', 'hashtags');
+    _trendNext.searchParams.set('tag', tag);
+    _trendNext.searchParams.delete('thread');
+    _trendNext.searchParams.delete('profile');
+    _trendNext.searchParams.delete('bookmarks');
+    _trendNext.searchParams.delete('notifications');
+    history.pushState({}, '', _trendNext);
 
     state.selectedHashtagFilter = tag;
     state.feedFilter = 'hashtags';
@@ -1584,6 +1627,17 @@ async function boot() {
 
   // Expose helpers so search.js can trigger navigation without circular imports
   window.__searchHashtagClick = (tag) => {
+    // Push a history entry so the user can return from the hashtag view
+    const _searchNext = new URL(window.location);
+    _searchNext.searchParams.set('tab', 'feed');
+    _searchNext.searchParams.set('feed', 'hashtags');
+    _searchNext.searchParams.set('tag', tag);
+    _searchNext.searchParams.delete('thread');
+    _searchNext.searchParams.delete('profile');
+    _searchNext.searchParams.delete('bookmarks');
+    _searchNext.searchParams.delete('notifications');
+    history.pushState({}, '', _searchNext);
+
     state.selectedHashtagFilter = tag;
     state.feedFilter = 'hashtags';
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'feed'));
