@@ -40,6 +40,10 @@ import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply, update
 import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
 import { openPostAnalyticsDrawer, closePostAnalyticsDrawer, appendMoreAnalyticsUsers } from './analytics.js';
 
+// Expose drawer openers needed by render.js (no module imports there)
+window.openThreadDrawer = openThreadDrawer;
+window.handleReply = handleReply;
+
 // Drawer state tracking for history
 function isAnyDrawerOpen() {
   return (
