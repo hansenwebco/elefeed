@@ -5,7 +5,7 @@
  */
 
 import { $, state, store, REDIRECT_URI, SCOPES, urlParams } from './state.js';
-import { delay, updateURLParam } from './utils.js';
+import { delay, updateURLParam, escapeHTML, renderCustomEmojis, formatNum } from './utils.js';
 import { apiGet, registerApp, exchangeCode } from './api.js';
 import {
   showScreen, showToast, showLoginError, clearLoginError,
@@ -1635,6 +1635,203 @@ document.addEventListener('click', e => {
     }
   }
 });
+
+/* ══════════════════════════════════════════════════════════════════════
+   USER HOVER CARD (desktop only)
+   ══════════════════════════════════════════════════════════════════════ */
+
+const _hoverCardCache = new Map(); // accountId → { account, relationship, ts }
+const HOVER_CARD_TTL = 2 * 60 * 1000;
+
+let _hoverShowTimer = null;
+let _hoverHideTimer = null;
+let _hoverCurrentId = null;
+
+function _hoverIsDesktop() {
+  return window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 768px)').matches;
+}
+
+function _positionHoverCard(card, triggerRect) {
+  const W = 300;
+  const margin = 10;
+  let left = triggerRect.left + triggerRect.width / 2 - W / 2;
+  left = Math.max(margin, Math.min(left, window.innerWidth - W - margin));
+  const cardH = card.offsetHeight || 180;
+  let top = triggerRect.bottom + 6;
+  if (top + cardH > window.innerHeight - margin) {
+    top = triggerRect.top - cardH - 6;
+  }
+  card.style.left = left + 'px';
+  card.style.top = top + 'px';
+}
+
+async function _showHoverCard(accountId, server, triggerRect) {
+  const card = document.getElementById('user-hover-card');
+  if (!card) return;
+
+  // Don't show card for the logged-in user's own posts
+  if (state.account && accountId === state.account.id) return;
+
+  _hoverCurrentId = accountId;
+
+  // Show skeleton immediately
+  card.innerHTML = `
+    <div class="hover-card-inner hover-card-loading">
+      <div class="hover-card-skel-avatar"></div>
+      <div class="hover-card-skel-lines">
+        <div class="hover-card-skel-line w-60"></div>
+        <div class="hover-card-skel-line w-40"></div>
+      </div>
+    </div>`;
+  _positionHoverCard(card, triggerRect);
+  card.setAttribute('aria-hidden', 'false');
+  card.classList.add('visible');
+
+  // Use cache or fetch fresh
+  let cached = _hoverCardCache.get(accountId);
+  if (!cached || (Date.now() - cached.ts) > HOVER_CARD_TTL) {
+    try {
+      const [account, relationships] = await Promise.all([
+        apiGet(`/api/v1/accounts/${accountId}`, state.token, server),
+        apiGet(`/api/v1/accounts/relationships?id[]=${accountId}`, state.token, server).catch(() => []),
+      ]);
+      cached = { account, relationship: relationships[0] || null, ts: Date.now() };
+      _hoverCardCache.set(accountId, cached);
+    } catch {
+      if (_hoverCurrentId !== accountId) return;
+      card.innerHTML = `<div class="hover-card-inner" style="padding:16px;font-size:13px;color:var(--text-muted);">Could not load profile.</div>`;
+      return;
+    }
+  }
+
+  if (_hoverCurrentId !== accountId) return;
+
+  const { account, relationship } = cached;
+  const isFollowing = !!(relationship && relationship.following);
+  const isFollowedBy = !!(relationship && relationship.followed_by);
+  const isRequested = !!(relationship && relationship.requested);
+  const isBlocked = !!(relationship && relationship.blocking);
+  const isMuted = !!(relationship && relationship.muting);
+
+  const displayName = renderCustomEmojis(account.display_name || account.username, account.emojis);
+  const bioText = account.note ? account.note.replace(/<[^>]+>/g, '').trim() : '';
+
+  const followBtnClass = `profile-follow-btn hover-card-follow-btn${isFollowing ? ' following' : ''}${isRequested ? ' requested' : ''}`;
+  const followBtnText = isBlocked ? 'Blocked' : isMuted ? 'Muted' : isFollowing ? 'Following' : (isRequested ? 'Requested' : 'Follow');
+
+  card.innerHTML = `
+    <div class="hover-card-inner">
+      <div class="hover-card-header">
+        <img class="hover-card-avatar"
+          src="${escapeHTML(account.avatar_static || account.avatar)}"
+          alt=""
+          onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER" />
+        <button class="${followBtnClass}"
+          data-account-id="${escapeHTML(accountId)}"
+          data-following="${isFollowing ? 'true' : 'false'}"
+          ${isBlocked || isMuted ? 'disabled' : ''}>
+          ${escapeHTML(followBtnText)}
+        </button>
+      </div>
+      <div class="hover-card-name">${displayName}</div>
+      <div class="hover-card-acct">@${escapeHTML(account.acct)}</div>
+      ${isFollowedBy ? '<div class="hover-card-follows-you">Follows you</div>' : ''}
+      ${bioText ? `<div class="hover-card-bio">${escapeHTML(bioText)}</div>` : ''}
+      <div class="hover-card-stats">
+        <div class="hover-card-stat">
+          <span class="hover-card-stat-num">${formatNum(account.statuses_count)}</span>
+          <span class="hover-card-stat-label"> Posts</span>
+        </div>
+        <div class="hover-card-stat">
+          <span class="hover-card-stat-num">${formatNum(account.following_count)}</span>
+          <span class="hover-card-stat-label"> Following</span>
+        </div>
+        <div class="hover-card-stat">
+          <span class="hover-card-stat-num">${formatNum(account.followers_count)}</span>
+          <span class="hover-card-stat-label"> Followers</span>
+        </div>
+      </div>
+    </div>`;
+
+  // Re-position now that we have real dimensions
+  _positionHoverCard(card, triggerRect);
+}
+
+function _dismissHoverCard() {
+  _hoverCurrentId = null;
+  const card = document.getElementById('user-hover-card');
+  if (card) {
+    card.classList.remove('visible');
+    card.setAttribute('aria-hidden', 'true');
+  }
+}
+
+// Mouseover delegation — start show timer when entering a name/avatar trigger
+document.addEventListener('mouseover', e => {
+  if (!_hoverIsDesktop()) return;
+  const trigger = e.target.closest('[data-profile-id]');
+  if (!trigger) return;
+
+  const accountId = trigger.dataset.profileId;
+  const server = trigger.dataset.profileServer || state.server;
+
+  // Already showing this card — cancel any pending hide
+  if (_hoverCurrentId === accountId) {
+    clearTimeout(_hoverHideTimer);
+    return;
+  }
+
+  clearTimeout(_hoverHideTimer);
+  clearTimeout(_hoverShowTimer);
+
+  _hoverShowTimer = setTimeout(() => {
+    const rect = trigger.getBoundingClientRect();
+    _showHoverCard(accountId, server, rect);
+  }, 350);
+});
+
+// Mouseout delegation — start hide timer when leaving a trigger
+document.addEventListener('mouseout', e => {
+  if (!_hoverIsDesktop()) return;
+  const trigger = e.target.closest('[data-profile-id]');
+  if (!trigger) return;
+  // Ignore if still within the same trigger element
+  if (trigger.contains(e.relatedTarget)) return;
+  // Ignore if moving into the card
+  const card = document.getElementById('user-hover-card');
+  if (card && card.contains(e.relatedTarget)) return;
+
+  clearTimeout(_hoverShowTimer);
+  _hoverHideTimer = setTimeout(_dismissHoverCard, 250);
+});
+
+// Keep card alive while cursor is on it
+const _hoverCardEl = document.getElementById('user-hover-card');
+if (_hoverCardEl) {
+  _hoverCardEl.addEventListener('mouseenter', () => {
+    clearTimeout(_hoverHideTimer);
+    clearTimeout(_hoverShowTimer);
+  });
+  _hoverCardEl.addEventListener('mouseleave', () => {
+    _hoverHideTimer = setTimeout(_dismissHoverCard, 250);
+  });
+  // Click on card body (not follow btn) → open profile drawer
+  _hoverCardEl.addEventListener('click', e => {
+    if (e.target.closest('.profile-follow-btn')) return;
+    if (!_hoverCurrentId) return;
+    _dismissHoverCard();
+    openProfileDrawer(_hoverCurrentId, state.server);
+  });
+}
+
+// Dismiss hover card when any drawer opens
+document.addEventListener('click', e => {
+  if (e.target.closest('.profile-follow-btn.hover-card-follow-btn')) {
+    // Invalidate cache for this account so next hover re-fetches updated relationship
+    const btn = e.target.closest('.profile-follow-btn.hover-card-follow-btn');
+    if (btn) _hoverCardCache.delete(btn.dataset.accountId);
+  }
+}, true);
 
 /* ══════════════════════════════════════════════════════════════════════
    NETWORK STATUS
