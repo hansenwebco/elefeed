@@ -39,6 +39,7 @@ import {
 import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply, updateCharCount, updateSidebarCharCount } from './compose.js';
 import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
 import { openPostAnalyticsDrawer, closePostAnalyticsDrawer, appendMoreAnalyticsUsers } from './analytics.js';
+import { startCountPolling, stopCountPolling, applyCountsFromStatus } from './counts.js';
 
 // Expose drawer openers needed by render.js (no module imports there)
 window.openThreadDrawer = openThreadDrawer;
@@ -270,6 +271,7 @@ async function initApp(server, token, demo = false) {
   }
 
   startPolling();
+  startCountPolling();
   pollNotifications();
 
   // Start background Service Worker polling
@@ -864,6 +866,11 @@ if (settingsMenuBtn) {
       hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
     }
 
+    const countPollingToggle = $('settings-count-polling-toggle');
+    if (countPollingToggle) {
+      countPollingToggle.checked = store.get('pref_count_polling') !== 'false';
+    }
+
     const autoOpenSensitiveToggle = $('settings-auto-open-sensitive-toggle');
     if (autoOpenSensitiveToggle) {
       autoOpenSensitiveToggle.checked = store.get('pref_auto_open_sensitive') === 'true';
@@ -1245,6 +1252,19 @@ if (_hideCardsToggle) {
   });
 }
 
+// Live count updates
+const _countPollingToggle = $('settings-count-polling-toggle');
+if (_countPollingToggle) {
+  _countPollingToggle.addEventListener('change', () => {
+    store.set('pref_count_polling', _countPollingToggle.checked ? 'true' : 'false');
+    if (_countPollingToggle.checked) {
+      startCountPolling();
+    } else {
+      stopCountPolling();
+    }
+  });
+}
+
 // Auto-open sensitive content
 const _autoOpenSensitiveToggle = $('settings-auto-open-sensitive-toggle');
 if (_autoOpenSensitiveToggle) {
@@ -1312,6 +1332,7 @@ $('logout-btn').addEventListener('click', () => {
   showScreen('login-screen');
   showToast('Signed out.');
   stopPolling();
+  stopCountPolling();
   stopSwPolling();
 });
 
@@ -1646,6 +1667,7 @@ const HOVER_CARD_TTL = 2 * 60 * 1000;
 let _hoverShowTimer = null;
 let _hoverHideTimer = null;
 let _hoverCurrentId = null;
+let _hoverCurrentServer = null;
 
 function _hoverIsDesktop() {
   return window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 768px)').matches;
@@ -1673,6 +1695,7 @@ async function _showHoverCard(accountId, server, triggerRect) {
   if (state.account && accountId === state.account.id) return;
 
   _hoverCurrentId = accountId;
+  _hoverCurrentServer = server;
 
   // Show skeleton immediately
   card.innerHTML = `
@@ -1819,8 +1842,10 @@ if (_hoverCardEl) {
   _hoverCardEl.addEventListener('click', e => {
     if (e.target.closest('.profile-follow-btn')) return;
     if (!_hoverCurrentId) return;
+    const id = _hoverCurrentId;
+    const server = _hoverCurrentServer || state.server;
     _dismissHoverCard();
-    openProfileDrawer(_hoverCurrentId, state.server);
+    openProfileDrawer(id, server);
   });
 }
 

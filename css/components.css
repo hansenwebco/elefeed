@@ -660,6 +660,63 @@
   font-size: 12px;
 }
 
+/* ─── Live Count Pop Animations ─── */
+
+/*
+ * When a post's reply / boost / favourite count increases, the count
+ * element briefly pops with a scale + colour cycle, then settles back.
+ * Each type uses the colour associated with that action.
+ */
+
+@keyframes count-pop-reply {
+  0%   { transform: scale(1);    color: inherit; }
+  25%  { transform: scale(1.45); color: #7b9cff; }
+  55%  { transform: scale(1.2);  color: #a0b8ff; }
+  100% { transform: scale(1);    color: inherit; }
+}
+
+@keyframes count-pop-boost {
+  0%   { transform: scale(1);    color: inherit; }
+  25%  { transform: scale(1.45); color: var(--boost, #40c97e); }
+  55%  { transform: scale(1.2);  color: #5de09b; }
+  100% { transform: scale(1);    color: inherit; }
+}
+
+@keyframes count-pop-fav {
+  0%   { transform: scale(1);    color: inherit; }
+  25%  { transform: scale(1.45); color: var(--fav, #ffb035); }
+  55%  { transform: scale(1.2);  color: #ffd060; }
+  100% { transform: scale(1);    color: inherit; }
+}
+
+.count-pop-reply {
+  display: inline-block;
+  animation: count-pop-reply 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.count-pop-boost {
+  display: inline-block;
+  animation: count-pop-boost 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.count-pop-fav {
+  display: inline-block;
+  animation: count-pop-fav 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Spark particles launched by counts.js */
+@keyframes count-spark {
+  0%   { opacity: 1;   transform: translate(0, 0)                         scale(1);   }
+  70%  { opacity: 0.8; transform: translate(var(--sdx), var(--sdy))       scale(0.6); }
+  100% { opacity: 0;   transform: translate(var(--sdx), var(--sdy))       scale(0);   }
+}
+
+/* The wrapper div injected by counts.js has this class */
+.count-sparks-wrap {
+  /* positioned absolutely by JS inline styles; this is just for safety */
+  pointer-events: none;
+}
+
 .confirm-dialog-body {
   flex: 1;
   min-width: 0;
