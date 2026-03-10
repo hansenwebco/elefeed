@@ -502,6 +502,7 @@ export async function loadFeedTab(scrollTop = true) {
   setupOverlayPill();
   setupOverlayPillScroll();
 
+  $('feed-posts').innerHTML = '';
   setLoading('feed', true);
   setError('feed', null);
 
