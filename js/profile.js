@@ -62,16 +62,22 @@ import {
 const profilePagination = {
   accountId: null,
   server: null,
-  maxId: null,
-  loading: false,
+  posts: { maxId: null, loading: false },
+  replies: { maxId: null, loading: false },
+  media: { maxId: null, loading: false },
 };
+
+// Cache rendered profile so reopening the same profile is instant (TTL 5 min)
+const _profileCache = { accountId: null, ts: 0, scrollTop: 0 };
+const PROFILE_CACHE_TTL = 5 * 60 * 1000;
 
 let profileScrollListenerAttached = false;
 
 function checkProfileInfiniteScroll() {
   const inner = document.querySelector('.profile-drawer-inner');
   if (!inner) return;
-  const btn = inner.querySelector('.load-more-btn[data-feed="profile"]');
+  const activePanel = inner.querySelector('.profile-tab-panel:not([hidden])') || inner;
+  const btn = activePanel.querySelector('.load-more-btn[data-feed="profile"]');
   if (!btn || btn.disabled) return;
   const rect = btn.getBoundingClientRect();
   const innerRect = inner.getBoundingClientRect();
@@ -96,31 +102,92 @@ function attachProfileScrollListener() {
   }, { passive: true });
 }
 
+function renderMediaItem(status) {
+  const attachments = (status.media_attachments || []).filter(
+    m => m.type === 'image' || m.type === 'video' || m.type === 'gifv'
+  );
+  if (!attachments.length) return '';
+  return attachments.map(att => {
+    const isVideo = att.type === 'video' || att.type === 'gifv';
+    const thumb = escapeHTML(att.preview_url || att.url);
+    const fullUrl = escapeHTML(att.url);
+    const altText = (att.description || '').replace(/"/g, '&quot;');
+    return `<div class="media-item profile-media-item" data-full-url="${fullUrl}" data-type="${att.type}" data-alt="${altText}" onclick="expandMedia(this)">
+      <img src="${thumb}" alt="" loading="lazy"/>
+      ${isVideo ? '<div class="profile-media-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg></div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+async function loadProfileTab(tabName, panel) {
+  if (panel.dataset.loaded) return;
+  panel.innerHTML = '<div class="profile-loading"><div class="spinner"></div></div>';
+  const { accountId, server } = profilePagination;
+  const tabState = profilePagination[tabName];
+  let url;
+  if (tabName === 'replies') {
+    url = `/api/v1/accounts/${accountId}/statuses?limit=20`;
+  } else if (tabName === 'media') {
+    url = `/api/v1/accounts/${accountId}/statuses?limit=20&only_media=true`;
+  } else return;
+
+  try {
+    const statuses = await apiGet(url, state.token, server);
+    tabState.maxId = statuses.length ? statuses[statuses.length - 1].id : null;
+    panel.dataset.loaded = 'true';
+    const loadMoreHtml = (statuses.length === 20 && tabState.maxId)
+      ? `<button class="load-more-btn" data-feed="profile" data-tab="${tabName}">Load More</button>`
+      : '';
+    if (tabName === 'media') {
+      panel.innerHTML = statuses.length
+        ? `<div class="profile-media-grid">${statuses.map(s => renderMediaItem(s)).join('')}</div>${loadMoreHtml}`
+        : '<div class="feed-status"><p style="font-size:13px;">No media yet.</p></div>';
+    } else {
+      panel.innerHTML = statuses.length
+        ? statuses.map(s => renderPost(s)).join('') + loadMoreHtml
+        : '<div class="feed-status"><p style="font-size:13px;">No posts yet.</p></div>';
+    }
+  } catch (err) {
+    panel.innerHTML = '<div class="feed-status"><p style="font-size:13px;color:var(--danger);">Failed to load.</p></div>';
+  }
+}
+
 export async function loadMoreProfilePosts(btn) {
-  if (profilePagination.loading || !profilePagination.maxId) return;
-  profilePagination.loading = true;
+  const tabName = btn.dataset.tab || 'posts';
+  const tabState = profilePagination[tabName];
+  if (!tabState || tabState.loading || !tabState.maxId) return;
+  tabState.loading = true;
   btn.disabled = true;
   btn.textContent = 'Loading...';
 
   try {
-    const { accountId, server, maxId } = profilePagination;
-    const newPosts = await apiGet(
-      `/api/v1/accounts/${accountId}/statuses?limit=20&exclude_replies=true&max_id=${maxId}`,
-      state.token,
-      server
-    );
+    const { accountId, server } = profilePagination;
+    let url = `/api/v1/accounts/${accountId}/statuses?limit=20&max_id=${tabState.maxId}`;
+    if (tabName === 'posts') url += '&exclude_replies=true';
+    if (tabName === 'media') url += '&only_media=true';
 
-    profilePagination.maxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
+    const newPosts = await apiGet(url, state.token, server);
+    tabState.maxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
 
-    const html = newPosts.map(s => renderPost(s)).join('');
     const container = btn.parentNode;
     if (!container) return;
 
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    while (tmp.firstChild) container.insertBefore(tmp.firstChild, btn);
+    if (tabName === 'media') {
+      const grid = container.querySelector('.profile-media-grid');
+      if (grid) {
+        const html = newPosts.map(s => renderMediaItem(s)).join('');
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        while (tmp.firstChild) grid.appendChild(tmp.firstChild);
+      }
+    } else {
+      const html = newPosts.map(s => renderPost(s)).join('');
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      while (tmp.firstChild) container.insertBefore(tmp.firstChild, btn);
+    }
 
-    if (!profilePagination.maxId) {
+    if (!tabState.maxId) {
       btn.remove();
     } else {
       btn.disabled = false;
@@ -133,7 +200,7 @@ export async function loadMoreProfilePosts(btn) {
     btn.disabled = false;
     btn.textContent = 'Load More';
   } finally {
-    profilePagination.loading = false;
+    tabState.loading = false;
   }
 }
 
@@ -143,6 +210,27 @@ export function openProfileDrawer(accountId, server) {
   const drawer = $('profile-drawer');
   const backdrop = $('profile-backdrop');
   const content = $('profile-content');
+
+  // Reuse cached profile if it's the same account and still fresh
+  const cacheHit = _profileCache.accountId === accountId &&
+    (Date.now() - _profileCache.ts) < PROFILE_CACHE_TTL &&
+    content.querySelector('.profile-tabs'); // content is actually rendered
+
+  if (cacheHit) {
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    updateURLParam('profile', accountId, true);
+    const inner = drawer.querySelector('.profile-drawer-inner');
+    if (inner && _profileCache.scrollTop > 0) {
+      requestAnimationFrame(() => { inner.scrollTop = _profileCache.scrollTop; });
+    }
+    // scroll listener may have been detached — recheck
+    if (!profileScrollListenerAttached) attachProfileScrollListener();
+    setTimeout(checkProfileInfiniteScroll, 200);
+    return;
+  }
 
   content.innerHTML = '<div class="profile-loading"><div class="spinner"></div></div>';
   drawer.classList.add('open');
@@ -158,8 +246,12 @@ export function openProfileDrawer(accountId, server) {
   // Reset pagination state for this profile
   profilePagination.accountId = accountId;
   profilePagination.server = srv;
-  profilePagination.maxId = null;
-  profilePagination.loading = false;
+  profilePagination.posts.maxId = null;
+  profilePagination.posts.loading = false;
+  profilePagination.replies.maxId = null;
+  profilePagination.replies.loading = false;
+  profilePagination.media.maxId = null;
+  profilePagination.media.loading = false;
   profileScrollListenerAttached = false;
 
   Promise.all([
@@ -239,11 +331,11 @@ export function openProfileDrawer(accountId, server) {
 
     // Track cursor for pagination
     if (statuses.length) {
-      profilePagination.maxId = statuses[statuses.length - 1].id;
+      profilePagination.posts.maxId = statuses[statuses.length - 1].id;
     }
 
-    const loadMoreHtml = (statuses.length === 20 && profilePagination.maxId)
-      ? '<button class="load-more-btn" data-feed="profile">Load More</button>'
+    const loadMoreHtml = (statuses.length === 20 && profilePagination.posts.maxId)
+      ? '<button class="load-more-btn" data-feed="profile" data-tab="posts">Load More</button>'
       : '';
 
     const postsHtml = statuses.length
@@ -338,13 +430,37 @@ export function openProfileDrawer(accountId, server) {
         </a>
       </div>
       ${pinnedHtml}
-      <div class="profile-posts-header">recent posts</div>
-      ${postsHtml}`;
+      <div class="profile-tabs" role="tablist">
+        <button class="profile-tab active" data-tab="posts" role="tab" aria-selected="true">Posts</button>
+        <button class="profile-tab" data-tab="replies" role="tab" aria-selected="false">Posts &amp; Replies</button>
+        <button class="profile-tab" data-tab="media" role="tab" aria-selected="false">Media</button>
+      </div>
+      <div class="profile-tab-panel" id="profile-tab-posts" role="tabpanel">${postsHtml}</div>
+      <div class="profile-tab-panel" id="profile-tab-replies" role="tabpanel" hidden></div>
+      <div class="profile-tab-panel" id="profile-tab-media" role="tabpanel" hidden></div>`;
 
     // Render the follow/mutual label after DOM is inserted
     renderProfileBannerFollowLabel(relationship);
 
-    // Wire pinned carousel
+    // Wire profile content tabs
+    content.querySelectorAll('.profile-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        content.querySelectorAll('.profile-tab').forEach(t => {
+          t.classList.toggle('active', t === tab);
+          t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+        });
+        content.querySelectorAll('.profile-tab-panel').forEach(p => {
+          p.hidden = p.id !== `profile-tab-${tabName}`;
+        });
+        const panel = content.querySelector(`#profile-tab-${tabName}`);
+        if (panel && !panel.dataset.loaded && tabName !== 'posts') {
+          loadProfileTab(tabName, panel);
+        }
+        setTimeout(checkProfileInfiniteScroll, 200);
+      });
+    });
+
     if (pinned.length > 1) {
       const carouselEl = $(`pinned-carousel-${accountId}`);
       if (carouselEl) {
@@ -386,6 +502,11 @@ export function openProfileDrawer(accountId, server) {
         }, { passive: false });
       }
     }
+    // Mark cache as valid for this account
+    _profileCache.accountId = accountId;
+    _profileCache.ts = Date.now();
+    _profileCache.scrollTop = 0;
+
     // Attach infinite scroll listener to the drawer
     attachProfileScrollListener();
     setTimeout(checkProfileInfiniteScroll, 200);
@@ -400,6 +521,11 @@ export function openProfileDrawer(accountId, server) {
 export function closeProfileDrawer() {
   const drawer = $('profile-drawer');
   const backdrop = $('profile-backdrop');
+
+  // Save scroll position so cache restores correctly
+  const inner = drawer.querySelector('.profile-drawer-inner');
+  if (inner && _profileCache.accountId) _profileCache.scrollTop = inner.scrollTop;
+
   drawer.classList.remove('open');
   drawer.setAttribute('aria-hidden', 'true');
   backdrop.classList.remove('open');
