@@ -508,11 +508,13 @@
   display: none;
 }
 
-.post-content .hashtag {
+.post-content .hashtag,
+.post-tags .hashtag {
   color: var(--green);
 }
 
-.hashtag-pills-enabled .post-content .hashtag {
+.hashtag-pills-enabled .post-content .hashtag,
+.hashtag-pills-enabled .post-tags .hashtag {
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--accent);
@@ -526,10 +528,16 @@
   transition: all var(--trans);
 }
 
-.hashtag-pills-enabled .post-content .hashtag:hover {
+.hashtag-pills-enabled .post-content .hashtag:hover,
+.hashtag-pills-enabled .post-tags .hashtag:hover {
   background: var(--surface);
   border-color: var(--accent);
   text-decoration: none;
+}
+
+/* Trailing hashtag block moved below media/cards */
+.post-tags {
+  margin-top: 8px;
 }
 
 .post-content .mention {

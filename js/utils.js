@@ -66,6 +66,36 @@ export function processContent(html) {
 }
 
 /**
+ * Remove trailing paragraphs that contain only hashtag links (and whitespace)
+ * from post HTML, returning them separately so they can be rendered after
+ * media / cards. Posts where hashtags appear mid-content are unaffected.
+ * Returns { content: string, tagLine: string }.
+ */
+export function extractTrailingHashtags(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  const paras = Array.from(div.querySelectorAll('p'));
+  const trailing = [];
+  for (let i = paras.length - 1; i >= 0; i--) {
+    const p = paras[i];
+    const onlyHashtags = Array.from(p.childNodes).every(n => {
+      if (n.nodeType === 3 /* TEXT_NODE */) return n.textContent.trim() === '';
+      if (n.nodeType === 1 /* ELEMENT_NODE */)
+        return n.classList.contains('hashtag') || n.tagName === 'BR';
+      return false;
+    });
+    if (!onlyHashtags || p.querySelectorAll('.hashtag').length === 0) break;
+    trailing.unshift(p);
+  }
+  if (trailing.length === 0) return { content: html, tagLine: '' };
+  trailing.forEach(p => p.remove());
+  return {
+    content: div.innerHTML,
+    tagLine: trailing.map(p => p.innerHTML).join(' '),
+  };
+}
+
+/**
  * Replace `:shortcode:` placeholders with `<img>` custom emoji tags.
  * Text is HTML-escaped first to prevent injection.
  */
