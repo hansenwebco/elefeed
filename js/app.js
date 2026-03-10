@@ -850,7 +850,7 @@ if (settingsMenuBtn) {
 
     const hashtagPillsToggle = $('settings-hashtag-pills-toggle');
     if (hashtagPillsToggle) {
-      hashtagPillsToggle.checked = store.get('pref_hashtag_pills') === 'true';
+      hashtagPillsToggle.checked = store.get('pref_hashtag_pills') !== 'false';
     }
 
     const newpostStyleCurrent = store.get('pref_newpost_style') || 'badge'; // default: Refresh Notification
@@ -1212,8 +1212,8 @@ document.querySelectorAll('#settings-newpost-style-group .theme-segment-btn').fo
   });
 });
 
-// Hashtag pills
-if (store.get('pref_hashtag_pills') === 'true') {
+// Hashtag pills (enabled by default; opt-out via settings)
+if (store.get('pref_hashtag_pills') !== 'false') {
   document.body.classList.add('hashtag-pills-enabled');
 }
 const _hashtagPillsToggle = $('settings-hashtag-pills-toggle');

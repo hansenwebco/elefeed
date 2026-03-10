@@ -13,7 +13,7 @@
 
 import { state } from './state.js';
 import {
-  escapeHTML, sanitizeHTML, processContent,
+  escapeHTML, sanitizeHTML, processContent, extractTrailingHashtags,
   renderCustomEmojis, relativeTime,
 } from './utils.js';
 
@@ -231,6 +231,10 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   const hasCW = !autoOpenSensitive && ((s.spoiler_text && s.spoiler_text.length > 0) || s.sensitive);
   const cwText = s.spoiler_text ? escapeHTML(s.spoiler_text) : 'Sensitive content';
   const cwId = `cw-${idPrefix}${status.id}`;
+  const { content: postBody, tagLine } = extractTrailingHashtags(
+    processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server, cardUrl: s.card && s.card.url }))
+  );
+  const tagLineHTML = tagLine ? `<div class="post-tags">${tagLine}</div>` : '';
   let contentHTML = '';
   if (hasCW) {
     contentHTML = `
@@ -240,14 +244,14 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this)">show</button>
         </div>
         <div class="cw-body" id="${cwId}">
-          <div class="post-content">${processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server }))}</div>
-          ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}
+          <div class="post-content">${postBody}</div>
+          ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}${tagLineHTML}
         </div>
       </div>`;
   } else {
     contentHTML = `
-      <div class="post-content">${processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server }))}</div>
-      ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}`;
+      <div class="post-content">${postBody}</div>
+      ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}${tagLineHTML}`;
   }
 
   let targetLang = 'browser';

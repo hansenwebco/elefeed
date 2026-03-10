@@ -27,6 +27,16 @@ export function sanitizeHTML(html, context = null) {
     else if (text.startsWith('@')) {
       a.classList.add('mention');
       isMention = true;
+    } else {
+      a.classList.add('ext-link');
+      // Mark links that duplicate an attached link card so CSS can hide them
+      if (context && context.cardUrl) {
+        const href = a.getAttribute('href') || '';
+        const norm = s => s.replace(/\/$/, '');
+        if (href && norm(href) === norm(context.cardUrl)) {
+          a.classList.add('card-url-link');
+        }
+      }
     }
 
     if (isMention && context && context.mentions) {
@@ -53,6 +63,36 @@ export function sanitizeHTML(html, context = null) {
 /** Process post content HTML before rendering. */
 export function processContent(html) {
   return html;
+}
+
+/**
+ * Remove trailing paragraphs that contain only hashtag links (and whitespace)
+ * from post HTML, returning them separately so they can be rendered after
+ * media / cards. Posts where hashtags appear mid-content are unaffected.
+ * Returns { content: string, tagLine: string }.
+ */
+export function extractTrailingHashtags(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  const paras = Array.from(div.querySelectorAll('p'));
+  const trailing = [];
+  for (let i = paras.length - 1; i >= 0; i--) {
+    const p = paras[i];
+    const onlyHashtags = Array.from(p.childNodes).every(n => {
+      if (n.nodeType === 3 /* TEXT_NODE */) return n.textContent.trim() === '';
+      if (n.nodeType === 1 /* ELEMENT_NODE */)
+        return n.classList.contains('hashtag') || n.tagName === 'BR';
+      return false;
+    });
+    if (!onlyHashtags || p.querySelectorAll('.hashtag').length === 0) break;
+    trailing.unshift(p);
+  }
+  if (trailing.length === 0) return { content: html, tagLine: '' };
+  trailing.forEach(p => p.remove());
+  return {
+    content: div.innerHTML,
+    tagLine: trailing.map(p => p.innerHTML).join(' '),
+  };
 }
 
 /**
