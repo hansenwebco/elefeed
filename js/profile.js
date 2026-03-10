@@ -403,7 +403,7 @@ export function openProfileDrawer(accountId, server) {
       ${headerImg}
       <div class="profile-identity">
         <div class="profile-avatar-wrap">
-          <img class="profile-avatar-large" src="${escapeHTML(account.avatar_static || account.avatar)}" alt=""/>
+          <img class="profile-avatar-large" src="${escapeHTML(account.avatar_static || account.avatar)}" alt="" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
           <div class="profile-action-group">${followButton}${notifyButton}${moreMenu}</div>
         </div>
         <div class="profile-name-row">

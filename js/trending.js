@@ -115,7 +115,7 @@ export async function loadTrendingPeople() {
     container.innerHTML = people.map(acct => `
       <div class="trending-person-card" data-profile-id="${escapeHTML(acct.id)}" data-profile-server="">
         <div class="trending-person-avatar">
-          <img src="${escapeHTML(acct.avatar_static || acct.avatar)}" alt="" loading="lazy" />
+          <img src="${escapeHTML(acct.avatar_static || acct.avatar)}" alt="" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER" />
         </div>
         <div class="trending-person-name">${renderCustomEmojis(acct.display_name || acct.username, acct.emojis || [])}</div>
         <div class="trending-person-acct">@${escapeHTML(acct.acct)}</div>

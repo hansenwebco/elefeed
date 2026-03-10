@@ -361,7 +361,7 @@ function renderAccount(account) {
 
   return `
     <div class="search-account-row" data-profile-id="${account.id}" data-profile-server="${server}" style="cursor:pointer;">
-      <img class="search-account-avatar" src="${escapeHTML(account.avatar_static || account.avatar)}" alt="" loading="lazy" />
+      <img class="search-account-avatar" src="${escapeHTML(account.avatar_static || account.avatar)}" alt="" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER" />
       <div class="search-account-info">
         <div class="search-account-name">${displayName}</div>
         <div class="search-account-acct">@${escapeHTML(account.acct)}</div>

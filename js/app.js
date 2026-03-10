@@ -183,6 +183,7 @@ async function initApp(server, token, demo = false) {
   try {
     state.account = await apiGet('/api/v1/accounts/verify_credentials', token, server);
     const avatarEl = $('user-avatar');
+    avatarEl.onerror = () => { avatarEl.onerror = null; avatarEl.src = window._AVATAR_PLACEHOLDER; };
     avatarEl.src = state.account.avatar_static || state.account.avatar;
     avatarEl.alt = state.account.display_name || state.account.username;
     applyFollowingFeedFlag();
