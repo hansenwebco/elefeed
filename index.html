@@ -981,6 +981,17 @@
               <span class="settings-toggle-track"></span>
             </label>
           </div>
+          <!-- Live count updates -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">Live count updates</span>
+              <span style="font-size:11px; color:var(--text-muted);">Periodically refresh reply, boost, and favourite counts on visible posts.</span>
+            </div>
+            <label class="settings-toggle" style="flex-shrink:0;" title="Enable live count updates">
+              <input type="checkbox" id="settings-count-polling-toggle" checked />
+              <span class="settings-toggle-track"></span>
+            </label>
+          </div>
           <!-- Sensitive content — grouped with a subtle inset -->
           <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
             <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Sensitive Content</span>

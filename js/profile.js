@@ -51,6 +51,7 @@ export function closeAllProfileMoreMenus() {
 
 import { $, state } from './state.js';
 import { apiGet } from './api.js';
+import { applyCountsFromStatus } from './counts.js';
 import { showToast } from './ui.js';
 import { renderPost } from './render.js';
 import {
@@ -905,6 +906,7 @@ export async function handleFavoriteToggle(btn) {
     });
     if (!res.ok) throw new Error('Failed to favorite');
     const post = await res.json();
+    applyCountsFromStatus(post);
     if (countSpan) countSpan.textContent = post.favourites_count || 0;
   } catch (err) {
     btn.dataset.favourited = originalFavourited ? 'true' : 'false';

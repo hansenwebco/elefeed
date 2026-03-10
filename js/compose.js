@@ -8,6 +8,7 @@
 import { $, state, composeState } from './state.js';
 import { apiGet } from './api.js';
 import { showToast } from './ui.js';
+import { applyCountsFromStatus } from './counts.js';
 import { escapeHTML, renderCustomEmojis, placeCursorAtEnd } from './utils.js';
 import { loadFeedTab } from './feed.js';
 import { updateCurrentThread } from './thread.js';
@@ -263,6 +264,7 @@ window.handleBoostSubmit = async function (postId, isBoosted) {
     if (!res.ok) throw new Error('Failed to process boost');
     const statusResponse = await res.json();
     const actualStatus = statusResponse.reblog || statusResponse;
+    applyCountsFromStatus(actualStatus);
 
     const menuBtn = document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`);
     if (menuBtn) {
