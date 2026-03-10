@@ -103,7 +103,8 @@ function attachProfileScrollListener() {
 }
 
 function renderMediaItem(status) {
-  const attachments = (status.media_attachments || []).filter(
+  const s = status.reblog || status;
+  const attachments = (s.media_attachments || []).filter(
     m => m.type === 'image' || m.type === 'video' || m.type === 'gifv'
   );
   if (!attachments.length) return '';
@@ -112,7 +113,21 @@ function renderMediaItem(status) {
     const thumb = escapeHTML(att.preview_url || att.url);
     const fullUrl = escapeHTML(att.url);
     const altText = (att.description || '').replace(/"/g, '&quot;');
-    return `<div class="media-item profile-media-item" data-full-url="${fullUrl}" data-type="${att.type}" data-alt="${altText}" onclick="expandMedia(this)">
+    return `<div class="media-item profile-media-item"
+      data-full-url="${fullUrl}"
+      data-type="${att.type}"
+      data-alt="${altText}"
+      data-post-id="${escapeHTML(s.id)}"
+      data-account-acct="${escapeHTML(s.account.acct)}"
+      data-post-url="${escapeHTML(s.url || '')}"
+      data-reblogged="${s.reblogged ? 'true' : 'false'}"
+      data-favourited="${s.favourited ? 'true' : 'false'}"
+      data-reblogs-count="${s.reblogs_count || 0}"
+      data-quotes-count="${s.quotes_count || 0}"
+      data-favourites-count="${s.favourites_count || 0}"
+      data-replies-count="${s.replies_count || 0}"
+      data-can-quote="${(!s.quote_approval || s.quote_approval.current_user !== 'denied') && s.visibility !== 'private' && s.visibility !== 'direct' ? 'true' : 'false'}"
+      onclick="expandMedia(this)">
       <img src="${thumb}" alt="" loading="lazy"/>
       ${isVideo ? '<div class="profile-media-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg></div>' : ''}
     </div>`;

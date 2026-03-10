@@ -806,7 +806,7 @@
 .lightbox-content video {
   display: block;
   max-width: 100%;
-  max-height: calc(100vh - 90px);
+  max-height: calc(100vh - 164px);
   width: auto;
   height: auto;
   border-radius: 4px;
@@ -941,6 +941,172 @@
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
+}
+
+/* ─── Lightbox Action Bar ─── */
+.lightbox-action-bar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(14, 14, 20, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 32px;
+  padding: 5px 8px;
+  z-index: 3100;
+  white-space: nowrap;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  /* slide up on open */
+  opacity: 0;
+  translate: 0 8px;
+  transition: opacity 0.25s ease 0.1s, translate 0.25s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+}
+.lightbox-overlay.open .lightbox-action-bar {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.lightbox-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  padding: 7px 10px;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+  line-height: 1;
+  min-width: 36px;
+  justify-content: center;
+}
+.lightbox-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Reply — teal hover matching the feed */
+.lightbox-action-btn.lb-reply:hover {
+  color: var(--teal);
+}
+.lightbox-action-btn.lb-reply:hover svg {
+  opacity: 1;
+}
+
+/* Boost — accent color on hover / active, matching the feed */
+.lightbox-action-btn.lb-boost:hover,
+.lightbox-action-btn.boosted {
+  color: var(--boost, #6e9ef5);
+}
+.lightbox-action-btn.lb-boost:hover svg,
+.lightbox-action-btn.boosted svg {
+  opacity: 1;
+}
+
+/* Favourite — star animations matching the feed */
+.lightbox-action-btn.lb-fav:hover {
+  color: var(--fav, #f4b942);
+}
+.lightbox-action-btn.lb-fav:hover svg {
+  opacity: 1;
+  transform: scale(1.1);
+}
+.lightbox-action-btn.favourited {
+  color: var(--fav, #f4b942);
+}
+.lightbox-action-btn.favourited svg {
+  opacity: 1;
+}
+.lightbox-action-btn.lb-fav:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.lightbox-action-btn.favoriting svg {
+  animation: starFavorite 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.lightbox-action-btn.favoriting,
+.lightbox-action-btn.unfavoriting {
+  color: var(--fav, #f4b942);
+}
+.lightbox-action-btn.favoriting svg,
+.lightbox-action-btn.unfavoriting svg {
+  opacity: 1;
+}
+.lightbox-action-btn.unfavoriting svg {
+  animation: starUnfavorite 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.lightbox-action-btn.unfavorite-fade svg {
+  animation: fadeOut 0.3s ease-out forwards;
+}
+
+.lightbox-action-btn.lightbox-action-open {
+  color: rgba(255, 255, 255, 0.55);
+}
+.lightbox-action-btn.lightbox-action-open:hover {
+  color: #fff;
+}
+
+.lightbox-action-sep {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 4px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Boost / Quote dropdown within the lightbox */
+.lightbox-action-boost-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.lightbox-boost-dropdown {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e1e2e;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 150px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7);
+  z-index: 3200;
+  flex-direction: column;
+  gap: 2px;
+}
+.lightbox-boost-dropdown.show {
+  display: flex;
+}
+
+.lightbox-boost-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 14px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.12s;
+}
+.lightbox-boost-item:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Hide Mastodon's native fallback quote inline text */
