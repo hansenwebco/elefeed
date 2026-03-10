@@ -240,13 +240,13 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this)">show</button>
         </div>
         <div class="cw-body" id="${cwId}">
-          <div class="post-content">${processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server }))}</div>
+          <div class="post-content">${processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server, cardUrl: s.card && s.card.url }))}</div>
           ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}
         </div>
       </div>`;
   } else {
     contentHTML = `
-      <div class="post-content">${processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server }))}</div>
+      <div class="post-content">${processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server, cardUrl: s.card && s.card.url }))}</div>
       ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}`;
   }
 

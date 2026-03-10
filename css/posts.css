@@ -488,6 +488,26 @@
   text-decoration: underline;
 }
 
+/* External links are visually quieter than hashtags/mentions */
+.post-content .ext-link {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.post-content .ext-link:hover {
+  color: var(--accent2);
+}
+
+/* Hide URLs in post body that are already represented by a link card */
+.post-content .card-url-link {
+  display: none;
+}
+
+/* Collapse any <p> left empty after card URL suppression */
+.post-content p:empty {
+  display: none;
+}
+
 .post-content .hashtag {
   color: var(--green);
 }
