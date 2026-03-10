@@ -668,46 +668,53 @@ window.expandMedia = function expandMedia(mediaItem) {
       mediaEl.addEventListener('animationend', () => mediaEl.classList.remove(animClass), { once: true });
     }
 
-    // Sample dominant color from images and apply a tinted background
+    // Sample the dominant color from the image's edge pixels and apply a tinted
+    // background. Edges are used because that's where the image meets the overlay —
+    // matching those colours makes the transition look seamless. Hue is resolved via
+    // a saturation-weighted circular mean (HSL approach) so vivid edge tones win over
+    // neutral grey fringing. See: instrument.com/latest/mapping-colors
     if (mediaEl instanceof HTMLImageElement) {
       const doExtract = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = 48; canvas.height = 48;
+        const S = 64, BORDER = 10; // 64×64 canvas; sample outer 10 px strip
+        canvas.width = S; canvas.height = S;
         try {
-          ctx.drawImage(mediaEl, 0, 0, 48, 48);
-          const d = ctx.getImageData(0, 0, 48, 48).data;
-          // Convert each pixel to HSL individually, then use a saturation-weighted
-          // circular mean for hue so vivid pixels (e.g. sky blue, sunset orange)
-          // dominate over grey/near-white noise.
+          ctx.drawImage(mediaEl, 0, 0, S, S);
+          const d = ctx.getImageData(0, 0, S, S).data;
           let sinSum = 0, cosSum = 0, satSum = 0, n = 0;
-          for (let i = 0; i < d.length; i += 4) {
-            const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
-            const max = Math.max(r, g, b), min = Math.min(r, g, b);
-            const l = (max + min) / 2;
-            if (l < 0.08 || l > 0.93) continue; // skip near-black / near-white
-            const delta = max - min;
-            if (delta < 0.08) continue; // skip near-grey pixels
-            const s = delta / (1 - Math.abs(2 * l - 1));
-            let h = 0;
-            if (max === r)      h = 60 * (((g - b) / delta) % 6);
-            else if (max === g) h = 60 * ((b - r) / delta + 2);
-            else                h = 60 * ((r - g) / delta + 4);
-            if (h < 0) h += 360;
-            const rad = h * Math.PI / 180;
-            // Weight by saturation so the most vivid pixels steer the average hue
-            sinSum += Math.sin(rad) * s;
-            cosSum += Math.cos(rad) * s;
-            satSum += s;
-            n++;
+          for (let py = 0; py < S; py++) {
+            for (let px = 0; px < S; px++) {
+              // Only use the perimeter strip — these pixels sit at the image/backdrop boundary
+              if (px >= BORDER && px < S - BORDER && py >= BORDER && py < S - BORDER) continue;
+              const i = (py * S + px) * 4;
+              const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+              const max = Math.max(r, g, b), min = Math.min(r, g, b);
+              const l = (max + min) / 2;
+              if (l < 0.05 || l > 0.95) continue; // skip near-black / near-white
+              const delta = max - min;
+              if (delta < 0.05) continue; // skip near-grey (lower than before to catch muted/pastel tones)
+              const s = delta / (1 - Math.abs(2 * l - 1));
+              let h = 0;
+              if (max === r)      h = 60 * (((g - b) / delta) % 6);
+              else if (max === g) h = 60 * ((b - r) / delta + 2);
+              else                h = 60 * ((r - g) / delta + 4);
+              if (h < 0) h += 360;
+              const rad = h * Math.PI / 180;
+              // Weight by saturation so the most vivid edge pixels steer the hue
+              sinSum += Math.sin(rad) * s;
+              cosSum += Math.cos(rad) * s;
+              satSum += s;
+              n++;
+            }
           }
-          if (n === 0 || satSum === 0) return;
+          if (n === 0 || satSum === 0) { overlay.style.backgroundColor = ''; return; }
           const avgHue = (Math.atan2(sinSum, cosSum) * 180 / Math.PI + 360) % 360;
-          const avgSat = satSum / n; // 0-1
-          // Dark but clearly tinted background: saturation scaled up so it's visible
-          const bgSat = Math.round(Math.min(avgSat * 100, 65));
-          overlay.style.backgroundColor = `hsl(${Math.round(avgHue)}, ${bgSat}%, 15%)`;
-        } catch (e) { /* cross-origin taint — keep default */ }
+          const avgSat = satSum / n; // 0–1
+          // Power curve gives more presence at low saturations without washing out vivid images
+          const bgSat = Math.round(Math.min(Math.pow(avgSat, 0.6) * 100, 80));
+          overlay.style.backgroundColor = `hsl(${Math.round(avgHue)}, ${bgSat}%, 22%)`;
+        } catch (e) { /* cross-origin canvas taint — keep default dark background */ }
       };
       if (mediaEl.complete && mediaEl.naturalWidth > 0) doExtract();
       else mediaEl.addEventListener('load', doExtract, { once: true });

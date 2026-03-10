@@ -191,11 +191,9 @@ export async function loadTrendingFollowing() {
   const loading = $('trending-following-loading');
   const progress = $('trending-following-progress');
   const errEl = $('trending-following-error');
-  const header = $('trending-following-header');
 
   errEl.classList.remove('visible');
   container.innerHTML = '';
-  if (header) header.style.display = 'none';
   $('trending-following-skeleton').innerHTML = makeSkeleton(5);
   loading.style.display = 'flex';
   if (progress) progress.textContent = 'Fetching your timeline\u2026';
@@ -288,11 +286,6 @@ export async function loadTrendingFollowing() {
     if (!top.length) {
       container.innerHTML = `<div class="feed-status"><div class="status-icon">📈</div><p>No highly-engaged original posts from your network in the last 6 hours.</p></div>`;
     } else {
-      if (header) {
-        $('trending-following-count').textContent =
-          `${top.length} posts ranked by engagement \u00b7 last 6h`;
-        header.style.display = '';
-      }
       container.innerHTML = top.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
     }
   } catch (err) {
