@@ -63,7 +63,10 @@ async function handlePush(event) {
     body: bodyText,
     icon: data.icon || '/icon512x512.png',
     badge: '/icon512x512.png',
-    tag: `elefeed-notif-${data.notification_id || Date.now()}`,
+    // Fixed tag: new pushes silently replace the previous one instead of
+    // stacking a separate OS notification for every queued item.
+    tag: 'elefeed-notif',
+    renotify: true,
     data: { url: '/' }
   };
 

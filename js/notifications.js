@@ -440,6 +440,7 @@ function renderNotifItem(n) {
       <div class="notif-body">
         <div class="notif-meta">
           <img class="notif-avatar" src="${escapeHTML(avatarUrl)}" alt="" loading="lazy"
+               onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"
                data-notif-profile="${account.id}" data-notif-server="${state.server}" />
           <span class="notif-who" data-notif-profile="${account.id}" data-notif-server="${state.server}">${displayName}</span>
           <span class="notif-action">${label}</span>
@@ -486,8 +487,16 @@ export async function pollNotifications() {
       notifs.length > 0
     ) {
       const newest = notifs[0];
-      const alreadyFired =
-        state._lastFiredNotifId && state._lastFiredNotifId >= newest.id;
+
+      // On the very first poll after startup, _lastFiredNotifId is null.
+      // Don't fire an alert for notifications that were already queued
+      // before the app opened (the SW already handled those). Instead,
+      // silently seed the ID so only truly new arrivals trigger an alert.
+      if (state._lastFiredNotifId === null) {
+        state._lastFiredNotifId = newest.id;
+      }
+
+      const alreadyFired = state._lastFiredNotifId >= newest.id;
 
       if (!alreadyFired && Notification.permission === 'granted') {
         const bgEnabled = store.get('pref_bg_notifications') !== 'false';
