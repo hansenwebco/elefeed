@@ -595,13 +595,14 @@ window.expandMedia = function expandMedia(mediaItem) {
   content.className = 'lightbox-content';
 
   let mediaEl = null;
-  let altBadge = null;
-  let altPanel = null;
+  // lbAltBtn / lbAltPanel are set by the action-bar block below.
+  // When the action bar exists they handle ALT; otherwise the
+  // renderCurrentMedia fallback creates a standalone badge.
+  let lbAltBtn = null;
+  let lbAltPanel = null;
 
   const renderCurrentMedia = (direction = null) => {
     if (mediaEl) { mediaEl.remove(); }
-    if (altBadge) { altBadge.remove(); altBadge = null; }
-    if (altPanel) { altPanel.remove(); altPanel = null; }
     const currentItem = mediaItems[currentIndex];
     const fullUrl = currentItem.dataset.fullUrl;
     const type = currentItem.dataset.type;
@@ -730,21 +731,26 @@ window.expandMedia = function expandMedia(mediaItem) {
       overlay.style.backgroundColor = '';
     }
 
-    // Alt text badge
-    const altText = currentItem.dataset.alt;
-    if (altText && altText.trim()) {
-      altPanel = document.createElement('div');
-      altPanel.className = 'lightbox-alt-panel';
-      altPanel.textContent = altText;
-      altPanel.onclick = (e) => e.stopPropagation();
-
-      altBadge = document.createElement('button');
-      altBadge.className = 'lightbox-alt-badge';
-      altBadge.textContent = 'ALT';
-      altBadge.onclick = (e) => { e.stopPropagation(); altPanel.classList.toggle('visible'); };
-
-      overlay.appendChild(altPanel);
-      overlay.appendChild(altBadge);
+    // Alt text — integrated into action bar when available, standalone badge otherwise
+    const altText = (currentItem.dataset.alt || '').trim();
+    if (lbAltBtn && lbAltPanel) {
+      // Action-bar mode: show/hide the ALT button and update panel text
+      lbAltBtn.hidden = !altText;
+      if (lbAltBtn._sep) lbAltBtn._sep.hidden = !altText;
+      lbAltPanel.textContent = altText;
+      lbAltPanel.classList.remove('visible'); // collapse panel on image switch
+    } else if (altText) {
+      // Fallback standalone badge (no action bar / no postId)
+      const _panel = document.createElement('div');
+      _panel.className = 'lightbox-alt-panel';
+      _panel.textContent = altText;
+      _panel.onclick = (e) => e.stopPropagation();
+      const _badge = document.createElement('button');
+      _badge.className = 'lightbox-alt-badge';
+      _badge.textContent = 'ALT';
+      _badge.onclick = (e) => { e.stopPropagation(); _panel.classList.toggle('visible'); };
+      overlay.appendChild(_panel);
+      overlay.appendChild(_badge);
     }
 
     dotEls.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
@@ -970,6 +976,32 @@ window.expandMedia = function expandMedia(mediaItem) {
       openBtn.onclick = (e) => { e.stopPropagation(); close(); if (window.openThreadDrawer) window.openThreadDrawer(postId); };
       actionBar.appendChild(openBtn);
     }
+
+    // ── ALT text button (integrated into toolbar) ──
+    lbAltPanel = document.createElement('div');
+    lbAltPanel.className = 'lightbox-alt-panel';
+    lbAltPanel.onclick = (e) => e.stopPropagation();
+    overlay.appendChild(lbAltPanel);
+
+    const altSep = document.createElement('div');
+    altSep.className = 'lightbox-action-sep';
+    altSep.hidden = true;
+    actionBar.appendChild(altSep);
+
+    lbAltBtn = document.createElement('button');
+    lbAltBtn.className = 'lightbox-action-btn lb-alt';
+    lbAltBtn.title = 'Alt text';
+    lbAltBtn.hidden = true;
+    lbAltBtn.textContent = 'ALT';
+    lbAltBtn._sep = altSep; // keep reference so renderCurrentMedia can show/hide the sep
+    lbAltBtn.onclick = (e) => {
+      e.stopPropagation();
+      // Read alt text from the current item at click time to avoid stale state
+      const currentAlt = (mediaItems[currentIndex]?.dataset.alt || '').trim();
+      lbAltPanel.textContent = currentAlt;
+      lbAltPanel.classList.toggle('visible');
+    };
+    actionBar.appendChild(lbAltBtn);
 
     overlay.appendChild(actionBar);
 
