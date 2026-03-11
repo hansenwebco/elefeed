@@ -595,33 +595,40 @@ window.expandMedia = function expandMedia(mediaItem) {
 
   const overlay = document.createElement('div');
   overlay.className = 'lightbox-overlay';
-  const content = document.createElement('div');
-  content.className = 'lightbox-content';
 
-  let mediaEl = null;
   // lbAltBtn / lbAltPanel are set by the action-bar block below.
-  // When the action bar exists they handle ALT; otherwise the
-  // renderCurrentMedia fallback creates a standalone badge.
+  // When the action bar exists they handle ALT; otherwise updateSlideState
+  // creates a standalone badge for the current slide.
   let lbAltBtn = null;
   let lbAltPanel = null;
 
-  const renderCurrentMedia = (direction = null) => {
-    if (mediaEl) { mediaEl.remove(); }
-    const currentItem = mediaItems[currentIndex];
-    const fullUrl = currentItem.dataset.fullUrl;
-    const type = currentItem.dataset.type;
+  // ── Carousel: build a horizontal scroll track with one slide per media item ──
+  const trackOuter = document.createElement('div');
+  trackOuter.className = 'lb-track-outer';
+  const track = document.createElement('div');
+  track.className = 'lb-track';
+  trackOuter.appendChild(track);
 
-    if (!fullUrl) return;
+  const slideData = mediaItems.map((item, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'lb-slide';
+
+    const content = document.createElement('div');
+    content.className = 'lightbox-content';
+    content.onclick = (e) => e.stopPropagation();
+
+    const fullUrl = item.dataset.fullUrl;
+    const type = item.dataset.type;
+    let mediaEl;
 
     if (type === 'gifv') {
       mediaEl = document.createElement('video');
       mediaEl.src = fullUrl;
-      mediaEl.autoplay = true;
+      mediaEl.autoplay = (i === currentIndex);
       mediaEl.loop = true;
       mediaEl.muted = true;
       mediaEl.playsInline = true;
       mediaEl.setAttribute('playsinline', '');
-      // No controls for GIFs
     } else if (type === 'image') {
       mediaEl = document.createElement('img');
       mediaEl.crossOrigin = 'anonymous';
@@ -633,7 +640,7 @@ window.expandMedia = function expandMedia(mediaItem) {
 
       const vid = document.createElement('video');
       vid.src = fullUrl;
-      vid.autoplay = true;
+      vid.autoplay = (i === currentIndex);
       vid.muted = true;
       vid.playsInline = true;
       vid.setAttribute('playsinline', '');
@@ -670,43 +677,95 @@ window.expandMedia = function expandMedia(mediaItem) {
       mediaEl.crossOrigin = 'anonymous';
       mediaEl.src = fullUrl;
     }
-    // Prevent clicking the media itself from closing the overlay
-    mediaEl.onclick = (e) => e.stopPropagation();
-    content.insertBefore(mediaEl, content.firstChild);
 
-    // Slide animation when navigating between images
-    if (direction) {
-      const animClass = direction === 'right' ? 'lb-slide-from-right' : 'lb-slide-from-left';
-      mediaEl.classList.add(animClass);
-      mediaEl.addEventListener('animationend', () => mediaEl.classList.remove(animClass), { once: true });
+    content.appendChild(mediaEl);
+    slide.appendChild(content);
+    track.appendChild(slide);
+    return { slide, content, mediaEl, item };
+  });
+
+  overlay.appendChild(trackOuter);
+
+  // ── Dots ──
+  const dotEls = [];
+  if (mediaItems.length > 1) {
+    const dotsEl = document.createElement('div');
+    dotsEl.className = 'lightbox-dots';
+    mediaItems.forEach((_, i) => {
+      const dot = document.createElement('span');
+      dot.className = 'lightbox-dot' + (i === currentIndex ? ' active' : '');
+      dotsEl.appendChild(dot);
+      dotEls.push(dot);
+    });
+    overlay.appendChild(dotsEl);
+  }
+
+  // ── Slide state: sync dots, video play/pause, alt text, and tinted backdrop ──
+  const updateSlideState = () => {
+    dotEls.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+
+    // Pause all videos; play only the active slide's video
+    slideData.forEach(({ mediaEl }, i) => {
+      const vid = (mediaEl instanceof HTMLVideoElement)
+        ? mediaEl
+        : mediaEl.querySelector?.('video');
+      if (vid) {
+        if (i === currentIndex) vid.play().catch(() => {});
+        else vid.pause();
+      }
+    });
+
+    // Alt text — integrated into action bar when available, standalone badge otherwise
+    if (lbAltBtn && lbAltPanel) {
+      const altText = (mediaItems[currentIndex].dataset.alt || '').trim();
+      lbAltBtn.hidden = !altText;
+      if (lbAltBtn._sep) lbAltBtn._sep.hidden = !altText;
+      lbAltPanel.classList.remove('visible'); // collapse panel on slide change
+    } else {
+      // Remove any badge/panel left by a previous slide
+      overlay.querySelectorAll('.lb-alt-standalone').forEach(el => el.remove());
+      const altText = (mediaItems[currentIndex].dataset.alt || '').trim();
+      if (altText) {
+        const _panel = document.createElement('div');
+        _panel.className = 'lightbox-alt-panel lb-alt-standalone';
+        _panel.textContent = altText;
+        _panel.onclick = (e) => e.stopPropagation();
+        const _badge = document.createElement('button');
+        _badge.className = 'lightbox-alt-badge lb-alt-standalone';
+        _badge.textContent = 'ALT';
+        _badge.onclick = (e) => { e.stopPropagation(); _panel.classList.toggle('visible'); };
+        overlay.appendChild(_panel);
+        overlay.appendChild(_badge);
+      }
     }
 
-    // Sample the dominant color from the image's edge pixels and apply a tinted
-    // background. Edges are used because that's where the image meets the overlay —
-    // matching those colours makes the transition look seamless. Hue is resolved via
-    // a saturation-weighted circular mean (HSL approach) so vivid edge tones win over
-    // neutral grey fringing. See: instrument.com/latest/mapping-colors
-    if (mediaEl instanceof HTMLImageElement) {
+    // Sample the dominant color from the active image's edge pixels and tint the backdrop.
+    // Edges are used because that's where the image meets the overlay — matching those colours
+    // makes the transition look seamless. Hue is resolved via a saturation-weighted circular
+    // mean (HSL approach) so vivid edge tones win over neutral grey fringing.
+    const { mediaEl } = slideData[currentIndex];
+    const imgEl = (mediaEl instanceof HTMLImageElement) ? mediaEl : null;
+    if (imgEl) {
       const doExtract = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const S = 64, BORDER = 10; // 64×64 canvas; sample outer 10 px strip
         canvas.width = S; canvas.height = S;
         try {
-          ctx.drawImage(mediaEl, 0, 0, S, S);
+          ctx.drawImage(imgEl, 0, 0, S, S);
           const d = ctx.getImageData(0, 0, S, S).data;
           let sinSum = 0, cosSum = 0, satSum = 0, n = 0;
           for (let py = 0; py < S; py++) {
             for (let px = 0; px < S; px++) {
               // Only use the perimeter strip — these pixels sit at the image/backdrop boundary
               if (px >= BORDER && px < S - BORDER && py >= BORDER && py < S - BORDER) continue;
-              const i = (py * S + px) * 4;
-              const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+              const idx = (py * S + px) * 4;
+              const r = d[idx] / 255, g = d[idx + 1] / 255, b = d[idx + 2] / 255;
               const max = Math.max(r, g, b), min = Math.min(r, g, b);
               const l = (max + min) / 2;
               if (l < 0.05 || l > 0.95) continue; // skip near-black / near-white
               const delta = max - min;
-              if (delta < 0.05) continue; // skip near-grey (lower than before to catch muted/pastel tones)
+              if (delta < 0.05) continue; // skip near-grey
               const s = delta / (1 - Math.abs(2 * l - 1));
               let h = 0;
               if (max === r)      h = 60 * (((g - b) / delta) % 6);
@@ -727,80 +786,58 @@ window.expandMedia = function expandMedia(mediaItem) {
           // Power curve gives more presence at low saturations without washing out vivid images
           const bgSat = Math.round(Math.min(Math.pow(avgSat, 0.6) * 100, 80));
           overlay.style.backgroundColor = `hsl(${Math.round(avgHue)}, ${bgSat}%, 22%)`;
-        } catch (e) { /* cross-origin canvas taint — keep default dark background */ }
+        } catch (_e) { /* cross-origin canvas taint — keep default dark background */ }
       };
-      if (mediaEl.complete && mediaEl.naturalWidth > 0) doExtract();
-      else mediaEl.addEventListener('load', doExtract, { once: true });
+      if (imgEl.complete && imgEl.naturalWidth > 0) doExtract();
+      else imgEl.addEventListener('load', doExtract, { once: true });
     } else {
       overlay.style.backgroundColor = '';
     }
-
-    // Alt text — integrated into action bar when available, standalone badge otherwise
-    const altText = (currentItem.dataset.alt || '').trim();
-    if (lbAltBtn && lbAltPanel) {
-      // Action-bar mode: show/hide the ALT button and update panel text
-      lbAltBtn.hidden = !altText;
-      if (lbAltBtn._sep) lbAltBtn._sep.hidden = !altText;
-      lbAltPanel.textContent = altText;
-      lbAltPanel.classList.remove('visible'); // collapse panel on image switch
-    } else if (altText) {
-      // Fallback standalone badge (no action bar / no postId)
-      const _panel = document.createElement('div');
-      _panel.className = 'lightbox-alt-panel';
-      _panel.textContent = altText;
-      _panel.onclick = (e) => e.stopPropagation();
-      const _badge = document.createElement('button');
-      _badge.className = 'lightbox-alt-badge';
-      _badge.textContent = 'ALT';
-      _badge.onclick = (e) => { e.stopPropagation(); _panel.classList.toggle('visible'); };
-      overlay.appendChild(_panel);
-      overlay.appendChild(_badge);
-    }
-
-    dotEls.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
   };
 
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'lightbox-close';
-  closeBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+  // Smooth-scroll the track to a target slide index
+  const goTo = (index) => {
+    currentIndex = index;
+    trackOuter.scrollTo({ left: index * trackOuter.offsetWidth, behavior: 'smooth' });
+    updateSlideState();
+  };
 
-  const mediaWrap = document.createElement('div');
-  mediaWrap.className = 'lightbox-media-wrap';
-  mediaWrap.appendChild(content);
-  mediaWrap.onclick = (e) => e.stopPropagation();
+  // Keep currentIndex in sync when the user swipes natively
+  let scrollEndTimer;
+  trackOuter.addEventListener('scroll', () => {
+    clearTimeout(scrollEndTimer);
+    scrollEndTimer = setTimeout(() => {
+      const newIndex = Math.round(trackOuter.scrollLeft / trackOuter.offsetWidth);
+      if (newIndex !== currentIndex) {
+        currentIndex = newIndex;
+        updateSlideState();
+      }
+    }, 80);
+  }, { passive: true });
 
-  const dotEls = [];
-
+  // ── Tap zones for prev/next (only when multiple slides) ──
   if (mediaItems.length > 1) {
-    const dotsEl = document.createElement('div');
-    dotsEl.className = 'lightbox-dots';
-    mediaItems.forEach((_, i) => {
-      const dot = document.createElement('span');
-      dot.className = 'lightbox-dot' + (i === currentIndex ? ' active' : '');
-      dotsEl.appendChild(dot);
-      dotEls.push(dot);
-    });
-    mediaWrap.appendChild(dotsEl);
-
     const tapPrev = document.createElement('div');
     tapPrev.className = 'lightbox-tap-prev';
     tapPrev.onclick = (e) => {
       e.stopPropagation();
-      if (currentIndex > 0) { currentIndex--; renderCurrentMedia('left'); }
+      if (currentIndex > 0) goTo(currentIndex - 1);
     };
 
     const tapNext = document.createElement('div');
     tapNext.className = 'lightbox-tap-next';
     tapNext.onclick = (e) => {
       e.stopPropagation();
-      if (currentIndex < mediaItems.length - 1) { currentIndex++; renderCurrentMedia('right'); }
+      if (currentIndex < mediaItems.length - 1) goTo(currentIndex + 1);
     };
 
     overlay.appendChild(tapPrev);
     overlay.appendChild(tapNext);
   }
 
-  overlay.appendChild(mediaWrap);
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'lightbox-close';
+  closeBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
   overlay.appendChild(closeBtn);
 
   // ── Lightbox action bar (reply / boost / fav / open post) ──
@@ -997,7 +1034,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     lbAltBtn.title = 'Alt text';
     lbAltBtn.hidden = true;
     lbAltBtn.textContent = 'ALT';
-    lbAltBtn._sep = altSep; // keep reference so renderCurrentMedia can show/hide the sep
+    lbAltBtn._sep = altSep; // keep reference so updateSlideState can show/hide the sep
     lbAltBtn.onclick = (e) => {
       e.stopPropagation();
       // Read alt text from the current item at click time to avoid stale state
@@ -1015,11 +1052,17 @@ window.expandMedia = function expandMedia(mediaItem) {
 
   document.body.appendChild(overlay);
 
-  renderCurrentMedia();
-
   history.pushState({ mediaViewer: true }, '', '');
 
-  requestAnimationFrame(() => overlay.classList.add('open'));
+  // Jump to the starting slide instantly, then trigger the open animation.
+  // Two rAFs ensure layout is calculated before scrollLeft is applied.
+  requestAnimationFrame(() => {
+    if (currentIndex > 0) {
+      trackOuter.scrollLeft = currentIndex * trackOuter.offsetWidth;
+    }
+    updateSlideState();
+    requestAnimationFrame(() => overlay.classList.add('open'));
+  });
 
   // Signal to the global touchmove handler (iOS) and swap viewport meta (Android)
   // so pinch-to-zoom is allowed while the lightbox is open.
@@ -1039,33 +1082,15 @@ window.expandMedia = function expandMedia(mediaItem) {
     if (e.key === 'Escape') {
       e.stopPropagation(); close();
     } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
-      e.stopPropagation(); currentIndex--; renderCurrentMedia('left');
+      e.stopPropagation(); goTo(currentIndex - 1);
     } else if (e.key === 'ArrowRight' && currentIndex < mediaItems.length - 1) {
-      e.stopPropagation(); currentIndex++; renderCurrentMedia('right');
+      e.stopPropagation(); goTo(currentIndex + 1);
     }
   };
 
   overlay.onclick = close;
   closeBtn.onclick = (e) => { e.stopPropagation(); close(); };
   document.addEventListener('keydown', handleKeydown);
-
-  // Touch swipe to navigate between images; ignore multi-touch (pinch) gestures.
-  let touchStartX = 0, touchStartY = 0, touchIsMulti = false;
-  overlay.addEventListener('touchstart', (e) => {
-    if (e.touches.length > 1) { touchIsMulti = true; return; }
-    touchIsMulti = false;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
-  overlay.addEventListener('touchend', (e) => {
-    if (touchIsMulti) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = e.changedTouches[0].clientY - touchStartY;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-      if (dx < 0 && currentIndex < mediaItems.length - 1) { currentIndex++; renderCurrentMedia('right'); }
-      else if (dx > 0 && currentIndex > 0) { currentIndex--; renderCurrentMedia('left'); }
-    }
-  }, { passive: true });
 };
 
 // adjustImageAlignment removed — single-image containers now use CSS
