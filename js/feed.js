@@ -484,7 +484,8 @@ export async function loadFeedTab(scrollTop = true) {
   const filter = state.feedFilter;
   const feedKey = activeFeedKey();
 
-  // Merge pending posts into appropriate timeline on tab switch
+  // Merge any buffered pending posts into the backing feed array before
+  // re-rendering so they appear inline and the poller's min_id advances.
   if (state.pendingPosts[feedKey] && state.pendingPosts[feedKey].length > 0) {
     if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
       state.hashtagFeed = [...state.pendingPosts[feedKey], ...(state.hashtagFeed || [])];
@@ -566,6 +567,16 @@ async function pollForNewPosts() {
   } else if (filter === 'live') {
     minIdToUse = state.localFeed && state.localFeed.length > 0 ? state.localFeed[0].id : null;
   }
+  // Also factor in any posts already waiting in the pending queue — they are
+  // newer than the feed's tip and must advance min_id so we don't re-fetch them.
+  const _feedKey = activeFeedKey();
+  const _pending = state.pendingPosts[_feedKey] || [];
+  if (_pending.length > 0) {
+    const pid = _pending[0].id;
+    if (!minIdToUse || pid.length > minIdToUse.length || (pid.length === minIdToUse.length && pid > minIdToUse)) {
+      minIdToUse = pid;
+    }
+  }
   if (!minIdToUse) return;
 
   try {
@@ -575,12 +586,10 @@ async function pollForNewPosts() {
       newPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40&min_id=${minIdToUse}`, state.token);
       newPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
       newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
-      if (newPosts.length > 0) state.hashtagFeed = [...newPosts, ...state.hashtagFeed];
     } else {
       if (filter === 'live') {
         newPosts = await apiGet(`/api/v1/timelines/public?local=true&limit=40&min_id=${minIdToUse}`, state.token);
         newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
-        if (newPosts.length > 0) state.localFeed = [...newPosts, ...state.localFeed];
       } else {
         newPosts = await apiGet(`/api/v1/timelines/home?limit=40&min_id=${minIdToUse}`, state.token);
         const followedTagNames = new Set((state.followedHashtags || []).map(t => t.name.toLowerCase()));
@@ -594,7 +603,6 @@ async function pollForNewPosts() {
           }
         });
         newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
-        if (newPosts.length > 0) state.homeFeed = [...newPosts, ...state.homeFeed];
       }
     }
 
@@ -613,7 +621,12 @@ async function pollForNewPosts() {
     }
 
     const feedKey = activeFeedKey();
-    state.pendingPosts[feedKey] = [...display, ...(state.pendingPosts[feedKey] || [])];
+    // Deduplicate: drop posts already sitting in the pending queue to prevent
+    // accumulating the same post across consecutive poll cycles.
+    const existingPendingIds = new Set((state.pendingPosts[feedKey] || []).map(p => p.id));
+    const fresh = display.filter(p => !existingPendingIds.has(p.id));
+    if (!fresh.length) return;
+    state.pendingPosts[feedKey] = [...fresh, ...(state.pendingPosts[feedKey] || [])];
     overlayPillDismissed = false;
     updateTabPill(feedKey);
   } catch (err) {
@@ -624,17 +637,30 @@ async function pollForNewPosts() {
 /* ── Pending post flushing ─────────────────────────────────────────── */
 
 export function flushPendingPosts(feedKey, scrollToTop) {
-  let posts = state.pendingPosts[feedKey] || [];
-  if (!posts.length) return;
+  const allPending = state.pendingPosts[feedKey] || [];
+  if (!allPending.length) return;
 
   const container = $('feed-posts');
   if (!container) return;
 
-  posts = getFilteredPendingPosts(feedKey);
+  const posts = getFilteredPendingPosts(feedKey);
 
-  const html = posts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
+  // Update the backing feed array BEFORE clearing pendingPosts so the poller's
+  // min_id anchor advances and won't re-fetch these posts on the next cycle.
+  if (feedKey.startsWith('feed_hashtags_') && feedKey !== 'feed_hashtags_all') {
+    state.hashtagFeed = [...allPending, ...(state.hashtagFeed || [])];
+  } else if (feedKey === 'feed_live') {
+    state.localFeed = [...allPending, ...(state.localFeed || [])];
+  } else {
+    state.homeFeed = [...allPending, ...(state.homeFeed || [])];
+  }
+
   state.pendingPosts[feedKey] = [];
   updateTabPill(feedKey);
+
+  if (!posts.length) return;
+
+  const html = posts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
 
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
@@ -668,22 +694,20 @@ let loadMoreObserver = null;
 export function checkInfiniteScroll() {
   const activePanel = document.querySelector('.tab-panel.active');
   if (!activePanel) return;
-  const btn = activePanel.querySelector('.load-more-btn');
-  
-  if (!loadMoreObserver) {
-    loadMoreObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting && !entry.target.disabled) {
-          handleLoadMore(entry.target);
-        }
-      });
-    }, {
-      rootMargin: '800px'
+
+  // Recreate the observer each time so stale buttons are never re-fired
+  if (loadMoreObserver) loadMoreObserver.disconnect();
+  loadMoreObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.disabled) {
+        handleLoadMore(entry.target);
+      }
     });
-  }
-  
-  // Disconnect old button and observe new one
-  const buttons = document.querySelectorAll('.load-more-btn');
+  }, {
+    rootMargin: '800px'
+  });
+
+  const buttons = activePanel.querySelectorAll('.load-more-btn');
   buttons.forEach(b => loadMoreObserver.observe(b));
 }
 
