@@ -122,7 +122,7 @@ window.addEventListener('popstate', async e => {
 
     // Restore or clear hashtag filter state based on URL params
     const feedParam = currentParams.get('feed');
-    const tagParam  = currentParams.get('tag');
+    const tagParam = currentParams.get('tag');
     const prevFeedFilter = state.feedFilter;
 
     if (feedParam === 'hashtags' && tagParam) {
@@ -300,6 +300,15 @@ async function initApp(server, token, demo = false) {
    OAUTH CALLBACK
    ══════════════════════════════════════════════════════════════════════ */
 
+function saveMastodonToken(token) {
+  if (window.AndroidBridge && window.AndroidBridge.saveToken) {
+    window.AndroidBridge.saveToken(token);
+    window.AndroidBridge.triggerTestNotification();
+  } else {
+    console.log("Android bridge not available");
+  }
+}
+
 async function handleCallback(code) {
   const server = store.get('pending_server');
   const clientId = store.get('pending_client_id');
@@ -341,6 +350,7 @@ async function handleCallback(code) {
       store.set('token', tokenData.access_token);
       store.set('server', server);
       store.set('token_scopes', SCOPES);
+      saveMastodonToken(tokenData.access_token);
       await initApp(server, tokenData.access_token);
     }
   } catch (err) {
@@ -432,6 +442,8 @@ $('login-btn').addEventListener('click', async () => {
         store.set('token', token);
         store.set('server', srv);
         store.set('token_scopes', scopes || SCOPES);
+
+        saveMastodonToken(token);
 
         $('login-btn').textContent = 'Log in with Mastodon →';
         $('login-btn').disabled = false;
