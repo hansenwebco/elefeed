@@ -1275,6 +1275,10 @@
   body.manage-inline-active .manage-inline-panel {
     flex: 1;
   }
+  
+  .thread-back-bar {
+    top: 55px;
+  }
 }
 
 .manage-inline-panel {
