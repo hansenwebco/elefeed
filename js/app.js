@@ -402,7 +402,7 @@ $('login-btn').addEventListener('click', async () => {
     // process (Android WebView → Chrome Custom Tab, iOS → SFSafariViewController)
     // whose localStorage is completely isolated. Use a full-page redirect instead,
     // which stays in the same context so pending_* values are always available.
-    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || typeof window.AndroidBridge !== 'undefined';
     if (isMobile) {
       location.href = authUrl;
       return;
