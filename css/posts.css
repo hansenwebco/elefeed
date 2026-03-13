@@ -794,7 +794,7 @@
   transition: opacity 200ms ease, background-color 600ms ease;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: pinch-zoom;
+  touch-action: pan-x pinch-zoom;
 }
 
 .lightbox-overlay.open {

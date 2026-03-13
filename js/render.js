@@ -615,7 +615,6 @@ window.expandMedia = function expandMedia(mediaItem) {
 
     const content = document.createElement('div');
     content.className = 'lightbox-content';
-    content.onclick = (e) => e.stopPropagation();
 
     const fullUrl = item.dataset.fullUrl;
     const type = item.dataset.type;
@@ -803,37 +802,38 @@ window.expandMedia = function expandMedia(mediaItem) {
   };
 
   // Keep currentIndex in sync when the user swipes natively
-  let scrollEndTimer;
   trackOuter.addEventListener('scroll', () => {
-    clearTimeout(scrollEndTimer);
-    scrollEndTimer = setTimeout(() => {
-      const newIndex = Math.round(trackOuter.scrollLeft / trackOuter.offsetWidth);
-      if (newIndex !== currentIndex) {
-        currentIndex = newIndex;
-        updateSlideState();
-      }
-    }, 80);
+    if (!trackOuter.offsetWidth) return;
+    const newIndex = Math.round(trackOuter.scrollLeft / trackOuter.offsetWidth);
+    if (newIndex !== currentIndex) {
+      currentIndex = newIndex;
+      updateSlideState();
+    }
   }, { passive: true });
 
   // ── Tap zones for prev/next (only when multiple slides) ──
-  if (mediaItems.length > 1) {
-    const tapPrev = document.createElement('div');
-    tapPrev.className = 'lightbox-tap-prev';
-    tapPrev.onclick = (e) => {
-      e.stopPropagation();
-      if (currentIndex > 0) goTo(currentIndex - 1);
-    };
+  trackOuter.addEventListener('click', (e) => {
+    if (e.target.closest('button, .vid-controls, .vid-overlay-play, .lightbox-alt-badge, .lightbox-action-bar')) {
+      return; 
+    }
 
-    const tapNext = document.createElement('div');
-    tapNext.className = 'lightbox-tap-next';
-    tapNext.onclick = (e) => {
-      e.stopPropagation();
-      if (currentIndex < mediaItems.length - 1) goTo(currentIndex + 1);
-    };
+    let navigated = false;
+    if (mediaItems.length > 1) {
+      const rect = trackOuter.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      if (x < rect.width * 0.45 && currentIndex > 0) {
+        goTo(currentIndex - 1);
+        navigated = true;
+      } else if (x > rect.width * 0.55 && currentIndex < mediaItems.length - 1) {
+        goTo(currentIndex + 1);
+        navigated = true;
+      }
+    }
 
-    overlay.appendChild(tapPrev);
-    overlay.appendChild(tapNext);
-  }
+    if (navigated || e.target.closest('.lightbox-content')) {
+      e.stopPropagation();
+    }
+  });
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'lightbox-close';
