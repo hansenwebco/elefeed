@@ -8,13 +8,13 @@
 
 /* ─── Screen System ─── */
 .screen {
-  display: none;
+  display: none !important;
   flex-direction: column;
   min-height: 100dvh;
 }
 
 .screen.active {
-  display: flex;
+  display: flex !important;
 }
 
 /* ─── App Screen (main layout) ─── */

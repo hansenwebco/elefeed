@@ -113,7 +113,10 @@
 
       <footer class="login-footer">
         <div class="login-footer-security">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
           Your access token never leaves your browser
         </div>
         <div class="login-footer-links">
@@ -122,6 +125,79 @@
           <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
         </div>
       </footer>
+    </div>
+
+    <!-- Marketing Section -->
+    <div id="login-marketing">
+      <div class="marketing-grid">
+        <!-- Feature 1 -->
+        <div class="marketing-feature">
+          <div class="marketing-content">
+            <div class="marketing-chip">Tidy Feeds</div>
+            <h2>Feeds your way</h2>
+            <p>Switch effortlessly between posts from people you follow or curated feeds of your favorite hashtags. Elefeed keeps your timeline organized and focused on what matters most to you.</p>
+          </div>
+          <div class="marketing-image-container media-item" data-full-url="images/feature-feeds.png" data-type="image" onclick="expandMedia(this)">
+            <img src="images/feature-feeds.png" alt="Elefeed Feed View" loading="lazy">
+          </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="marketing-feature marketing-feature--alt">
+          <div class="marketing-content">
+            <div class="marketing-chip">Visual Context</div>
+            <h2>Know exactly why</h2>
+            <p>Every post in your feed is color-coded and clearly notated. Whether it's a hashtag you follow or a profile recommendation, you'll never wonder why a post appeared in your timeline.</p>
+          </div>
+          <div class="marketing-image-container media-item" data-full-url="images/feature-context.png" data-type="image" onclick="expandMedia(this)">
+            <img src="images/feature-context.png" alt="Color Coded Posts" loading="lazy">
+          </div>
+        </div>
+
+        <!-- Feature 3 (Mobile-First) -->
+        <div class="marketing-feature">
+          <div class="marketing-content">
+            <div class="marketing-chip">Always with you</div>
+            <h2>Mobile-First Experience</h2>
+            <p>Elefeed is built for the modern web. Install it as a Progressive Web App (PWA) to get a native-app feel on your iPhone or Android. Fast, responsive, and ready for your home screen.</p>
+          </div>
+          <div class="marketing-image-wrap--centered">
+            <div class="marketing-image--phone-simple media-item" data-full-url="images/feature-mobile.png" data-type="image" onclick="expandMedia(this)">
+              <img src="images/feature-mobile.png" alt="Elefeed Mobile App View" loading="lazy">
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="marketing-feature marketing-feature--alt">
+          <div class="marketing-content">
+            <div class="marketing-chip">Privacy First</div>
+            <h2>Private, local, and fast</h2>
+            <p>Elefeed is a lightweight client that runs entirely in your browser. No databases, no tracking, and no third-party servers. All your data stays in your browser's local storage.</p>
+          </div>
+          <div class="marketing-image-container media-item" data-full-url="images/feature-privacy.png" data-type="image" onclick="expandMedia(this)">
+            <img src="images/feature-privacy.png" alt="Elefeed Mobile View" loading="lazy">
+          </div>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="marketing-feature">
+          <div class="marketing-content">
+            <div class="marketing-chip">Custom Experience</div>
+            <h2>Tailored to You</h2>
+            <p>Customize every aspect of your experience. Control media previews, filter by language, manage instant notifications, and switch between light and dark modes. Elefeed is built to adapt perfectly to your flow.</p>
+          </div>
+          <div class="marketing-image-container media-item" data-full-url="images/feature-custom.png" data-type="image" onclick="expandMedia(this)">
+            <img src="images/feature-custom.png" alt="Customization settings" loading="lazy">
+          </div>
+        </div>
+
+        <!-- Open Source Callout -->
+        <div class="marketing-footer-banner">
+          <img src="images/footer-elephant-brand.png" alt="Elefeed" style="width: 48px; height: auto; margin-bottom: 24px; filter: brightness(0) saturate(100%) invert(63%) sepia(85%) saturate(3069%) hue-rotate(218deg) brightness(101%) contrast(101%);">
+          <p>Elefeed is open source. Contribute or view the code on <a href="https://github.com/hansenwebco/elefeed" target="_blank">GitHub</a>.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -334,10 +410,10 @@
               </button>
               <button class="tab-dropdown-item" data-filter="live">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1.5 8.5a13 13 0 0 1 21 0"/>
-                  <path d="M5 12a10 10 0 0 1 14 0"/>
-                  <path d="M8.5 15.5a7 7 0 0 1 7 0"/>
-                  <circle cx="12" cy="19" r="1" fill="currentColor"/>
+                  <path d="M1.5 8.5a13 13 0 0 1 21 0" />
+                  <path d="M5 12a10 10 0 0 1 14 0" />
+                  <path d="M8.5 15.5a7 7 0 0 1 7 0" />
+                  <circle cx="12" cy="19" r="1" fill="currentColor" />
                 </svg>
                 Local Feed
               </button>
@@ -383,8 +459,8 @@
               </button>
               <button class="tab-dropdown-item" data-subtab="following" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                  <polyline points="17 6 23 6 23 12"/>
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                  <polyline points="17 6 23 6 23 12" />
                 </svg>
                 From Following
               </button>
@@ -570,7 +646,9 @@
     <div class="profile-backdrop" id="profile-backdrop"></div>
     <aside class="profile-drawer" id="profile-drawer" aria-hidden="true">
       <button class="profile-back-analytics-btn" id="profile-back-analytics" aria-label="Back to insights">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
         Back to list
       </button>
       <button class="profile-close" id="profile-close" aria-label="Close profile">
@@ -930,7 +1008,7 @@
           <!-- Display & Behavior — grouped like language content -->
           <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
             <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Display & Behavior</span>
-            
+
             <!-- Hashtag Pills -->
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <div style="display:flex; flex-direction:column; gap:2px;">
@@ -970,7 +1048,7 @@
           <!-- Language — grouped like sensitive content -->
           <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
             <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Language</span>
-            
+
             <!-- Translation Target Language -->
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <div style="display:flex; flex-direction:column; gap:2px;">
