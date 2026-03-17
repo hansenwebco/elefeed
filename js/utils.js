@@ -191,3 +191,30 @@ export function updateURLParam(key, value, push = false) {
     window.history.replaceState({}, '', url);
   }
 }
+
+/**
+ * Checks if a post's language matches the preferred filter.
+ * Strict: if a filter is set (not 'all'), the language MUST be present and match.
+ * Flexible: matches 'en' to 'en-US', etc.
+ */
+export function matchesLanguage(postLang, filter) {
+  if (!filter || filter === 'all') return true;
+  
+  // Normalize post language: treat undefined, null, or "und" as unknown
+  const normalized = (typeof postLang === 'string') ? postLang.trim().toLowerCase() : null;
+  if (!normalized || normalized === 'und') return false; 
+  
+  const f = filter.trim().toLowerCase();
+  
+  // Exact match (e.g., 'en' === 'en')
+  if (normalized === f) return true;
+  
+  // Prefix match (e.g., 'en-US' matches 'en')
+  if (normalized.startsWith(f + '-')) return true;
+  
+  // Reverse prefix match: if filter is 'en-US' and post is 'en', show it?
+  // Usually better to be inclusive: if user wants 'en-US', they probably want general 'en' too.
+  if (f.startsWith(normalized + '-')) return true;
+  
+  return false;
+}

@@ -10,6 +10,7 @@ import { apiGet } from './api.js';
 import {
   escapeHTML, sanitizeHTML,
   renderCustomEmojis, relativeTime,
+  matchesLanguage,
 } from './utils.js';
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -132,7 +133,14 @@ async function loadMoreResults(query, filter) {
     let newItems = [];
     if (searchType === 'accounts') newItems = data.accounts || [];
     else if (searchType === 'hashtags') newItems = data.hashtags || [];
-    else newItems = data.statuses || [];
+    else {
+      newItems = data.statuses || [];
+      const preferredLang = state.preferredLanguage || 'all';
+      newItems = newItems.filter(s => {
+        const postLang = (s.reblog || s).language || s.language;
+        return matchesLanguage(postLang, preferredLang);
+      });
+    }
 
     _offset += newItems.length;
     _hasMoreResults = newItems.length === STATUS_PAGE;
@@ -225,7 +233,15 @@ function renderResults(data, query, filter) {
   const body = document.getElementById('search-results');
   if (!body) return;
 
-  const { accounts = [], statuses = [], hashtags = [] } = data;
+  const { accounts = [], hashtags = [] } = data;
+  let statuses = data.statuses || [];
+  
+  const preferredLang = state.preferredLanguage || 'all';
+  statuses = statuses.filter(s => {
+    const postLang = (s.reblog || s).language || s.language;
+    return matchesLanguage(postLang, preferredLang);
+  });
+  
   const hasAny = accounts.length || statuses.length || hashtags.length;
 
   if (!hasAny) {

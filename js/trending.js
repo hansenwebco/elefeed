@@ -7,7 +7,7 @@ import { $, state } from './state.js';
 import { apiGet } from './api.js';
 import { makeSkeleton, updateTabLabel } from './ui.js';
 import { renderPost } from './render.js';
-import { escapeHTML, renderCustomEmojis, formatCount } from './utils.js';
+import { escapeHTML, renderCustomEmojis, formatCount, matchesLanguage } from './utils.js';
 import { fetchRelationships } from './feed.js';
 
 /* ── Sparkline builder ─────────────────────────────────────────────── */
@@ -43,7 +43,13 @@ export async function loadTrendingPosts() {
       container.innerHTML = `<div class="feed-status"><div class="status-icon">📈</div><p>No trending posts right now.</p></div>`;
       return;
     }
-    container.innerHTML = posts.map(p => renderPost(p, { tags: [] })).join('');
+    const preferredLang = state.preferredLanguage || 'all';
+    let display = posts;
+    display = display.filter(p => {
+      const postLang = (p.reblog || p).language || p.language;
+      return matchesLanguage(postLang, preferredLang);
+    });
+    container.innerHTML = display.map(p => renderPost(p, { tags: [] })).join('');
     state.trendingPostsLoaded = true;
   } catch (err) {
     loading.style.display = 'none';
@@ -286,7 +292,13 @@ export async function loadTrendingFollowing() {
     if (!top.length) {
       container.innerHTML = `<div class="feed-status"><div class="status-icon">📈</div><p>No highly-engaged original posts from your network in the last 6 hours.</p></div>`;
     } else {
-      container.innerHTML = top.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
+      const preferredLang = state.preferredLanguage || 'all';
+      let display = top;
+      display = display.filter(p => {
+        const postLang = (p.reblog || p).language || p.language;
+        return matchesLanguage(postLang, preferredLang);
+      });
+      container.innerHTML = display.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
     }
   } catch (err) {
     loading.style.display = 'none';
