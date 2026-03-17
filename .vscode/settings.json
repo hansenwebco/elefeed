@@ -1,4 +1,5 @@
 {
     "sarif-viewer.connectToGithubCodeScanning": "off",
-    "codeQL.githubDatabase.download": "never"
+    "codeQL.githubDatabase.download": "never",
+    "claudeCodeChat.permissions.yoloMode": false
 }

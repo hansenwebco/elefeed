@@ -196,19 +196,25 @@ async function initApp(server, token, demo = false) {
   try {
     const v1Data = await apiGet('/api/v1/instance', token, server);
     let chars = 500;
+    let languages = [];
     if (v1Data.configuration?.statuses?.max_characters) {
       chars = v1Data.configuration.statuses.max_characters;
     } else if (v1Data.max_toot_chars) {
       chars = v1Data.max_toot_chars;
-    } else {
-      try {
-        const v2Data = await apiGet('/api/v2/instance', token, server);
-        if (v2Data.configuration?.statuses?.max_characters) {
-          chars = v2Data.configuration.statuses.max_characters;
-        }
-      } catch (err2) { }
     }
+    
+    try {
+      const v2Data = await apiGet('/api/v2/instance', token, server);
+      if (v2Data.configuration?.statuses?.max_characters) {
+        chars = v2Data.configuration.statuses.max_characters;
+      }
+      if (v2Data.languages) {
+        languages = v2Data.languages;
+      }
+    } catch (err2) { }
+
     state.maxTootChars = chars;
+    state.instanceLanguages = languages;
     updateCharCount();
     updateSidebarCharCount();
   } catch (err) {
@@ -898,6 +904,59 @@ if (settingsMenuBtn) {
       translateLangSel.value = store.get('pref_translate_lang') || 'browser';
     }
 
+    const feedLangSel = $('settings-feed-lang');
+    if (feedLangSel) {
+      const current = store.get('pref_feed_lang') || 'all';
+      // Populate if we have languages from the instance
+      if (state.instanceLanguages && state.instanceLanguages.length > 0) {
+        const langMap = {
+          'ar': 'Arabic', 'bg': 'Bulgarian', 'bn': 'Bengali', 'ca': 'Catalan',
+          'cs': 'Czech', 'da': 'Danish', 'de': 'German', 'el': 'Greek',
+          'en': 'English', 'eo': 'Esperanto', 'es': 'Spanish', 'et': 'Estonian',
+          'eu': 'Basque', 'fa': 'Persian', 'fi': 'Finnish', 'fr': 'French',
+          'ga': 'Irish', 'gl': 'Galician', 'he': 'Hebrew', 'hi': 'Hindi',
+          'hr': 'Croatian', 'hu': 'Hungarian', 'id': 'Indonesian', 'is': 'Icelandic',
+          'it': 'Italian', 'ja': 'Japanese', 'ko': 'Korean', 'lt': 'Lithuanian',
+          'lv': 'Latvian', 'mk': 'Macedonian', 'ml': 'Malayalam', 'mr': 'Marathi',
+          'ms': 'Malay', 'nl': 'Dutch', 'no': 'Norwegian', 'pa': 'Punjabi',
+          'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian',
+          'sk': 'Slovak', 'sl': 'Slovenian', 'sq': 'Albanian', 'sr': 'Serbian',
+          'sv': 'Swedish', 'ta': 'Tamil', 'te': 'Telugu', 'th': 'Thai',
+          'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 'vi': 'Vietnamese',
+          'zh': 'Chinese'
+        };
+        // Use a set to combine instance languages with common languages
+        const allLangs = new Set([...Object.keys(langMap), ...(state.instanceLanguages || [])]);
+        
+        // Reset and add "Show All"
+        feedLangSel.innerHTML = '<option value="all">Show All</option>';
+        
+        Array.from(allLangs)
+          .sort((a, b) => {
+            const nameA = langMap[a] || a.toUpperCase();
+            const nameB = langMap[b] || b.toUpperCase();
+            return nameA.localeCompare(nameB);
+          })
+          .forEach(code => {
+            const opt = document.createElement('option');
+            opt.value = code;
+            opt.textContent = langMap[code] || code.toUpperCase();
+            feedLangSel.appendChild(opt);
+          });
+      } else {
+        // Fallback to basic list if instance doesn't provide languages
+        const langMap = { 'en': 'English', 'es': 'Spanish', 'fr': 'French', 'de': 'German' };
+        feedLangSel.innerHTML = '<option value="all">Show All</option>';
+        Object.keys(langMap).forEach(code => {
+          const opt = document.createElement('option');
+          opt.value = code;
+          opt.textContent = langMap[code];
+          feedLangSel.appendChild(opt);
+        });
+      }
+      feedLangSel.value = current;
+    }
+
     // Close other drawers
     closeAnyDrawer();
 
@@ -1298,6 +1357,19 @@ const _translateLangSel = $('settings-translate-lang');
 if (_translateLangSel) {
   _translateLangSel.addEventListener('change', () => {
     store.set('pref_translate_lang', _translateLangSel.value);
+  });
+}
+
+// Feed language filter
+const _feedLangSel = $('settings-feed-lang');
+if (_feedLangSel) {
+  _feedLangSel.addEventListener('change', () => {
+    const val = _feedLangSel.value;
+    store.set('pref_feed_lang', val);
+    state.preferredLanguage = val;
+    // Reload feed to apply new filter
+    loadFeedTab();
+    showToast(val === 'all' ? 'Showing all languages' : `Filtering by: ${val.toUpperCase()}`);
   });
 }
 

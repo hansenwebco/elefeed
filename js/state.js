@@ -82,6 +82,7 @@ export const state = {
   _lastFiredNotifId: null,
   /** Latest notif ID seen by the SW (may be ahead of lastSeenNotifId). */
   _swLastKnownId: null,
+  preferredLanguage: store.get('pref_feed_lang') || 'all',
 };
 
 /* ── Compose form state (shared between drawer & sidebar) ──────────── */

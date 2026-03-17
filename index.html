@@ -927,71 +927,95 @@
       <div style="padding:16px; border-bottom:1px solid var(--border);">
         <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Content</h4>
         <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- Translation Target Language -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Translation language</span>
-              <span style="font-size:11px; color:var(--text-muted);">Preferred language for translating posts.</span>
+          <!-- Display & Behavior — grouped like language content -->
+          <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Display & Behavior</span>
+            
+            <!-- Hashtag Pills -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Hashtag pills</span>
+                <span style="font-size:11px; color:var(--text-muted);">Show hashtags as bordered pills.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Enable hashtag pills">
+                <input type="checkbox" id="settings-hashtag-pills-toggle" checked />
+                <span class="settings-toggle-track"></span>
+              </label>
             </div>
-            <select id="settings-translate-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
-              <option value="browser">Browser Default</option>
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="zh">Chinese</option>
-              <option value="ja">Japanese</option>
-              <option value="ko">Korean</option>
-              <option value="ru">Russian</option>
-              <option value="pt">Portuguese</option>
-              <option value="it">Italian</option>
-              <option value="ar">Arabic</option>
-              <option value="hi">Hindi</option>
-              <option value="nl">Dutch</option>
-              <option value="pl">Polish</option>
-              <option value="tr">Turkish</option>
-              <option value="id">Indonesian</option>
-              <option value="th">Thai</option>
-              <option value="vi">Vietnamese</option>
-              <option value="sv">Swedish</option>
-              <option value="fi">Finnish</option>
-              <option value="da">Danish</option>
-              <option value="no">Norwegian</option>
-            </select>
-          </div>
-          <!-- Hashtag Pills -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Hashtag pills</span>
-              <span style="font-size:11px; color:var(--text-muted);">Show hashtags as bordered pills.</span>
+
+            <!-- Hide Cards -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Hide link previews</span>
+                <span style="font-size:11px; color:var(--text-muted);">Hide link preview cards within posts for a lighter feed.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Hide link previews">
+                <input type="checkbox" id="settings-hide-cards-toggle" />
+                <span class="settings-toggle-track"></span>
+              </label>
             </div>
-            <label class="settings-toggle" style="flex-shrink:0;" title="Enable hashtag pills">
-              <input type="checkbox" id="settings-hashtag-pills-toggle" checked />
-              <span class="settings-toggle-track"></span>
-            </label>
-          </div>
-          <!-- Hide Cards -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Hide link previews</span>
-              <span style="font-size:11px; color:var(--text-muted);">Hide link preview cards within posts for a lighter feed.</span>
+
+            <!-- Live count updates -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Live count updates</span>
+                <span style="font-size:11px; color:var(--text-muted);">Periodically refresh reply, boost, and favourite counts on visible posts.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Enable live count updates">
+                <input type="checkbox" id="settings-count-polling-toggle" checked />
+                <span class="settings-toggle-track"></span>
+              </label>
             </div>
-            <label class="settings-toggle" style="flex-shrink:0;" title="Hide link previews">
-              <input type="checkbox" id="settings-hide-cards-toggle" />
-              <span class="settings-toggle-track"></span>
-            </label>
           </div>
-          <!-- Live count updates -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Live count updates</span>
-              <span style="font-size:11px; color:var(--text-muted);">Periodically refresh reply, boost, and favourite counts on visible posts.</span>
+          <!-- Language — grouped like sensitive content -->
+          <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Language</span>
+            
+            <!-- Translation Target Language -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Translation language</span>
+                <span style="font-size:11px; color:var(--text-muted);">Preferred language for translating posts.</span>
+              </div>
+              <select id="settings-translate-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
+                <option value="browser">Browser Default</option>
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="ru">Russian</option>
+                <option value="pt">Portuguese</option>
+                <option value="it">Italian</option>
+                <option value="ar">Arabic</option>
+                <option value="hi">Hindi</option>
+                <option value="nl">Dutch</option>
+                <option value="pl">Polish</option>
+                <option value="tr">Turkish</option>
+                <option value="id">Indonesian</option>
+                <option value="th">Thai</option>
+                <option value="vi">Vietnamese</option>
+                <option value="sv">Swedish</option>
+                <option value="fi">Finnish</option>
+                <option value="da">Danish</option>
+                <option value="no">Norwegian</option>
+              </select>
             </div>
-            <label class="settings-toggle" style="flex-shrink:0;" title="Enable live count updates">
-              <input type="checkbox" id="settings-count-polling-toggle" checked />
-              <span class="settings-toggle-track"></span>
-            </label>
+
+            <!-- Feed Language Filter -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Feed language filter</span>
+                <span style="font-size:11px; color:var(--text-muted);">Only show posts in this language across all feeds.</span>
+              </div>
+              <select id="settings-feed-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
+                <option value="all">Show All</option>
+              </select>
+            </div>
           </div>
+
           <!-- Sensitive content — grouped with a subtle inset -->
           <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
             <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Sensitive Content</span>

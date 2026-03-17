@@ -71,6 +71,7 @@ import { apiGet } from './api.js';
 import { setLoading, setError, showToast, updateTabLabel } from './ui.js';
 import { renderPost } from './render.js';
 import { getDemoHomePosts, getDemoHashtagData } from './demo.js';
+import { matchesLanguage } from './utils.js';
 
 /* ── Key helpers ───────────────────────────────────────────────────── */
 
@@ -91,12 +92,16 @@ export function getFilteredPendingPosts(feedKey) {
   const showBoosts = store.get('pref_show_boosts') !== 'false';
   const showReplies = store.get('pref_show_replies') !== 'false';
   const showQuotes = store.get('pref_show_quotes') !== 'false';
+  const preferredLang = state.preferredLanguage || 'all';
 
   return posts.filter(p => {
     if (!showBoosts && p.reblog) return false;
     const inner = p.reblog || p;
     if (!showReplies && inner.in_reply_to_id) return false;
     if (!showQuotes && inner.quote) return false;
+    
+    const postLang = inner.language || p.language;
+    if (!matchesLanguage(postLang, preferredLang)) return false;
     return true;
   });
 }
@@ -197,12 +202,16 @@ function renderFilteredPosts(displayPosts) {
   const showBoosts = store.get('pref_show_boosts') !== 'false';
   const showReplies = store.get('pref_show_replies') !== 'false';
   const showQuotes = store.get('pref_show_quotes') !== 'false';
+  const preferredLang = state.preferredLanguage || 'all';
 
   displayPosts = displayPosts.filter(p => {
     if (!showBoosts && p.reblog) return false;
     const inner = p.reblog || p;
     if (!showReplies && inner.in_reply_to_id) return false;
     if (!showQuotes && inner.quote) return false;
+
+    const postLang = inner.language || p.language;
+    if (!matchesLanguage(postLang, preferredLang)) return false;
     return true;
   });
 
@@ -774,10 +783,16 @@ export async function handleLoadMore(btn) {
       maxIdToUse = state.homeMaxId;
     }
 
-    let display = newPosts;
-    if (filter === 'following' && !state.demoMode) display = await filterForFollowing(newPosts);
+    const preferredLang = state.preferredLanguage || 'all';
+    let display = newPosts.filter(p => {
+      const inner = p.reblog || p;
+      const postLang = inner.language || p.language;
+      return matchesLanguage(postLang, preferredLang);
+    });
+    
+    if (filter === 'following' && !state.demoMode) display = await filterForFollowing(display);
     else if (filter === 'hashtags' && (!state.selectedHashtagFilter || state.selectedHashtagFilter === 'all')) {
-      display = newPosts.filter(p => p._sourceTags && p._sourceTags.length > 0);
+      display = display.filter(p => p._sourceTags && p._sourceTags.length > 0);
     }
 
     if (!state.demoMode && filter !== 'following') {

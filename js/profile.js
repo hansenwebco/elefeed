@@ -56,6 +56,7 @@ import { showToast } from './ui.js';
 import { renderPost } from './render.js';
 import {
   escapeHTML, sanitizeHTML, renderCustomEmojis, formatNum, updateURLParam,
+  matchesLanguage,
 } from './utils.js';
 
 /* ── Profile pagination state ──────────────────────────────────────── */
@@ -154,14 +155,23 @@ async function loadProfileTab(tabName, panel) {
     const loadMoreHtml = (statuses.length === 20 && tabState.maxId)
       ? `<button class="load-more-btn" data-feed="profile" data-tab="${tabName}">Load More</button>`
       : '';
+    const preferredLang = state.preferredLanguage || 'all';
+    let display = statuses;
+    if (tabName !== 'media') {
+      display = display.filter(s => {
+        const postLang = (s.reblog || s).language || s.language;
+        return matchesLanguage(postLang, preferredLang);
+      });
+    }
+    
     if (tabName === 'media') {
       panel.innerHTML = statuses.length
         ? `<div class="profile-media-grid">${statuses.map(s => renderMediaItem(s)).join('')}</div>${loadMoreHtml}`
         : '<div class="feed-status"><p style="font-size:13px;">No media yet.</p></div>';
     } else {
-      panel.innerHTML = statuses.length
-        ? statuses.map(s => renderPost(s)).join('') + loadMoreHtml
-        : '<div class="feed-status"><p style="font-size:13px;">No posts yet.</p></div>';
+      panel.innerHTML = display.length
+        ? display.map(s => renderPost(s)).join('') + loadMoreHtml
+        : '<div class="feed-status"><p style="font-size:13px;">No posts matching your language filter.</p></div>';
     }
   } catch (err) {
     panel.innerHTML = '<div class="feed-status"><p style="font-size:13px;color:var(--danger);">Failed to load.</p></div>';
@@ -197,7 +207,13 @@ export async function loadMoreProfilePosts(btn) {
         while (tmp.firstChild) grid.appendChild(tmp.firstChild);
       }
     } else {
-      const html = newPosts.map(s => renderPost(s)).join('');
+      const preferredLang = state.preferredLanguage || 'all';
+      let display = newPosts;
+      display = display.filter(s => {
+        const postLang = (s.reblog || s).language || s.language;
+        return matchesLanguage(postLang, preferredLang);
+      });
+      const html = display.map(s => renderPost(s)).join('');
       const tmp = document.createElement('div');
       tmp.innerHTML = html;
       while (tmp.firstChild) container.insertBefore(tmp.firstChild, btn);
@@ -354,9 +370,16 @@ export function openProfileDrawer(accountId, server) {
       ? '<button class="load-more-btn" data-feed="profile" data-tab="posts">Load More</button>'
       : '';
 
-    const postsHtml = statuses.length
-      ? statuses.map(s => renderPost(s)).join('') + loadMoreHtml
-      : '<div class="feed-status"><p style="font-size:13px;">No posts yet.</p></div>';
+    const preferredLang = state.preferredLanguage || 'all';
+    let display = statuses;
+    display = display.filter(s => {
+      const postLang = (s.reblog || s).language || s.language;
+      return matchesLanguage(postLang, preferredLang);
+    });
+
+    const postsHtml = display.length
+      ? display.map(s => renderPost(s)).join('') + loadMoreHtml
+      : '<div class="feed-status"><p style="font-size:13px;">No posts matching your language filter.</p></div>';
 
     /* ── Pinned posts ── */
     const pinned = pinnedStatuses || [];
@@ -579,11 +602,17 @@ export function openBookmarksDrawer() {
           </div>`;
         return;
       }
-      const postsHtml = bookmarks.map(s => renderPost(s)).join('');
+      const preferredLang = state.preferredLanguage || 'all';
+      let display = bookmarks;
+      display = display.filter(s => {
+        const postLang = (s.reblog || s).language || s.language;
+        return matchesLanguage(postLang, preferredLang);
+      });
+      const postsHtml = display.map(s => renderPost(s)).join('');
       content.innerHTML = `
         <div style="padding:20px 20px 12px;">
           <h2 style="font-family:var(--font-display);font-size:20px;margin-bottom:4px;">Bookmarks</h2>
-          <p style="color:var(--text-muted);font-size:12px;font-family:var(--font-mono);">${bookmarks.length} saved post${bookmarks.length !== 1 ? 's' : ''}</p>
+          <p style="color:var(--text-muted);font-size:12px;font-family:var(--font-mono);">${display.length} saved post${display.length !== 1 ? 's' : ''}</p>
         </div>
         <div style="border-top:1px solid var(--border);">${postsHtml}</div>`;
     })
