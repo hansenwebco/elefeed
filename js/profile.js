@@ -415,7 +415,9 @@ export function openProfileDrawer(accountId, server) {
               </button>
             </div>
           </div>
-          <div id="${carouselId}">${slides}</div>
+          <div class="pinned-carousel-outer">
+            <div id="${carouselId}" class="pinned-carousel-track">${slides}</div>
+          </div>
           <div class="pinned-dots">${pinned.map((_, i) =>
         `<button class="pinned-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Post ${i + 1}"></button>`
       ).join('')}</div>
@@ -509,14 +511,33 @@ export function openProfileDrawer(accountId, server) {
         const total = slides.length;
         let current = 0;
 
+        function updateHeight(idx) {
+          const slide = slides[idx];
+          const outer = carouselEl.parentElement; // .pinned-carousel-outer
+          if (slide && outer) {
+            outer.style.height = slide.offsetHeight + 'px';
+          }
+        }
+
         function goTo(idx) {
+          const newIdx = (idx + total) % total;
+          carouselEl.style.transform = `translateX(-${newIdx * 100}%)`;
+          
+          updateHeight(newIdx);
+
           slides[current].classList.remove('active');
           dots[current].classList.remove('active');
-          current = (idx + total) % total;
+          current = newIdx;
           slides[current].classList.add('active');
           dots[current].classList.add('active');
           if (counter) counter.textContent = `${current + 1} / ${total}`;
         }
+
+        // Update height if images load later
+        carouselEl.addEventListener('load', () => updateHeight(current), true);
+
+        // Initial height set
+        setTimeout(() => updateHeight(0), 100);
 
         carouselEl.closest('.pinned-section').querySelector('.pinned-nav.prev')
           .addEventListener('click', e => { e.stopPropagation(); goTo(current - 1); });
