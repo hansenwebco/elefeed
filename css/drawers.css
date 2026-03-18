@@ -1087,13 +1087,28 @@
   border-bottom: none;
 }
 
+.pinned-carousel-outer {
+  overflow: hidden;
+  width: 100%;
+  transition: height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pinned-carousel-track {
+  display: flex;
+  align-items: flex-start;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 .pinned-slide {
-  display: none;
+  flex: 0 0 100%;
+  width: 100%;
+  display: block;
+  opacity: 0.5;
+  transition: opacity 0.6s ease;
 }
 
 .pinned-slide.active {
-  display: block;
-  animation: pinnedFadeIn 180ms ease;
+  opacity: 1;
 }
 
 .pinned-slide .post {

@@ -830,6 +830,7 @@
   align-items: center;
   justify-content: center;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
   /* top: close button clearance; bottom: action bar clearance */
   padding: 64px 24px 100px;
   cursor: zoom-out;
