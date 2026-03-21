@@ -660,7 +660,8 @@
         display: none;
     }
 
-    .search-status-acct {
+    .search-status-acct,
+    .search-account-acct {
         display: none;
     }
 
