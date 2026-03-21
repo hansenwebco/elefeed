@@ -292,7 +292,7 @@
 /* ─── Textarea ─── */
 .compose-textarea {
   width: 100%;
-  min-height: 120px;
+  min-height: 48px;
   background: transparent;
   border: none;
   font-size: 15px;
@@ -300,7 +300,6 @@
   font-family: var(--font-sans);
   resize: none;
   line-height: 1.5;
-  flex: 1 0 auto;
   overflow-y: visible;
 }
 

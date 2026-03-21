@@ -14,6 +14,9 @@ import { loadFeedTab } from './feed.js';
 import { updateCurrentThread } from './thread.js';
 import { openEmojiPicker, closeEmojiPicker, initEmojiPicker, initEmojiAutocomplete } from './emoji.js';
 
+const ICON_REPLY = '<polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" />';
+const ICON_QUOTE = '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v3c0 1.25.75 2 2 2h3c0 4-2 6-3 6l1 3z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v3c0 1.25.75 2 2 2h3c0 4-2 6-3 6l1 3z"></path>';
+
 /* ══════════════════════════════════════════════════════════════════════
    ALT-TEXT MODAL
    ══════════════════════════════════════════════════════════════════════ */
@@ -103,7 +106,9 @@ export function resetReplyState() {
 
     if (bar) bar.style.display = 'none';
     if (nameNode) nameNode.textContent = '';
-    if (typeNode) typeNode.textContent = 'Replying to';
+    if (typeNode) typeNode.textContent = 'New post';
+    const headerTitle = $('compose-header-title' + suffix);
+    if (headerTitle) headerTitle.textContent = 'New message';
     if (textarea) textarea.innerText = '';
     if (postBtn) postBtn.textContent = 'Post';
 
@@ -123,6 +128,12 @@ export function resetReplyState() {
       if (text) text.textContent = 'Public, quotes allowed';
     }
 
+    const quotePreview = $('compose-quote-preview' + suffix);
+    if (quotePreview) {
+      quotePreview.style.display = 'none';
+      quotePreview.innerHTML = '';
+    }
+
     if (mediaPreview) mediaPreview.innerHTML = '';
   });
   if (window.innerWidth > 900) updateSidebarCharCount(); else updateCharCount();
@@ -130,6 +141,14 @@ export function resetReplyState() {
 
 // Expose on window so inline onclick="resetReplyState()" on cancel buttons works
 window.resetReplyState = resetReplyState;
+
+window.cancelReplyAndClose = function (isSidebar) {
+  if (isSidebar) {
+    resetReplyState();
+  } else {
+    closeComposeDrawer();
+  }
+};
 
 /* ══════════════════════════════════════════════════════════════════════
    VISIBILITY MODAL
@@ -195,10 +214,14 @@ export function handleReply(postId, acct) {
   const bar = $('compose-reply-bar' + suffix);
   const to = $('compose-reply-to' + suffix);
 
-  if (bar && to) {
+  if (to) {
     const typeNode = $('compose-context-type' + suffix);
-    if (typeNode) typeNode.textContent = 'Replying to';
-    bar.style.display = 'block';
+    if (typeNode) typeNode.textContent = 'Replying to ';
+    const headerTitle = $('compose-header-title' + suffix);
+    if (headerTitle) headerTitle.textContent = 'Replying';
+    const iconEl = $('compose-context-icon' + suffix);
+    if (iconEl) iconEl.innerHTML = ICON_REPLY;
+    if (bar) bar.style.display = 'flex';
     to.textContent = '@' + acct;
   }
 
@@ -237,11 +260,66 @@ window.handleQuoteInit = function (postId, acct) {
   const bar = $('compose-reply-bar' + suffix);
   const to = $('compose-reply-to' + suffix);
 
-  if (bar && to) {
+  if (to) {
     const typeNode = $('compose-context-type' + suffix);
-    if (typeNode) typeNode.textContent = 'Quoting';
-    bar.style.display = 'block';
+    if (typeNode) typeNode.textContent = 'Quoting ';
+    const headerTitle = $('compose-header-title' + suffix);
+    if (headerTitle) headerTitle.textContent = 'Quoting';
+    const iconEl = $('compose-context-icon' + suffix);
+    if (iconEl) iconEl.innerHTML = ICON_QUOTE;
+    if (bar) bar.style.display = 'flex';
     to.textContent = '@' + acct;
+  }
+
+  const quotePreview = $('compose-quote-preview' + suffix);
+  if (quotePreview) {
+    quotePreview.innerHTML = '<div style="color:var(--text-dim);">Loading quote...</div>';
+    quotePreview.style.display = 'block';
+    
+    apiGet(`/api/v1/statuses/${postId}`, state.token)
+      .then(status => {
+        let contentHtml = status.content || '';
+        let temp = document.createElement('div');
+        temp.innerHTML = contentHtml;
+        let textContent = temp.innerText || '';
+        
+        const avatarUrl = status.account && status.account.avatar ? status.account.avatar : '';
+        const displayName = status.account && status.account.display_name ? status.account.display_name : acct;
+        
+        // Sanitize for basic XSS protection in preview
+        const sanText = textContent.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        
+        // Detect attached media for preview
+        let mediaHtml = '';
+        if (status.media_attachments && status.media_attachments.length > 0) {
+          const m = status.media_attachments[0];
+          const purl = m.preview_url || m.url;
+          if (purl) {
+            mediaHtml = `<div style="margin-top:6px; border-radius:4px; overflow:hidden; position:relative; background:var(--bg); border:1px solid var(--border);">
+              <img src="${purl}" style="width:100%; height:auto; max-height:300px; object-fit:contain; display:block;">
+              ${m.type === 'video' || m.type === 'gifv' ? '<div style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:9px; font-weight:700; padding:2px 4px; border-radius:3px;">VIDEO</div>' : ''}
+            </div>`;
+          }
+        }
+        
+        quotePreview.innerHTML = `
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+             <img src="${avatarUrl}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; background:var(--surface); flex-shrink:0;">
+             <div style="display:flex; flex-direction:column; line-height:1.2; overflow:hidden;">
+               <span style="font-weight:600; font-size:12.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayName}</span>
+               <span style="color:var(--text-dim); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${acct}</span>
+             </div>
+          </div>
+          <div style="opacity:0.9; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family:var(--font-body); font-size:12.5px; line-height:1.4;">
+            ${sanText}
+          </div>
+          ${mediaHtml}
+        `;
+      })
+      .catch(err => {
+        console.error(err);
+        quotePreview.innerHTML = '<div style="color:var(--danger);">Failed to load quote</div>';
+      });
   }
 
   if (!isDesktop) openComposeDrawer();
@@ -426,10 +504,10 @@ window.handleEditInit = async function (postId) {
 
     const bar = $('compose-reply-bar' + suffix);
     const to = $('compose-reply-to' + suffix);
-    if (bar && to) {
+    if (to) {
       const typeNode = $('compose-context-type' + suffix);
       if (typeNode) typeNode.textContent = 'Editing post';
-      bar.style.display = 'block';
+      if (bar) bar.style.display = 'flex';
       to.textContent = '';
     }
     const postBtn = $('compose-post-btn' + suffix);
