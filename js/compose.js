@@ -15,7 +15,7 @@ import { updateCurrentThread } from './thread.js';
 import { openEmojiPicker, closeEmojiPicker, initEmojiPicker, initEmojiAutocomplete } from './emoji.js';
 
 const ICON_REPLY = '<polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" />';
-const ICON_QUOTE = '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v3c0 1.25.75 2 2 2h3c0 4-2 6-3 6l1 3z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v3c0 1.25.75 2 2 2h3c0 4-2 6-3 6l1 3z"></path>';
+const ICON_QUOTE = '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v3c0 1.25.75 2 2 2h3c0 4-2 6-3 6l1 3z" fill="currentColor" stroke="none"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v3c0 1.25.75 2 2 2h3c0 4-2 6-3 6l1 3z" fill="currentColor" stroke="none"></path>';
 
 /* ══════════════════════════════════════════════════════════════════════
    ALT-TEXT MODAL
@@ -295,11 +295,55 @@ window.handleQuoteInit = function (postId, acct) {
           const m = status.media_attachments[0];
           const purl = m.preview_url || m.url;
           if (purl) {
-            mediaHtml = `<div style="margin-top:6px; border-radius:4px; overflow:hidden; position:relative; background:var(--bg); border:1px solid var(--border);">
-              <img src="${purl}" style="width:100%; height:auto; max-height:300px; object-fit:contain; display:block;">
-              ${m.type === 'video' || m.type === 'gifv' ? '<div style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:9px; font-weight:700; padding:2px 4px; border-radius:3px;">VIDEO</div>' : ''}
+            let hideSensitive = true;
+            try { hideSensitive = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
+            const isSensitive = status.sensitive;
+            const startBlurred = isSensitive && hideSensitive;
+            const blurClass = startBlurred ? ' media-sensitive-blur' : '';
+            
+            const qPill = isSensitive ? `
+              <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); window.toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
+                <div class="sp-card" style="padding:8px 12px; border-radius:10px;">
+                  <span class="sp-card-title" style="font-size:12px;">Sensitive content</span>
+                  <span class="sp-card-sub" style="font-size:10px;">Click to show</span>
+                </div>
+                <svg class="sp-icon sp-icon-eye" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span class="sp-revealed-label" style="font-size:10px;">hide</span>
+              </button>` : '';
+
+            mediaHtml = `<div class="post-media" style="margin-top:6px; border-radius:4px; overflow:hidden; position:relative; background:var(--bg); border:1px solid var(--border); line-height:0;">
+              <img src="${purl}" class="${blurClass}" style="width:100%; height:auto; max-height:300px; object-fit:contain; display:block;">
+              ${m.type === 'video' || m.type === 'gifv' ? '<div style="position:absolute; bottom:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:9px; font-weight:700; padding:2px 4px; border-radius:3px;">VIDEO</div>' : ''}
+              ${qPill}
             </div>`;
           }
+        }
+        
+        const cwText = status.spoiler_text ? status.spoiler_text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Sensitive content';
+        const hasCW = (status.sensitive || (status.spoiler_text && status.spoiler_text.length > 0));
+
+        contentHtml = '';
+        if (hasCW) {
+          const cwBodyId = `compose-quote-cw${suffix}`;
+          contentHtml = `
+            <div class="cw-wrapper" style="margin:4px 0; background:rgba(255,107,107,0.04); border-left:2px solid var(--danger); padding:8px; border-radius:4px;">
+              <div class="cw-summary" style="cursor:pointer; font-size:12px; display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation(); window.toggleCW('${cwBodyId}', this.querySelector('.cw-toggle'))">
+                <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cwText}</span>
+                <button class="cw-toggle" style="padding:2px 8px; font-size:11px; flex-shrink:0;">show</button>
+              </div>
+              <div class="cw-body" id="${cwBodyId}">
+                <div style="opacity:0.9; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family:var(--font-body); font-size:12.5px; line-height:1.4; margin-top:8px;">
+                  ${sanText}
+                </div>
+                ${mediaHtml}
+              </div>
+            </div>`;
+        } else {
+          contentHtml = `
+            <div style="opacity:0.9; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family:var(--font-body); font-size:12.5px; line-height:1.4;">
+              ${sanText}
+            </div>
+            ${mediaHtml}`;
         }
         
         quotePreview.innerHTML = `
@@ -310,10 +354,7 @@ window.handleQuoteInit = function (postId, acct) {
                <span style="color:var(--text-dim); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${acct}</span>
              </div>
           </div>
-          <div style="opacity:0.9; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family:var(--font-body); font-size:12.5px; line-height:1.4;">
-            ${sanText}
-          </div>
-          ${mediaHtml}
+          ${contentHtml}
         `;
       })
       .catch(err => {
