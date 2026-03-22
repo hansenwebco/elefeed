@@ -123,55 +123,73 @@
 
 /* Trending People */
 .trending-people-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   padding-bottom: 8px;
 }
 
 .trending-person-card {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: border-color var(--trans), background var(--trans);
+  transition: background var(--trans);
+}
+
+.trending-person-card:last-child {
+  border-bottom: none;
 }
 
 .trending-person-card:hover {
-  border-color: var(--accent);
-  background: rgba(155, 127, 255, 0.05);
+  background: rgba(155, 127, 255, 0.04);
+}
+
+.trending-person-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  width: 100%;
 }
 
 .trending-person-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-  overflow: hidden;
   flex-shrink: 0;
-  background: var(--surface);
+  width: 44px;
+  height: 44px;
 }
 
 .trending-person-avatar img {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
+  border: 1px solid var(--border);
   object-fit: cover;
 }
 
+.trending-person-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.trending-person-author {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .trending-person-name {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 .trending-person-acct {
@@ -181,24 +199,106 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  flex-shrink: 1;
+}
+
+.trending-person-server {
+  display: none;
+  /* Desktop default: handle name/handle display differently? No, follow feed style. */
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.trending-person-action {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.trending-person-action .profile-follow-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  border-radius: 6px;
+  min-width: 82px;
+  height: 30px;
+}
+
+@media (max-width: 600px) {
+  .trending-person-meta {
+    justify-content: center;
+  }
+
+  .trending-person-acct {
+    display: none;
+    /* Hide @handle on mobile like post headers */
+  }
+
+  .trending-person-server {
+    display: block;
+    /* Show server address instead of handle on mobile */
+    opacity: 0.6;
+  }
+
+  .trending-person-action .profile-follow-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+    min-width: 74px;
+    height: 28px;
+  }
+}
+
+.trending-person-body {
+  padding-left: 0;
+  /* Align with avatar edge or indent? indented looks better for bio */
+  margin-top: 4px;
+}
+
+@media (min-width: 601px) {
+  .trending-person-body {
+    padding-left: 56px;
+    /* indent to align with text start */
+  }
+
+  .trending-person-acct-row .trending-person-server::before {
+    content: '·';
+    margin-right: 6px;
+    opacity: 0.5;
+  }
+}
+
+.trending-person-bio {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.trending-person-bio p {
+  margin: 0;
 }
 
 .trending-person-stats {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .trending-person-stat {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: baseline;
+  gap: 4px;
 }
 
 .trending-person-stat-val {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text);
 }
@@ -302,11 +402,17 @@
   overflow: hidden;
 }
 
+.trending-link-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 .trending-link-stat {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-dim);
-  margin-top: 6px;
 }
 
 /* Sub-panels */
