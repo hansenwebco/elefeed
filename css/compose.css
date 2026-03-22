@@ -185,9 +185,8 @@
   .compose-drawer .compose-textarea {
     min-height: 80px;
     max-height: none;
-    flex: 1;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    flex: 1 0 auto;
+    overflow-y: visible;
   }
 
   .compose-drawer .compose-cw-section,
@@ -293,7 +292,7 @@
 /* ─── Textarea ─── */
 .compose-textarea {
   width: 100%;
-  min-height: 120px;
+  min-height: 48px;
   background: transparent;
   border: none;
   font-size: 15px;
@@ -301,9 +300,7 @@
   font-family: var(--font-sans);
   resize: none;
   line-height: 1.5;
-  flex: 1;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow-y: visible;
 }
 
 .compose-cw-section,
@@ -928,7 +925,8 @@
 /* ─── Suggestion Strip / Dropdown ─── */
 .compose-textarea-wrap {
   position: relative;
-  flex: 1;
+  z-index: 2;
+  flex: 1 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;

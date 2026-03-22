@@ -381,6 +381,7 @@ function renderAccount(account) {
       <div class="search-account-info">
         <div class="search-account-name">${displayName}</div>
         <div class="search-account-acct">@${escapeHTML(account.acct)}</div>
+        <div class="post-server-address">${escapeHTML((account.url || '').split('/')[2] || '')}</div>
         ${account.note ? `<div class="search-account-bio">${sanitizeHTML(account.note)}</div>` : ''}
       </div>
       <div class="search-account-meta">
@@ -513,6 +514,7 @@ function renderStatus(status) {
         <div class="search-status-author" data-profile-id="${s.account.id}" data-profile-server="${server}" style="cursor:pointer;">
           <div class="search-status-name">${renderCustomEmojis(s.account.display_name || s.account.username, s.account.emojis)}</div>
           <div class="search-status-acct">@${escapeHTML(s.account.acct)}</div>
+          <div class="post-server-address">${escapeHTML((s.account.url || '').split('/')[2] || '')}</div>
         </div>
         <span class="search-status-time">${relativeTime(s.created_at)}</span>
       </div>

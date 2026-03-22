@@ -113,49 +113,72 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
     pollHTML = `<div class="post-poll">${options}<div class="poll-meta">${total} votes · ${s.poll.expired ? 'closed' : 'open'}</div></div>`;
   }
 
-  /* ── Quote ── */
-  let quoteHTML = '';
-  const qStatus = s.quote && (s.quote.quoted_status || (s.quote.account ? s.quote : null));
-  if (qStatus) {
-    let autoOpenSensitive = false;
-    try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
-    const qHasCW = !autoOpenSensitive && ((qStatus.spoiler_text && qStatus.spoiler_text.length > 0) || qStatus.sensitive);
-    const qCwText = qStatus.spoiler_text ? escapeHTML(qStatus.spoiler_text) : 'Sensitive content';
-    const qCwId = `qcw-${idPrefix}${qStatus.id}-${status.id}`;
-    let qContentHTML = '';
-    if (qHasCW) {
-      qContentHTML = `
-        <div class="cw-wrapper">
-          <div class="cw-summary" style="cursor:pointer;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this.querySelector('.cw-toggle'))">
-            <span>${qCwText}</span>
-            <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this)">show</button>
-          </div>
-          <div class="cw-body" id="${qCwId}">
-            <div class="post-content">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>
-          </div>
-        </div>`;
-    } else {
-      qContentHTML = `<div class="post-content" style="margin-bottom:0">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>`;
-    }
+    /* ── Quote ── */
+    let quoteHTML = '';
+    const qStatus = s.quote && (s.quote.quoted_status || (s.quote.account ? s.quote : null));
+    if (qStatus) {
+      let autoOpenSensitive = false;
+      try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
+      const qHasCW = !autoOpenSensitive && ((qStatus.spoiler_text && qStatus.spoiler_text.length > 0) || qStatus.sensitive);
+      const qCwText = qStatus.spoiler_text ? escapeHTML(qStatus.spoiler_text) : 'Sensitive content';
+      const qCwId = `qcw-${idPrefix}${qStatus.id}-${status.id}`;
+      
+      let qContentHTML = '';
+      if (qHasCW) {
+        qContentHTML = `
+          <div class="cw-wrapper" style="margin:4px 0 0;">
+            <div class="cw-summary" style="cursor:pointer; font-size:12px;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this.querySelector('.cw-toggle'))">
+              <span>${qCwText}</span>
+              <button class="cw-toggle" style="padding:3px 8px; font-size:11px;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this)">show</button>
+            </div>
+            <div class="cw-body" id="${qCwId}">
+              <div class="post-content" style="font-size:12.5px; opacity:0.9;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>
+            </div>
+          </div>`;
+      } else {
+        qContentHTML = `<div class="post-content" style="font-size:12.5px; opacity:0.9; margin-bottom:0; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>`;
+      }
 
-    quoteHTML = `
-      <div class="post-quote" onclick="event.stopPropagation(); window.open('${qStatus.url}', '_blank')">
-        <div class="post-header" style="margin-bottom:8px;">
-          <div class="post-avatar" style="width:24px;height:24px;">
-            <img src="${qStatus.account.avatar_static || qStatus.account.avatar}" alt="" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
-            ${state.knownFollowing.has(qStatus.account.id) ? `<div class="following-badge" title="Following">
-              <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-            </div>` : ''}
+      let qMediaHTML = '';
+      if (qStatus.media_attachments && qStatus.media_attachments.length > 0) {
+        const m = qStatus.media_attachments[0];
+        const purl = m.preview_url || m.url;
+        if (purl) {
+          const qSensitive = qStatus.sensitive;
+          const startBlurred = qSensitive && hideSensitiveMedia;
+          const blurClass = startBlurred ? ' media-sensitive-blur' : '';
+          
+          const qPill = qSensitive ? `
+            <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); window.toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
+              <div class="sp-card" style="padding:8px 12px; border-radius:10px;">
+                <span class="sp-card-title" style="font-size:12px;">Sensitive content</span>
+                <span class="sp-card-sub" style="font-size:10px;">Click to show</span>
+              </div>
+              <svg class="sp-icon sp-icon-eye" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span class="sp-revealed-label" style="font-size:10px;">hide</span>
+            </button>` : '';
+
+          qMediaHTML = `<div class="post-media" style="margin-top:8px; border-radius:6px; overflow:hidden; position:relative; background:var(--bg); border:1px solid var(--border); line-height:0;">
+            <img src="${purl}" class="${blurClass}" style="width:100%; height:auto; max-height:300px; object-fit:contain; display:block;" loading="lazy">
+            ${m.type === 'video' || m.type === 'gifv' ? '<div style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.6); color:#fff; font-size:9px; font-weight:700; padding:2px 5px; border-radius:3px; letter-spacing:0.5px;">VIDEO</div>' : ''}
+            ${qPill}
+          </div>`;
+        }
+      }
+
+      quoteHTML = `
+        <div class="post-quote" style="padding:10px; margin-top:8px;" onclick="event.stopPropagation(); if (window.openThreadDrawer) window.openThreadDrawer('${qStatus.id}'); else window.open('${qStatus.url}', '_blank')">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <img src="${qStatus.account.avatar_static || qStatus.account.avatar}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; background:var(--surface); flex-shrink:0;" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER">
+            <div style="display:flex; flex-direction:column; line-height:1.2; overflow:hidden;">
+              <span style="font-weight:600; font-size:12.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${renderCustomEmojis(qStatus.account.display_name || qStatus.account.username, qStatus.account.emojis)}</span>
+              <span style="color:var(--text-dim); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${escapeHTML(qStatus.account.acct)}</span>
+            </div>
           </div>
-          <div class="post-meta"><div class="post-author" style="font-size:13px;">
-            <span class="post-display-name">${renderCustomEmojis(qStatus.account.display_name || qStatus.account.username, qStatus.account.emojis)}</span>
-            <span class="post-acct">@${escapeHTML(qStatus.account.acct)}</span>
-            <span class="post-time">${relativeTime(qStatus.created_at)}</span>
-          </div></div>
-        </div>
-        ${qContentHTML}
-      </div>`;
-  }
+          ${qContentHTML}
+          ${qMediaHTML}
+        </div>`;
+    }
 
   /* ── Card (Link Preview) ── */
   let cardHTML = '';
@@ -546,19 +569,20 @@ export function renderThreadPost(status, variant) {
     <div class="${variantClass}" data-status-id="${s.id}">
       <article class="post${contextClass}" data-id="${status.id}">
         ${boostLabelHTML}
-        <div class="post-header">
+        <div class="post-header post-header--with-server">
           <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer">
             <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
             ${state.knownFollowing.has(s.account.id) ? `<div class="following-badge" title="Following">
               <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             </div>` : ''}
           </div>
-          <div class="post-meta">
-            <div class="post-author">
+          <div class="post-meta post-meta--with-server">
+            <div class="post-author post-author--with-server">
               <span class="post-display-name" data-profile-id="${s.account.id}" data-profile-server="${profileServer}">${renderCustomEmojis(s.account.display_name || s.account.username, s.account.emojis)}</span>
               <span class="post-acct">@${escapeHTML(s.account.acct)}</span>
               <span class="post-time">${relativeTime(s.created_at)}</span>
             </div>
+            <div class="post-server-address">${escapeHTML((s.account.url || '').split('/')[2] || '')}</div>
           </div>
           ${rightHeaderHTML}
         </div>
