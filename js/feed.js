@@ -740,6 +740,13 @@ export function handleScrollDirection() {
 /* ── Load more (pagination) ────────────────────────────────────────── */
 
 export async function handleLoadMore(btn) {
+  if (btn.dataset.type === 'trending-posts') {
+    const { loadTrendingPosts } = await import('./trending.js');
+    btn.disabled = true;
+    btn.textContent = 'Loading...';
+    await loadTrendingPosts(true);
+    return;
+  }
   if (btn.dataset.type === 'trending-people') {
     const { loadTrendingPeople } = await import('./trending.js');
     btn.disabled = true;

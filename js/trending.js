@@ -25,36 +25,74 @@ function buildSparkline(history) {
 
 /* ── Individual loaders ────────────────────────────────────────────── */
 
-export async function loadTrendingPosts() {
+export async function loadTrendingPosts(append = false) {
   const container = $('trending-posts-list');
-  const loading = $('trending-posts-loading');
-  const errEl = $('trending-posts-error');
+  const limit = 20;
 
-  errEl.classList.remove('visible');
-  $('trending-posts-skeleton').innerHTML = makeSkeleton(5);
-  loading.style.display = 'flex';
-  container.innerHTML = '';
+  if (!append) {
+    container.innerHTML = '';
+    state.trendingPostsOffset = 0;
+    const loading = $('trending-posts-loading');
+    const errEl = $('trending-posts-error');
+    errEl.classList.remove('visible');
+    $('trending-posts-skeleton').innerHTML = makeSkeleton(2);
+    loading.style.display = 'flex';
+  }
 
   try {
-    const posts = await apiGet('/api/v1/trends/statuses?limit=20', state.token);
-    loading.style.display = 'none';
+    const posts = await apiGet(`/api/v1/trends/statuses?limit=${limit}&offset=${state.trendingPostsOffset}`, state.token);
+    const loading = $('trending-posts-loading');
+    if (loading) loading.style.display = 'none';
 
-    if (!Array.isArray(posts) || posts.length === 0) {
+    if (!append && (!Array.isArray(posts) || posts.length === 0)) {
       container.innerHTML = `<div class="feed-status"><div class="status-icon">📈</div><p>No trending posts right now.</p></div>`;
       return;
     }
+
     const preferredLang = state.preferredLanguage || 'all';
     let display = posts;
-    display = display.filter(p => {
-      const postLang = (p.reblog || p).language || p.language;
-      return matchesLanguage(postLang, preferredLang);
-    });
-    container.innerHTML = display.map(p => renderPost(p, { tags: [] })).join('');
+    if (preferredLang !== 'all') {
+      display = display.filter(p => {
+        const postLang = (p.reblog || p).language || p.language;
+        return matchesLanguage(postLang, preferredLang);
+      });
+    }
+
+    const html = display.map(p => renderPost(p, { tags: [] })).join('');
+
+    const oldBtn = container.querySelector('.load-more-btn');
+    if (oldBtn) oldBtn.remove();
+
+    if (append) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      while (temp.firstChild) container.appendChild(temp.firstChild);
+    } else {
+      container.innerHTML = html;
+    }
+
+    state.trendingPostsOffset += posts.length;
+
+    if (posts.length === limit) {
+      const btn = document.createElement('button');
+      btn.className = 'load-more-btn';
+      btn.dataset.type = 'trending-posts';
+      btn.textContent = 'Load More';
+      container.appendChild(btn);
+
+      const { checkInfiniteScroll } = await import('./feed.js');
+      checkInfiniteScroll();
+    }
+
     state.trendingPostsLoaded = true;
   } catch (err) {
-    loading.style.display = 'none';
-    errEl.textContent = 'Could not load trending posts: ' + err.message;
-    errEl.classList.add('visible');
+    const loading = $('trending-posts-loading');
+    if (loading) loading.style.display = 'none';
+    const errEl = $('trending-posts-error');
+    if (errEl) {
+      errEl.textContent = 'Could not load trending posts: ' + err.message;
+      errEl.classList.add('visible');
+    }
   }
 }
 

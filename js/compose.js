@@ -438,7 +438,7 @@ window.handleEditInit = async function (postId) {
     composeState.quoteId = null;
 
     const textarea = $('compose-textarea' + suffix);
-    textarea.innerText = (sourceResponse.text || '') + '\u00A0';
+    textarea.innerText = (sourceResponse.text || '');
 
     const cwInput = $('compose-cw-input' + suffix);
     const cwSection = $('compose-cw-section' + suffix);
@@ -727,7 +727,7 @@ window.handleDeleteRedraftInit = async function (postId) {
     resetReplyState();
 
     const textarea = $('compose-textarea' + suffix);
-    textarea.innerText = sourceText + '\u00A0';
+    textarea.innerText = sourceText;
 
     // Restore CW: prefer the deleted post's CW; fall back to whatever was in the box
     const effectiveCw = spoilerText || savedCw;
@@ -855,7 +855,7 @@ export function openComposeDrawer() {
   }
   setTimeout(() => {
     const textarea = $('compose-textarea');
-    if (!textarea.innerText.endsWith('\u00A0') && !textarea.innerText.endsWith(' ')) {
+    if (textarea.innerText.length > 0 && !textarea.innerText.endsWith('\u00A0') && !textarea.innerText.endsWith(' ')) {
       textarea.innerText += '\u00A0';
     }
     placeCursorAtEnd(textarea);
