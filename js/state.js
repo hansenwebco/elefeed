@@ -66,8 +66,12 @@ export const state = {
   /* Trending flags */
   trendingPostsLoaded: false,
   trendingHashtagsLoaded: false,
+  trendingHashtagsOffset: 0,
   trendingPeopleLoaded: false,
+  trendingPeopleOffset: 0,
+  trendingPeople: [],
   trendingNewsLoaded: false,
+  trendingNewsOffset: 0,
   trendingFollowingLoaded: false,
 
   /* Notifications */

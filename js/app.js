@@ -1527,9 +1527,18 @@ document.addEventListener('click', e => {
    ══════════════════════════════════════════════════════════════════════ */
 
 document.addEventListener('click', e => {
+  /* Follow / unfollow */
+  const followBtn = e.target.closest('.profile-follow-btn[data-account-id]');
+  if (followBtn) { e.preventDefault(); closeAllProfileMoreMenus(); handleFollowToggle(followBtn); return; }
+
+  /* Notify toggle */
+  const notifyBtn = e.target.closest('.profile-notify-btn');
+  if (notifyBtn) { e.preventDefault(); closeAllProfileMoreMenus(); handleNotifyToggle(notifyBtn); return; }
+
   /* Profile avatar / name → open profile drawer */
   const trigger = e.target.closest('[data-profile-id]');
   if (trigger) {
+    if (e.target.closest('.profile-follow-btn') || e.target.closest('.profile-notify-btn')) return;
     e.preventDefault();
     closeComposeDrawer();
     const profileDrawer = $('profile-drawer');
@@ -1541,14 +1550,6 @@ document.addEventListener('click', e => {
     openProfileDrawer(trigger.dataset.profileId, trigger.dataset.profileServer);
     return;
   }
-
-  /* Follow / unfollow */
-  const followBtn = e.target.closest('.profile-follow-btn[data-account-id]');
-  if (followBtn) { e.preventDefault(); closeAllProfileMoreMenus(); handleFollowToggle(followBtn); return; }
-
-  /* Notify toggle */
-  const notifyBtn = e.target.closest('.profile-notify-btn');
-  if (notifyBtn) { e.preventDefault(); closeAllProfileMoreMenus(); handleNotifyToggle(notifyBtn); return; }
 
   /* Profile more menu button */
   const profileMoreBtn = e.target.closest('.profile-more-menu-btn');

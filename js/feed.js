@@ -740,6 +740,28 @@ export function handleScrollDirection() {
 /* ── Load more (pagination) ────────────────────────────────────────── */
 
 export async function handleLoadMore(btn) {
+  if (btn.dataset.type === 'trending-people') {
+    const { loadTrendingPeople } = await import('./trending.js');
+    btn.disabled = true;
+    btn.textContent = 'Loading...';
+    await loadTrendingPeople(true);
+    return;
+  }
+  if (btn.dataset.type === 'trending-news') {
+    const { loadTrendingNews } = await import('./trending.js');
+    btn.disabled = true;
+    btn.textContent = 'Loading...';
+    await loadTrendingNews(true);
+    return;
+  }
+  if (btn.dataset.type === 'trending-hashtags') {
+    const { loadTrendingHashtags } = await import('./trending.js');
+    btn.disabled = true;
+    btn.textContent = 'Loading...';
+    await loadTrendingHashtags(true);
+    return;
+  }
+
   const filter = state.feedFilter;
   let maxIdToUse = state.homeMaxId;
   if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {

@@ -301,6 +301,8 @@
   resize: none;
   line-height: 1.5;
   overflow-y: visible;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .compose-cw-section,
@@ -649,9 +651,7 @@
   color: var(--text-muted);
   min-width: 0;
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .hashtag-follow-strip-text strong {
@@ -840,9 +840,7 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .mention-acct,
@@ -850,9 +848,7 @@
   font-size: 11px;
   font-family: var(--font-mono);
   color: var(--text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 /* ─── Emoji Shortcode Autocomplete ─── */
@@ -969,7 +965,6 @@
   border: none;
   border-right: 1px solid var(--border);
   cursor: pointer;
-  white-space: nowrap;
   flex-shrink: 0;
   transition: background var(--trans);
   font-size: 13px;
@@ -1028,19 +1023,15 @@
 
 .suggestion-chip-label {
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 140px;
+  overflow-wrap: anywhere;
+  max-width: 180px;
 }
 
 .suggestion-chip-sub {
   font-size: 11px;
   font-family: var(--font-mono);
   color: var(--text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 /* ── Desktop: fixed dropdown (coordinates set by JS) ── */
