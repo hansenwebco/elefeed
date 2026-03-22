@@ -364,10 +364,8 @@
     margin-top: 2px;
     color: var(--text-dim);
     font-family: var(--font-mono);
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
     max-width: 100%;
   }
 }
