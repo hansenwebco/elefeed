@@ -315,8 +315,9 @@ export async function loadTrendingNews(append = false) {
             <div class="trending-link-title">${escapeHTML(link.title || link.url)}</div>
             ${link.description ? `<div class="trending-link-desc">${escapeHTML(link.description)}</div>` : ''}
             <div class="trending-link-stats">
-              <span class="trending-link-stat">${formatCount(totalUses)} shares total</span>
-              <span class="trending-link-stat">&middot; ${formatCount(todayAccts)} shares today</span>
+              <span class="trending-link-stat">${formatCount(todayAccts)} today</span>
+              <span class="trending-link-stat-sep">&middot;</span>
+              <span class="trending-link-stat">${formatCount(totalUses)} total</span>
             </div>
           </div>
         </a>`;

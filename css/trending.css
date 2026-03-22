@@ -3,13 +3,14 @@
    ═══════════════════════════════════════════════ */
 
 .trending-section {
-  padding: 24px 20px 0;
+  padding: 24px 0 0;
 }
 
 .trending-section-title {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 0 20px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -42,8 +43,8 @@
 .trending-tag-row {
   display: flex;
   align-items: center;
-  padding: 10px 14px;
-  border-radius: var(--radius);
+  padding: 12px 20px;
+  border-radius: 0;
   cursor: pointer;
   text-decoration: none;
   transition: background var(--trans);
@@ -123,10 +124,10 @@
 
 /* Trending People */
 .trending-people-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 12px;
 }
 
 .trending-person-card {
@@ -323,7 +324,7 @@
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 16px 0;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   text-decoration: none;
@@ -405,14 +406,23 @@
 .trending-link-stats {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-top: 6px;
+  flex-wrap: nowrap; /* Prevent undesirable wrapping on small screens */
+  overflow: hidden;
 }
 
 .trending-link-stat {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.trending-link-stat-sep {
+   color: var(--text-dim);
+   opacity: 0.5;
+   font-size: 12px;
 }
 
 /* Sub-panels */
