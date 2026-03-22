@@ -36,7 +36,7 @@ import {
   initNotifications, startSwPolling, stopSwPolling,
   requestNotifPermission, getNotifPermission, updateSwConfig,
 } from './notifications.js';
-import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply, updateCharCount, updateSidebarCharCount } from './compose.js';
+import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply, updateCharCount, updateSidebarCharCount, resetReplyState, refreshComposeDefaults } from './compose.js';
 import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
 import { openPostAnalyticsDrawer, closePostAnalyticsDrawer, appendMoreAnalyticsUsers } from './analytics.js';
 import { startCountPolling, stopCountPolling, applyCountsFromStatus } from './counts.js';
@@ -217,6 +217,7 @@ async function initApp(server, token, demo = false) {
     state.instanceLanguages = languages;
     updateCharCount();
     updateSidebarCharCount();
+    resetReplyState();
   } catch (err) {
     console.warn('Could not load instance info:', err);
   }
@@ -904,57 +905,88 @@ if (settingsMenuBtn) {
       translateLangSel.value = store.get('pref_translate_lang') || 'browser';
     }
 
-    const feedLangSel = $('settings-feed-lang');
-    if (feedLangSel) {
-      const current = store.get('pref_feed_lang') || 'all';
-      // Populate if we have languages from the instance
-      if (state.instanceLanguages && state.instanceLanguages.length > 0) {
-        const langMap = {
-          'ar': 'Arabic', 'bg': 'Bulgarian', 'bn': 'Bengali', 'ca': 'Catalan',
-          'cs': 'Czech', 'da': 'Danish', 'de': 'German', 'el': 'Greek',
-          'en': 'English', 'eo': 'Esperanto', 'es': 'Spanish', 'et': 'Estonian',
-          'eu': 'Basque', 'fa': 'Persian', 'fi': 'Finnish', 'fr': 'French',
-          'ga': 'Irish', 'gl': 'Galician', 'he': 'Hebrew', 'hi': 'Hindi',
-          'hr': 'Croatian', 'hu': 'Hungarian', 'id': 'Indonesian', 'is': 'Icelandic',
-          'it': 'Italian', 'ja': 'Japanese', 'ko': 'Korean', 'lt': 'Lithuanian',
-          'lv': 'Latvian', 'mk': 'Macedonian', 'ml': 'Malayalam', 'mr': 'Marathi',
-          'ms': 'Malay', 'nl': 'Dutch', 'no': 'Norwegian', 'pa': 'Punjabi',
-          'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian',
-          'sk': 'Slovak', 'sl': 'Slovenian', 'sq': 'Albanian', 'sr': 'Serbian',
-          'sv': 'Swedish', 'ta': 'Tamil', 'te': 'Telugu', 'th': 'Thai',
-          'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 'vi': 'Vietnamese',
-          'zh': 'Chinese'
-        };
-        // Use a set to combine instance languages with common languages
-        const allLangs = new Set([...Object.keys(langMap), ...(state.instanceLanguages || [])]);
-        
-        // Reset and add "Show All"
-        feedLangSel.innerHTML = '<option value="all">Show All</option>';
-        
-        Array.from(allLangs)
-          .sort((a, b) => {
-            const nameA = langMap[a] || a.toUpperCase();
-            const nameB = langMap[b] || b.toUpperCase();
-            return nameA.localeCompare(nameB);
-          })
-          .forEach(code => {
-            const opt = document.createElement('option');
-            opt.value = code;
-            opt.textContent = langMap[code] || code.toUpperCase();
-            feedLangSel.appendChild(opt);
-          });
-      } else {
-        // Fallback to basic list if instance doesn't provide languages
-        const langMap = { 'en': 'English', 'es': 'Spanish', 'fr': 'French', 'de': 'German' };
-        feedLangSel.innerHTML = '<option value="all">Show All</option>';
-        Object.keys(langMap).forEach(code => {
+    const langMap = {
+      'ar': 'Arabic', 'bg': 'Bulgarian', 'bn': 'Bengali', 'ca': 'Catalan',
+      'cs': 'Czech', 'da': 'Danish', 'de': 'German', 'el': 'Greek',
+      'en': 'English', 'eo': 'Esperanto', 'es': 'Spanish', 'et': 'Estonian',
+      'eu': 'Basque', 'fa': 'Persian', 'fi': 'Finnish', 'fr': 'French',
+      'ga': 'Irish', 'gl': 'Galician', 'he': 'Hebrew', 'hi': 'Hindi',
+      'hr': 'Croatian', 'hu': 'Hungarian', 'id': 'Indonesian', 'is': 'Icelandic',
+      'it': 'Italian', 'ja': 'Japanese', 'ko': 'Korean', 'lt': 'Lithuanian',
+      'lv': 'Latvian', 'mk': 'Macedonian', 'ml': 'Malayalam', 'mr': 'Marathi',
+      'ms': 'Malay', 'nl': 'Dutch', 'no': 'Norwegian', 'pa': 'Punjabi',
+      'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian',
+      'sk': 'Slovak', 'sl': 'Slovenian', 'sq': 'Albanian', 'sr': 'Serbian',
+      'sv': 'Swedish', 'ta': 'Tamil', 'te': 'Telugu', 'th': 'Thai',
+      'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 'vi': 'Vietnamese',
+      'zh': 'Chinese'
+    };
+
+    const populateLangDropdown = (selectEl, includeAll = true, includeBrowser = false) => {
+      if (!selectEl) return;
+      const current = selectEl.value;
+      selectEl.innerHTML = '';
+      if (includeAll) {
+        const opt = document.createElement('option');
+        opt.value = 'all';
+        opt.textContent = 'Show All';
+        selectEl.appendChild(opt);
+      }
+      if (includeBrowser) {
+        const opt = document.createElement('option');
+        opt.value = 'browser';
+        opt.textContent = '🌐 Browser default';
+        selectEl.appendChild(opt);
+      }
+
+      const allLangs = new Set([...Object.keys(langMap), ...(state.instanceLanguages || [])]);
+      Array.from(allLangs)
+        .sort((a, b) => {
+          const nameA = langMap[a] || a.toUpperCase();
+          const nameB = langMap[b] || b.toUpperCase();
+          return nameA.localeCompare(nameB);
+        })
+        .forEach(code => {
           const opt = document.createElement('option');
           opt.value = code;
-          opt.textContent = langMap[code];
-          feedLangSel.appendChild(opt);
+          opt.textContent = langMap[code] || code.toUpperCase();
+          selectEl.appendChild(opt);
         });
-      }
-      feedLangSel.value = current;
+      selectEl.value = current;
+    };
+
+    const feedLangSel = $('settings-feed-lang');
+    if (feedLangSel) {
+      feedLangSel.value = store.get('pref_feed_lang') || 'all';
+      populateLangDropdown(feedLangSel, true, false);
+      feedLangSel.value = store.get('pref_feed_lang') || 'all';
+    }
+
+    const postLangSel = $('settings-post-lang');
+    if (postLangSel) {
+      postLangSel.value = store.get('pref_post_lang') || 'browser';
+      populateLangDropdown(postLangSel, false, true);
+      postLangSel.value = store.get('pref_post_lang') || 'browser';
+    }
+
+    // Also update the modal dropdown while we are at it
+    const modalLangSel = $('modal-lang-select');
+    if (modalLangSel) {
+      populateLangDropdown(modalLangSel, false, true);
+    }
+
+    // Posting Defaults
+    const postVisSel = $('settings-post-visibility');
+    if (postVisSel) {
+      postVisSel.value = store.get('pref_post_visibility') || 'public';
+    }
+    const postQuoteSel = $('settings-post-quote');
+    if (postQuoteSel) {
+      postQuoteSel.value = store.get('pref_post_quote') || 'public';
+    }
+    const alwaysSensitiveToggle = $('settings-always-sensitive-toggle');
+    if (alwaysSensitiveToggle) {
+      alwaysSensitiveToggle.checked = store.get('pref_always_sensitive') === 'true';
     }
 
     // Close other drawers
@@ -1369,7 +1401,65 @@ if (_feedLangSel) {
     state.preferredLanguage = val;
     // Reload feed to apply new filter
     loadFeedTab();
-    showToast(val === 'all' ? 'Showing all languages' : `Filtering by: ${val.toUpperCase()}`);
+    showToast.success(val === 'all' ? 'Showing all languages' : `Filtering by: ${val.toUpperCase()}`);
+  });
+}
+
+// Posting Defaults
+const _postVisSel = $('settings-post-visibility');
+const _postQuoteSel = $('settings-post-quote');
+
+const updatePostQuoteEnabled = () => {
+  if (!_postVisSel || !_postQuoteSel) return;
+  const vis = _postVisSel.value;
+  if (vis === 'private' || vis === 'direct') {
+    _postQuoteSel.value = 'nobody';
+    _postQuoteSel.disabled = true;
+  } else {
+    _postQuoteSel.disabled = false;
+  }
+};
+
+if (_postVisSel) {
+  _postVisSel.addEventListener('change', () => {
+    store.set('pref_post_visibility', _postVisSel.value);
+    updatePostQuoteEnabled();
+    store.set('pref_post_quote', _postQuoteSel.value); // Re-save quote since it might have changed
+    showToast.success('Default visibility updated');
+    refreshComposeDefaults();
+  });
+}
+
+if (_postQuoteSel) {
+  _postQuoteSel.addEventListener('change', () => {
+    store.set('pref_post_quote', _postQuoteSel.value);
+    showToast.success('Default quote permission updated');
+    refreshComposeDefaults();
+  });
+}
+
+// Ensure initial state is correct when opening settings
+if ($('settings-menu-btn')) {
+  $('settings-menu-btn').addEventListener('click', () => {
+    setTimeout(updatePostQuoteEnabled, 0);
+  });
+}
+
+const _postLangSel = $('settings-post-lang');
+if (_postLangSel) {
+  _postLangSel.addEventListener('change', () => {
+    store.set('pref_post_lang', _postLangSel.value);
+    showToast.success('Default posting language updated');
+    refreshComposeDefaults();
+  });
+}
+
+const _alwaysSensitiveToggle = $('settings-always-sensitive-toggle');
+if (_alwaysSensitiveToggle) {
+  _alwaysSensitiveToggle.addEventListener('change', () => {
+    store.set('pref_always_sensitive', _alwaysSensitiveToggle.checked ? 'true' : 'false');
+    showToast.success(_alwaysSensitiveToggle.checked ? 'Always mark media as sensitive' : 'Media sensitivity reset to default');
+    refreshComposeDefaults();
   });
 }
 
