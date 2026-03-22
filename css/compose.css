@@ -936,11 +936,13 @@
 
 /* ── Mobile: inline ribbon below the textarea ── */
 .compose-suggestions-strip {
+  position: relative;
+  z-index: 10;
+  background: var(--surface);
   border-top: 1px solid var(--border);
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
   overflow: hidden;
-  margin-bottom: -12px;
 }
 
 .suggestions-strip-track {
