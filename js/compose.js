@@ -17,6 +17,20 @@ import { openEmojiPicker, closeEmojiPicker, initEmojiPicker, initEmojiAutocomple
 const ICON_REPLY = '<polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" />';
 const ICON_QUOTE = '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v3c0 1.25.75 2 2 2h3c0 4-2 6-3 6l1 3z" fill="currentColor" stroke="none"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v3c0 1.25.75 2 2 2h3c0 4-2 6-3 6l1 3z" fill="currentColor" stroke="none"></path>';
 
+const VIS_ICONS = {
+  'public': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  'unlisted': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`,
+  'private': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  'direct': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`
+};
+
+const EXTRA_ICONS = {
+  'quote_followers': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  'quote_nobody': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`,
+  'lang': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`,
+  'sensitive': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
+};
+
 /* ══════════════════════════════════════════════════════════════════════
    ALT-TEXT MODAL
    ══════════════════════════════════════════════════════════════════════ */
@@ -130,18 +144,29 @@ export function resetReplyState() {
       visBtn.title = "";
       visBtn.style.opacity = '1';
       
-      const icons = { 'public': '🌐', 'unlisted': '🔓', 'private': '🔒', 'direct': '✉️' };
       const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
-      const quoteLabels = { 'public': 'quotes allowed', 'followers': 'quotes limited', 'nobody': 'quotes disabled' };
+      const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
       
       const icon = $('compose-visibility-icon' + suffix);
       const text = $('compose-visibility-text' + suffix);
-      if (icon) icon.textContent = icons[defaultVis] || '🌐';
+      
+      if (icon) icon.innerHTML = VIS_ICONS[defaultVis] || VIS_ICONS['public'];
       if (text) {
-        let label = `${visLabels[defaultVis] || 'Public'}, ${quoteLabels[defaultQuote] || 'quotes allowed'}`;
-        if (defaultLang !== 'browser') label += ` · ${defaultLang.toUpperCase()}`;
-        if (defaultSensitive === 'true') label += ' · ⚠️';
-        text.textContent = label;
+        const primaryLabel = visLabels[defaultVis] || 'Public';
+        let extraHtml = '';
+        if (defaultQuote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
+        if (defaultQuote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
+        if (defaultLang !== 'browser') extraHtml += `<span class="lang-tag">${defaultLang.toUpperCase()}</span>`;
+        if (defaultSensitive === 'true' || defaultSensitive === true) extraHtml += EXTRA_ICONS['sensitive'];
+        
+        text.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
+        
+        // Tooltip
+        let tooltip = primaryLabel;
+        tooltip += ` · ${quoteLabelsFull[defaultQuote] || 'Anyone can quote'}`;
+        if (defaultLang !== 'browser') tooltip += ` · Language: ${defaultLang.toUpperCase()}`;
+        if (defaultSensitive === 'true' || defaultSensitive === true) tooltip += ' · Marked Sensitive';
+        visBtn.title = tooltip;
       }
     }
 
@@ -185,18 +210,28 @@ export function refreshComposeDefaults() {
     visBtn.dataset.lang = defaultLang;
     visBtn.dataset.sensitive = defaultSensitive;
     
-    const icons = { 'public': '🌐', 'unlisted': '🔓', 'private': '🔒', 'direct': '✉️' };
     const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
-    const quoteLabels = { 'public': 'quotes allowed', 'followers': 'quotes limited', 'nobody': 'quotes disabled' };
+    const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
     
     const icon = $('compose-visibility-icon' + suffix);
     const text = $('compose-visibility-text' + suffix);
-    if (icon) icon.textContent = icons[defaultVis] || '🌐';
+    if (icon) icon.innerHTML = VIS_ICONS[defaultVis] || VIS_ICONS['public'];
     if (text) {
-      let label = `${visLabels[defaultVis] || 'Public'}, ${quoteLabels[defaultQuote] || 'quotes allowed'}`;
-      if (defaultLang !== 'browser') label += ` · ${defaultLang.toUpperCase()}`;
-      if (defaultSensitive === 'true') label += ' · ⚠️';
-      text.textContent = label;
+      const primaryLabel = visLabels[defaultVis] || 'Public';
+      let extraHtml = '';
+      if (defaultQuote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
+      if (defaultQuote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
+      if (defaultLang !== 'browser') extraHtml += `<span class="lang-tag">${defaultLang.toUpperCase()}</span>`;
+      if (defaultSensitive === 'true' || defaultSensitive === true) extraHtml += EXTRA_ICONS['sensitive'];
+      
+      text.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
+      
+      // Tooltip
+      let tooltip = primaryLabel;
+      tooltip += ` · ${quoteLabelsFull[defaultQuote] || 'Anyone can quote'}`;
+      if (defaultLang !== 'browser') tooltip += ` · Language: ${defaultLang.toUpperCase()}`;
+      if (defaultSensitive === 'true' || defaultSensitive === true) tooltip += ' · Marked Sensitive';
+      visBtn.title = tooltip;
     }
   });
 }
@@ -236,17 +271,27 @@ window.saveVisibilityModal = function () {
     visBtn.dataset.lang = lang;
     visBtn.dataset.sensitive = sensitive ? 'true' : 'false';
 
-    const icons = { 'public': '🌐', 'unlisted': '🔓', 'private': '🔒', 'direct': '✉️' };
     const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
-    const quoteLabels = { 'public': 'quotes allowed', 'followers': 'quotes limited', 'nobody': 'quotes disabled' };
+    const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
     const iconNode = $('compose-visibility-icon' + suffix);
     const textNode = $('compose-visibility-text' + suffix);
-    if (iconNode) iconNode.textContent = icons[vis] || '🌐';
+    if (iconNode) iconNode.innerHTML = VIS_ICONS[vis] || VIS_ICONS['public'];
     if (textNode) {
-      let label = `${visLabels[vis] || 'Public'}, ${quoteLabels[quote] || 'quotes allowed'}`;
-      if (lang !== 'browser') label += ` · ${lang.toUpperCase()}`;
-      if (sensitive) label += ' · ⚠️';
-      textNode.textContent = label;
+      const primaryLabel = visLabels[vis] || 'Public';
+      let extraHtml = '';
+      if (quote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
+      if (quote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
+      if (lang !== 'browser') extraHtml += `<span class="lang-tag">${lang.toUpperCase()}</span>`;
+      if (sensitive) extraHtml += EXTRA_ICONS['sensitive'];
+      
+      textNode.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
+
+      // Tooltip
+      let tooltip = primaryLabel;
+      tooltip += ` · ${quoteLabelsFull[quote] || 'Anyone can quote'}`;
+      if (lang !== 'browser') tooltip += ` · Language: ${lang.toUpperCase()}`;
+      if (sensitive) tooltip += ' · Marked Sensitive';
+      visBtn.title = tooltip;
     }
   }
   window.closeVisibilityModal();
@@ -520,23 +565,9 @@ window.handleEditInit = async function (postId) {
       const vis = statusResponse.visibility || 'public';
       visBtn.dataset.visibility = vis;
 
-      const icons = { 'public': '🌐', 'unlisted': '🔓', 'private': '🔒', 'direct': '✉️' };
       const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
-      const quoteLabels = { 'public': 'quotes allowed', 'followers': 'quotes limited', 'nobody': 'quotes disabled' };
+      const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
 
-      let finalQuote = 'public';
-      if (vis === 'private' || vis === 'direct') {
-        finalQuote = 'nobody';
-      } else {
-        let policy = statusResponse.quote_approval_policy || sourceResponse.quote_approval_policy;
-        if (!policy && statusResponse.quote_approval && statusResponse.quote_approval.automatic) {
-          const autoList = statusResponse.quote_approval.automatic;
-          if (autoList.includes('public')) policy = 'public';
-          else if (autoList.includes('followers')) policy = 'followers';
-          else policy = 'nobody';
-        }
-        finalQuote = policy || 'public';
-      }
       const lang = statusResponse.language || 'browser';
       const sensitive = statusResponse.sensitive === true;
       visBtn.dataset.quote = finalQuote;
@@ -548,12 +579,23 @@ window.handleEditInit = async function (postId) {
 
       const iconNode = $('compose-visibility-icon' + suffix);
       const textNode = $('compose-visibility-text' + suffix);
-      if (iconNode) iconNode.textContent = icons[vis] || '🌐';
+      if (iconNode) iconNode.innerHTML = VIS_ICONS[vis] || VIS_ICONS['public'];
       if (textNode) {
-        let label = `${visLabels[vis] || 'Public'}, ${quoteLabels[finalQuote] || 'quotes allowed'}`;
-        if (lang !== 'browser') label += ` · ${lang.toUpperCase()}`;
-        if (sensitive) label += ' · ⚠️';
-        textNode.textContent = label;
+        const primaryLabel = visLabels[vis] || 'Public';
+        let extraHtml = '';
+        if (finalQuote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
+        if (finalQuote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
+        if (lang !== 'browser') extraHtml += `<span class="lang-tag">${lang.toUpperCase()}</span>`;
+        if (sensitive) extraHtml += EXTRA_ICONS['sensitive'];
+        
+        textNode.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
+
+        // Tooltip (already set above, but let's make it consistent)
+        let tooltip = `(Editing) ${primaryLabel}`;
+        tooltip += ` · ${quoteLabelsFull[finalQuote] || 'Anyone can quote'}`;
+        if (lang !== 'browser') tooltip += ` · Language: ${lang.toUpperCase()}`;
+        if (sensitive) tooltip += ' · Marked Sensitive';
+        visBtn.title = tooltip;
       }
     }
 
