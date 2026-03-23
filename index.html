@@ -380,6 +380,13 @@
                   </svg>
                   <span>Settings</span>
                 </button>
+                <button class="boost-dropdown-item" id="profile-zen-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5 4.5 4.5 0 1 1 16.5 12 4.5 4.5 0 1 1 12 16.5"></path>
+                  </svg>
+                  <span>Zen Mode</span>
+                </button>
                 <button class="boost-dropdown-item" id="logout-btn">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -1075,6 +1082,18 @@
               </div>
               <label class="settings-toggle" style="flex-shrink:0;" title="Enable live count updates">
                 <input type="checkbox" id="settings-count-polling-toggle" checked />
+                <span class="settings-toggle-track"></span>
+              </label>
+            </div>
+
+            <!-- Zen mode -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Zen mode</span>
+                <span style="font-size:11px; color:var(--text-muted);">Hide boosts, faves, and other UI clutter for a focused reading experience.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Enable zen mode">
+                <input type="checkbox" id="settings-zen-mode-toggle" />
                 <span class="settings-toggle-track"></span>
               </label>
             </div>
