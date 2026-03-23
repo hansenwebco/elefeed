@@ -5,7 +5,7 @@
  * reply/quote context, and posting.
  */
 
-import { $, state, composeState } from './state.js';
+import { $, state, composeState, store } from './state.js';
 import { apiGet } from './api.js';
 import { showToast } from './ui.js';
 import { applyCountsFromStatus } from './counts.js';
@@ -117,15 +117,32 @@ export function resetReplyState() {
     if (cwBtn) cwBtn.classList.remove('active');
 
     if (visBtn) {
-      visBtn.dataset.visibility = 'public';
-      visBtn.dataset.quote = 'public';
+      const defaultVis = store.get('pref_post_visibility') || 'public';
+      const defaultQuote = store.get('pref_post_quote') || 'public';
+      const defaultLang = store.get('pref_post_lang') || 'browser';
+      const defaultSensitive = store.get('pref_always_sensitive') || 'false';
+
+      visBtn.dataset.visibility = defaultVis;
+      visBtn.dataset.quote = defaultQuote;
+      visBtn.dataset.lang = defaultLang;
+      visBtn.dataset.sensitive = defaultSensitive;
       visBtn.disabled = false;
       visBtn.title = "";
       visBtn.style.opacity = '1';
+      
+      const icons = { 'public': '🌐', 'unlisted': '🔓', 'private': '🔒', 'direct': '✉️' };
+      const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
+      const quoteLabels = { 'public': 'quotes allowed', 'followers': 'quotes limited', 'nobody': 'quotes disabled' };
+      
       const icon = $('compose-visibility-icon' + suffix);
       const text = $('compose-visibility-text' + suffix);
-      if (icon) icon.textContent = '🌐';
-      if (text) text.textContent = 'Public, quotes allowed';
+      if (icon) icon.textContent = icons[defaultVis] || '🌐';
+      if (text) {
+        let label = `${visLabels[defaultVis] || 'Public'}, ${quoteLabels[defaultQuote] || 'quotes allowed'}`;
+        if (defaultLang !== 'browser') label += ` · ${defaultLang.toUpperCase()}`;
+        if (defaultSensitive === 'true') label += ' · ⚠️';
+        text.textContent = label;
+      }
     }
 
     const quotePreview = $('compose-quote-preview' + suffix);
@@ -150,6 +167,40 @@ window.cancelReplyAndClose = function (isSidebar) {
   }
 };
 
+export function refreshComposeDefaults() {
+  ['', '-sidebar'].forEach(suffix => {
+    const visBtn = $('compose-visibility-btn' + suffix);
+    if (!visBtn) return;
+    
+    // Only update if it's not disabled (e.g. not in Edit mode)
+    if (visBtn.disabled) return;
+
+    const defaultVis = store.get('pref_post_visibility') || 'public';
+    const defaultQuote = store.get('pref_post_quote') || 'public';
+    const defaultLang = store.get('pref_post_lang') || 'browser';
+    const defaultSensitive = store.get('pref_always_sensitive') || 'false';
+
+    visBtn.dataset.visibility = defaultVis;
+    visBtn.dataset.quote = defaultQuote;
+    visBtn.dataset.lang = defaultLang;
+    visBtn.dataset.sensitive = defaultSensitive;
+    
+    const icons = { 'public': '🌐', 'unlisted': '🔓', 'private': '🔒', 'direct': '✉️' };
+    const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
+    const quoteLabels = { 'public': 'quotes allowed', 'followers': 'quotes limited', 'nobody': 'quotes disabled' };
+    
+    const icon = $('compose-visibility-icon' + suffix);
+    const text = $('compose-visibility-text' + suffix);
+    if (icon) icon.textContent = icons[defaultVis] || '🌐';
+    if (text) {
+      let label = `${visLabels[defaultVis] || 'Public'}, ${quoteLabels[defaultQuote] || 'quotes allowed'}`;
+      if (defaultLang !== 'browser') label += ` · ${defaultLang.toUpperCase()}`;
+      if (defaultSensitive === 'true') label += ' · ⚠️';
+      text.textContent = label;
+    }
+  });
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    VISIBILITY MODAL
    ══════════════════════════════════════════════════════════════════════ */
@@ -160,6 +211,8 @@ window.openVisibilityModal = function (suffix) {
   if (visBtn) {
     $('modal-visibility-select').value = visBtn.dataset.visibility || 'public';
     $('modal-quote-select').value = visBtn.dataset.quote || 'public';
+    $('modal-lang-select').value = visBtn.dataset.lang || 'browser';
+    $('modal-sensitive-toggle').checked = visBtn.dataset.sensitive === 'true';
   }
   window.handleModalVisibilityChange(); // init disabled state
   $('visibility-modal').style.display = 'flex';
@@ -176,8 +229,12 @@ window.saveVisibilityModal = function () {
   if (visBtn) {
     const vis = $('modal-visibility-select').value;
     const quote = $('modal-quote-select').value;
+    const lang = $('modal-lang-select').value;
+    const sensitive = $('modal-sensitive-toggle').checked;
     visBtn.dataset.visibility = vis;
     visBtn.dataset.quote = quote;
+    visBtn.dataset.lang = lang;
+    visBtn.dataset.sensitive = sensitive ? 'true' : 'false';
 
     const icons = { 'public': '🌐', 'unlisted': '🔓', 'private': '🔒', 'direct': '✉️' };
     const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
@@ -185,7 +242,12 @@ window.saveVisibilityModal = function () {
     const iconNode = $('compose-visibility-icon' + suffix);
     const textNode = $('compose-visibility-text' + suffix);
     if (iconNode) iconNode.textContent = icons[vis] || '🌐';
-    if (textNode) textNode.textContent = `${visLabels[vis] || 'Public'}, ${quoteLabels[quote] || 'quotes allowed'}`;
+    if (textNode) {
+      let label = `${visLabels[vis] || 'Public'}, ${quoteLabels[quote] || 'quotes allowed'}`;
+      if (lang !== 'browser') label += ` · ${lang.toUpperCase()}`;
+      if (sensitive) label += ' · ⚠️';
+      textNode.textContent = label;
+    }
   }
   window.closeVisibilityModal();
 };
@@ -475,7 +537,11 @@ window.handleEditInit = async function (postId) {
         }
         finalQuote = policy || 'public';
       }
+      const lang = statusResponse.language || 'browser';
+      const sensitive = statusResponse.sensitive === true;
       visBtn.dataset.quote = finalQuote;
+      visBtn.dataset.lang = lang;
+      visBtn.dataset.sensitive = sensitive ? 'true' : 'false';
       visBtn.disabled = true;
       visBtn.title = "Visibility cannot be changed while editing";
       visBtn.style.opacity = '0.5';
@@ -483,7 +549,12 @@ window.handleEditInit = async function (postId) {
       const iconNode = $('compose-visibility-icon' + suffix);
       const textNode = $('compose-visibility-text' + suffix);
       if (iconNode) iconNode.textContent = icons[vis] || '🌐';
-      if (textNode) textNode.textContent = `${visLabels[vis] || 'Public'}, ${quoteLabels[finalQuote] || 'quotes allowed'}`;
+      if (textNode) {
+        let label = `${visLabels[vis] || 'Public'}, ${quoteLabels[finalQuote] || 'quotes allowed'}`;
+        if (lang !== 'browser') label += ` · ${lang.toUpperCase()}`;
+        if (sensitive) label += ' · ⚠️';
+        textNode.textContent = label;
+      }
     }
 
     const mediaFilesKey = suffix === '-sidebar' ? 'sidebarMediaFiles' : 'mediaFiles';
@@ -894,6 +965,8 @@ async function doPost(suffix = '') {
   const visBtn = $('compose-visibility-btn' + suffix);
   const visibility = visBtn ? (visBtn.dataset.visibility || 'public') : 'public';
   const quote_approval_policy = visBtn ? (visBtn.dataset.quote || 'public') : 'public';
+  const language = visBtn ? (visBtn.dataset.lang || 'browser') : 'browser';
+  const sensitive = visBtn ? (visBtn.dataset.sensitive === 'true') : false;
   const status = textarea.innerText.trim();
   const spoilerText = cwInput.value.trim();
 
@@ -935,7 +1008,9 @@ async function doPost(suffix = '') {
       }
     }
 
-    const postData = { status, visibility, quote_approval_policy };
+    const postData = { status, visibility, quote_approval_policy, sensitive };
+    if (language !== 'browser') postData.language = language;
+
     if (!composeState.editPostId) {
       if (composeState.replyToId) postData.in_reply_to_id = composeState.replyToId;
       if (composeState.quoteId) postData.quoted_status_id = composeState.quoteId;

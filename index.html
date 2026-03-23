@@ -123,6 +123,8 @@
           <span class="sidebar-footer-brand" style="font-family:inherit;font-size:inherit;color:inherit;">Elefeed</span>
           <span class="login-footer-dot">&middot;</span>
           <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
+          <span class="login-footer-dot">&middot;</span>
+          <a href="#" onclick="event.preventDefault(); document.getElementById('csam-modal').style.display='flex'">Child Safety</a>
         </div>
       </footer>
     </div>
@@ -307,6 +309,7 @@
         </div>
         <div class="sidebar-footer-links">
           <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
+          <a href="#" onclick="event.preventDefault(); document.getElementById('csam-modal').style.display='flex'">Child Safety</a>
           <a href="https://github.com/hansenwebco/elefeed/issues" target="_blank" rel="noopener">Report Bug</a>
           <a href="https://github.com/hansenwebco/elefeed" target="_blank" rel="noopener">Source Code</a>
         </div>
@@ -1154,6 +1157,69 @@
               </label>
             </div>
           </div>
+
+          <!-- Posting Defaults -->
+          <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Posting Defaults</span>
+            
+            <!-- Default Visibility -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Default visibility</span>
+                <span style="font-size:11px; color:var(--text-muted);">Initial visibility for new posts.</span>
+              </div>
+              <select id="settings-post-visibility" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
+                <option value="public">🌐 Public</option>
+                <option value="unlisted">🔓 Unlisted</option>
+                <option value="private">🔒 Followers</option>
+                <option value="direct">✉️ Direct</option>
+              </select>
+            </div>
+
+            <!-- Default Who can quote -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Default who can quote</span>
+                <span style="font-size:11px; color:var(--text-muted);">Initial quote permission for new posts.</span>
+              </div>
+              <select id="settings-post-quote" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
+                <option value="public">💬 Anyone</option>
+                <option value="followers">👥 Followers only</option>
+                <option value="nobody">🚫 Just me</option>
+              </select>
+            </div>
+
+            <!-- Default Language -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Default posting language</span>
+                <span style="font-size:11px; color:var(--text-muted);">Language tag added to your posts.</span>
+              </div>
+              <select id="settings-post-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
+                <option value="browser">Browser default</option>
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="zh">Chinese</option>
+              </select>
+            </div>
+
+            <!-- Always mark media as sensitive -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Always mark media as sensitive</span>
+                <span style="font-size:11px; color:var(--text-muted);">Automatically set the sensitive flag when uploading media.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Always mark media as sensitive">
+                <input type="checkbox" id="settings-always-sensitive-toggle" />
+                <span class="settings-toggle-track"></span>
+              </label>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -1345,6 +1411,84 @@
     </div>
   </div>
 
+  <!-- Child Safety (CSAM) Modal -->
+  <div id="csam-modal" class="compose-alt-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,13,15,0.85); align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
+    <div style="background:var(--surface); width:min(600px, 100%); margin: 0 16px; border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,0.5); max-height: 90vh;">
+      <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink: 0;">
+        <h3 style="font-size:16px; font-weight:500; font-family:var(--font-display);">ele<span style="color:var(--accent)">feed</span> <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; font-weight:normal; margin-left: 8px;">Child Safety & CSAM Policy</span></h3>
+        <button onclick="document.getElementById('csam-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div style="padding:24px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
+        <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">
+          Elefeed is a client application used to access and view content on the
+          Mastodon decentralized social network. Elefeed does not host, store,
+          or control the content that appears within the application.
+          All posts, media, and user accounts are hosted on independent
+          Mastodon servers operated by third-party administrators.
+        </p>
+
+        <div>
+          <h2 style="font-size:16px; color:var(--accent2); margin-top:28px; margin-bottom:12px; font-family:var(--font-mono); font-weight:500;">Zero Tolerance for Child Exploitation</h2>
+          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">
+            Elefeed has a strict zero-tolerance stance toward child sexual abuse
+            material (CSAM) or any content that exploits minors. Such content is
+            illegal and harmful, and we strongly support efforts to prevent and
+            report it wherever it appears.
+          </p>
+        </div>
+
+        <div>
+          <h2 style="font-size:16px; color:var(--accent2); margin-top:28px; margin-bottom:12px; font-family:var(--font-mono); font-weight:500;">Content Moderation</h2>
+          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">
+            Because Mastodon is a decentralized network, moderation is handled
+            by the administrators of the individual servers that host the content.
+            Elefeed does not control these servers and does not have the ability
+            to directly remove or moderate content hosted on them.
+          </p>
+        </div>
+
+        <div>
+          <h2 style="font-size:16px; color:var(--accent2); margin-top:28px; margin-bottom:12px; font-family:var(--font-mono); font-weight:500;">Reporting Harmful or Illegal Content</h2>
+          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">
+            If you encounter content that may involve the exploitation of a minor,
+            you should report it directly to the administrator of the Mastodon
+            server where the content is hosted. Most Mastodon servers provide
+            built-in reporting tools or administrator contact information.
+          </p>
+          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:8px 0 0;">
+            In addition, if you believe illegal content is present online,
+            you may report it to appropriate authorities such as the
+            National Center for Missing and Exploited Children (NCMEC)
+            or your local law enforcement agency.
+          </p>
+        </div>
+
+        <div>
+          <h2 style="font-size:16px; color:var(--accent2); margin-top:28px; margin-bottom:12px; font-family:var(--font-mono); font-weight:500;">Elefeed Support</h2>
+          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">
+            If you have questions about Elefeed or need assistance identifying
+            the server hosting a piece of content, you may contact us at:
+          </p>
+          <p style="color:var(--accent); font-family:var(--font-mono); font-size:15px; margin:8px 0 0;">
+            support@elefeed.app
+          </p>
+        </div>
+
+        <div style="margin-top:24px; border-top:1px solid var(--border); padding-top:16px;">
+          <p style="color:var(--text-dim); font-size:12px; margin:0;">Last updated: March 2026</p>
+        </div>
+      </div>
+      <div style="padding:16px; border-top:1px solid var(--border); display:flex; justify-content:center; flex-shrink: 0;">
+        <button onclick="document.getElementById('csam-modal').style.display='none'" style="padding:10px 20px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:var(--font-body); font-size:14px; cursor:pointer; transition:all var(--trans);" onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text)'">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Visibility Modal -->
   <div id="visibility-modal" class="compose-alt-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,13,15,0.85); align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
     <div style="background:var(--surface); width:min(400px, 100%); margin: 0 16px; border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,0.5);">
@@ -1377,6 +1521,31 @@
             <option value="followers">👥 Followers only</option>
             <option value="nobody">🚫 Just me</option>
           </select>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:13px; font-weight:500; color:var(--text);">Post language</label>
+          <select id="modal-lang-select" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; outline:none;">
+            <option value="browser">🌐 Browser default</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="es">🇪🇸 Spanish</option>
+            <option value="fr">🇫🇷 French</option>
+            <option value="de">🇩🇪 German</option>
+            <option value="ja">🇯🇵 Japanese</option>
+            <option value="ko">🇰🇷 Korean</option>
+            <option value="zh">🇨🇳 Chinese</option>
+          </select>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top: 4px;">
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <span style="font-size:13px; color:var(--text); font-weight:500;">Mark media as sensitive</span>
+            <span style="font-size:11px; color:var(--text-muted);">Manually flag images/video in this post.</span>
+          </div>
+          <label class="settings-toggle" style="flex-shrink:0;">
+            <input type="checkbox" id="modal-sensitive-toggle" />
+            <span class="settings-toggle-track"></span>
+          </label>
         </div>
       </div>
       <div style="padding:16px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
