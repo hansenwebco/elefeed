@@ -456,3 +456,33 @@
     padding: 9px 0;
   }
 }
+/* ─── Zen Mode ─── */
+#zen-btn {
+  display: none !important;
+}
+
+body.zen-mode .post-footer,
+body.zen-mode .sidebar-footer,
+body.zen-mode .post-time {
+  display: none !important;
+}
+
+/* Hide extra compose UI */
+body.zen-mode .compose-toolbar-left,
+body.zen-mode .compose-lang-btn,
+body.zen-mode #compose-lang-btn,
+body.zen-mode #compose-lang-btn-sidebar,
+body.zen-mode .compose-char-count {
+  display: none !important;
+}
+
+/* Ensure post button and visibility stay visible */
+body.zen-mode .compose-header,
+body.zen-mode .compose-toolbar {
+  justify-content: flex-end;
+}
+
+.profile-dropdown-zen-active {
+  color: var(--accent) !important;
+}
+

@@ -885,6 +885,11 @@ if (settingsMenuBtn) {
       hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
     }
 
+    const zenModeToggle = $('settings-zen-mode-toggle');
+    if (zenModeToggle) {
+      zenModeToggle.checked = state.zenMode;
+    }
+
     const countPollingToggle = $('settings-count-polling-toggle');
     if (countPollingToggle) {
       countPollingToggle.checked = store.get('pref_count_polling') !== 'false';
@@ -1339,6 +1344,40 @@ if (_hashtagPillsToggle) {
   });
 }
 
+// Zen Mode
+function applyZenMode() {
+  const btn = $('profile-zen-btn');
+  const toggle = $('settings-zen-mode-toggle');
+  if (state.zenMode) {
+    document.body.classList.add('zen-mode');
+    btn?.classList.add('profile-dropdown-zen-active');
+    if (toggle) toggle.checked = true;
+  } else {
+    document.body.classList.remove('zen-mode');
+    btn?.classList.remove('profile-dropdown-zen-active');
+    if (toggle) toggle.checked = false;
+  }
+}
+
+$('profile-zen-btn')?.addEventListener('click', () => {
+  state.zenMode = !state.zenMode;
+  store.set('zen_mode', state.zenMode);
+  applyZenMode();
+  showToast(state.zenMode ? 'Zen Mode enabled' : 'Zen Mode disabled');
+  $('profile-dropdown')?.classList.remove('show');
+});
+
+const _zenModeToggle = $('settings-zen-mode-toggle');
+if (_zenModeToggle) {
+  _zenModeToggle.addEventListener('change', () => {
+    state.zenMode = _zenModeToggle.checked;
+    store.set('zen_mode', state.zenMode);
+    applyZenMode();
+    showToast(state.zenMode ? 'Zen Mode enabled' : 'Zen Mode disabled');
+  });
+}
+applyZenMode();
+
 // Hide Cards
 if (store.get('pref_hide_cards') === 'true') {
   document.body.classList.add('hide-cards-enabled');
@@ -1625,6 +1664,7 @@ document.addEventListener('click', e => {
   const notifyBtn = e.target.closest('.profile-notify-btn');
   if (notifyBtn) { e.preventDefault(); closeAllProfileMoreMenus(); handleNotifyToggle(notifyBtn); return; }
 
+  /* Profile avatar / name → open profile drawer */
   /* Profile avatar / name → open profile drawer */
   const trigger = e.target.closest('[data-profile-id]');
   if (trigger) {

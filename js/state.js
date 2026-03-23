@@ -62,6 +62,7 @@ export const state = {
   exploreSubtab: urlParams.get('explore') || 'posts',
   pendingPosts: { feed: [] },
   demoMode: false,
+  zenMode: store.get('zen_mode') === 'true',
 
   /* Trending flags */
   trendingPostsLoaded: false,
