@@ -156,7 +156,6 @@ export function resetReplyState() {
         let extraHtml = '';
         if (defaultQuote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
         if (defaultQuote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
-        if (defaultLang !== 'browser') extraHtml += `<span class="lang-tag">${defaultLang.toUpperCase()}</span>`;
         if (defaultSensitive === 'true' || defaultSensitive === true) extraHtml += EXTRA_ICONS['sensitive'];
         
         text.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
@@ -168,6 +167,9 @@ export function resetReplyState() {
         if (defaultSensitive === 'true' || defaultSensitive === true) tooltip += ' · Marked Sensitive';
         visBtn.title = tooltip;
       }
+
+      const langText = $('compose-lang-text' + suffix);
+      if (langText) langText.textContent = defaultLang === 'browser' ? 'EN' : defaultLang.toUpperCase();
     }
 
     const quotePreview = $('compose-quote-preview' + suffix);
@@ -221,7 +223,6 @@ export function refreshComposeDefaults() {
       let extraHtml = '';
       if (defaultQuote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
       if (defaultQuote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
-      if (defaultLang !== 'browser') extraHtml += `<span class="lang-tag">${defaultLang.toUpperCase()}</span>`;
       if (defaultSensitive === 'true' || defaultSensitive === true) extraHtml += EXTRA_ICONS['sensitive'];
       
       text.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
@@ -233,6 +234,8 @@ export function refreshComposeDefaults() {
       if (defaultSensitive === 'true' || defaultSensitive === true) tooltip += ' · Marked Sensitive';
       visBtn.title = tooltip;
     }
+    const langText = $('compose-lang-text' + suffix);
+    if (langText) langText.textContent = defaultLang === 'browser' ? 'EN' : defaultLang.toUpperCase();
   });
 }
 
@@ -281,7 +284,6 @@ window.saveVisibilityModal = function () {
       let extraHtml = '';
       if (quote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
       if (quote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
-      if (lang !== 'browser') extraHtml += `<span class="lang-tag">${lang.toUpperCase()}</span>`;
       if (sensitive) extraHtml += EXTRA_ICONS['sensitive'];
       
       textNode.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
@@ -293,6 +295,8 @@ window.saveVisibilityModal = function () {
       if (sensitive) tooltip += ' · Marked Sensitive';
       visBtn.title = tooltip;
     }
+    const langText = $('compose-lang-text' + suffix);
+    if (langText) langText.textContent = lang === 'browser' ? 'EN' : lang.toUpperCase();
   }
   window.closeVisibilityModal();
 };
@@ -585,7 +589,6 @@ window.handleEditInit = async function (postId) {
         let extraHtml = '';
         if (finalQuote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
         if (finalQuote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
-        if (lang !== 'browser') extraHtml += `<span class="lang-tag">${lang.toUpperCase()}</span>`;
         if (sensitive) extraHtml += EXTRA_ICONS['sensitive'];
         
         textNode.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
@@ -597,6 +600,8 @@ window.handleEditInit = async function (postId) {
         if (sensitive) tooltip += ' · Marked Sensitive';
         visBtn.title = tooltip;
       }
+      const langText = $('compose-lang-text' + suffix);
+      if (langText) langText.textContent = lang === 'browser' ? 'EN' : lang.toUpperCase();
     }
 
     const mediaFilesKey = suffix === '-sidebar' ? 'sidebarMediaFiles' : 'mediaFiles';
