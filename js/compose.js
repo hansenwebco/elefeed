@@ -574,6 +574,7 @@ window.handleEditInit = async function (postId) {
 
       const lang = statusResponse.language || 'browser';
       const sensitive = statusResponse.sensitive === true;
+      const finalQuote = statusResponse.quote_approval_policy || statusResponse.quote_policy || 'public';
       visBtn.dataset.quote = finalQuote;
       visBtn.dataset.lang = lang;
       visBtn.dataset.sensitive = sensitive ? 'true' : 'false';
