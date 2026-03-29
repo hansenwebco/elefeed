@@ -29,14 +29,6 @@ export function sanitizeHTML(html, context = null) {
       isMention = true;
     } else {
       a.classList.add('ext-link');
-      // Mark links that duplicate an attached link card so CSS can hide them
-      if (context && context.cardUrl) {
-        const href = a.getAttribute('href') || '';
-        const norm = s => s.replace(/\/$/, '');
-        if (href && norm(href) === norm(context.cardUrl)) {
-          a.classList.add('card-url-link');
-        }
-      }
     }
 
     if (isMention && context && context.mentions) {

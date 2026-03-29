@@ -496,10 +496,6 @@
   color: var(--accent2);
 }
 
-/* Hide URLs in post body that are already represented by a link card */
-.post-content .card-url-link {
-  display: none;
-}
 
 /* Collapse any <p> left empty after card URL suppression */
 .post-content p:empty {
