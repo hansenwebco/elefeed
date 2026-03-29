@@ -255,7 +255,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   const cwText = s.spoiler_text ? escapeHTML(s.spoiler_text) : 'Sensitive content';
   const cwId = `cw-${idPrefix}${status.id}`;
   const { content: postBody, tagLine } = extractTrailingHashtags(
-    processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server, cardUrl: s.card && s.card.url }))
+    processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server }))
   );
   const tagLineHTML = tagLine ? `<div class="post-tags">${tagLine}</div>` : '';
   let contentHTML = '';
