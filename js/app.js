@@ -223,16 +223,26 @@ async function initApp(server, token, demo = false) {
     console.warn('Could not load instance info:', err);
   }
 
-  // Probe the local public timeline — some servers (e.g. mastodon.social) return
-  // HTTP 200 with [] when the local timeline is intentionally disabled, so we
-  // require at least one post in the response before enabling the option.
-  fetch(`https://${server}/api/v1/timelines/public?local=true&limit=1`, {
-    headers: { 'Authorization': `Bearer ${token}` },
-  }).then(async res => {
-    if (!res.ok) { applyLiveFeedFlag(false); return; }
-    const data = await res.json();
-    applyLiveFeedFlag(Array.isArray(data) && data.length > 0);
-  }).catch(() => applyLiveFeedFlag(false));
+  // Probe public timelines — some servers intentionally disable local or federated timelines.
+  state.localSupported = true;
+  state.federatedSupported = true;
+  
+  Promise.all([
+    fetch(`https://${server}/api/v1/timelines/public?local=true&limit=1`, { headers: { 'Authorization': `Bearer ${token}` } }),
+    fetch(`https://${server}/api/v1/timelines/public?limit=1`, { headers: { 'Authorization': `Bearer ${token}` } })
+  ]).then(async ([localRes, fedRes]) => {
+    if (!localRes.ok) state.localSupported = false;
+    else { const localData = await localRes.json(); state.localSupported = Array.isArray(localData) && localData.length > 0; }
+    
+    if (!fedRes.ok) state.federatedSupported = false;
+    else { const fedData = await fedRes.json(); state.federatedSupported = Array.isArray(fedData) && fedData.length > 0; }
+    
+    updatePublicFeedFlags();
+  }).catch(() => {
+    state.localSupported = false;
+    state.federatedSupported = false;
+    updatePublicFeedFlags();
+  });
 
   // Update footer server info display
   document.querySelectorAll('.footer-account-name').forEach(el => {
@@ -1162,19 +1172,10 @@ function refreshNotifSettingsUI() {
   }
 }
 
-// Show or hide the Live Feeds dropdown item based on streaming availability
-function applyLiveFeedFlag(supported) {
-  const btn = document.querySelector('#tab-dropdown-feed .tab-dropdown-item[data-filter="live"]');
-  if (!btn) return;
-  btn.style.display = supported ? '' : 'none';
-  // If the user was on the live feed but streaming is gone, fall back to all
-  if (!supported && state.feedFilter === 'live') {
-    state.feedFilter = 'all';
-    document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach((b, i) => {
-      b.classList.toggle('active', i === 0);
-    });
-    updateTabLabel('feed');
-  }
+// Leave public feeds dropdown items visible even if disabled,
+// so users can click them and see the explanation message.
+function updatePublicFeedFlags() {
+  // No-op
 }
 
 // Apply the "From Following" feature flag to the tab button visibility

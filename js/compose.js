@@ -143,13 +143,13 @@ export function resetReplyState() {
       visBtn.disabled = false;
       visBtn.title = "";
       visBtn.style.opacity = '1';
-      
+
       const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
       const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
-      
+
       const icon = $('compose-visibility-icon' + suffix);
       const text = $('compose-visibility-text' + suffix);
-      
+
       if (icon) icon.innerHTML = VIS_ICONS[defaultVis] || VIS_ICONS['public'];
       if (text) {
         const primaryLabel = visLabels[defaultVis] || 'Public';
@@ -157,9 +157,9 @@ export function resetReplyState() {
         if (defaultQuote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
         if (defaultQuote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
         if (defaultSensitive === 'true' || defaultSensitive === true) extraHtml += EXTRA_ICONS['sensitive'];
-        
+
         text.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
-        
+
         // Tooltip
         let tooltip = primaryLabel;
         tooltip += ` · ${quoteLabelsFull[defaultQuote] || 'Anyone can quote'}`;
@@ -198,7 +198,7 @@ export function refreshComposeDefaults() {
   ['', '-sidebar'].forEach(suffix => {
     const visBtn = $('compose-visibility-btn' + suffix);
     if (!visBtn) return;
-    
+
     // Only update if it's not disabled (e.g. not in Edit mode)
     if (visBtn.disabled) return;
 
@@ -211,10 +211,10 @@ export function refreshComposeDefaults() {
     visBtn.dataset.quote = defaultQuote;
     visBtn.dataset.lang = defaultLang;
     visBtn.dataset.sensitive = defaultSensitive;
-    
+
     const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
     const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
-    
+
     const icon = $('compose-visibility-icon' + suffix);
     const text = $('compose-visibility-text' + suffix);
     if (icon) icon.innerHTML = VIS_ICONS[defaultVis] || VIS_ICONS['public'];
@@ -224,9 +224,9 @@ export function refreshComposeDefaults() {
       if (defaultQuote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
       if (defaultQuote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
       if (defaultSensitive === 'true' || defaultSensitive === true) extraHtml += EXTRA_ICONS['sensitive'];
-      
+
       text.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
-      
+
       // Tooltip
       let tooltip = primaryLabel;
       tooltip += ` · ${quoteLabelsFull[defaultQuote] || 'Anyone can quote'}`;
@@ -285,7 +285,7 @@ window.saveVisibilityModal = function () {
       if (quote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
       if (quote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
       if (sensitive) extraHtml += EXTRA_ICONS['sensitive'];
-      
+
       textNode.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
 
       // Tooltip
@@ -386,20 +386,20 @@ window.handleQuoteInit = function (postId, acct) {
   if (quotePreview) {
     quotePreview.innerHTML = '<div style="color:var(--text-dim);">Loading quote...</div>';
     quotePreview.style.display = 'block';
-    
+
     apiGet(`/api/v1/statuses/${postId}`, state.token)
       .then(status => {
         let contentHtml = status.content || '';
         let temp = document.createElement('div');
         temp.innerHTML = contentHtml;
         let textContent = temp.innerText || '';
-        
+
         const avatarUrl = status.account && status.account.avatar ? status.account.avatar : '';
         const displayName = status.account && status.account.display_name ? status.account.display_name : acct;
-        
+
         // Sanitize for basic XSS protection in preview
         const sanText = textContent.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        
+
         // Detect attached media for preview
         let mediaHtml = '';
         if (status.media_attachments && status.media_attachments.length > 0) {
@@ -411,7 +411,7 @@ window.handleQuoteInit = function (postId, acct) {
             const isSensitive = status.sensitive;
             const startBlurred = isSensitive && hideSensitive;
             const blurClass = startBlurred ? ' media-sensitive-blur' : '';
-            
+
             const qPill = isSensitive ? `
               <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); window.toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
                 <div class="sp-card" style="padding:8px 12px; border-radius:10px;">
@@ -429,7 +429,7 @@ window.handleQuoteInit = function (postId, acct) {
             </div>`;
           }
         }
-        
+
         const cwText = status.spoiler_text ? status.spoiler_text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Sensitive content';
         const hasCW = (status.sensitive || (status.spoiler_text && status.spoiler_text.length > 0));
 
@@ -456,7 +456,7 @@ window.handleQuoteInit = function (postId, acct) {
             </div>
             ${mediaHtml}`;
         }
-        
+
         quotePreview.innerHTML = `
           <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
              <img src="${avatarUrl}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; background:var(--surface); flex-shrink:0;">
@@ -591,7 +591,7 @@ window.handleEditInit = async function (postId) {
         if (finalQuote === 'followers') extraHtml += EXTRA_ICONS['quote_followers'];
         if (finalQuote === 'nobody') extraHtml += EXTRA_ICONS['quote_nobody'];
         if (sensitive) extraHtml += EXTRA_ICONS['sensitive'];
-        
+
         textNode.innerHTML = `<span>${primaryLabel}</span>${extraHtml ? '<span style="opacity:0.3;margin:0 2px;">·</span>' + extraHtml : ''}`;
 
         // Tooltip (already set above, but let's make it consistent)

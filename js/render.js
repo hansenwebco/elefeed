@@ -113,19 +113,19 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
     pollHTML = `<div class="post-poll">${options}<div class="poll-meta">${total} votes · ${s.poll.expired ? 'closed' : 'open'}</div></div>`;
   }
 
-    /* ── Quote ── */
-    let quoteHTML = '';
-    const qStatus = s.quote && (s.quote.quoted_status || (s.quote.account ? s.quote : null));
-    if (qStatus) {
-      let autoOpenSensitive = false;
-      try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
-      const qHasCW = !autoOpenSensitive && ((qStatus.spoiler_text && qStatus.spoiler_text.length > 0) || qStatus.sensitive);
-      const qCwText = qStatus.spoiler_text ? escapeHTML(qStatus.spoiler_text) : 'Sensitive content';
-      const qCwId = `qcw-${idPrefix}${qStatus.id}-${status.id}`;
-      
-      let qContentHTML = '';
-      if (qHasCW) {
-        qContentHTML = `
+  /* ── Quote ── */
+  let quoteHTML = '';
+  const qStatus = s.quote && (s.quote.quoted_status || (s.quote.account ? s.quote : null));
+  if (qStatus) {
+    let autoOpenSensitive = false;
+    try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
+    const qHasCW = !autoOpenSensitive && ((qStatus.spoiler_text && qStatus.spoiler_text.length > 0) || qStatus.sensitive);
+    const qCwText = qStatus.spoiler_text ? escapeHTML(qStatus.spoiler_text) : 'Sensitive content';
+    const qCwId = `qcw-${idPrefix}${qStatus.id}-${status.id}`;
+
+    let qContentHTML = '';
+    if (qHasCW) {
+      qContentHTML = `
           <div class="cw-wrapper" style="margin:4px 0 0;">
             <div class="cw-summary" style="cursor:pointer; font-size:12px;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this.querySelector('.cw-toggle'))">
               <span>${qCwText}</span>
@@ -135,20 +135,20 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
               <div class="post-content" style="font-size:12.5px; opacity:0.9;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>
             </div>
           </div>`;
-      } else {
-        qContentHTML = `<div class="post-content" style="font-size:12.5px; opacity:0.9; margin-bottom:0; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>`;
-      }
+    } else {
+      qContentHTML = `<div class="post-content" style="font-size:12.5px; opacity:0.9; margin-bottom:0; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>`;
+    }
 
-      let qMediaHTML = '';
-      if (qStatus.media_attachments && qStatus.media_attachments.length > 0) {
-        const m = qStatus.media_attachments[0];
-        const purl = m.preview_url || m.url;
-        if (purl) {
-          const qSensitive = qStatus.sensitive;
-          const startBlurred = qSensitive && hideSensitiveMedia;
-          const blurClass = startBlurred ? ' media-sensitive-blur' : '';
-          
-          const qPill = qSensitive ? `
+    let qMediaHTML = '';
+    if (qStatus.media_attachments && qStatus.media_attachments.length > 0) {
+      const m = qStatus.media_attachments[0];
+      const purl = m.preview_url || m.url;
+      if (purl) {
+        const qSensitive = qStatus.sensitive;
+        const startBlurred = qSensitive && hideSensitiveMedia;
+        const blurClass = startBlurred ? ' media-sensitive-blur' : '';
+
+        const qPill = qSensitive ? `
             <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); window.toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
               <div class="sp-card" style="padding:8px 12px; border-radius:10px;">
                 <span class="sp-card-title" style="font-size:12px;">Sensitive content</span>
@@ -158,15 +158,15 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
               <span class="sp-revealed-label" style="font-size:10px;">hide</span>
             </button>` : '';
 
-          qMediaHTML = `<div class="post-media" style="margin-top:8px; border-radius:6px; overflow:hidden; position:relative; background:var(--bg); border:1px solid var(--border); line-height:0;">
+        qMediaHTML = `<div class="post-media" style="margin-top:8px; border-radius:6px; overflow:hidden; position:relative; background:var(--bg); border:1px solid var(--border); line-height:0;">
             <img src="${purl}" class="${blurClass}" style="width:100%; height:auto; max-height:300px; object-fit:contain; display:block;" loading="lazy">
             ${m.type === 'video' || m.type === 'gifv' ? '<div style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.6); color:#fff; font-size:9px; font-weight:700; padding:2px 5px; border-radius:3px; letter-spacing:0.5px;">VIDEO</div>' : ''}
             ${qPill}
           </div>`;
-        }
       }
+    }
 
-      quoteHTML = `
+    quoteHTML = `
         <div class="post-quote" style="padding:10px; margin-top:8px;" onclick="event.stopPropagation(); if (window.openThreadDrawer) window.openThreadDrawer('${qStatus.id}'); else window.open('${qStatus.url}', '_blank')">
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
             <img src="${qStatus.account.avatar_static || qStatus.account.avatar}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; background:var(--surface); flex-shrink:0;" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER">
@@ -178,7 +178,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           ${qContentHTML}
           ${qMediaHTML}
         </div>`;
-    }
+  }
 
   /* ── Card (Link Preview) ── */
   let cardHTML = '';
@@ -217,8 +217,8 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
     const hrefAttr = isVideo
       ? ''
       : (sensitiveCardLocked
-          ? `data-card-url="${s.card.url}"`
-          : `href="${s.card.url}" target="_blank" rel="noopener"`);
+        ? `data-card-url="${s.card.url}"`
+        : `href="${s.card.url}" target="_blank" rel="noopener"`);
     const titleText = escapeHTML(s.card.title || '');
     const titleHTML = s.card.title ? `<div class="post-card-title">${isVideo ? `<a href="${s.card.url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;" onclick="event.stopPropagation()">${titleText}</a>` : titleText}</div>` : '';
     const cardOnclick = sensitiveCardLocked
@@ -735,7 +735,7 @@ window.expandMedia = function expandMedia(mediaItem) {
         ? mediaEl
         : mediaEl.querySelector?.('video');
       if (vid) {
-        if (i === currentIndex) vid.play().catch(() => {});
+        if (i === currentIndex) vid.play().catch(() => { });
         else vid.pause();
       }
     });
@@ -793,9 +793,9 @@ window.expandMedia = function expandMedia(mediaItem) {
               if (delta < 0.05) continue; // skip near-grey
               const s = delta / (1 - Math.abs(2 * l - 1));
               let h = 0;
-              if (max === r)      h = 60 * (((g - b) / delta) % 6);
+              if (max === r) h = 60 * (((g - b) / delta) % 6);
               else if (max === g) h = 60 * ((b - r) / delta + 2);
-              else                h = 60 * ((r - g) / delta + 4);
+              else h = 60 * ((r - g) / delta + 4);
               if (h < 0) h += 360;
               const rad = h * Math.PI / 180;
               // Weight by saturation so the most vivid edge pixels steer the hue
@@ -840,7 +840,7 @@ window.expandMedia = function expandMedia(mediaItem) {
   // ── Tap zones for prev/next (only when multiple slides) ──
   trackOuter.addEventListener('click', (e) => {
     if (e.target.closest('button, .vid-controls, .vid-overlay-play, .lightbox-alt-badge, .lightbox-action-bar')) {
-      return; 
+      return;
     }
 
     let navigated = false;
@@ -870,17 +870,17 @@ window.expandMedia = function expandMedia(mediaItem) {
   if (postId) {
     // Article-backed context (feed / thread): read live state from DOM buttons.
     // Standalone context (profile media grid): read from data attributes on the media item.
-    const postReplyBtn  = article ? article.querySelector('.post-reply-btn') : null;
-    const postBoostBtn  = article ? article.querySelector('.post-boost-btn') : null;
-    const postFavBtn    = article ? article.querySelector('.post-fav-btn')   : null;
-    const canQuote      = article
+    const postReplyBtn = article ? article.querySelector('.post-reply-btn') : null;
+    const postBoostBtn = article ? article.querySelector('.post-boost-btn') : null;
+    const postFavBtn = article ? article.querySelector('.post-fav-btn') : null;
+    const canQuote = article
       ? !!article.querySelector('.boost-dropdown-item[data-action="quote"]')
       : (_standalone && _standalone.dataset.canQuote === 'true');
-    const acct          = postReplyBtn
+    const acct = postReplyBtn
       ? postReplyBtn.dataset.accountAcct
       : (_standalone ? _standalone.dataset.accountAcct : '');
 
-    let isBoosted    = postBoostBtn
+    let isBoosted = postBoostBtn
       ? postBoostBtn.classList.contains('boosted')
       : (_standalone ? _standalone.dataset.reblogged === 'true' : false);
     let isFavourited = postFavBtn
@@ -1022,7 +1022,7 @@ window.expandMedia = function expandMedia(mediaItem) {
             headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
           }).then(r => r.ok ? r.json() : null).then(post => {
             if (post && lfc) lfc.textContent = post.favourites_count || 0;
-          }).catch(() => {}).finally(() => { lbFavBtn.disabled = false; });
+          }).catch(() => { }).finally(() => { lbFavBtn.disabled = false; });
         } else {
           lbFavBtn.disabled = false;
         }
@@ -1130,20 +1130,20 @@ function _vpFormatTime(s) {
   return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 }
 
-window.vpTogglePlay = function(wrap) {
+window.vpTogglePlay = function (wrap) {
   const vid = wrap && wrap.querySelector('video');
   if (!vid) return;
   vid.paused ? vid.play() : vid.pause();
 };
 
-window.vpToggleMute = function(wrap) {
+window.vpToggleMute = function (wrap) {
   const vid = wrap && wrap.querySelector('video');
   if (!vid) return;
   vid.muted = !vid.muted;
   wrap.classList.toggle('vp-muted', vid.muted);
 };
 
-window.vpSeek = function(e, wrap) {
+window.vpSeek = function (e, wrap) {
   const bar = wrap && wrap.querySelector('.vid-progress');
   const vid = wrap && wrap.querySelector('video');
   if (!bar || !vid || !vid.duration) return;
@@ -1152,7 +1152,7 @@ window.vpSeek = function(e, wrap) {
 };
 
 /** Wrapper click: if already playing — pause; if paused — open lightbox. */
-window.vpWrapperClick = function(e, wrap) {
+window.vpWrapperClick = function (e, wrap) {
   const vid = wrap && wrap.querySelector('video');
   if (vid && !vid.paused) {
     vid.pause();
@@ -1192,7 +1192,7 @@ document.addEventListener('pause', (e) => {
 }, true);
 
 /** Toggle blur on all sensitive media in the post on/off. */
-window.toggleSensitiveMedia = function(btn) {
+window.toggleSensitiveMedia = function (btn) {
   const postMedia = btn.closest('.post-media, .post-card-img-wrap');
   const allMedia = postMedia.querySelectorAll('img, video');
   const anyBlurred = [...allMedia].some(el => el.classList.contains('media-sensitive-blur'));
@@ -1213,7 +1213,7 @@ window.toggleSensitiveMedia = function(btn) {
  * The card is always a <div> while sensitive so the browser can never auto-navigate.
  * First click (while blurred): reveal the content. Subsequent clicks: open the URL.
  */
-window.handleSensitiveCardClick = function(e, el) {
+window.handleSensitiveCardClick = function (e, el) {
   e.stopPropagation();
   if (e.target.closest('.sensitive-pill')) return;
   const img = el.querySelector('img.post-card-image');

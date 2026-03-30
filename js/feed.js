@@ -99,7 +99,7 @@ export function getFilteredPendingPosts(feedKey) {
     const inner = p.reblog || p;
     if (!showReplies && inner.in_reply_to_id) return false;
     if (!showQuotes && inner.quote) return false;
-    
+
     const postLang = inner.language || p.language;
     if (!matchesLanguage(postLang, preferredLang)) return false;
     return true;
@@ -215,7 +215,16 @@ function renderFilteredPosts(displayPosts) {
     return true;
   });
 
-  if (!displayPosts.length) {
+  if (!displayPosts || !displayPosts.length) {
+    if (filter === 'live' && state.localSupported === false) {
+      container.innerHTML = `<div class="feed-status"><div class="status-icon" style="color:var(--text-muted);">🛡️</div><p style="margin:8px 0 4px;font-size:16px;">Local Feed Disabled</p><p style="margin:0;font-size:13px;color:var(--text-muted);opacity:0.8;line-height:1.5;">Your server administrator has chosen to disable the public local timeline for this instance.</p></div>`;
+      return;
+    }
+    if (filter === 'federated' && state.federatedSupported === false) {
+      container.innerHTML = `<div class="feed-status"><div class="status-icon" style="color:var(--text-muted);">🛡️</div><p style="margin:8px 0 4px;font-size:16px;">Federated Feed Disabled</p><p style="margin:0;font-size:13px;color:var(--text-muted);opacity:0.8;line-height:1.5;">Your server administrator has chosen to disable the public federated timeline for this instance.</p></div>`;
+      return;
+    }
+
     let msg = 'Nothing here yet.';
     if (filter === 'following') msg = 'No recent posts from people you follow.';
     if (filter === 'hashtags') msg = 'No recent posts matching your hashtags.';
@@ -295,6 +304,10 @@ export async function filterForFollowing(page) {
 /* ── Ensure federated feed is fetched ────────────────────────────── */
 
 async function ensureFederatedFeedLoaded() {
+  if (state.federatedSupported === false) {
+    state.federatedFeed = [];
+    return;
+  }
   if (!state.federatedFeed) {
     const posts = await apiGet('/api/v1/timelines/public?limit=40', state.token);
     state.federatedFeed = posts;
@@ -305,6 +318,10 @@ async function ensureFederatedFeedLoaded() {
 /* ── Ensure local feed is fetched ─────────────────────────────────── */
 
 async function ensureLocalFeedLoaded() {
+  if (state.localSupported === false) {
+    state.localFeed = [];
+    return;
+  }
   if (!state.localFeed) {
     const posts = await apiGet('/api/v1/timelines/public?local=true&limit=40', state.token);
     state.localFeed = posts;
@@ -551,9 +568,9 @@ export async function loadFeedTab(scrollTop = true) {
     if (filter === 'live' || filter === 'federated') {
       const subpanel = $(`trending-subpanel-${filter}`);
       if (subpanel) {
-         document.querySelectorAll('.trending-subpanel').forEach(p => p.classList.remove('active'));
-         subpanel.classList.add('active');
-         subpanel.appendChild(wrapper);
+        document.querySelectorAll('.trending-subpanel').forEach(p => p.classList.remove('active'));
+        subpanel.classList.add('active');
+        subpanel.appendChild(wrapper);
       }
     } else {
       const parent = $('panel-feed');
@@ -638,7 +655,7 @@ export function stopFederatedStream() {
  */
 export function startFederatedStream() {
   stopFederatedStream(); // close any stale connection first
-  if (!state.token || !state.server) return;
+  if (!state.token || !state.server || state.federatedSupported === false) return;
 
   // EventSource doesn't support Authorization headers; Mastodon accepts the
   // token as a query parameter specifically for this purpose.
@@ -985,7 +1002,7 @@ export async function handleLoadMore(btn) {
       const postLang = inner.language || p.language;
       return matchesLanguage(postLang, preferredLang);
     });
-    
+
     if (filter === 'following' && !state.demoMode) display = await filterForFollowing(display);
     else if (filter === 'hashtags' && (!state.selectedHashtagFilter || state.selectedHashtagFilter === 'all')) {
       display = display.filter(p => p._sourceTags && p._sourceTags.length > 0);
