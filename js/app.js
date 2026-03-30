@@ -205,7 +205,7 @@ async function initApp(server, token, demo = false) {
     } else if (v1Data.max_toot_chars) {
       chars = v1Data.max_toot_chars;
     }
-    
+
     try {
       const v2Data = await apiGet('/api/v2/instance', token, server);
       if (v2Data.version) {
@@ -232,17 +232,17 @@ async function initApp(server, token, demo = false) {
   // Probe public timelines — some servers intentionally disable local or federated timelines.
   state.localSupported = true;
   state.federatedSupported = true;
-  
+
   Promise.all([
     fetch(`https://${server}/api/v1/timelines/public?local=true&limit=1`, { headers: { 'Authorization': `Bearer ${token}` } }),
     fetch(`https://${server}/api/v1/timelines/public?limit=1`, { headers: { 'Authorization': `Bearer ${token}` } })
   ]).then(async ([localRes, fedRes]) => {
     if (!localRes.ok) state.localSupported = false;
     else { const localData = await localRes.json(); state.localSupported = Array.isArray(localData) && localData.length > 0; }
-    
+
     if (!fedRes.ok) state.federatedSupported = false;
     else { const fedData = await fedRes.json(); state.federatedSupported = Array.isArray(fedData) && fedData.length > 0; }
-    
+
     updatePublicFeedFlags();
   }).catch(() => {
     state.localSupported = false;
@@ -256,7 +256,7 @@ async function initApp(server, token, demo = false) {
     if (state.account) {
       el.innerHTML = `@${state.account.username}<span style="opacity:0.6;">@${server}</span>`;
       parent.style.display = 'flex';
-      
+
       const vSpan = parent.querySelector('.footer-server-version');
       if (vSpan && state.serverVersion) {
         vSpan.textContent = `(${state.serverVersion})`;
@@ -339,7 +339,6 @@ async function initApp(server, token, demo = false) {
 function saveMastodonToken(token) {
   if (window.AndroidBridge && window.AndroidBridge.saveToken) {
     window.AndroidBridge.saveToken(token);
-    window.AndroidBridge.triggerTestNotification();
   } else {
     console.log("Android bridge not available");
   }
@@ -716,7 +715,7 @@ function switchToTab(tab) {
       if (isFeedContext) {
         state.feedFilter = state.exploreSubtab;
         document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(b => {
-           b.classList.toggle('active', b.dataset.subtab === state.exploreSubtab);
+          b.classList.toggle('active', b.dataset.subtab === state.exploreSubtab);
         });
         import('./feed.js').then(m => m.loadFeedTab());
       } else {
@@ -770,7 +769,7 @@ document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item 
     $('hashtag-filter-bar').style.display = (filter === 'hashtags') ? '' : 'none';
     updateTabLabel('feed');
     closeAllTabDropdowns();
-    
+
     // Switch to feed tab visually and functionally, or just reload the feed if already there
     if (state.activeTab !== 'feed') {
       import('./ui.js').then(m => m.switchToTab('feed'));
@@ -837,7 +836,7 @@ document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(it
       else if (subtab === 'people' && !state.trendingPeopleLoaded) loadTrendingPeople();
       else if (subtab === 'news' && !state.trendingNewsLoaded) loadTrendingNews();
       else if (subtab === 'following' && !state.trendingFollowingLoaded) loadTrendingFollowing();
-      
+
       // Stop federated stream if moving away from it in Explore
       stopFederatedStream();
     }
@@ -875,7 +874,7 @@ const doRefresh = () => {
   }
   state.pendingPosts[feedKey] = [];
   updateTabPill(feedKey);
-  
+
   if (tab === 'feed') {
     state.homeFeed = null;
     state.hashtagFeed = null;
