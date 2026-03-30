@@ -196,6 +196,8 @@ async function initApp(server, token, demo = false) {
   // Load instance limit and check streaming support
   try {
     const v1Data = await apiGet('/api/v1/instance', token, server);
+    state.serverVersion = v1Data.version;
+
     let chars = 500;
     let languages = [];
     if (v1Data.configuration?.statuses?.max_characters) {
@@ -203,9 +205,13 @@ async function initApp(server, token, demo = false) {
     } else if (v1Data.max_toot_chars) {
       chars = v1Data.max_toot_chars;
     }
-    
+
     try {
       const v2Data = await apiGet('/api/v2/instance', token, server);
+      if (v2Data.version) {
+        state.serverVersion = v2Data.version;
+      }
+
       if (v2Data.configuration?.statuses?.max_characters) {
         chars = v2Data.configuration.statuses.max_characters;
       }
@@ -223,24 +229,40 @@ async function initApp(server, token, demo = false) {
     console.warn('Could not load instance info:', err);
   }
 
-  // Probe the local public timeline — some servers (e.g. mastodon.social) return
-  // HTTP 200 with [] when the local timeline is intentionally disabled, so we
-  // require at least one post in the response before enabling the option.
-  fetch(`https://${server}/api/v1/timelines/public?local=true&limit=1`, {
-    headers: { 'Authorization': `Bearer ${token}` },
-  }).then(async res => {
-    if (!res.ok) { applyLiveFeedFlag(false); return; }
-    const data = await res.json();
-    applyLiveFeedFlag(Array.isArray(data) && data.length > 0);
-  }).catch(() => applyLiveFeedFlag(false));
+  // Probe public timelines — some servers intentionally disable local or federated timelines.
+  state.localSupported = true;
+  state.federatedSupported = true;
+
+  Promise.all([
+    fetch(`https://${server}/api/v1/timelines/public?local=true&limit=1`, { headers: { 'Authorization': `Bearer ${token}` } }),
+    fetch(`https://${server}/api/v1/timelines/public?limit=1`, { headers: { 'Authorization': `Bearer ${token}` } })
+  ]).then(async ([localRes, fedRes]) => {
+    if (!localRes.ok) state.localSupported = false;
+    else { const localData = await localRes.json(); state.localSupported = Array.isArray(localData) && localData.length > 0; }
+
+    if (!fedRes.ok) state.federatedSupported = false;
+    else { const fedData = await fedRes.json(); state.federatedSupported = Array.isArray(fedData) && fedData.length > 0; }
+
+    updatePublicFeedFlags();
+  }).catch(() => {
+    state.localSupported = false;
+    state.federatedSupported = false;
+    updatePublicFeedFlags();
+  });
 
   // Update footer server info display
   document.querySelectorAll('.footer-account-name').forEach(el => {
+    const parent = el.parentElement;
     if (state.account) {
       el.innerHTML = `@${state.account.username}<span style="opacity:0.6;">@${server}</span>`;
-      el.parentElement.style.display = 'block';
+      parent.style.display = 'flex';
+
+      const vSpan = parent.querySelector('.footer-server-version');
+      if (vSpan && state.serverVersion) {
+        vSpan.textContent = `(${state.serverVersion})`;
+      }
     } else {
-      el.parentElement.style.display = 'none';
+      parent.style.display = 'none';
     }
   });
 
@@ -317,7 +339,6 @@ async function initApp(server, token, demo = false) {
 function saveMastodonToken(token) {
   if (window.AndroidBridge && window.AndroidBridge.saveToken) {
     window.AndroidBridge.saveToken(token);
-    window.AndroidBridge.triggerTestNotification();
   } else {
     console.log("Android bridge not available");
   }
@@ -694,7 +715,7 @@ function switchToTab(tab) {
       if (isFeedContext) {
         state.feedFilter = state.exploreSubtab;
         document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(b => {
-           b.classList.toggle('active', b.dataset.subtab === state.exploreSubtab);
+          b.classList.toggle('active', b.dataset.subtab === state.exploreSubtab);
         });
         import('./feed.js').then(m => m.loadFeedTab());
       } else {
@@ -748,7 +769,7 @@ document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item 
     $('hashtag-filter-bar').style.display = (filter === 'hashtags') ? '' : 'none';
     updateTabLabel('feed');
     closeAllTabDropdowns();
-    
+
     // Switch to feed tab visually and functionally, or just reload the feed if already there
     if (state.activeTab !== 'feed') {
       import('./ui.js').then(m => m.switchToTab('feed'));
@@ -815,7 +836,7 @@ document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(it
       else if (subtab === 'people' && !state.trendingPeopleLoaded) loadTrendingPeople();
       else if (subtab === 'news' && !state.trendingNewsLoaded) loadTrendingNews();
       else if (subtab === 'following' && !state.trendingFollowingLoaded) loadTrendingFollowing();
-      
+
       // Stop federated stream if moving away from it in Explore
       stopFederatedStream();
     }
@@ -853,7 +874,7 @@ const doRefresh = () => {
   }
   state.pendingPosts[feedKey] = [];
   updateTabPill(feedKey);
-  
+
   if (tab === 'feed') {
     state.homeFeed = null;
     state.hashtagFeed = null;
@@ -1162,19 +1183,10 @@ function refreshNotifSettingsUI() {
   }
 }
 
-// Show or hide the Live Feeds dropdown item based on streaming availability
-function applyLiveFeedFlag(supported) {
-  const btn = document.querySelector('#tab-dropdown-feed .tab-dropdown-item[data-filter="live"]');
-  if (!btn) return;
-  btn.style.display = supported ? '' : 'none';
-  // If the user was on the live feed but streaming is gone, fall back to all
-  if (!supported && state.feedFilter === 'live') {
-    state.feedFilter = 'all';
-    document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach((b, i) => {
-      b.classList.toggle('active', i === 0);
-    });
-    updateTabLabel('feed');
-  }
+// Leave public feeds dropdown items visible even if disabled,
+// so users can click them and see the explanation message.
+function updatePublicFeedFlags() {
+  // No-op
 }
 
 // Apply the "From Following" feature flag to the tab button visibility

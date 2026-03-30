@@ -41,6 +41,7 @@ export const state = {
   clientId: null,
   clientSecret: null,
   account: null,
+  serverVersion: null,
   maxTootChars: 500,
 
   /* Feed data */
