@@ -279,10 +279,37 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   const hasCW = !autoOpenSensitive && ((s.spoiler_text && s.spoiler_text.length > 0) || s.sensitive);
   const cwText = s.spoiler_text ? escapeHTML(s.spoiler_text) : 'Sensitive content';
   const cwId = `cw-${idPrefix}${status.id}`;
-  const { content: postBody, tagLine } = extractTrailingHashtags(
-    processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server }))
+  const { content: rawContent, tags: postTags } = extractTrailingHashtags(
+    sanitizeHTML(s.content, { mentions: s.mentions, server: state.server })
   );
-  const tagLineHTML = tagLine ? `<div class="post-tags">${tagLine}</div>` : '';
+  const postBody = processContent(rawContent);
+
+  let tagLineHTML = '';
+  if (postTags && postTags.length > 0) {
+    if (postTags.length > 4) {
+      const visible = postTags.slice(0, 4).join(' ');
+      const extra = postTags.slice(4).join(' ');
+      
+      // Extract plantext for the tooltip
+      const extraText = postTags.slice(4).map(tagHTML => {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = tagHTML;
+        return tmp.textContent.trim();
+      }).join(' ');
+
+      tagLineHTML = `
+        <div class="post-tags">
+          ${visible}
+          <span class="post-tags-extra">${extra}</span>
+          <button class="post-tags-toggle" 
+                  title="${extraText.replace(/"/g, '&quot;')}"
+                  onclick="window.toggleShowMoreTags(event, this)">+${postTags.length - 4} more</button>
+          <button class="post-tags-less-toggle" onclick="window.toggleShowLessTags(event, this)">show less</button>
+        </div>`;
+    } else {
+      tagLineHTML = `<div class="post-tags">${postTags.join(' ')}</div>`;
+    }
+  }
   const plainText = (s.content || '').replace(/<[^>]+>/g, '');
   const isLong = plainText.length > 800 || (s.content || '').split(/<p|<br/i).length > 16;
   const wrapPostContent = (html) => {
@@ -1385,5 +1412,26 @@ window.translatePost = async function translatePost(btn, statusId, postLang, pos
       label.textContent = 'Error';
       btn.disabled = true;
     }
+  }
+};
+
+/**
+ * Toggle visibility of extra trailing hashtags.
+ */
+window.toggleShowMoreTags = function toggleShowMoreTags(event, btn) {
+  event.stopPropagation();
+  // Find the closest container by checking for specific classes OR just the parent p/div
+  // but we prefer specifically marked ones to be precise.
+  const container = btn.parentElement;
+  if (container) {
+    container.classList.add('post-tags--expanded');
+  }
+};
+
+window.toggleShowLessTags = function toggleShowLessTags(event, btn) {
+  event.stopPropagation();
+  const container = btn.closest('.post-tags--expanded');
+  if (container) {
+    container.classList.remove('post-tags--expanded');
   }
 };
