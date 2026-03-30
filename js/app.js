@@ -198,11 +198,6 @@ async function initApp(server, token, demo = false) {
     const v1Data = await apiGet('/api/v1/instance', token, server);
     state.serverVersion = v1Data.version;
 
-    // Update all sidebars with server version info
-    document.querySelectorAll('.footer-server-version').forEach(el => {
-        el.textContent = `running ${v1Data.version}`;
-    });
-
     let chars = 500;
     let languages = [];
     if (v1Data.configuration?.statuses?.max_characters) {
@@ -215,9 +210,6 @@ async function initApp(server, token, demo = false) {
       const v2Data = await apiGet('/api/v2/instance', token, server);
       if (v2Data.version) {
         state.serverVersion = v2Data.version;
-        document.querySelectorAll('.footer-server-version').forEach(el => {
-            el.textContent = `running ${v2Data.version}`;
-        });
       }
 
       if (v2Data.configuration?.statuses?.max_characters) {
@@ -260,11 +252,17 @@ async function initApp(server, token, demo = false) {
 
   // Update footer server info display
   document.querySelectorAll('.footer-account-name').forEach(el => {
+    const parent = el.parentElement;
     if (state.account) {
       el.innerHTML = `@${state.account.username}<span style="opacity:0.6;">@${server}</span>`;
-      el.parentElement.style.display = 'block';
+      parent.style.display = 'flex';
+      
+      const vSpan = parent.querySelector('.footer-server-version');
+      if (vSpan && state.serverVersion) {
+        vSpan.textContent = `(${state.serverVersion})`;
+      }
     } else {
-      el.parentElement.style.display = 'none';
+      parent.style.display = 'none';
     }
   });
 
