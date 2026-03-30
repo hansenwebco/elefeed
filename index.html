@@ -483,8 +483,10 @@
               </button>
               <button class="tab-dropdown-item" data-filter="following">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
                 Followed Profiles
               </button>
@@ -497,15 +499,6 @@
                 </svg>
                 Followed Hashtags
               </button>
-              <button class="tab-dropdown-item" data-filter="live">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1.5 8.5a13 13 0 0 1 21 0" />
-                  <path d="M5 12a10 10 0 0 1 14 0" />
-                  <path d="M8.5 15.5a7 7 0 0 1 7 0" />
-                  <circle cx="12" cy="19" r="1" fill="currentColor" />
-                </svg>
-                Local Feed
-              </button>
             </div>
           </div>
           <div class="tab-btn-wrap">
@@ -513,6 +506,7 @@
               <span class="tab-btn-label">Explore</span><span class="tab-chevron" style="display:none">▾</span>
             </button>
             <div class="tab-dropdown" id="tab-dropdown-explore">
+              <div style="font-size:10px; color:var(--text-dim); padding:4px 14px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600;">Trending</div>
               <button class="tab-dropdown-item active" data-subtab="posts">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -552,6 +546,25 @@
                   <polyline points="17 6 23 6 23 12" />
                 </svg>
                 From Following
+              </button>
+              <div class="boost-dropdown-separator"></div>
+              <div style="font-size:10px; color:var(--text-dim); padding:4px 14px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600;">Public Feeds</div>
+              <button class="tab-dropdown-item" data-subtab="live">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1.5 8.5a13 13 0 0 1 21 0" />
+                  <path d="M5 12a10 10 0 0 1 14 0" />
+                  <path d="M8.5 15.5a7 7 0 0 1 7 0" />
+                  <circle cx="12" cy="19" r="1" fill="currentColor" />
+                </svg>
+                Local Feed
+              </button>
+              <button class="tab-dropdown-item" data-subtab="federated">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+                Federated Feed
               </button>
             </div>
           </div>
@@ -671,19 +684,39 @@
               </div>
             </div>
           </div>
-          <div class="feed-loading" id="feed-loading">
-            <div class="skeleton-posts" id="feed-skeleton"></div>
-          </div>
-          <div class="error-banner" id="feed-error"></div>
-          <div style="position:relative;">
+          <div id="feed-content-wrapper" style="position:relative;">
+            <div id="federated-info-bar" class="federated-info-bar" style="display:none;">
+              <svg class="federated-info-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+              <div class="federated-info-bar-text">
+                The federated timeline displays all public posts from users known to your server.
+              </div>
+              <button id="federated-info-dismiss" class="federated-info-bar-dismiss" aria-label="Dismiss">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div class="feed-loading" id="feed-loading">
+              <div class="skeleton-posts" id="feed-skeleton"></div>
+            </div>
+            <div class="error-banner" id="feed-error"></div>
+            <div style="position:relative;">
             <div id="feed-posts" style="position:relative;"></div>
             <!-- Move overlay pill to end of body to avoid stacking context issues -->
             <button id="new-posts-pill" class="overlay-pill" style="display:none;">New posts</button>
           </div>
         </div>
+        </div>
 
         <!-- Explore Tab -->
         <div class="tab-panel" id="panel-explore" role="tabpanel">
+          <div class="trending-subpanel" id="trending-subpanel-live"></div>
+          <div class="trending-subpanel" id="trending-subpanel-federated"></div>
           <div class="trending-subpanel active" id="trending-subpanel-posts">
             <div class="feed-loading" id="trending-posts-loading" style="display:none;">
               <div class="skeleton-posts" id="trending-posts-skeleton"></div>

@@ -341,6 +341,74 @@
   text-align: center;
 }
 
+/* ─── Federated Feed Info Bar ─── */
+.federated-info-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 11px 20px;
+  
+  position: sticky;
+  top: 94px;
+  z-index: 95;
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 93%, #40c97e);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  
+  border-bottom: 1px solid rgba(64, 201, 126, 0.2);
+}
+
+@media (max-width: 900px) {
+  .federated-info-bar {
+    top: 0;
+  }
+}
+
+.federated-info-bar-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: #40c97e;
+  opacity: 0.85;
+}
+
+.federated-info-bar-text {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.federated-info-bar-text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.federated-info-bar-dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color var(--trans), background var(--trans);
+  margin-top: 1px;
+}
+
+.federated-info-bar-dismiss:hover {
+  color: var(--text);
+  background: var(--surface2);
+}
+
 /* ─── Responsive Utilities ─── */
 @media (max-width: 700px) {
   .manage-btn-text {
@@ -634,6 +702,7 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
 }
 

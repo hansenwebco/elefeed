@@ -19,6 +19,7 @@ import {
   registerNotifPoller, getScrollContainer, getScrollTop, scrollContainerTo,
   getScrollAnchor, restoreScrollAnchor,
   getFilteredPendingPosts, resetOverlayPillDismissed,
+  stopFederatedStream,
 } from './feed.js';
 import {
   loadTrendingTab, loadTrendingPosts, loadTrendingHashtags,
@@ -272,7 +273,13 @@ async function initApp(server, token, demo = false) {
   updateTabLabel('explore');
 
   if (state.activeTab === 'explore') {
-    loadExploreTab();
+    const isFeedContext = state.exploreSubtab === 'live' || state.exploreSubtab === 'federated';
+    if (isFeedContext) {
+      state.feedFilter = state.exploreSubtab;
+      loadFeedTab();
+    } else {
+      loadExploreTab();
+    }
   } else {
     loadFeedTab();
   }
@@ -674,8 +681,27 @@ function switchToTab(tab) {
 
   clearTimeout(tabSwitchTimeout);
   tabSwitchTimeout = setTimeout(() => {
-    if (tab === 'feed') loadFeedTab();
-    else if (tab === 'explore') loadExploreTab();
+    if (tab === 'feed') {
+      // If returning to the feed tab while the filter was set to an explore-controlled feed,
+      // revert back to 'all' so that it renders into the visible panel.
+      if (state.feedFilter === 'live' || state.feedFilter === 'federated') {
+        state.feedFilter = 'all';
+      }
+      loadFeedTab();
+    }
+    else if (tab === 'explore') {
+      const isFeedContext = state.exploreSubtab === 'live' || state.exploreSubtab === 'federated';
+      if (isFeedContext) {
+        state.feedFilter = state.exploreSubtab;
+        document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(b => {
+           b.classList.toggle('active', b.dataset.subtab === state.exploreSubtab);
+        });
+        import('./feed.js').then(m => m.loadFeedTab());
+      } else {
+        stopFederatedStream(); // SSE must stop when leaving the feed tab for standard explore
+        loadExploreTab();
+      }
+    }
   }, 100);
 }
 
@@ -710,7 +736,7 @@ document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item 
   item.addEventListener('click', (e) => {
     e.stopPropagation();
     const filter = item.dataset.filter;
-    if (filter === state.feedFilter) { closeAllTabDropdowns(); return; }
+    if (filter === state.feedFilter && state.activeTab === 'feed') { closeAllTabDropdowns(); return; }
 
     document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
       i.classList.toggle('active', i.dataset.filter === filter);
@@ -722,7 +748,13 @@ document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item 
     $('hashtag-filter-bar').style.display = (filter === 'hashtags') ? '' : 'none';
     updateTabLabel('feed');
     closeAllTabDropdowns();
-    loadFeedTab();
+    
+    // Switch to feed tab visually and functionally, or just reload the feed if already there
+    if (state.activeTab !== 'feed') {
+      import('./ui.js').then(m => m.switchToTab('feed'));
+    } else {
+      import('./feed.js').then(m => m.loadFeedTab());
+    }
   });
 });
 
@@ -757,6 +789,9 @@ document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(it
   item.addEventListener('click', (e) => {
     e.stopPropagation();
     const subtab = item.dataset.subtab;
+    const isFeedContext = subtab === 'live' || subtab === 'federated';
+
+    if (subtab === state.exploreSubtab && state.activeTab === 'explore') { closeAllTabDropdowns(); return; }
 
     document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(i => {
       i.classList.toggle('active', i.dataset.subtab === subtab);
@@ -771,11 +806,19 @@ document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(it
     updateTabLabel('explore');
     closeAllTabDropdowns();
 
-    if (subtab === 'posts' && !state.trendingPostsLoaded) loadTrendingPosts();
-    else if (subtab === 'hashtags' && !state.trendingHashtagsLoaded) loadTrendingHashtags();
-    else if (subtab === 'people' && !state.trendingPeopleLoaded) loadTrendingPeople();
-    else if (subtab === 'news' && !state.trendingNewsLoaded) loadTrendingNews();
-    else if (subtab === 'following' && !state.trendingFollowingLoaded) loadTrendingFollowing();
+    if (isFeedContext) {
+      state.feedFilter = subtab;
+      loadFeedTab();
+    } else {
+      if (subtab === 'posts' && !state.trendingPostsLoaded) loadTrendingPosts();
+      else if (subtab === 'hashtags' && !state.trendingHashtagsLoaded) loadTrendingHashtags();
+      else if (subtab === 'people' && !state.trendingPeopleLoaded) loadTrendingPeople();
+      else if (subtab === 'news' && !state.trendingNewsLoaded) loadTrendingNews();
+      else if (subtab === 'following' && !state.trendingFollowingLoaded) loadTrendingFollowing();
+      
+      // Stop federated stream if moving away from it in Explore
+      stopFederatedStream();
+    }
   });
 });
 
@@ -810,23 +853,39 @@ const doRefresh = () => {
   }
   state.pendingPosts[feedKey] = [];
   updateTabPill(feedKey);
+  
   if (tab === 'feed') {
     state.homeFeed = null;
     state.hashtagFeed = null;
-    state.localFeed = null;
     loadFeedTab();
   } else if (tab === 'explore') {
-    state.trendingPostsLoaded = false;
-    state.trendingHashtagsLoaded = false;
-    state.trendingPeopleLoaded = false;
-    state.trendingNewsLoaded = false;
-    state.trendingFollowingLoaded = false;
-    loadExploreTab();
+    const isFeedContext = state.exploreSubtab === 'live' || state.exploreSubtab === 'federated';
+    if (isFeedContext) {
+      if (state.exploreSubtab === 'live') state.localFeed = null;
+      if (state.exploreSubtab === 'federated') state.federatedFeed = null;
+      loadFeedTab();
+    } else {
+      state.trendingPostsLoaded = false;
+      state.trendingHashtagsLoaded = false;
+      state.trendingPeopleLoaded = false;
+      state.trendingNewsLoaded = false;
+      state.trendingFollowingLoaded = false;
+      loadExploreTab();
+    }
   }
   showToast('Refreshing…');
 };
 $('refresh-btn').addEventListener('click', doRefresh);
 $('header-wordmark-btn').addEventListener('click', doRefresh);
+
+const fedDismissBtn = $('federated-info-dismiss');
+if (fedDismissBtn) {
+  fedDismissBtn.addEventListener('click', () => {
+    state.federatedBannerDismissed = true;
+    const fedBar = $('federated-info-bar');
+    if (fedBar) fedBar.style.display = 'none';
+  });
+}
 
 /* Avatar menu */
 $('avatar-btn').addEventListener('click', (e) => {
@@ -1507,6 +1566,7 @@ $('logout-btn').addEventListener('click', () => {
   store.del('token');
   store.del('server');
   store.del('token_scopes');
+  stopFederatedStream(); // close any active SSE connection
   state.server = null;
   state.token = null;
   state.account = null;
@@ -1514,6 +1574,7 @@ $('logout-btn').addEventListener('click', () => {
   state.followingFeed = null;
   state.hashtagFeed = null;
   state.localFeed = null;
+  state.federatedFeed = null;
   state.followedHashtags = null;
   state.activeTab = 'feed';
   state.feedFilter = 'all';
@@ -2009,6 +2070,9 @@ document.addEventListener('mouseover', e => {
   if (!_hoverIsDesktop()) return;
   const trigger = e.target.closest('[data-profile-id]');
   if (!trigger) return;
+
+  // Disable user profile popups in the "Trending People" feed as it's redundant
+  if (trigger.closest('.trending-person-card')) return;
 
   const accountId = trigger.dataset.profileId;
   const server = trigger.dataset.profileServer || state.server;

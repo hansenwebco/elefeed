@@ -183,10 +183,10 @@ export function setLoading(section, on) {
 
 export function isMobileWidth() { return window.innerWidth <= 500; }
 
-const filterLabels = { all: 'All', following: 'Followed Profiles', hashtags: 'Followed Hashtags', live: 'Local Feed' };
-const filterLabelsMobile = { all: 'All', following: 'Following', hashtags: 'Hashtags', live: 'Local' };
-const subtabLabels = { posts: 'Trending Posts', hashtags: 'Trending Hashtags', people: 'Trending People', news: 'Trending News', following: 'From Following' };
-const subtabLabelsMobile = { posts: 'Trending', hashtags: 'Hashtags', people: 'People', news: 'News', following: 'Following' };
+const filterLabels = { all: 'All', following: 'Followed Profiles', hashtags: 'Followed Hashtags' };
+const filterLabelsMobile = { all: 'All', following: 'Following', hashtags: 'Hashtags' };
+const subtabLabels = { posts: 'Trending Posts', hashtags: 'Trending Hashtags', people: 'Trending People', news: 'Trending News', following: 'From Following', live: 'Local Feed', federated: 'Federated Feed' };
+const subtabLabelsMobile = { posts: 'Trending', hashtags: 'Hashtags', people: 'People', news: 'News', following: 'Following', live: 'Local', federated: 'Federated' };
 
 export function updateTabLabel(tab) {
   const btn = $(`tab-btn-${tab}`);
