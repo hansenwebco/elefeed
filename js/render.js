@@ -283,6 +283,17 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
     processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server }))
   );
   const tagLineHTML = tagLine ? `<div class="post-tags">${tagLine}</div>` : '';
+  const plainText = (s.content || '').replace(/<[^>]+>/g, '');
+  const isLong = plainText.length > 800 || (s.content || '').split(/<p|<br/i).length > 16;
+  const wrapPostContent = (html) => {
+    if (!isLong) return `<div class="post-content">${html}</div>`;
+    return `
+      <div class="post-content-wrap collapsed-active">
+        <div class="post-content post-content--collapsed">${html}</div>
+        <button class="show-more-btn" onclick="event.stopPropagation(); window.toggleShowMore(this)">Show more</button>
+      </div>`;
+  };
+
   let contentHTML = '';
   if (hasCW) {
     contentHTML = `
@@ -292,13 +303,13 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this)">show</button>
         </div>
         <div class="cw-body" id="${cwId}">
-          <div class="post-content">${postBody}</div>
+          ${wrapPostContent(postBody)}
           ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}${tagLineHTML}
         </div>
       </div>`;
   } else {
     contentHTML = `
-      <div class="post-content">${postBody}</div>
+      ${wrapPostContent(postBody)}
       ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}${tagLineHTML}`;
   }
 
@@ -1256,6 +1267,17 @@ window.toggleCW = function toggleCW(id, btn) {
   const body = document.getElementById(id);
   const expanded = body.classList.toggle('expanded');
   btn.textContent = expanded ? 'hide' : 'show';
+};
+
+/** Toggle between summary and full text for long posts. */
+window.toggleShowMore = function toggleShowMore(btn) {
+  const wrap = btn.closest('.post-content-wrap');
+  const content = wrap ? wrap.querySelector('.post-content') : null;
+  if (!wrap || !content) return;
+
+  const isCollapsed = wrap.classList.toggle('collapsed-active');
+  content.classList.toggle('post-content--collapsed', isCollapsed);
+  btn.textContent = isCollapsed ? 'Show more' : 'Show less';
 };
 
 /** Load the video iframe within a card */
