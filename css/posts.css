@@ -519,7 +519,6 @@
   color: var(--accent);
   padding: 2px 8px;
   border-radius: 12px;
-  display: inline-flex;
   align-items: center;
   vertical-align: baseline;
   font-size: 0.9em;
@@ -529,6 +528,17 @@
   transition: all var(--trans);
   cursor: pointer;
   font-family: var(--font-body);
+}
+
+/* Specific display logic for pills */
+.hashtag-pills-enabled .post-content .hashtag,
+.hashtag-pills-enabled .post-tags .hashtag,
+.hashtag-pills-enabled .post-tags-toggle {
+  display: inline-flex;
+}
+
+.hashtag-pills-enabled .post-tags-less-toggle {
+  display: none;
 }
 
 .hashtag-pills-enabled .post-content .hashtag:hover,
@@ -1968,12 +1978,13 @@ body.hide-cards-enabled .post-card {
 
 .hashtag-pills-enabled .post-tags-less-toggle {
   color: var(--text-dim);
-}
-
-.post-tags--expanded .post-tags-toggle {
   display: none;
 }
 
+.post-tags--expanded .post-tags-toggle {
+  display: none !important;
+}
+
 .post-tags--expanded .post-tags-less-toggle {
-  display: inline-flex;
+  display: inline-flex !important;
 }
