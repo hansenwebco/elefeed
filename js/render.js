@@ -115,7 +115,18 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
 
   /* ── Quote ── */
   let quoteHTML = '';
-  const qStatus = s.quote && (s.quote.quoted_status || (s.quote.account ? s.quote : null));
+  // Exhaustive search for quoted status across official and fork API formats
+  let qRaw = s.quoted_status || 
+             (s.quote && (s.quote.quoted_status || s.quote)) || 
+             status.quoted_status || 
+             (status.quote && (status.quote.quoted_status || status.quote));
+  
+  // Also check if the 's' itself is the quote (happens in some fork boost handling)
+  if (qRaw && (qRaw.id === s.id || qRaw.id === status.id)) qRaw = null;
+
+  // Final check for a valid status object with an account
+  const qStatus = (qRaw && typeof qRaw === 'object' && qRaw.account && qRaw.content !== undefined) ? qRaw : null;
+
   if (qStatus) {
     let autoOpenSensitive = false;
     try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
@@ -178,22 +189,36 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           ${qContentHTML}
           ${qMediaHTML}
         </div>`;
+  } else if (s.quote_id || s.quoted_status_id || (s.quote && typeof s.quote === 'string')) {
+    // Fallback: we know it's a quote but we don't have the status object
+    const qid = s.quote_id || s.quoted_status_id || (typeof s.quote === 'string' ? s.quote : '');
+    if (qid) {
+      quoteHTML = `<div class="post-quote" style="padding:10px; margin-top:8px; border-style:dashed; opacity:0.7;" onclick="event.stopPropagation(); if (window.openThreadDrawer) window.openThreadDrawer('${qid}');">
+          <div style="font-size:12px; color:var(--text-dim); display:flex; align-items:center; gap:6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 11h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2zm10 0h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2z"/></svg>
+            Quoted post (click to load)
+          </div>
+        </div>`;
+    }
   }
 
   /* ── Card (Link Preview) ── */
   let cardHTML = '';
-  if (s.card && (!s.media_attachments || s.media_attachments.length === 0)) {
+  // Suppress card if it's the same URL as the quoted status to avoid redundancy
+  const isDuplicateCard = qStatus && s.card && (s.card.url === qStatus.url || s.card.url === qStatus.uri);
+
+  if (s.card && !isDuplicateCard && (!s.media_attachments || s.media_attachments.length === 0)) {
     const isVideo = (s.card.type === 'video' || s.card.type === 'rich') && s.card.html;
     const cardSensitive = s.sensitive && hideSensitiveMedia;
 
-    let mediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image${cardSensitive ? ' media-sensitive-blur' : ''}" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
+    let cardMediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image${cardSensitive ? ' media-sensitive-blur' : ''}" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
 
-    if (isVideo && mediaHTML) {
+    if (isVideo && cardMediaHTML) {
       const encodedHtml = encodeURIComponent(s.card.html);
       const ratio = s.card.width && s.card.height ? `${s.card.width} / ${s.card.height}` : '16 / 9';
-      mediaHTML = `
+      cardMediaHTML = `
         <div class="post-card-video-wrapper" onclick="event.preventDefault(); event.stopPropagation(); window.playCardVideo(this, '${encodedHtml}', '${ratio}')">
-          ${mediaHTML}
+          ${cardMediaHTML}
           <div class="post-card-play-overlay">
             <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="8 5 19 12 8 19"></polygon></svg>
           </div>
@@ -203,13 +228,13 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
     // Sensitive link cards with media are rendered as <div> (not <a>) so the
     // browser can never auto-navigate. Navigation is handled via window.open.
     let sensitiveCardLocked = false;
-    if (cardSensitive && mediaHTML) {
+    if (cardSensitive && cardMediaHTML) {
       const cardPill = `<button class="sensitive-pill" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
         <div class="sp-card"><span class="sp-card-title">Sensitive content</span><span class="sp-card-sub">Click to show</span></div>
         <svg class="sp-icon sp-icon-eye" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         <span class="sp-revealed-label">hide</span>
       </button>`;
-      mediaHTML = `<div class="post-card-img-wrap">${mediaHTML}${cardPill}</div>`;
+      cardMediaHTML = `<div class="post-card-img-wrap">${cardMediaHTML}${cardPill}</div>`;
       sensitiveCardLocked = true;
     }
 
@@ -227,7 +252,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
 
     cardHTML = `
       <${tag} ${hrefAttr} class="post-card" onclick="${cardOnclick}">
-        ${mediaHTML}
+        ${cardMediaHTML}
         <div class="post-card-content">
           ${titleHTML}
           ${s.card.description ? `<div class="post-card-description">${escapeHTML(s.card.description)}</div>` : ''}

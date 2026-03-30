@@ -386,9 +386,19 @@ window.handleQuoteInit = function (postId, acct) {
   if (quotePreview) {
     quotePreview.innerHTML = '<div style="color:var(--text-dim);">Loading quote...</div>';
     quotePreview.style.display = 'block';
+  }
 
-    apiGet(`/api/v1/statuses/${postId}`, state.token)
-      .then(status => {
+  // Fetch the status to get its URL and build a preview
+  apiGet(`/api/v1/statuses/${postId}`, state.token)
+    .then(status => {
+      // Append the URL to the textarea for backwards compatibility
+      const url = status.url || status.uri;
+      if (url && textarea && !textarea.innerText.includes(url)) {
+        const currentText = textarea.innerText.trim();
+        // Add a newline if there's already text, then the URL
+        textarea.innerText = (currentText ? currentText + '\n\n' : '') + url;
+        textarea.dispatchEvent(new Event('input'));
+      }
         let contentHtml = status.content || '';
         let temp = document.createElement('div');
         temp.innerHTML = contentHtml;
@@ -457,22 +467,25 @@ window.handleQuoteInit = function (postId, acct) {
             ${mediaHtml}`;
         }
 
-        quotePreview.innerHTML = `
-          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-             <img src="${avatarUrl}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; background:var(--surface); flex-shrink:0;">
-             <div style="display:flex; flex-direction:column; line-height:1.2; overflow:hidden;">
-               <span style="font-weight:600; font-size:12.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayName}</span>
-               <span style="color:var(--text-dim); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${acct}</span>
-             </div>
-          </div>
-          ${contentHtml}
-        `;
+        if (quotePreview) {
+          quotePreview.innerHTML = `
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+               <img src="${avatarUrl}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; background:var(--surface); flex-shrink:0;">
+               <div style="display:flex; flex-direction:column; line-height:1.2; overflow:hidden;">
+                 <span style="font-weight:600; font-size:12.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayName}</span>
+                 <span style="color:var(--text-dim); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${acct}</span>
+               </div>
+            </div>
+            ${contentHtml}
+          `;
+        }
       })
       .catch(err => {
         console.error(err);
-        quotePreview.innerHTML = '<div style="color:var(--danger);">Failed to load quote</div>';
+        if (quotePreview) {
+          quotePreview.innerHTML = '<div style="color:var(--danger);">Failed to load quote</div>';
+        }
       });
-  }
 
   if (!isDesktop) openComposeDrawer();
   else placeCursorAtEnd(textarea);
@@ -575,6 +588,15 @@ window.handleEditInit = async function (postId) {
       const lang = statusResponse.language || 'browser';
       const sensitive = statusResponse.sensitive === true;
       const finalQuote = statusResponse.quote_approval_policy || statusResponse.quote_policy || 'public';
+      const qRaw = statusResponse.quoted_status || 
+                   (statusResponse.quote && (statusResponse.quote.quoted_status || statusResponse.quote));
+      const qStatus = (qRaw && typeof qRaw === 'object' && qRaw.account) ? qRaw : null;
+
+      if (qStatus && qStatus.id) {
+        composeState.quoteId = qStatus.id;
+        handleQuoteInit(qStatus.id, qStatus.account?.acct || '');
+      }
+
       visBtn.dataset.quote = finalQuote;
       visBtn.dataset.lang = lang;
       visBtn.dataset.sensitive = sensitive ? 'true' : 'false';
@@ -794,6 +816,7 @@ window.handleDeleteRedraftInit = async function (postId) {
   let sourceText = '';
   let spoilerText = '';
   let deletedPostMedia = [];
+  let actualStatus = null;
   try {
     const [sourceResponse, statusResponse] = await Promise.all([
       apiGet(`/api/v1/statuses/${postId}/source`, state.token),
@@ -802,7 +825,7 @@ window.handleDeleteRedraftInit = async function (postId) {
     sourceText = sourceResponse.text || '';
     spoilerText = sourceResponse.spoiler_text || '';
     // Unwrap reblogs — the media lives on the inner reblog object if it's a boost
-    const actualStatus = statusResponse.reblog || statusResponse;
+    actualStatus = statusResponse.reblog || statusResponse;
     deletedPostMedia = actualStatus.media_attachments || [];
   } catch (err) {
     showToast('Could not fetch post source: ' + err.message, 'error');
@@ -830,6 +853,13 @@ window.handleDeleteRedraftInit = async function (postId) {
   const savedMediaDescs = [...(composeState[mediaDescsKey] || [])];
   const savedMediaIds = [...(composeState[mediaIdsKey] || [])];
   const savedCw = ($('compose-cw-input' + suffix) || {}).value || '';
+  
+  const qRaw = actualStatus.quoted_status || 
+               (actualStatus.quote && (actualStatus.quote.quoted_status || actualStatus.quote));
+  const qStatus = (qRaw && typeof qRaw === 'object' && qRaw.account) ? qRaw : null;
+
+  const savedQuoteId = qStatus && qStatus.id ? qStatus.id : null;
+  const savedQuoteAcct = qStatus && qStatus.account ? qStatus.account.acct : '';
 
   try {
     const res = await fetch(`https://${state.server}/api/v1/statuses/${postId}`, {
@@ -935,6 +965,10 @@ window.handleDeleteRedraftInit = async function (postId) {
     else placeCursorAtEnd(textarea);
 
     if (isDesktop) updateSidebarCharCount(); else updateCharCount();
+
+    if (savedQuoteId) {
+      handleQuoteInit(savedQuoteId, savedQuoteAcct);
+    }
 
     showToast('Post deleted — edit and re-post below.', 'success');
   } catch (err) {
@@ -1061,7 +1095,10 @@ async function doPost(suffix = '') {
 
     if (!composeState.editPostId) {
       if (composeState.replyToId) postData.in_reply_to_id = composeState.replyToId;
-      if (composeState.quoteId) postData.quoted_status_id = composeState.quoteId;
+      if (composeState.quoteId) {
+        postData.quoted_status_id = composeState.quoteId;
+        postData.quote_id = composeState.quoteId; // Common in forks
+      }
     }
     if (spoilerText) postData.spoiler_text = spoilerText;
     if (finalMediaIds.length) {

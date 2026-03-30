@@ -196,6 +196,13 @@ async function initApp(server, token, demo = false) {
   // Load instance limit and check streaming support
   try {
     const v1Data = await apiGet('/api/v1/instance', token, server);
+    state.serverVersion = v1Data.version;
+
+    // Update all sidebars with server version info
+    document.querySelectorAll('.footer-server-version').forEach(el => {
+        el.textContent = `running ${v1Data.version}`;
+    });
+
     let chars = 500;
     let languages = [];
     if (v1Data.configuration?.statuses?.max_characters) {
@@ -206,6 +213,13 @@ async function initApp(server, token, demo = false) {
     
     try {
       const v2Data = await apiGet('/api/v2/instance', token, server);
+      if (v2Data.version) {
+        state.serverVersion = v2Data.version;
+        document.querySelectorAll('.footer-server-version').forEach(el => {
+            el.textContent = `running ${v2Data.version}`;
+        });
+      }
+
       if (v2Data.configuration?.statuses?.max_characters) {
         chars = v2Data.configuration.statuses.max_characters;
       }
