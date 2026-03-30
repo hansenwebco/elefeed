@@ -220,6 +220,7 @@ function renderFilteredPosts(displayPosts) {
     if (filter === 'following') msg = 'No recent posts from people you follow.';
     if (filter === 'hashtags') msg = 'No recent posts matching your hashtags.';
     if (filter === 'live') msg = 'No recent posts on this server.';
+    if (filter === 'federated') msg = 'No recent posts from the federated timeline.';
     container.innerHTML = `<div class="feed-status"><div class="status-icon">📭</div><p>${msg}</p></div>`;
     return;
   }
@@ -229,6 +230,8 @@ function renderFilteredPosts(displayPosts) {
     maxId = state.hashtagMaxId;
   } else if (filter === 'live') {
     maxId = state.localMaxId;
+  } else if (filter === 'federated') {
+    maxId = state.federatedMaxId;
   }
 
   const html = displayPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
@@ -287,6 +290,16 @@ export async function filterForFollowing(page) {
     const inner = p.reblog || p;
     return state.knownFollowing.has(inner.account.id);
   });
+}
+
+/* ── Ensure federated feed is fetched ────────────────────────────── */
+
+async function ensureFederatedFeedLoaded() {
+  if (!state.federatedFeed) {
+    const posts = await apiGet('/api/v1/timelines/public?limit=40', state.token);
+    state.federatedFeed = posts;
+    state.federatedMaxId = posts.length ? posts[posts.length - 1].id : null;
+  }
 }
 
 /* ── Ensure local feed is fetched ─────────────────────────────────── */
@@ -495,11 +508,17 @@ export async function loadFeedTab(scrollTop = true) {
 
   // Merge any buffered pending posts into the backing feed array before
   // re-rendering so they appear inline and the poller's min_id advances.
+  // Always stop any active federated SSE stream first; a new one will be
+  // started below if the selected filter is 'federated'.
+  stopFederatedStream();
+
   if (state.pendingPosts[feedKey] && state.pendingPosts[feedKey].length > 0) {
     if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
       state.hashtagFeed = [...state.pendingPosts[feedKey], ...(state.hashtagFeed || [])];
     } else if (filter === 'live') {
       state.localFeed = [...state.pendingPosts[feedKey], ...(state.localFeed || [])];
+    } else if (filter === 'federated') {
+      state.federatedFeed = [...state.pendingPosts[feedKey], ...(state.federatedFeed || [])];
     } else {
       state.homeFeed = [...state.pendingPosts[feedKey], ...(state.homeFeed || [])];
     }
@@ -511,6 +530,11 @@ export async function loadFeedTab(scrollTop = true) {
   // Setup overlay pill handlers
   setupOverlayPill();
   setupOverlayPillScroll();
+
+  const fedBar = $('federated-info-bar');
+  if (fedBar) {
+    fedBar.style.display = (filter === 'federated' && !state.federatedBannerDismissed) ? 'flex' : 'none';
+  }
 
   $('feed-posts').innerHTML = '';
   setLoading('feed', true);
@@ -533,6 +557,12 @@ export async function loadFeedTab(scrollTop = true) {
       await ensureLocalFeedLoaded();
       if (!state.demoMode) await fetchRelationships(state.localFeed);
       renderFilteredPosts(state.localFeed);
+    } else if (filter === 'federated') {
+      await ensureFederatedFeedLoaded();
+      if (!state.demoMode) await fetchRelationships(state.federatedFeed);
+      renderFilteredPosts(state.federatedFeed);
+      // Open the SSE stream for real-time updates (no polling for federated)
+      if (!state.demoMode) startFederatedStream();
     }
   } catch (err) {
     setError('feed', 'Failed to load feed: ' + err.message);
@@ -564,11 +594,110 @@ export function stopPolling() {
   notifPollInterval = null;
 }
 
+/* ── Federated Streaming (SSE) ────────────────────────────────────────── */
+
+let _federatedStream = null;
+
+export function stopFederatedStream() {
+  if (_federatedStream) {
+    _federatedStream.close();
+    _federatedStream = null;
+  }
+}
+
+/**
+ * Opens a Mastodon SSE stream on /api/v1/streaming/public and auto-flushes
+ * each incoming post directly to the top of the DOM (no pill/badge).
+ * EventSource handles reconnection automatically on network blips.
+ * Call stopFederatedStream() to tear it down when navigating away.
+ */
+export function startFederatedStream() {
+  stopFederatedStream(); // close any stale connection first
+  if (!state.token || !state.server) return;
+
+  // EventSource doesn't support Authorization headers; Mastodon accepts the
+  // token as a query parameter specifically for this purpose.
+  const url = `https://${state.server}/api/v1/streaming/public?access_token=${encodeURIComponent(state.token)}`;
+  let es;
+  try {
+    es = new EventSource(url);
+  } catch (e) {
+    console.warn('[Federated stream] EventSource failed to open:', e);
+    return;
+  }
+  _federatedStream = es;
+
+  // Helper: scroll-position-preserving prepend of one post to feed + DOM
+  function prependPost(post) {
+    // If the user has navigated away, kill the stream rather than continue
+    if (state.feedFilter !== 'federated' || state.activeTab !== 'feed') {
+      stopFederatedStream();
+      return;
+    }
+
+    // Deduplicate
+    const existingIds = new Set((state.federatedFeed || []).map(p => p.id));
+    if (existingIds.has(post.id)) return;
+
+    state.federatedFeed = [post, ...(state.federatedFeed || [])];
+
+    const container = $('feed-posts');
+    if (!container) return;
+
+    const html = renderPost(post, { tags: [] });
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const frag = document.createDocumentFragment();
+    while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+
+    // Preserve scroll so reading isn't disrupted
+    const sc = getScrollContainer();
+    const scrollEl = sc || document.documentElement;
+    const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
+    const originalHeight = scrollEl.scrollHeight;
+    scrollEl.style.overflowAnchor = 'none';
+    container.insertBefore(frag, container.firstChild);
+    const newHeight = scrollEl.scrollHeight;
+    if (sc) {
+      sc.scrollTop = currentScroll + (newHeight - originalHeight);
+    } else {
+      window.scrollTo(0, currentScroll + (newHeight - originalHeight));
+    }
+    scrollEl.style.overflowAnchor = '';
+  }
+
+  es.addEventListener('update', (e) => {
+    try { prependPost(JSON.parse(e.data)); }
+    catch (err) { console.warn('[Federated stream] Failed to parse update:', err); }
+  });
+
+  // Remove deleted posts from the backing array and the DOM
+  es.addEventListener('delete', (e) => {
+    const deletedId = String(e.data).trim();
+    if (state.federatedFeed) {
+      state.federatedFeed = state.federatedFeed.filter(p => p.id !== deletedId);
+    }
+    const el = document.querySelector(`#feed-posts article[data-id="${deletedId}"]`);
+    if (el) el.remove();
+  });
+
+  es.onerror = () => {
+    // If navigated away during an error/reconnect window, clean up
+    if (state.feedFilter !== 'federated' || state.activeTab !== 'feed') {
+      stopFederatedStream();
+    }
+    // Otherwise EventSource will auto-reconnect — no action needed
+  };
+}
+
 
 
 async function pollForNewPosts() {
   if (!state.token || state.demoMode || state.activeTab !== 'feed') return;
   const filter = state.feedFilter;
+
+  // Federated is handled entirely by SSE streaming — poller does nothing for it
+  if (filter === 'federated') return;
 
   let minIdToUse = state.homeFeed && state.homeFeed.length > 0 ? state.homeFeed[0].id : null;
   if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
@@ -660,6 +789,8 @@ export function flushPendingPosts(feedKey, scrollToTop) {
     state.hashtagFeed = [...allPending, ...(state.hashtagFeed || [])];
   } else if (feedKey === 'feed_live') {
     state.localFeed = [...allPending, ...(state.localFeed || [])];
+  } else if (feedKey === 'feed_federated') {
+    state.federatedFeed = [...allPending, ...(state.federatedFeed || [])];
   } else {
     state.homeFeed = [...allPending, ...(state.homeFeed || [])];
   }
@@ -775,6 +906,8 @@ export async function handleLoadMore(btn) {
     maxIdToUse = state.hashtagMaxId;
   } else if (filter === 'live') {
     maxIdToUse = state.localMaxId;
+  } else if (filter === 'federated') {
+    maxIdToUse = state.federatedMaxId;
   }
   if (!maxIdToUse) return;
 
@@ -795,6 +928,11 @@ export async function handleLoadMore(btn) {
       state.localFeed = [...(state.localFeed || []), ...newPosts];
       state.localMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
       maxIdToUse = state.localMaxId;
+    } else if (filter === 'federated') {
+      newPosts = await apiGet(`/api/v1/timelines/public?limit=40&max_id=${maxIdToUse}`, state.token);
+      state.federatedFeed = [...(state.federatedFeed || []), ...newPosts];
+      state.federatedMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
+      maxIdToUse = state.federatedMaxId;
     } else {
       newPosts = await apiGet(`/api/v1/timelines/home?limit=40&max_id=${state.homeMaxId}`, state.token);
       const followedTagNames = new Set((state.followedHashtags || []).map(t => t.name.toLowerCase()));

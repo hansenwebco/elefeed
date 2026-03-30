@@ -19,6 +19,7 @@ import {
   registerNotifPoller, getScrollContainer, getScrollTop, scrollContainerTo,
   getScrollAnchor, restoreScrollAnchor,
   getFilteredPendingPosts, resetOverlayPillDismissed,
+  stopFederatedStream,
 } from './feed.js';
 import {
   loadTrendingTab, loadTrendingPosts, loadTrendingHashtags,
@@ -675,7 +676,10 @@ function switchToTab(tab) {
   clearTimeout(tabSwitchTimeout);
   tabSwitchTimeout = setTimeout(() => {
     if (tab === 'feed') loadFeedTab();
-    else if (tab === 'explore') loadExploreTab();
+    else if (tab === 'explore') {
+      stopFederatedStream(); // SSE must stop when leaving the feed tab
+      loadExploreTab();
+    }
   }, 100);
 }
 
@@ -814,6 +818,7 @@ const doRefresh = () => {
     state.homeFeed = null;
     state.hashtagFeed = null;
     state.localFeed = null;
+    state.federatedFeed = null;
     loadFeedTab();
   } else if (tab === 'explore') {
     state.trendingPostsLoaded = false;
@@ -827,6 +832,15 @@ const doRefresh = () => {
 };
 $('refresh-btn').addEventListener('click', doRefresh);
 $('header-wordmark-btn').addEventListener('click', doRefresh);
+
+const fedDismissBtn = $('federated-info-dismiss');
+if (fedDismissBtn) {
+  fedDismissBtn.addEventListener('click', () => {
+    state.federatedBannerDismissed = true;
+    const fedBar = $('federated-info-bar');
+    if (fedBar) fedBar.style.display = 'none';
+  });
+}
 
 /* Avatar menu */
 $('avatar-btn').addEventListener('click', (e) => {
@@ -1507,6 +1521,7 @@ $('logout-btn').addEventListener('click', () => {
   store.del('token');
   store.del('server');
   store.del('token_scopes');
+  stopFederatedStream(); // close any active SSE connection
   state.server = null;
   state.token = null;
   state.account = null;
@@ -1514,6 +1529,7 @@ $('logout-btn').addEventListener('click', () => {
   state.followingFeed = null;
   state.hashtagFeed = null;
   state.localFeed = null;
+  state.federatedFeed = null;
   state.followedHashtags = null;
   state.activeTab = 'feed';
   state.feedFilter = 'all';
