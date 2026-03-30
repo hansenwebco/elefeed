@@ -502,6 +502,15 @@ async function loadHashtagsFeed() {
 /* ── Main feed tab loader ──────────────────────────────────────────── */
 
 export async function loadFeedTab(scrollTop = true) {
+  // Safeguard: if clicking the Home tab while a public feed was active in Explore, revert to 'all'
+  if (state.activeTab === 'feed' && (state.feedFilter === 'live' || state.feedFilter === 'federated')) {
+    state.feedFilter = 'all';
+    import('./ui.js').then(m => m.updateTabLabel('feed'));
+    document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
+      i.classList.toggle('active', i.dataset.filter === 'all');
+    });
+  }
+
   if (scrollTop) scrollContainerTo(0, 'instant');
   const filter = state.feedFilter;
   const feedKey = activeFeedKey();
@@ -534,6 +543,22 @@ export async function loadFeedTab(scrollTop = true) {
   const fedBar = $('federated-info-bar');
   if (fedBar) {
     fedBar.style.display = (filter === 'federated' && !state.federatedBannerDismissed) ? 'flex' : 'none';
+  }
+
+  // Move the feed wrapper into the appropriate tab relative to the filter
+  const wrapper = $('feed-content-wrapper');
+  if (wrapper) {
+    if (filter === 'live' || filter === 'federated') {
+      const subpanel = $(`trending-subpanel-${filter}`);
+      if (subpanel) {
+         document.querySelectorAll('.trending-subpanel').forEach(p => p.classList.remove('active'));
+         subpanel.classList.add('active');
+         subpanel.appendChild(wrapper);
+      }
+    } else {
+      const parent = $('panel-feed');
+      if (parent) parent.appendChild(wrapper);
+    }
   }
 
   $('feed-posts').innerHTML = '';
@@ -630,7 +655,8 @@ export function startFederatedStream() {
   // Helper: scroll-position-preserving prepend of one post to feed + DOM
   function prependPost(post) {
     // If the user has navigated away, kill the stream rather than continue
-    if (state.feedFilter !== 'federated' || state.activeTab !== 'feed') {
+    const isFeedActive = state.activeTab === 'feed' || (state.activeTab === 'explore' && ['live', 'federated'].includes(state.exploreSubtab));
+    if (state.feedFilter !== 'federated' || !isFeedActive) {
       stopFederatedStream();
       return;
     }
@@ -683,7 +709,8 @@ export function startFederatedStream() {
 
   es.onerror = () => {
     // If navigated away during an error/reconnect window, clean up
-    if (state.feedFilter !== 'federated' || state.activeTab !== 'feed') {
+    const isFeedActive = state.activeTab === 'feed' || (state.activeTab === 'explore' && ['live', 'federated'].includes(state.exploreSubtab));
+    if (state.feedFilter !== 'federated' || !isFeedActive) {
       stopFederatedStream();
     }
     // Otherwise EventSource will auto-reconnect — no action needed
@@ -693,7 +720,8 @@ export function startFederatedStream() {
 
 
 async function pollForNewPosts() {
-  if (!state.token || state.demoMode || state.activeTab !== 'feed') return;
+  const isFeedActive = state.activeTab === 'feed' || (state.activeTab === 'explore' && ['live', 'federated'].includes(state.exploreSubtab));
+  if (!state.token || state.demoMode || !isFeedActive) return;
   const filter = state.feedFilter;
 
   // Federated is handled entirely by SSE streaming — poller does nothing for it
@@ -858,7 +886,8 @@ export function handleScrollDirection() {
   const currentY = getScrollTop();
   scrollingUp = currentY < lastScrollY;
 
-  if (state.activeTab === 'feed') {
+  const isFeedActive = state.activeTab === 'feed' || (state.activeTab === 'explore' && ['live', 'federated'].includes(state.exploreSubtab));
+  if (isFeedActive) {
     const feedKey = activeFeedKey();
     const pending = getFilteredPendingPosts(feedKey);
     if (scrollingUp && currentY < 200 && pending.length > 0) {
