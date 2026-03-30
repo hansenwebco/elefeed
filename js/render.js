@@ -279,10 +279,48 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   const hasCW = !autoOpenSensitive && ((s.spoiler_text && s.spoiler_text.length > 0) || s.sensitive);
   const cwText = s.spoiler_text ? escapeHTML(s.spoiler_text) : 'Sensitive content';
   const cwId = `cw-${idPrefix}${status.id}`;
-  const { content: postBody, tagLine } = extractTrailingHashtags(
-    processContent(sanitizeHTML(s.content, { mentions: s.mentions, server: state.server }))
+  const { content: rawContent, tags: postTags } = extractTrailingHashtags(
+    sanitizeHTML(s.content, { mentions: s.mentions, server: state.server })
   );
-  const tagLineHTML = tagLine ? `<div class="post-tags">${tagLine}</div>` : '';
+  const postBody = processContent(rawContent);
+
+  let tagLineHTML = '';
+  if (postTags && postTags.length > 0) {
+    if (postTags.length > 4) {
+      const visible = postTags.slice(0, 4).join(' ');
+      const extra = postTags.slice(4).join(' ');
+      
+      // Extract plantext for the tooltip
+      const extraText = postTags.slice(4).map(tagHTML => {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = tagHTML;
+        return tmp.textContent.trim();
+      }).join(' ');
+
+      tagLineHTML = `
+        <div class="post-tags">
+          ${visible}
+          <span class="post-tags-extra">${extra}</span>
+          <button class="post-tags-toggle" 
+                  title="${extraText.replace(/"/g, '&quot;')}"
+                  onclick="window.toggleShowMoreTags(event, this)">+${postTags.length - 4} more</button>
+          <button class="post-tags-less-toggle" onclick="window.toggleShowLessTags(event, this)">show less</button>
+        </div>`;
+    } else {
+      tagLineHTML = `<div class="post-tags">${postTags.join(' ')}</div>`;
+    }
+  }
+  const plainText = (s.content || '').replace(/<[^>]+>/g, '');
+  const isLong = plainText.length > 800 || (s.content || '').split(/<p|<br/i).length > 16;
+  const wrapPostContent = (html) => {
+    if (!isLong) return `<div class="post-content">${html}</div>`;
+    return `
+      <div class="post-content-wrap collapsed-active">
+        <div class="post-content post-content--collapsed">${html}</div>
+        <button class="show-more-btn" onclick="event.stopPropagation(); window.toggleShowMore(this)">Show more</button>
+      </div>`;
+  };
+
   let contentHTML = '';
   if (hasCW) {
     contentHTML = `
@@ -292,13 +330,13 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this)">show</button>
         </div>
         <div class="cw-body" id="${cwId}">
-          <div class="post-content">${postBody}</div>
+          ${wrapPostContent(postBody)}
           ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}${tagLineHTML}
         </div>
       </div>`;
   } else {
     contentHTML = `
-      <div class="post-content">${postBody}</div>
+      ${wrapPostContent(postBody)}
       ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}${tagLineHTML}`;
   }
 
@@ -1258,6 +1296,17 @@ window.toggleCW = function toggleCW(id, btn) {
   btn.textContent = expanded ? 'hide' : 'show';
 };
 
+/** Toggle between summary and full text for long posts. */
+window.toggleShowMore = function toggleShowMore(btn) {
+  const wrap = btn.closest('.post-content-wrap');
+  const content = wrap ? wrap.querySelector('.post-content') : null;
+  if (!wrap || !content) return;
+
+  const isCollapsed = wrap.classList.toggle('collapsed-active');
+  content.classList.toggle('post-content--collapsed', isCollapsed);
+  btn.textContent = isCollapsed ? 'Show more' : 'Show less';
+};
+
 /** Load the video iframe within a card */
 window.playCardVideo = function playCardVideo(el, encodedHtml, aspectRatio) {
   const decoded = decodeURIComponent(encodedHtml);
@@ -1363,5 +1412,26 @@ window.translatePost = async function translatePost(btn, statusId, postLang, pos
       label.textContent = 'Error';
       btn.disabled = true;
     }
+  }
+};
+
+/**
+ * Toggle visibility of extra trailing hashtags.
+ */
+window.toggleShowMoreTags = function toggleShowMoreTags(event, btn) {
+  event.stopPropagation();
+  // Find the closest container by checking for specific classes OR just the parent p/div
+  // but we prefer specifically marked ones to be precise.
+  const container = btn.parentElement;
+  if (container) {
+    container.classList.add('post-tags--expanded');
+  }
+};
+
+window.toggleShowLessTags = function toggleShowLessTags(event, btn) {
+  event.stopPropagation();
+  const container = btn.closest('.post-tags--expanded');
+  if (container) {
+    container.classList.remove('post-tags--expanded');
   }
 };

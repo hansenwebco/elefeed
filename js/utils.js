@@ -54,20 +54,87 @@ export function sanitizeHTML(html, context = null) {
 
 /** Process post content HTML before rendering. */
 export function processContent(html) {
-  return html;
+  return foldHashtagsInHTML(html);
+}
+
+/**
+ * Detect lists of hashtags (> 4) within any element and fold them.
+ */
+export function foldHashtagsInHTML(html) {
+  if (!html) return '';
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  
+  const allTags = Array.from(div.querySelectorAll('.hashtag'));
+  if (allTags.length === 0) return html;
+
+  // Group tags by their direct parent element to ensure we only fold siblings
+  const parentMap = new Map();
+  allTags.forEach(tag => {
+    const parent = tag.parentElement;
+    if (!parentMap.has(parent)) parentMap.set(parent, []);
+    parentMap.get(parent).push(tag);
+  });
+
+  for (const [container, tags] of parentMap.entries()) {
+    if (tags.length <= 4) continue;
+    
+    // Find the fifth tag in this specific container
+    const fifthTag = tags[4];
+    
+    const extraWrapper = document.createElement('span');
+    extraWrapper.className = 'post-tags-extra';
+    
+    // Capture nodes from the fifth tag until the LAST tag in this parent.
+    // This ensures we keep subsequent content (like URLs or ending text) visible.
+    const lastTag = tags[tags.length - 1];
+    let current = fifthTag;
+    const nodesToMove = [];
+    while (current) {
+      nodesToMove.push(current);
+      if (current === lastTag) break;
+      current = current.nextSibling;
+    }
+    
+    const toggle = document.createElement('button');
+    toggle.className = 'post-tags-toggle';
+    toggle.textContent = `+${tags.length - 4} more`;
+    toggle.setAttribute('onclick', 'window.toggleShowMoreTags(event, this)');
+    
+    const extraTags = tags.slice(4);
+    toggle.setAttribute('title', extraTags.map(t => t.textContent.trim()).join(' '));
+    
+    // Insert toggle and wrapper
+    container.insertBefore(toggle, fifthTag);
+    container.insertBefore(extraWrapper, fifthTag);
+    
+    // Move nodes
+    nodesToMove.forEach(node => extraWrapper.appendChild(node));
+    
+    // Add a space and the 'less' button inside the wrapper
+    extraWrapper.appendChild(document.createTextNode(' '));
+    const lessToggle = document.createElement('button');
+    lessToggle.className = 'post-tags-less-toggle';
+    lessToggle.textContent = 'show less';
+    lessToggle.setAttribute('onclick', 'window.toggleShowLessTags(event, this)');
+    extraWrapper.appendChild(lessToggle);
+  }
+  
+  return div.innerHTML;
 }
 
 /**
  * Remove trailing paragraphs that contain only hashtag links (and whitespace)
- * from post HTML, returning them separately so they can be rendered after
- * media / cards. Posts where hashtags appear mid-content are unaffected.
- * Returns { content: string, tagLine: string }.
+ * from post HTML, returning an array of their HTML strings so they can be 
+ * rendered after media / cards. Posts where hashtags appear mid-content are unaffected.
+ * Returns { content: string, tags: string[] }.
  */
 export function extractTrailingHashtags(html) {
   const div = document.createElement('div');
   div.innerHTML = html;
   const paras = Array.from(div.querySelectorAll('p'));
-  const trailing = [];
+  const trailingParas = [];
+  
   for (let i = paras.length - 1; i >= 0; i--) {
     const p = paras[i];
     const onlyHashtags = Array.from(p.childNodes).every(n => {
@@ -77,13 +144,21 @@ export function extractTrailingHashtags(html) {
       return false;
     });
     if (!onlyHashtags || p.querySelectorAll('.hashtag').length === 0) break;
-    trailing.unshift(p);
+    trailingParas.unshift(p);
   }
-  if (trailing.length === 0) return { content: html, tagLine: '' };
-  trailing.forEach(p => p.remove());
+
+  if (trailingParas.length === 0) return { content: html, tags: [] };
+  
+  const tags = [];
+  trailingParas.forEach(p => {
+    // Collect all hashtag elements from this paragraph
+    p.querySelectorAll('.hashtag').forEach(a => tags.push(a.outerHTML));
+    p.remove();
+  });
+
   return {
     content: div.innerHTML,
-    tagLine: trailing.map(p => p.innerHTML).join(' '),
+    tags: tags,
   };
 }
 
