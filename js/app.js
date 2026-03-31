@@ -181,6 +181,9 @@ async function initApp(server, token, demo = false) {
     return;
   }
 
+  // Notify Android App if running in WebView
+  saveMastodonToken(token, server);
+
   // Load account info
   try {
     state.account = await apiGet('/api/v1/accounts/verify_credentials', token, server);
@@ -336,11 +339,27 @@ async function initApp(server, token, demo = false) {
    OAUTH CALLBACK
    ══════════════════════════════════════════════════════════════════════ */
 
-function saveMastodonToken(token) {
-  if (window.AndroidBridge && window.AndroidBridge.saveToken) {
+function saveMastodonToken(token, server) {
+  if (window.AndroidBridge && typeof window.AndroidBridge.postMessage === 'function') {
+    // New protocol using postMessage with JSON payload
+    window.AndroidBridge.postMessage(JSON.stringify({
+      type: 'saveToken',
+      token: token
+    }));
+    console.log('[Elefeed] Sent saveToken message to AndroidBridge.');
+
+    if (server) {
+      window.AndroidBridge.postMessage(JSON.stringify({
+        type: 'saveInstance',
+        instance: server
+      }));
+      console.log('[Elefeed] Sent saveInstance message to AndroidBridge.');
+    }
+  } else if (window.AndroidBridge && typeof window.AndroidBridge.saveToken === 'function') {
+    // Fallback for older versions using direct method call
     window.AndroidBridge.saveToken(token);
   } else {
-    console.log("Android bridge not available");
+    // console.log("Android bridge not available");
   }
 }
 
@@ -385,7 +404,6 @@ async function handleCallback(code) {
       store.set('token', tokenData.access_token);
       store.set('server', server);
       store.set('token_scopes', SCOPES);
-      saveMastodonToken(tokenData.access_token);
       await initApp(server, tokenData.access_token);
     }
   } catch (err) {
@@ -477,8 +495,6 @@ $('login-btn').addEventListener('click', async () => {
         store.set('token', token);
         store.set('server', srv);
         store.set('token_scopes', scopes || SCOPES);
-
-        saveMastodonToken(token);
 
         $('login-btn').textContent = 'Log in with Mastodon →';
         $('login-btn').disabled = false;
