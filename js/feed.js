@@ -695,26 +695,28 @@ export function startFederatedStream() {
 
     // Preserve scroll so reading isn't disrupted
     const sc = getScrollContainer();
-    const scrollEl = sc || document.documentElement;
     const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
-    const originalHeight = scrollEl.scrollHeight;
-    scrollEl.style.overflowAnchor = 'none';
-    container.insertBefore(frag, container.firstChild);
-    const newHeight = scrollEl.scrollHeight;
-    const delta = newHeight - originalHeight;
+    
+    // Capture position of the first existing post to calculate an accurate delta
+    const firstPost = container.querySelector('article');
+    const rectBefore = firstPost ? firstPost.getBoundingClientRect() : null;
 
-    // Preserve scroll position if reading (scrolled down), otherwise stay at top
-    if (currentScroll > 10) {
-      if (sc) {
-        sc.scrollTop += delta;
-      } else {
-        window.scrollBy(0, delta);
+    if (sc) sc.style.overflowAnchor = 'none';
+    else document.documentElement.style.overflowAnchor = 'none';
+
+    container.insertBefore(frag, container.firstChild);
+
+    if (rectBefore && currentScroll > 0) {
+      const rectAfter = firstPost.getBoundingClientRect();
+      const delta = rectAfter.top - rectBefore.top;
+      if (delta > 0) {
+        if (sc) sc.scrollTop += delta;
+        else window.scrollBy(0, delta);
       }
-    } else {
-      if (sc) sc.scrollTop = 0;
-      else window.scrollTo(0, 0);
     }
-    scrollEl.style.overflowAnchor = '';
+
+    if (sc) sc.style.overflowAnchor = '';
+    else document.documentElement.style.overflowAnchor = '';
   }
 
   es.addEventListener('update', (e) => {
@@ -865,27 +867,28 @@ export function flushPendingPosts(feedKey, scrollToTop) {
     scrollContainerTo(0, 'smooth');
   } else {
     const sc = getScrollContainer();
-    const scrollEl = sc || document.documentElement;
     const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
-    const originalHeight = scrollEl.scrollHeight;
-    scrollEl.style.overflowAnchor = 'none';
-    container.insertBefore(frag, container.firstChild);
-    const newHeight = scrollEl.scrollHeight;
-    const delta = newHeight - originalHeight;
+    
+    // Capture position of the first existing post to calculate an accurate delta
+    const firstPost = container.querySelector('article');
+    const rectBefore = firstPost ? firstPost.getBoundingClientRect() : null;
 
-    // If already at the top, or very close, just stay at the top so the new posts are visible.
-    // Otherwise, maintain our current reading position.
-    if (currentScroll > 10) {
-      if (sc) {
-        sc.scrollTop += delta;
-      } else {
-        window.scrollBy(0, delta);
+    if (sc) sc.style.overflowAnchor = 'none';
+    else document.documentElement.style.overflowAnchor = 'none';
+
+    container.insertBefore(frag, container.firstChild);
+
+    if (rectBefore && currentScroll > 0) {
+      const rectAfter = firstPost.getBoundingClientRect();
+      const delta = rectAfter.top - rectBefore.top;
+      if (delta > 0) {
+        if (sc) sc.scrollTop += delta;
+        else window.scrollBy(0, delta);
       }
-    } else {
-      if (sc) sc.scrollTop = 0;
-      else window.scrollTo(0, 0);
     }
-    scrollEl.style.overflowAnchor = '';
+
+    if (sc) sc.style.overflowAnchor = '';
+    else document.documentElement.style.overflowAnchor = '';
   }
 }
 
