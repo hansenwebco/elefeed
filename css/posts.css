@@ -102,6 +102,7 @@
 
 /* ─── Post Card ─── */
 .post {
+  overflow-anchor: auto;
   border-bottom: 1px solid var(--border);
   border-left: 1px solid var(--border2);
   padding: 18px 20px 7px 18px;

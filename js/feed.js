@@ -693,14 +693,23 @@ export function startFederatedStream() {
     const frag = document.createDocumentFragment();
     while (tmp.firstChild) frag.appendChild(tmp.firstChild);
 
-    // Preserve scroll so reading isn't disrupted
-    const currentScroll = getScrollTop();
-    const anchor = (currentScroll > 0.1) ? getScrollAnchor() : null;
+    // Preserve scroll so reading isn't disrupted.
+    // We use a DOM-element anchor approach instead of scrollHeight delta because
+    // Android WebView doesn't always report scrollHeight changes synchronously,
+    // causing double-jumps with the delta method.
+    const sc = getScrollContainer();
+    const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
 
-    container.insertBefore(frag, container.firstChild);
-
-    if (anchor) {
+    if (currentScroll > 10) {
+      // Save the first visible post so we can scroll back to it after inserting.
+      const anchor = getScrollAnchor();
+      container.insertBefore(frag, container.firstChild);
+      // scrollIntoView works reliably across all engines including WebView.
       restoreScrollAnchor(anchor);
+    } else {
+      container.insertBefore(frag, container.firstChild);
+      if (sc) sc.scrollTop = 0;
+      else window.scrollTo(0, 0);
     }
   }
 
@@ -851,14 +860,19 @@ export function flushPendingPosts(feedKey, scrollToTop) {
     container.insertBefore(frag, container.firstChild);
     scrollContainerTo(0, 'smooth');
   } else {
-    // Preserve scroll position relative to content
-    const currentScroll = getScrollTop();
-    const anchor = (currentScroll > 1) ? getScrollAnchor() : null;
+    const sc = getScrollContainer();
+    const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
 
-    container.insertBefore(frag, container.firstChild);
-
-    if (anchor) {
+    // Use DOM-element anchoring instead of scrollHeight delta so Android WebView
+    // doesn't jump. Save the first visible post, insert, then restore position.
+    if (currentScroll > 10) {
+      const anchor = getScrollAnchor();
+      container.insertBefore(frag, container.firstChild);
       restoreScrollAnchor(anchor);
+    } else {
+      container.insertBefore(frag, container.firstChild);
+      if (sc) sc.scrollTop = 0;
+      else window.scrollTo(0, 0);
     }
   }
 }
