@@ -694,29 +694,14 @@ export function startFederatedStream() {
     while (tmp.firstChild) frag.appendChild(tmp.firstChild);
 
     // Preserve scroll so reading isn't disrupted
-    const sc = getScrollContainer();
-    const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
-    
-    // Capture position of the first existing post to calculate an accurate delta
-    const firstPost = container.querySelector('article');
-    const rectBefore = firstPost ? firstPost.getBoundingClientRect() : null;
-
-    if (sc) sc.style.overflowAnchor = 'none';
-    else document.documentElement.style.overflowAnchor = 'none';
+    const currentScroll = getScrollTop();
+    const anchor = (currentScroll > 0.1) ? getScrollAnchor() : null;
 
     container.insertBefore(frag, container.firstChild);
 
-    if (rectBefore && currentScroll > 0) {
-      const rectAfter = firstPost.getBoundingClientRect();
-      const delta = rectAfter.top - rectBefore.top;
-      if (delta > 0) {
-        if (sc) sc.scrollTop += delta;
-        else window.scrollBy(0, delta);
-      }
+    if (anchor) {
+      restoreScrollAnchor(anchor);
     }
-
-    if (sc) sc.style.overflowAnchor = '';
-    else document.documentElement.style.overflowAnchor = '';
   }
 
   es.addEventListener('update', (e) => {
@@ -866,29 +851,15 @@ export function flushPendingPosts(feedKey, scrollToTop) {
     container.insertBefore(frag, container.firstChild);
     scrollContainerTo(0, 'smooth');
   } else {
-    const sc = getScrollContainer();
-    const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
-    
-    // Capture position of the first existing post to calculate an accurate delta
-    const firstPost = container.querySelector('article');
-    const rectBefore = firstPost ? firstPost.getBoundingClientRect() : null;
-
-    if (sc) sc.style.overflowAnchor = 'none';
-    else document.documentElement.style.overflowAnchor = 'none';
+    // Preserve scroll position relative to content
+    const currentScroll = getScrollTop();
+    const anchor = (currentScroll > 1) ? getScrollAnchor() : null;
 
     container.insertBefore(frag, container.firstChild);
 
-    if (rectBefore && currentScroll > 0) {
-      const rectAfter = firstPost.getBoundingClientRect();
-      const delta = rectAfter.top - rectBefore.top;
-      if (delta > 0) {
-        if (sc) sc.scrollTop += delta;
-        else window.scrollBy(0, delta);
-      }
+    if (anchor) {
+      restoreScrollAnchor(anchor);
     }
-
-    if (sc) sc.style.overflowAnchor = '';
-    else document.documentElement.style.overflowAnchor = '';
   }
 }
 
