@@ -701,10 +701,18 @@ export function startFederatedStream() {
     scrollEl.style.overflowAnchor = 'none';
     container.insertBefore(frag, container.firstChild);
     const newHeight = scrollEl.scrollHeight;
-    if (sc) {
-      sc.scrollTop = currentScroll + (newHeight - originalHeight);
+    const delta = newHeight - originalHeight;
+
+    // Preserve scroll position if reading (scrolled down), otherwise stay at top
+    if (currentScroll > 10) {
+      if (sc) {
+        sc.scrollTop += delta;
+      } else {
+        window.scrollBy(0, delta);
+      }
     } else {
-      window.scrollTo(0, currentScroll + (newHeight - originalHeight));
+      if (sc) sc.scrollTop = 0;
+      else window.scrollTo(0, 0);
     }
     scrollEl.style.overflowAnchor = '';
   }
@@ -863,10 +871,19 @@ export function flushPendingPosts(feedKey, scrollToTop) {
     scrollEl.style.overflowAnchor = 'none';
     container.insertBefore(frag, container.firstChild);
     const newHeight = scrollEl.scrollHeight;
-    if (sc) {
-      sc.scrollTop = currentScroll + (newHeight - originalHeight);
+    const delta = newHeight - originalHeight;
+
+    // If already at the top, or very close, just stay at the top so the new posts are visible.
+    // Otherwise, maintain our current reading position.
+    if (currentScroll > 10) {
+      if (sc) {
+        sc.scrollTop += delta;
+      } else {
+        window.scrollBy(0, delta);
+      }
     } else {
-      window.scrollTo(0, currentScroll + (newHeight - originalHeight));
+      if (sc) sc.scrollTop = 0;
+      else window.scrollTo(0, 0);
     }
     scrollEl.style.overflowAnchor = '';
   }

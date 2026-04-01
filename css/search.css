@@ -556,6 +556,7 @@
     display: flex;
     gap: 6px;
     margin-bottom: 8px;
+    position: relative;
 }
 
 .search-status-thumb {

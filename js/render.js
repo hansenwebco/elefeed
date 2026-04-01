@@ -1256,7 +1256,7 @@ document.addEventListener('pause', (e) => {
 
 /** Toggle blur on all sensitive media in the post on/off. */
 window.toggleSensitiveMedia = function (btn) {
-  const postMedia = btn.closest('.post-media, .post-card-img-wrap');
+  const postMedia = btn.closest('.post-media, .post-card-img-wrap, .search-status-media');
   const allMedia = postMedia.querySelectorAll('img, video');
   const anyBlurred = [...allMedia].some(el => el.classList.contains('media-sensitive-blur'));
   allMedia.forEach(el => el.classList.toggle('media-sensitive-blur', !anyBlurred));
