@@ -453,9 +453,37 @@ function renderNotifItem(n) {
 
 /* ── Polling ───────────────────────────────────────────────────────── */
 
+let triedMarkers = false;
+
+/**
+ * Poll for new notifications.
+ * Handles the "fresh install" case logically:
+ * 1. Checks localStorage for last seen ID
+ * 2. Checks server markers (via Mastodon API) for synced seen ID
+ * 3. Default to marking latest as seen if no record exists (avoids "30" badge)
+ */
 export async function pollNotifications() {
   if (!state.token || state.demoMode) return;
-  state.lastSeenNotifId = store.get('lastSeenNotifId_' + state.server) || null;
+
+  // Restore from storage if needed
+  if (!state.lastSeenNotifId) {
+    state.lastSeenNotifId = store.get('lastSeenNotifId_' + state.server) || null;
+  }
+
+  // First-run sync: Check server markers if we have no local seen record
+  if (!state.lastSeenNotifId && !triedMarkers) {
+    triedMarkers = true;
+    try {
+      const markers = await apiGet('/api/v1/markers?timeline[]=notifications', state.token);
+      const markerId = markers?.notifications?.last_read_id;
+      if (markerId) {
+        state.lastSeenNotifId = markerId;
+        store.set('lastSeenNotifId_' + state.server, markerId);
+      }
+    } catch (e) {
+      console.debug('[Elefeed] Marker sync failed:', e.message);
+    }
+  }
 
   try {
     const notifs = await apiGet('/api/v1/notifications?limit=30', state.token);
@@ -463,9 +491,16 @@ export async function pollNotifications() {
 
     if (notifs.length > 0) {
       state.notifMaxId['all'] = notifs[notifs.length - 1].id;
-      state.notifUnreadCount = state.lastSeenNotifId
-        ? notifs.filter(n => n.id > state.lastSeenNotifId).length
-        : notifs.length;
+
+      // Final logical fallback: If still null after checking markers, 
+      // assume the user has seen current content to avoid starting with 30 unread.
+      if (!state.lastSeenNotifId) {
+        state.lastSeenNotifId = notifs[0].id;
+        state.notifUnreadCount = 0;
+        store.set('lastSeenNotifId_' + state.server, state.lastSeenNotifId);
+      } else {
+        state.notifUnreadCount = notifs.filter(n => n.id > state.lastSeenNotifId).length;
+      }
     } else {
       state.notifUnreadCount = 0;
     }

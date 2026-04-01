@@ -274,8 +274,6 @@ function renderResults(data, query, filter) {
         </div>
         ${filter === 'all' && accounts.length > 5 ? `
           <button class="search-see-all" data-filter="accounts">See all ${accounts.length} profiles →</button>
-        ` : filter === 'accounts' ? `
-          <div id="search-sentinel"></div>
         ` : ''}
       </div>`;
   }
@@ -297,8 +295,6 @@ function renderResults(data, query, filter) {
         </div>
         ${filter === 'all' && hashtags.length > 5 ? `
           <button class="search-see-all" data-filter="hashtags">See all hashtags →</button>
-        ` : filter === 'hashtags' ? `
-          <div id="search-sentinel"></div>
         ` : ''}
       </div>`;
   }
@@ -320,13 +316,19 @@ function renderResults(data, query, filter) {
         </div>
         ${filter === 'all' && statuses.length > 5 ? `
           <button class="search-see-all" data-filter="statuses">See all posts →</button>
-        ` : filter === 'statuses' ? `
-          <div id="search-sentinel"></div>
         ` : ''}
       </div>`;
   }
 
   body.innerHTML = html || `<div class="search-empty"><p>No results</p></div>`;
+
+  // Always append sentinel at the very bottom if there are more results, 
+  // regardless of the current active filter (since loadMoreResults handles it)
+  if (_hasMoreResults) {
+    const sentinel = document.createElement('div');
+    sentinel.id = 'search-sentinel';
+    body.appendChild(sentinel);
+  }
 }
 
 function appendPosts(statuses) {
@@ -498,12 +500,24 @@ function renderStatus(status) {
   const server = escapeHTML(state.server || '');
   const previewHTML = buildStatusPreviewHTML(s);
 
+  let hideSensitiveMedia = true;
+  try { hideSensitiveMedia = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
+  const startBlurred = s.sensitive && hideSensitiveMedia;
+
   const hasMedia = s.media_attachments && s.media_attachments.length > 0;
   const mediaPreview = hasMedia ? `
     <div class="search-status-media">
       ${s.media_attachments.slice(0, 2).map(m => `
-        <img src="${escapeHTML(m.preview_url || m.url)}" alt="" class="search-status-thumb" loading="lazy" />
+        <img src="${escapeHTML(m.preview_url || m.url)}" alt="" class="search-status-thumb${startBlurred ? ' media-sensitive-blur' : ''}" loading="lazy" />
       `).join('')}
+      ${s.sensitive ? `
+        <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media" style="border-radius: 8px;">
+           <div class="sp-card" style="padding: 6px 12px; border-radius: 8px;">
+             <span class="sp-card-title" style="font-size:11px;">Sensitive</span>
+           </div>
+           <span class="sp-revealed-label" style="font-size:10px;">hide</span>
+        </button>
+      ` : ''}
     </div>` : '';
 
   return `
