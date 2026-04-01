@@ -693,24 +693,28 @@ export function startFederatedStream() {
     const frag = document.createDocumentFragment();
     while (tmp.firstChild) frag.appendChild(tmp.firstChild);
 
-    // Preserve scroll so reading isn't disrupted.
-    // We use a DOM-element anchor approach instead of scrollHeight delta because
-    // Android WebView doesn't always report scrollHeight changes synchronously,
-    // causing double-jumps with the delta method.
+    // Preserve scroll so reading isn't disrupted
     const sc = getScrollContainer();
+    const scrollEl = sc || document.documentElement;
     const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
+    const originalHeight = scrollEl.scrollHeight;
+    scrollEl.style.overflowAnchor = 'none';
+    container.insertBefore(frag, container.firstChild);
+    const newHeight = scrollEl.scrollHeight;
+    const delta = newHeight - originalHeight;
 
+    // Preserve scroll position if reading (scrolled down), otherwise stay at top
     if (currentScroll > 10) {
-      // Save the first visible post so we can scroll back to it after inserting.
-      const anchor = getScrollAnchor();
-      container.insertBefore(frag, container.firstChild);
-      // scrollIntoView works reliably across all engines including WebView.
-      restoreScrollAnchor(anchor);
+      if (sc) {
+        sc.scrollTop = currentScroll + delta;
+      } else {
+        window.scrollBy(0, delta);
+      }
     } else {
-      container.insertBefore(frag, container.firstChild);
       if (sc) sc.scrollTop = 0;
       else window.scrollTo(0, 0);
     }
+    scrollEl.style.overflowAnchor = '';
   }
 
   es.addEventListener('update', (e) => {
@@ -861,19 +865,27 @@ export function flushPendingPosts(feedKey, scrollToTop) {
     scrollContainerTo(0, 'smooth');
   } else {
     const sc = getScrollContainer();
+    const scrollEl = sc || document.documentElement;
     const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
+    const originalHeight = scrollEl.scrollHeight;
+    scrollEl.style.overflowAnchor = 'none';
+    container.insertBefore(frag, container.firstChild);
+    const newHeight = scrollEl.scrollHeight;
+    const delta = newHeight - originalHeight;
 
-    // Use DOM-element anchoring instead of scrollHeight delta so Android WebView
-    // doesn't jump. Save the first visible post, insert, then restore position.
+    // If already at the top, or very close, just stay at the top so the new posts are visible.
+    // Otherwise, maintain our current reading position.
     if (currentScroll > 10) {
-      const anchor = getScrollAnchor();
-      container.insertBefore(frag, container.firstChild);
-      restoreScrollAnchor(anchor);
+      if (sc) {
+        sc.scrollTop = currentScroll + delta;
+      } else {
+        window.scrollBy(0, delta);
+      }
     } else {
-      container.insertBefore(frag, container.firstChild);
       if (sc) sc.scrollTop = 0;
       else window.scrollTo(0, 0);
     }
+    scrollEl.style.overflowAnchor = '';
   }
 }
 
