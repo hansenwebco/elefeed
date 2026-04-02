@@ -693,20 +693,8 @@ export function startFederatedStream() {
     const frag = document.createDocumentFragment();
     while (tmp.firstChild) frag.appendChild(tmp.firstChild);
 
-    // Preserve scroll so reading isn't disrupted
-    const sc = getScrollContainer();
-    const scrollEl = sc || document.documentElement;
-    const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
-    const originalHeight = scrollEl.scrollHeight;
-    scrollEl.style.overflowAnchor = 'none';
+    // Just insert — browser's native scroll anchoring keeps the viewport stable
     container.insertBefore(frag, container.firstChild);
-    const newHeight = scrollEl.scrollHeight;
-    if (sc) {
-      sc.scrollTop = currentScroll + (newHeight - originalHeight);
-    } else {
-      window.scrollTo(0, currentScroll + (newHeight - originalHeight));
-    }
-    scrollEl.style.overflowAnchor = '';
   }
 
   es.addEventListener('update', (e) => {
@@ -852,23 +840,10 @@ export function flushPendingPosts(feedKey, scrollToTop) {
   const frag = document.createDocumentFragment();
   while (tmp.firstChild) frag.appendChild(tmp.firstChild);
 
+  // Just insert — browser's native scroll anchoring keeps the viewport stable
+  container.insertBefore(frag, container.firstChild);
   if (scrollToTop) {
-    container.insertBefore(frag, container.firstChild);
     scrollContainerTo(0, 'smooth');
-  } else {
-    const sc = getScrollContainer();
-    const scrollEl = sc || document.documentElement;
-    const currentScroll = sc ? sc.scrollTop : (window.scrollY || document.documentElement.scrollTop);
-    const originalHeight = scrollEl.scrollHeight;
-    scrollEl.style.overflowAnchor = 'none';
-    container.insertBefore(frag, container.firstChild);
-    const newHeight = scrollEl.scrollHeight;
-    if (sc) {
-      sc.scrollTop = currentScroll + (newHeight - originalHeight);
-    } else {
-      window.scrollTo(0, currentScroll + (newHeight - originalHeight));
-    }
-    scrollEl.style.overflowAnchor = '';
   }
 }
 
