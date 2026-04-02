@@ -49,11 +49,11 @@
   .hashtag-search-hero {
     gap: 8px;
   }
-  
+
   .hashtag-manage-toggle span {
     display: none;
   }
-  
+
   .hashtag-manage-toggle {
     width: 38px;
     padding: 0 !important;
@@ -65,7 +65,7 @@
     font-size: 13px;
     padding-left: 36px;
   }
-  
+
   .search-icon-fixed {
     left: 10px;
     width: 16px;
@@ -470,6 +470,7 @@
 
 /* --- Mobile Overrides (Disable Highlighting) --- */
 @media (max-width: 600px) {
+
   .hashtag-view-container *,
   .hashtag-header-box *,
   .hashtag-active-pill,
