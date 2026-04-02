@@ -283,8 +283,8 @@ async function initApp(server, token, demo = false) {
     document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
       i.classList.toggle('active', i.dataset.filter === state.feedFilter);
     });
-    $('hashtag-filter-bar').style.display = (state.feedFilter === 'hashtags') ? '' : 'none';
   }
+  $('hashtag-filter-bar').style.display = (state.feedFilter === 'hashtags') ? '' : 'none';
 
   if (state.exploreSubtab !== 'posts') {
     document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(i => {

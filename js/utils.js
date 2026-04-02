@@ -243,11 +243,12 @@ export function updateURLParam(key, value, push = false) {
     url.searchParams.set(key, value);
   }
 
-  if (key === 'tab' || key === 'feed' || key === 'explore') {
+  if (key === 'tab' || key === 'explore' || (key === 'feed' && value !== 'hashtags')) {
     url.searchParams.delete('thread');
     url.searchParams.delete('profile');
     url.searchParams.delete('bookmarks');
     url.searchParams.delete('notifications');
+    url.searchParams.delete('tag');
   }
 
   if (window._isRouting) return; // Ignore push/replace if we are in the middle of a popstate navigation

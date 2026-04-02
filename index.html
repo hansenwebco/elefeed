@@ -159,6 +159,7 @@
   <link rel="stylesheet" href="css/trending.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/search.css" />
+  <link rel="stylesheet" href="css/hashtags.css" />
 </head>
 
 <body>
@@ -675,49 +676,69 @@
         </div>
         <!-- Feed Tab (unified: All / Following / #Hashtags) -->
         <div class="tab-panel active" id="panel-feed" role="tabpanel">
-          <div class="hashtag-filter-bar" id="hashtag-filter-bar" style="display:none;">
-            <!-- Row 1: dropdown select + manage button -->
-            <div class="hashtag-filter-row hashtag-filter-row--top">
-              <select class="hashtag-filter-select" id="hashtag-filter-select">
-                <option value="all">All Followed Hashtags</option>
-              </select>
-              <button id="manage-hashtags-btn" class="manage-hashtags-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-                <span class="manage-btn-text">Manage Hashtags</span>
-              </button>
-            </div>
-            <!-- Row 2: search input full-width -->
-            <div class="hashtag-filter-row hashtag-filter-row--search">
-              <div class="hashtag-search-wrap">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none;">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input type="text" id="hashtag-search-input" class="hashtag-search-input" placeholder="Look up a hashtag..." autocomplete="off" style="padding-right: 36px;" />
-                <button id="hashtag-search-btn" style="position:absolute; right:4px; top:50%; transform:translateY(-50%); background:transparent; border:none; width:24px; height:24px; border-radius:4px; color:var(--text-muted); display:flex; justify-content:center; align-items:center; cursor:pointer; transition:color 0.2s;" title="Search hashtag" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
+          <!-- Hashtag View Container (Dedicated landing for hashtags) -->
+          <div class="hashtag-view-container" id="hashtag-filter-bar" style="display:none;">
+            <div class="hashtag-header-box">
+              <!-- Page Header: Search and Manage -->
+              <header class="hashtag-page-header">
+                <div class="hashtag-search-hero">
+                  <svg class="search-icon-fixed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
                   </svg>
-                </button>
-                <div id="hashtag-lookup-results" class="hashtag-suggestions" style="position:absolute !important; top:100%; left:0; width:100%; margin-top:4px; max-height:300px; display:none;"></div>
+                  <input type="text" id="hashtag-search-input" class="hashtag-main-search-input" placeholder="Search followed hashtags or look up new ones..." autocomplete="off" />
+                  <button id="manage-hashtags-btn" class="hashtag-manage-toggle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span>Manage</span>
+                  </button>
+                  <div id="hashtag-lookup-results" class="hashtag-suggestions" style="position:absolute !important; top:100%; left:0; width:100%; margin-top:4px; max-height:300px; display:none; z-index: 100;"></div>
+                </div>
+              </header>
+
+              <!-- Current Selection / Breadcrumb — only shown when a specific tag is active -->
+              <div id="hashtag-active-view-header" style="display:none;">
+                <div class="hashtag-feed-header">
+                  <div class="hashtag-active-pill">
+                    <span class="hashtag-active-pill-symbol">#</span>
+                    <span class="hashtag-active-pill-name" id="hashtag-active-title">all</span>
+                    <button id="hashtag-clear-filter" class="hashtag-active-pill-close" aria-label="Clear hashtag filter">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Follow Suggestion Strip -->
+              <div class="hashtag-filter-row hashtag-filter-row--follow" id="hashtag-follow-row" style="display:none;">
+                <div class="hashtag-follow-strip">
+                  <div class="hashtag-follow-strip-text">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; opacity:0.6;">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>You're not following <strong id="hashtag-follow-strip-name"></strong></span>
+                  </div>
+                  <button id="hashtag-follow-strip-btn" class="hashtag-follow-strip-btn">+ Follow</button>
+                </div>
               </div>
             </div>
-            <!-- Row 3: follow suggestion — shown when viewing a non-followed hashtag -->
-            <div class="hashtag-filter-row hashtag-filter-row--follow" id="hashtag-follow-row" style="display:none;">
-              <div class="hashtag-follow-strip">
-                <div class="hashtag-follow-strip-text">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; opacity:0.6;">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  <span>You're not following <strong id="hashtag-follow-strip-name"></strong></span>
+
+            <!-- Main Hashtag Grid (The "Listing" the user mentioned) -->
+            <div id="hashtag-landing-grid-view" style="display:none;">
+              <h4 class="hashtag-section-title" id="followed-hashtags-count-label">Followed Hashtags</h4>
+              <div id="followed-hashtags-grid" class="hashtag-grid">
+                <!-- Populated by JS -->
+                <div class="hashtag-card" onclick="window.selectHashtag('all')">
+                  <div class="hashtag-card-name">All Hashtags</div>
+                  <div class="hashtag-card-stats">Unified Feed</div>
                 </div>
-                <button id="hashtag-follow-strip-btn" class="hashtag-follow-strip-btn">+ Follow</button>
               </div>
             </div>
           </div>
@@ -1084,7 +1105,7 @@
   <div class="manage-hashtag-drawer" id="manage-hashtag-drawer">
     <div class="thread-drawer-header">
       <span class="thread-drawer-title">Manage Hashtags</span>
-      <button class="thread-close-btn" id="manage-hashtags-close" aria-label="Close">
+      <button class="thread-close-btn" id="manage-hashtag-close" aria-label="Close">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />

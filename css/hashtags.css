@@ -1,0 +1,424 @@
+/* ═══════════════════════════════════════════════
+   HASHTAGS — Followed hashtags view & Management
+   ═══════════════════════════════════════════════ */
+
+:root {
+  --hashtag-card-bg: var(--surface2);
+  --hashtag-card-hover: var(--surface);
+  --hashtag-card-border: var(--border);
+  --hashtag-card-accent: var(--accent);
+}
+
+/* ─── Hashtag View Container ─── */
+.hashtag-view-container {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0;
+  animation: fadeIn 0.3s ease;
+}
+
+.hashtag-header-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 680px;
+  width: 100%;
+  margin: 16px auto 24px auto;
+  padding: 16px 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .hashtag-header-box {
+    width: 100%;
+    margin: 12px 0 20px 0;
+    padding: 12px 16px;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .hashtag-search-hero {
+    gap: 8px;
+  }
+  
+  .hashtag-manage-toggle span {
+    display: none;
+  }
+  
+  .hashtag-manage-toggle {
+    width: 38px;
+    padding: 0 !important;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .hashtag-main-search-input {
+    font-size: 13px;
+    padding-left: 36px;
+  }
+  
+  .search-icon-fixed {
+    left: 10px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ─── Search & Header ─── */
+.hashtag-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hashtag-search-hero {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hashtag-main-search-input {
+  flex: 1;
+  height: 38px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 12px 0 38px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: var(--font-body);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.hashtag-main-search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 155, 127, 255), 0.12);
+  background: var(--bg);
+}
+
+.search-icon-fixed {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.hashtag-manage-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 12px;
+  height: 38px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}
+
+.hashtag-manage-toggle:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent2);
+}
+
+.hashtag-manage-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ─── Hashtag Grid ─── */
+.hashtag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .hashtag-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+}
+
+.hashtag-card {
+  background: var(--hashtag-card-bg);
+  border: 1px solid var(--hashtag-card-border);
+  border-radius: 12px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  min-height: 90px;
+}
+
+.hashtag-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.hashtag-card:hover {
+  background: var(--hashtag-card-hover);
+  border-color: var(--accent);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.hashtag-card:hover::before {
+  opacity: 1;
+}
+
+.hashtag-card-icon {
+  display: none;
+}
+
+.hashtag-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  line-height: 1.2;
+}
+
+.hashtag-card-stats {
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
+
+.hashtag-feed-header {
+  display: flex;
+  align-items: center;
+  animation: slideIn 0.2s ease;
+  width: 100%;
+}
+
+.hashtag-active-pill {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 4px 4px 4px 10px;
+  border-radius: 999px;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hashtag-active-pill-symbol {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.hashtag-active-pill-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+.hashtag-active-pill-close {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface2);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hashtag-active-pill-close:hover {
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+#hashtag-landing-grid-view {
+  padding: 0 20px;
+}
+
+@media (max-width: 600px) {
+  #hashtag-landing-grid-view {
+    padding: 0 16px;
+  }
+}
+
+/* ─── Section Dividers ─── */
+.hashtag-section-title {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+}
+
+.hashtag-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ─── Animations ─── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ─── Loading / Empty States ─── */
+.hashtag-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: var(--surface2);
+  border: 2px dashed var(--border);
+  border-radius: 20px;
+  gap: 16px;
+}
+
+.hashtag-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
+.hashtag-empty-text {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+/* ─── Follow Suggestion Strip (Row 3) ─── */
+.hashtag-filter-row--follow {
+  animation: slideIn 180ms ease;
+}
+
+.hashtag-follow-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 12px;
+  gap: 12px;
+}
+
+.hashtag-follow-strip-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+  font-family: var(--font-body);
+}
+
+.hashtag-follow-strip-text strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.hashtag-follow-strip-btn {
+  flex-shrink: 0;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+  white-space: nowrap;
+}
+
+.hashtag-follow-strip-btn:hover:not(:disabled) {
+  background: var(--accent2);
+  transform: translateY(-1px);
+}
+
+.hashtag-follow-strip-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
