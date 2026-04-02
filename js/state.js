@@ -10,7 +10,7 @@
 
 export const CLIENT_NAME = 'Elefeed';
 export const CLIENT_WEBSITE = location.origin;
-export const CLIENT_VERSION = '1.0.5';
+export const CLIENT_VERSION = '0.0.0-dev';
 
 /** Normalized redirect URI — must match exactly between registration and authorization. */
 export const REDIRECT_URI = (() => {
