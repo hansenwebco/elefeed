@@ -1,0 +1,53 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps: deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject Version Number
+        run: |
+          # Create a version format: Year.Month.Day.RunNumber (e.g., 2024.04.02.42)
+          # We use UTC time to keep it consistent
+          VERSION=$(date -u +'%Y.%m.%d').${{ github.run_number }}
+          echo "Bumping version to $VERSION"
+          
+          # Replace the dev version placeholders in the code
+          # We use a specific pattern to ensure we only touch the intended lines
+          sed -i "s/CLIENT_VERSION = '0.0.0-dev'/CLIENT_VERSION = '$VERSION'/g" js/state.js
+          sed -i "s/0.0.0-dev/$VERSION/g" index.html
+          
+          echo "Stamped version $VERSION into files."
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
