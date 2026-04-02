@@ -701,62 +701,7 @@
   background: var(--surface);
 }
 
-/* ─── Follow Suggestion Strip (Row 3) ─── */
-.hashtag-filter-row--follow {
-  animation: slideDown 180ms ease;
-}
 
-.hashtag-follow-strip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: rgba(155, 127, 255, 0.07);
-  border: 1px solid rgba(155, 127, 255, 0.22);
-  border-radius: 7px;
-  padding: 9px 12px;
-  gap: 12px;
-}
-
-.hashtag-follow-strip-text {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  color: var(--text-muted);
-  min-width: 0;
-  flex: 1;
-  overflow-wrap: anywhere;
-}
-
-.hashtag-follow-strip-text strong {
-  color: var(--accent2);
-  font-weight: 600;
-}
-
-.hashtag-follow-strip-btn {
-  flex-shrink: 0;
-  background: var(--accent);
-  border: none;
-  border-radius: 5px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 13px;
-  cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
-  font-family: var(--font-body);
-  white-space: nowrap;
-}
-
-.hashtag-follow-strip-btn:hover:not(:disabled) {
-  background: var(--accent2);
-}
-
-.hashtag-follow-strip-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 /* ─── Emoji Picker ─── */
 .emoji-picker {

@@ -71,7 +71,7 @@ import { apiGet } from './api.js';
 import { setLoading, setError, showToast, updateTabLabel } from './ui.js';
 import { renderPost } from './render.js';
 import { getDemoHomePosts, getDemoHashtagData } from './demo.js';
-import { matchesLanguage } from './utils.js';
+import { matchesLanguage, updateURLParam } from './utils.js';
 
 /* ── Key helpers ───────────────────────────────────────────────────── */
 
@@ -366,27 +366,54 @@ export async function ensureHomeFeedLoaded() {
 /* ── Hashtag feed ──────────────────────────────────────────────────── */
 
 async function loadHashtagsFeed() {
-  $('feed-posts').innerHTML = '';
+  const container = $('feed-posts');
+  const gridView = $('hashtag-landing-grid-view');
+  const activeHeader = $('hashtag-active-view-header');
+  const followRow = $('hashtag-follow-row');
+  const wrapper = $('feed-content-wrapper');
 
-  // 1. OPTIMISTIC UI UPDATE
-  const filterSelect = $('hashtag-filter-select');
-  if (filterSelect) {
-    // Temporarily set the dropdown to the active tag so it displays instantly
-    filterSelect.innerHTML = '';
-    if (state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
-      const opt = document.createElement('option');
-      opt.value = state.selectedHashtagFilter;
-      opt.textContent = '#' + state.selectedHashtagFilter;
-      opt.selected = true;
-      filterSelect.appendChild(opt);
-    } else {
-      filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
+  // 0. Ensure followed hashtags are loaded BEFORE checking UI statuses
+  if (state.token && (!state.followedHashtags || state.followedHashtags.length === 0)) {
+    try {
+      state.followedHashtags = await apiGet('/api/v1/followed_tags?limit=100', state.token);
+    } catch (e) {
+      console.warn('Failed to fetch followed hashtags:', e);
+      state.followedHashtags = state.followedHashtags || [];
     }
   }
 
-  const followRow = document.getElementById('hashtag-follow-row');
+  // 1. Determine if we are in "Landing" mode or "Feed" mode
+  const isLanding = !state.selectedHashtagFilter || state.selectedHashtagFilter === 'landing';
+
+  if (isLanding) {
+    updateURLParam('tag', null); // Clear tag from URL in landing mode
+    if (wrapper) wrapper.style.display = 'none';
+    if (activeHeader) activeHeader.style.display = 'none';
+    if (followRow) followRow.style.display = 'none';
+    if (gridView) {
+      gridView.style.display = 'block';
+      // Signal to render the grid (defined in compose.js/hashtags.js)
+      if (window.renderHashtagGrid) window.renderHashtagGrid();
+    }
+    return;
+  }
+
+  updateURLParam('tag', state.selectedHashtagFilter);
+
+  // 2. Feed Mode
+  if (gridView) gridView.style.display = 'none';
+  if (wrapper) wrapper.style.display = 'block';
+  if (activeHeader) {
+    activeHeader.style.display = 'block';
+    const titleEl = $('hashtag-active-title');
+    if (titleEl) titleEl.textContent = state.selectedHashtagFilter;
+  }
+  container.innerHTML = '';
+
   const followStripName = document.getElementById('hashtag-follow-strip-name');
-  if (followRow && followStripName && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
+  const isSpecificTag = state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all';
+
+  if (followRow && followStripName && isSpecificTag) {
     const isFollowed = state.followedHashtags && state.followedHashtags.some(t => t.name.toLowerCase() === state.selectedHashtagFilter.toLowerCase());
     if (!isFollowed) {
       followStripName.textContent = '#' + state.selectedHashtagFilter;
@@ -398,22 +425,14 @@ async function loadHashtagsFeed() {
     followRow.style.display = 'none';
   }
 
-  // 2. DATA FETCHING (Parallelized and deferred where possible)
+  // DATA FETCHING
   let tagPostsPromise = null;
-  const isSpecificTag = state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all';
 
   if (!state.demoMode) {
-    if (!state.followedHashtags) {
-      // Background fetch followed tags if we don't have them
-      state.followedHashtags = await apiGet('/api/v1/followed_tags?limit=100', state.token).catch(() => []);
-    }
-
     if (isSpecificTag) {
-      // If a specific tag is selected, we only need that tag's posts
       const tag = encodeURIComponent(state.selectedHashtagFilter);
       tagPostsPromise = apiGet(`/api/v1/timelines/tag/${tag}?limit=40`, state.token);
     } else {
-      // If "all" followed tags is selected, we need the home feed
       await ensureHomeFeedLoaded();
     }
   } else if (!isSpecificTag) {
@@ -422,78 +441,45 @@ async function loadHashtagsFeed() {
 
   const tags = state.followedHashtags || [];
 
-  // Update filter dropdown properly now that we have tags
-  if (filterSelect) {
-    filterSelect.innerHTML = '<option value="all">All Followed Hashtags</option>';
-    const sortedTags = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-
-    let found = state.selectedHashtagFilter === 'all';
-    sortedTags.forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t.name.toLowerCase();
-      opt.textContent = '#' + t.name;
-      if (state.selectedHashtagFilter === t.name.toLowerCase()) { opt.selected = true; found = true; }
-      filterSelect.appendChild(opt);
-    });
-
-    if (!found && isSpecificTag) {
-      const opt = document.createElement('option');
-      opt.value = state.selectedHashtagFilter;
-      opt.textContent = '#' + state.selectedHashtagFilter;
-      opt.selected = true;
-      filterSelect.appendChild(opt);
-    }
-  }
-
-  // ── Follow suggestion strip ──────────────────────────────────────
-  const selectedTag = state.selectedHashtagFilter;
-  const isAlreadyFollowed = !selectedTag || selectedTag === 'all' ||
-    tags.some(t => t.name.toLowerCase() === selectedTag.toLowerCase());
-
-  if (followRow) {
-    if (!isAlreadyFollowed && isSpecificTag) {
-      if (followStripName) followStripName.textContent = '#' + selectedTag;
-      followRow.style.display = '';
-
-      const followStripBtn = document.getElementById('hashtag-follow-strip-btn');
-      if (followStripBtn) {
-        const newBtn = followStripBtn.cloneNode(true);
-        followStripBtn.replaceWith(newBtn);
-        newBtn.addEventListener('click', async () => {
-          newBtn.disabled = true;
-          newBtn.textContent = 'Following…';
-          try {
-            const res = await fetch(`https://${state.server}/api/v1/tags/${encodeURIComponent(selectedTag)}/follow`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
-              cache: 'no-store',
-            });
-            if (!res.ok) throw new Error('Failed to follow hashtag');
-            const tagInfo = await res.json();
-            if (!state.followedHashtags) state.followedHashtags = [];
-            if (!state.followedHashtags.some(t => t.name.toLowerCase() === selectedTag.toLowerCase())) {
-              state.followedHashtags.push(tagInfo);
-            }
-            const { showToast } = await import('./ui.js');
-            showToast(`Following #${selectedTag}`);
-            followRow.style.display = 'none';
-            loadHashtagsFeed();
-          } catch (err) {
-            newBtn.disabled = false;
-            newBtn.textContent = '+ Follow';
-            const { showToast } = await import('./ui.js');
-            showToast('Failed to follow: ' + err.message);
+  // Handle follow in feed mode
+  if (!isLanding && followRow && followRow.style.display !== 'none') {
+    const selectedTag = state.selectedHashtagFilter;
+    const followStripBtn = document.getElementById('hashtag-follow-strip-btn');
+    if (followStripBtn) {
+      const newBtn = followStripBtn.cloneNode(true);
+      followStripBtn.replaceWith(newBtn);
+      newBtn.addEventListener('click', async () => {
+        newBtn.disabled = true;
+        newBtn.textContent = 'Following…';
+        try {
+          const res = await fetch(`https://${state.server}/api/v1/tags/${encodeURIComponent(selectedTag)}/follow`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+            cache: 'no-store',
+          });
+          if (!res.ok) throw new Error('Failed to follow hashtag');
+          const tagInfo = await res.json();
+          if (!state.followedHashtags) state.followedHashtags = [];
+          if (!state.followedHashtags.some(t => t.name.toLowerCase() === selectedTag.toLowerCase())) {
+            state.followedHashtags.push(tagInfo);
           }
-        });
-      }
-    } else {
-      followRow.style.display = 'none';
+          const { showToast } = await import('./ui.js');
+          showToast(`Following #${selectedTag}`);
+          followRow.style.display = 'none';
+          loadHashtagsFeed();
+        } catch (err) {
+          newBtn.disabled = false;
+          newBtn.textContent = '+ Follow';
+          const { showToast } = await import('./ui.js');
+          showToast('Failed to follow: ' + err.message);
+        }
+      });
     }
   }
 
   let display = [];
   if (state.demoMode) {
-    display = state.homeFeed.filter(p => p._sourceTags && p._sourceTags.length > 0);
+    display = (state.homeFeed || []).filter(p => p._sourceTags && p._sourceTags.length > 0);
     if (isSpecificTag) {
       display = display.filter(p => p._sourceTags.includes(state.selectedHashtagFilter));
     }
@@ -505,7 +491,7 @@ async function loadHashtagsFeed() {
       state.hashtagMaxId = tagPosts.length ? tagPosts[tagPosts.length - 1].id : null;
       display = tagPosts;
     } else {
-      display = state.homeFeed.filter(p => p._sourceTags && p._sourceTags.length > 0);
+      display = (state.homeFeed || []).filter(p => p._sourceTags && p._sourceTags.length > 0);
       state.hashtagMaxId = state.homeMaxId;
     }
   }
@@ -583,6 +569,9 @@ export async function loadFeedTab(scrollTop = true) {
   setError('feed', null);
 
   try {
+    const wrapper = $('feed-content-wrapper');
+    if (filter !== 'hashtags' && wrapper) wrapper.style.display = 'block';
+
     if (filter === 'all') {
       await ensureHomeFeedLoaded();
       if (!state.demoMode) await fetchRelationships(state.homeFeed);

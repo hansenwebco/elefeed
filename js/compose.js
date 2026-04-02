@@ -1533,30 +1533,87 @@ function setupContentEditable(editor) {
 let manageHashtagDebounceTimer = null;
 let manageHashtagActiveRequest = null;
 
+/* ─── Hashtag Grid Rendering ─── */
+window.renderHashtagGrid = function() {
+  const grid = $('followed-hashtags-grid');
+  if (!grid) return;
+  
+  const tags = state.followedHashtags || [];
+  const countLabel = $('followed-hashtags-count-label');
+  if (countLabel) countLabel.textContent = `Followed Hashtags (${tags.length})`;
+
+  // Always start with "All Hashtags"
+  let html = `
+    <div class="hashtag-card" onclick="window.selectHashtag('all')">
+      <div class="hashtag-card-name">All Hashtags</div>
+      <div class="hashtag-card-stats">Unified Feed</div>
+    </div>
+  `;
+
+  const sorted = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  
+  html += sorted.map(t => {
+    const usage = t.history ? t.history.reduce((sum, day) => sum + parseInt(day.uses || 0), 0) : null;
+    const usageText = usage !== null ? `${usage} uses/wk` : 'Following';
+    
+    return `
+      <div class="hashtag-card" onclick="window.selectHashtag('${escapeHTML(t.name.toLowerCase())}')">
+        <div class="hashtag-card-name">${escapeHTML(t.name)}</div>
+        <div class="hashtag-card-stats">${usageText}</div>
+      </div>
+    `;
+  }).join('');
+
+  grid.innerHTML = html;
+};
+
+window.selectHashtag = function(tag) {
+  state.selectedHashtagFilter = tag;
+  loadFeedTab();
+};
+
+window.unfollowHashtag = async function(tagName, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch(`https://${state.server}/api/v1/tags/${encodeURIComponent(tagName)}/unfollow`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${state.token}` }
+    });
+    if (!res.ok) throw new Error('Unfollow failed');
+    
+    state.followedHashtags = (state.followedHashtags || []).filter(t => t.name.toLowerCase() !== tagName.toLowerCase());
+    window.renderHashtagGrid();
+    showToast(`Unfollowed #${tagName}`);
+  } catch (err) {
+    if (btn) btn.disabled = false;
+    showToast('Failed to unfollow: ' + err.message);
+  }
+};
+
 function setupHashtagTab() {
   const btn = $('manage-hashtags-btn');
-  const panel = $('manage-inline-panel');
-  const closeBtn = $('manage-hashtags-close');
-  const searchInput = $('manage-hashtag-search-input');
+  const searchInput = $('hashtag-search-input');
+  const clearFilterBtn = $('hashtag-clear-filter');
 
-  const viewInput = $('hashtag-search-input');
-  const searchBtn = $('hashtag-search-btn');
-
-  let lookupHashtagDebounceTimer = null;
-  let lookupHashtagActiveRequest = null;
   const lookupDropdown = $('hashtag-lookup-results');
   let selectedLookupIndex = -1;
 
+  if (clearFilterBtn) {
+    clearFilterBtn.addEventListener('click', () => {
+      window.selectHashtag('landing');
+    });
+  }
+
   function doHashtagSearch(val) {
-    if (!viewInput) return;
+    if (!searchInput) return;
     const explicitVal = typeof val === 'string' ? val : null;
-    val = (explicitVal || viewInput.value.trim()).replace(/^#/, '');
+    val = (explicitVal || searchInput.value.trim()).replace(/^#/, '');
     if (val) {
       if (lookupDropdown) lookupDropdown.style.display = 'none';
       state.selectedHashtagFilter = val.toLowerCase();
       loadFeedTab();
       if (explicitVal) {
-        viewInput.value = '#' + val;
+        searchInput.value = '#' + val;
       }
     }
   }
@@ -1572,8 +1629,8 @@ function setupHashtagTab() {
     });
   }
 
-  if (viewInput) {
-    viewInput.addEventListener('keydown', (e) => {
+  if (searchInput) {
+    searchInput.addEventListener('keydown', (e) => {
       const isVisible = lookupDropdown && lookupDropdown.style.display !== 'none';
       const items = isVisible ? lookupDropdown.querySelectorAll('.hashtag-item') : [];
 
@@ -1605,40 +1662,36 @@ function setupHashtagTab() {
       if (e.key === 'Enter') doHashtagSearch();
     });
 
-    viewInput.addEventListener('input', () => {
+    searchInput.addEventListener('input', () => {
       selectedLookupIndex = -1;
-      clearTimeout(lookupHashtagDebounceTimer);
-      const q = viewInput.value.trim().replace(/^#/, '');
+      clearTimeout(manageHashtagDebounceTimer);
+      const q = searchInput.value.trim().replace(/^#/, '');
       if (!q) {
         if (lookupDropdown) lookupDropdown.style.display = 'none';
         return;
       }
-      lookupHashtagDebounceTimer = setTimeout(() => {
+      manageHashtagDebounceTimer = setTimeout(() => {
         fetchLookupHashtags(q);
       }, 300);
     });
 
     document.addEventListener('click', (e) => {
-      if (lookupDropdown && !e.target.closest('.hashtag-search-wrap')) {
+      if (lookupDropdown && !e.target.closest('.hashtag-search-wrap') && !e.target.closest('.hashtag-search-hero')) {
         lookupDropdown.style.display = 'none';
       }
     });
 
-    viewInput.addEventListener('focus', () => {
-      if (viewInput.value.trim().length > 0 && lookupDropdown.innerHTML !== '') {
+    searchInput.addEventListener('focus', () => {
+      if (searchInput.value.trim().length > 0 && lookupDropdown.innerHTML !== '') {
         lookupDropdown.style.display = 'flex';
       }
     });
   }
 
-  if (searchBtn) {
-    searchBtn.addEventListener('click', () => doHashtagSearch());
-  }
-
   async function fetchLookupHashtags(q) {
-    if (lookupHashtagActiveRequest) lookupHashtagActiveRequest.abort();
+    if (manageHashtagActiveRequest) manageHashtagActiveRequest.abort();
     const controller = new AbortController();
-    lookupHashtagActiveRequest = controller;
+    manageHashtagActiveRequest = controller;
     if (lookupDropdown) {
       lookupDropdown.style.display = 'flex';
       lookupDropdown.innerHTML = '<div style="padding:10px;text-align:center;"><div class="spinner" style="margin: 0 auto;"></div></div>';
@@ -1680,8 +1733,12 @@ function setupHashtagTab() {
     });
   }
 
+  // --- Manage Hashtags Drawer ---
   const drawer = $('manage-hashtag-drawer');
   const backdrop = $('manage-hashtag-backdrop');
+  // Note: closeBtn and searchInput in drawer should have unique IDs if needed, but let's stick to what's in index.html
+  const closeBtn = $('manage-hashtag-close');
+  const drawerSearchInput = $('manage-hashtag-search-input');
 
   if (!btn || !drawer) return;
 
@@ -1689,78 +1746,79 @@ function setupHashtagTab() {
     history.pushState({ drawer: 'manage-hashtag-drawer' }, '', '');
     drawer.classList.add('open');
     if (backdrop) backdrop.classList.add('open');
-    renderCurrentlyFollowing();
-    searchInput.value = '';
-    $('manage-hashtag-search-results').innerHTML = '';
-    setTimeout(() => searchInput.focus(), 100);
+    renderCurrentlyFollowingInDrawer();
+    if (drawerSearchInput) {
+      drawerSearchInput.value = '';
+      $('manage-hashtag-search-results').innerHTML = '';
+      setTimeout(() => drawerSearchInput.focus(), 100);
+    }
   }
 
   function closeManageHashtagsPanel() {
     drawer.classList.remove('open');
     if (backdrop) backdrop.classList.remove('open');
-    loadFeedTab(); // refresh the dropdown list in the feed bar
+    loadFeedTab(); 
+    window.renderHashtagGrid(); // Ensure landing grid is fresh
   }
 
   btn.addEventListener('click', openManageHashtagsPanel);
   if (closeBtn) closeBtn.addEventListener('click', closeManageHashtagsPanel);
   if (backdrop) backdrop.addEventListener('click', closeManageHashtagsPanel);
 
-  // Also close with Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && drawer.classList.contains('open')) {
       closeManageHashtagsPanel();
     }
   });
 
-  // Expose so the profile menu button in app.js can open it too
   window.openManageHashtagsPanel = openManageHashtagsPanel;
 
-  function renderCurrentlyFollowing() {
+  function renderCurrentlyFollowingInDrawer() {
     const list = $('manage-hashtags-list');
     const tags = state.followedHashtags || [];
+    if (!list) return;
     if (!tags.length) {
       list.innerHTML = '<div style="font-size:13px; color:var(--text-muted); padding: 8px 0;">You are not following any hashtags yet.</div>';
       return;
     }
 
-    // sort alphabetically
     const sorted = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
     list.innerHTML = sorted.map(t => `
       <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <div style="width:28px; height:28px; border-radius:6px; background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--accent); font-weight:bold; font-size:14px;">#</div>
-          <span style="font-weight:500; font-size:14px;">${escapeHTML(t.name)}</span>
+          <div style="width:28px; height:28px; border-radius:6px; background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--accent); font-weight:bold; font-size:13px;">#</div>
+          <span style="font-weight:500; font-size:13px;">${escapeHTML(t.name)}</span>
         </div>
         <button class="profile-follow-btn following outline" data-tag="${escapeHTML(t.name)}" data-following="true" style="padding:6px 12px; height:auto; min-width:80px; font-size:13px;">Unfollow</button>
       </div>
     `).join('');
 
-    // Attach event listeners for unfollow
     list.querySelectorAll('.profile-follow-btn').forEach(b => {
       b.addEventListener('click', async () => {
         const { handleHashtagFollowToggle } = await import('./profile.js');
         await handleHashtagFollowToggle(b);
-        // re-render list after toggle
-        renderCurrentlyFollowing();
+        renderCurrentlyFollowingInDrawer();
+        window.renderHashtagGrid();
       });
     });
   }
 
-  // Search autocomplete
-  searchInput.addEventListener('input', () => {
-    clearTimeout(manageHashtagDebounceTimer);
-    const q = searchInput.value.trim().replace(/^#/, '');
-    if (!q) {
-      $('manage-hashtag-search-results').innerHTML = '';
-      return;
-    }
-    manageHashtagDebounceTimer = setTimeout(() => {
-      fetchManageHashtags(q);
-    }, 300);
-  });
+  if (drawerSearchInput) {
+    drawerSearchInput.addEventListener('input', () => {
+      clearTimeout(manageHashtagDebounceTimer);
+      const q = drawerSearchInput.value.trim().replace(/^#/, '');
+      if (!q) {
+        $('manage-hashtag-search-results').innerHTML = '';
+        return;
+      }
+      manageHashtagDebounceTimer = setTimeout(() => {
+        fetchManageHashtagsInDrawer(q);
+      }, 300);
+    });
+  }
 
-  async function fetchManageHashtags(q) {
+  async function fetchManageHashtagsInDrawer(q) {
     if (manageHashtagActiveRequest) manageHashtagActiveRequest.abort();
     const controller = new AbortController();
     manageHashtagActiveRequest = controller;
@@ -1768,14 +1826,13 @@ function setupHashtagTab() {
       $('manage-hashtag-search-results').innerHTML = '<div class="spinner" style="margin: 10px auto;"></div>';
       const { apiGet } = await import('./api.js');
       const results = await apiGet(`/api/v2/search?q=${encodeURIComponent(q)}&type=hashtags&limit=5`, state.token, null, controller.signal);
-      const tags = results.hashtags || [];
-      renderSearchResults(tags);
+      renderSearchResultsInDrawer(results.hashtags || []);
     } catch (err) {
       if (err.name !== 'AbortError') console.warn('Hashtag search failed:', err);
     }
   }
 
-  function renderSearchResults(tags) {
+  function renderSearchResultsInDrawer(tags) {
     const list = $('manage-hashtag-search-results');
     if (!tags.length) {
       list.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:8px 0;">No matching hashtags found</div>';
@@ -1799,7 +1856,6 @@ function setupHashtagTab() {
       b.addEventListener('click', async () => {
         const { handleHashtagFollowToggle } = await import('./profile.js');
         await handleHashtagFollowToggle(b);
-        // Toggle the button style
         const isFollowing = b.dataset.following === 'true';
         if (isFollowing) {
           b.classList.add('following', 'outline');
@@ -1808,11 +1864,13 @@ function setupHashtagTab() {
           b.classList.remove('following', 'outline');
           b.textContent = 'Follow';
         }
-        renderCurrentlyFollowing(); // Update the lower list
+        renderCurrentlyFollowingInDrawer();
+        window.renderHashtagGrid();
       });
     });
   }
 }
+
 
 /* ══════════════════════════════════════════════════════════════════════
    INIT (called once from app.js)
@@ -1867,10 +1925,6 @@ export function initCompose() {
   $('compose-post-btn').addEventListener('click', () => doPost(''));
 
   // --- Sidebar compose ---
-  $('hashtag-filter-select').addEventListener('change', (e) => {
-    state.selectedHashtagFilter = e.target.value;
-    loadFeedTab();
-  });
   $('compose-textarea-sidebar').addEventListener('input', updateSidebarCharCount);
   $('compose-cw-input-sidebar').addEventListener('input', updateSidebarCharCount);
   $('compose-cw-btn-sidebar').addEventListener('click', () => {
