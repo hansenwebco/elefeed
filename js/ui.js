@@ -6,7 +6,7 @@
  * boot time from app.js via registerTabLoader() to avoid circular imports.
  */
 
-import { $, state } from './state.js';
+import { $, state, CLIENT_VERSION } from './state.js';
 
 /* ── Tab loader registry (avoids circular imports) ─────────────────── */
 
@@ -244,4 +244,24 @@ export function switchToTab(tab) {
   tabSwitchTimeout = setTimeout(() => {
     _tabLoaders[tab]?.();
   }, 100);
+}
+
+/* ── About Modal ───────────────────────────────────────────────────── */
+
+export function openAboutModal() {
+  $('about-modal').style.display = 'flex';
+}
+
+export function closeAboutModal() {
+  $('about-modal').style.display = 'none';
+}
+
+/** Set version strings from state.js into the DOM */
+export function initVersion() {
+  const v = `v${CLIENT_VERSION}`;
+  const sidebarEl = $('client-version');
+  if (sidebarEl) sidebarEl.textContent = v;
+  
+  const modalEls = document.querySelectorAll('.about-version-num');
+  modalEls.forEach(el => el.textContent = v);
 }

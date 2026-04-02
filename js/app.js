@@ -9,7 +9,7 @@ import { delay, updateURLParam, escapeHTML, renderCustomEmojis, formatNum } from
 import { apiGet, registerApp, exchangeCode } from './api.js';
 import {
   showScreen, showToast, showLoginError, clearLoginError,
-  updateTabLabel, closeAllTabDropdowns,
+  updateTabLabel, closeAllTabDropdowns, initVersion, openAboutModal,
 } from './ui.js';
 import { renderPost } from './render.js';
 import {
@@ -174,6 +174,7 @@ async function initApp(server, token, demo = false) {
   state.token = token;
   state.demoMode = demo;
   showScreen('app-screen');
+  initVersion();
 
   if (demo) {
     $('demo-notice').style.display = 'block';
@@ -796,6 +797,13 @@ document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item 
 });
 
 /* Feed Filter Settings */
+$('about-menu-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  openAboutModal();
+  $('profile-dropdown').classList.remove('show');
+  $('avatar-btn').classList.remove('active');
+});
+
 const feedFilterBtn = $('feed-filter-btn');
 const feedFilterDropdown = $('feed-filter-dropdown');
 
