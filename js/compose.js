@@ -399,30 +399,30 @@ window.handleQuoteInit = function (postId, acct) {
         textarea.innerText = (currentText ? currentText + '\n\n' : '') + url;
         textarea.dispatchEvent(new Event('input'));
       }
-        let contentHtml = status.content || '';
-        let temp = document.createElement('div');
-        temp.innerHTML = contentHtml;
-        let textContent = temp.innerText || '';
+      let contentHtml = status.content || '';
+      let temp = document.createElement('div');
+      temp.innerHTML = contentHtml;
+      let textContent = temp.innerText || '';
 
-        const avatarUrl = status.account && status.account.avatar ? status.account.avatar : '';
-        const displayName = status.account && status.account.display_name ? status.account.display_name : acct;
+      const avatarUrl = status.account && status.account.avatar ? status.account.avatar : '';
+      const displayName = status.account && status.account.display_name ? status.account.display_name : acct;
 
-        // Sanitize for basic XSS protection in preview
-        const sanText = textContent.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      // Sanitize for basic XSS protection in preview
+      const sanText = textContent.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-        // Detect attached media for preview
-        let mediaHtml = '';
-        if (status.media_attachments && status.media_attachments.length > 0) {
-          const m = status.media_attachments[0];
-          const purl = m.preview_url || m.url;
-          if (purl) {
-            let hideSensitive = true;
-            try { hideSensitive = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
-            const isSensitive = status.sensitive;
-            const startBlurred = isSensitive && hideSensitive;
-            const blurClass = startBlurred ? ' media-sensitive-blur' : '';
+      // Detect attached media for preview
+      let mediaHtml = '';
+      if (status.media_attachments && status.media_attachments.length > 0) {
+        const m = status.media_attachments[0];
+        const purl = m.preview_url || m.url;
+        if (purl) {
+          let hideSensitive = true;
+          try { hideSensitive = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
+          const isSensitive = status.sensitive;
+          const startBlurred = isSensitive && hideSensitive;
+          const blurClass = startBlurred ? ' media-sensitive-blur' : '';
 
-            const qPill = isSensitive ? `
+          const qPill = isSensitive ? `
               <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); window.toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
                 <div class="sp-card" style="padding:8px 12px; border-radius:10px;">
                   <span class="sp-card-title" style="font-size:12px;">Sensitive content</span>
@@ -432,21 +432,21 @@ window.handleQuoteInit = function (postId, acct) {
                 <span class="sp-revealed-label" style="font-size:10px;">hide</span>
               </button>` : '';
 
-            mediaHtml = `<div class="post-media" style="margin-top:6px; border-radius:4px; overflow:hidden; position:relative; background:var(--bg); border:1px solid var(--border); line-height:0;">
+          mediaHtml = `<div class="post-media" style="margin-top:6px; border-radius:4px; overflow:hidden; position:relative; background:var(--bg); border:1px solid var(--border); line-height:0;">
               <img src="${purl}" class="${blurClass}" style="width:100%; height:auto; max-height:300px; object-fit:contain; display:block;">
               ${m.type === 'video' || m.type === 'gifv' ? '<div style="position:absolute; bottom:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:9px; font-weight:700; padding:2px 4px; border-radius:3px;">VIDEO</div>' : ''}
               ${qPill}
             </div>`;
-          }
         }
+      }
 
-        const cwText = status.spoiler_text ? status.spoiler_text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Sensitive content';
-        const hasCW = (status.sensitive || (status.spoiler_text && status.spoiler_text.length > 0));
+      const cwText = status.spoiler_text ? status.spoiler_text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'Sensitive content';
+      const hasCW = (status.sensitive || (status.spoiler_text && status.spoiler_text.length > 0));
 
-        contentHtml = '';
-        if (hasCW) {
-          const cwBodyId = `compose-quote-cw${suffix}`;
-          contentHtml = `
+      contentHtml = '';
+      if (hasCW) {
+        const cwBodyId = `compose-quote-cw${suffix}`;
+        contentHtml = `
             <div class="cw-wrapper" style="margin:4px 0; background:rgba(255,107,107,0.04); border-left:2px solid var(--danger); padding:8px; border-radius:4px;">
               <div class="cw-summary" style="cursor:pointer; font-size:12px; display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation(); window.toggleCW('${cwBodyId}', this.querySelector('.cw-toggle'))">
                 <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cwText}</span>
@@ -459,16 +459,16 @@ window.handleQuoteInit = function (postId, acct) {
                 ${mediaHtml}
               </div>
             </div>`;
-        } else {
-          contentHtml = `
+      } else {
+        contentHtml = `
             <div style="opacity:0.9; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-family:var(--font-body); font-size:12.5px; line-height:1.4;">
               ${sanText}
             </div>
             ${mediaHtml}`;
-        }
+      }
 
-        if (quotePreview) {
-          quotePreview.innerHTML = `
+      if (quotePreview) {
+        quotePreview.innerHTML = `
             <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
                <img src="${avatarUrl}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; background:var(--surface); flex-shrink:0;">
                <div style="display:flex; flex-direction:column; line-height:1.2; overflow:hidden;">
@@ -478,14 +478,14 @@ window.handleQuoteInit = function (postId, acct) {
             </div>
             ${contentHtml}
           `;
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        if (quotePreview) {
-          quotePreview.innerHTML = '<div style="color:var(--danger);">Failed to load quote</div>';
-        }
-      });
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      if (quotePreview) {
+        quotePreview.innerHTML = '<div style="color:var(--danger);">Failed to load quote</div>';
+      }
+    });
 
   if (!isDesktop) openComposeDrawer();
   else placeCursorAtEnd(textarea);
@@ -588,8 +588,8 @@ window.handleEditInit = async function (postId) {
       const lang = statusResponse.language || 'browser';
       const sensitive = statusResponse.sensitive === true;
       const finalQuote = statusResponse.quote_approval_policy || statusResponse.quote_policy || 'public';
-      const qRaw = statusResponse.quoted_status || 
-                   (statusResponse.quote && (statusResponse.quote.quoted_status || statusResponse.quote));
+      const qRaw = statusResponse.quoted_status ||
+        (statusResponse.quote && (statusResponse.quote.quoted_status || statusResponse.quote));
       const qStatus = (qRaw && typeof qRaw === 'object' && qRaw.account) ? qRaw : null;
 
       if (qStatus && qStatus.id) {
@@ -853,9 +853,9 @@ window.handleDeleteRedraftInit = async function (postId) {
   const savedMediaDescs = [...(composeState[mediaDescsKey] || [])];
   const savedMediaIds = [...(composeState[mediaIdsKey] || [])];
   const savedCw = ($('compose-cw-input' + suffix) || {}).value || '';
-  
-  const qRaw = actualStatus.quoted_status || 
-               (actualStatus.quote && (actualStatus.quote.quoted_status || actualStatus.quote));
+
+  const qRaw = actualStatus.quoted_status ||
+    (actualStatus.quote && (actualStatus.quote.quoted_status || actualStatus.quote));
   const qStatus = (qRaw && typeof qRaw === 'object' && qRaw.account) ? qRaw : null;
 
   const savedQuoteId = qStatus && qStatus.id ? qStatus.id : null;
@@ -1534,10 +1534,10 @@ let manageHashtagDebounceTimer = null;
 let manageHashtagActiveRequest = null;
 
 /* ─── Hashtag Grid Rendering ─── */
-window.renderHashtagGrid = function() {
+window.renderHashtagGrid = function () {
   const grid = $('followed-hashtags-grid');
   if (!grid) return;
-  
+
   const tags = state.followedHashtags || [];
   const countLabel = $('followed-hashtags-count-label');
   if (countLabel) countLabel.textContent = `Followed Hashtags (${tags.length})`;
@@ -1551,11 +1551,11 @@ window.renderHashtagGrid = function() {
   `;
 
   const sorted = [...tags].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-  
+
   html += sorted.map(t => {
     const usage = t.history ? t.history.reduce((sum, day) => sum + parseInt(day.uses || 0), 0) : null;
-    const usageText = usage !== null ? `${usage} uses/wk` : 'Following';
-    
+    const usageText = usage !== null ? `${usage} uses/week` : 'Following';
+
     return `
       <div class="hashtag-card" onclick="window.selectHashtag('${escapeHTML(t.name.toLowerCase())}')">
         <div class="hashtag-card-name">${escapeHTML(t.name)}</div>
@@ -1567,12 +1567,12 @@ window.renderHashtagGrid = function() {
   grid.innerHTML = html;
 };
 
-window.selectHashtag = function(tag) {
+window.selectHashtag = function (tag) {
   state.selectedHashtagFilter = tag;
   loadFeedTab();
 };
 
-window.unfollowHashtag = async function(tagName, btn) {
+window.unfollowHashtag = async function (tagName, btn) {
   if (btn) btn.disabled = true;
   try {
     const res = await fetch(`https://${state.server}/api/v1/tags/${encodeURIComponent(tagName)}/unfollow`, {
@@ -1580,7 +1580,7 @@ window.unfollowHashtag = async function(tagName, btn) {
       headers: { 'Authorization': `Bearer ${state.token}` }
     });
     if (!res.ok) throw new Error('Unfollow failed');
-    
+
     state.followedHashtags = (state.followedHashtags || []).filter(t => t.name.toLowerCase() !== tagName.toLowerCase());
     window.renderHashtagGrid();
     showToast(`Unfollowed #${tagName}`);
@@ -1757,7 +1757,7 @@ function setupHashtagTab() {
   function closeManageHashtagsPanel() {
     drawer.classList.remove('open');
     if (backdrop) backdrop.classList.remove('open');
-    loadFeedTab(); 
+    loadFeedTab();
     window.renderHashtagGrid(); // Ensure landing grid is fresh
   }
 

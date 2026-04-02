@@ -877,7 +877,8 @@ export async function handleHashtagFollowToggle(btn) {
   btn.textContent = '...';
 
   try {
-    const endpoint = isFollowing ? `/api/v1/tags/${tag}/unfollow` : `/api/v1/tags/${tag}/follow`;
+    const safeTag = encodeURIComponent(tag);
+    const endpoint = isFollowing ? `/api/v1/tags/${safeTag}/unfollow` : `/api/v1/tags/${safeTag}/follow`;
     const res = await fetch(`https://${state.server}${endpoint}`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
@@ -893,11 +894,12 @@ export async function handleHashtagFollowToggle(btn) {
     btn.classList.toggle('following', nowFollowing);
 
     if (nowFollowing) {
+      if (!state.followedHashtags) state.followedHashtags = [];
       if (!state.followedHashtags.some(t => t.name.toLowerCase() === tag.toLowerCase())) {
         state.followedHashtags.push(tagInfo);
       }
     } else {
-      state.followedHashtags = state.followedHashtags.filter(t => t.name.toLowerCase() !== tag.toLowerCase());
+      state.followedHashtags = (state.followedHashtags || []).filter(t => t.name.toLowerCase() !== tag.toLowerCase());
     }
 
     showToast(nowFollowing ? `Following #${tag}` : `Unfollowed #${tag}`);

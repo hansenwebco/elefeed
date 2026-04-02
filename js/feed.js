@@ -20,11 +20,41 @@ export function getScrollTop() {
 }
 
 export function scrollContainerTo(top, behavior = 'smooth') {
-  const sc = getScrollContainer();
-  if (sc) {
-    sc.scrollTo({ top, behavior });
-  } else {
-    try { window.scrollTo({ top, behavior }); } catch (e) { window.scrollTo(0, top); }
+  // Reset the feed container if it exists
+  const feedCont = document.getElementById('feed-container');
+  if (feedCont) {
+    try {
+      feedCont.scrollTo({ top, behavior });
+    } catch (e) {
+      feedCont.scrollTop = top;
+    }
+  }
+
+  // Clear the window/document scroll
+  try {
+    document.documentElement.scrollTop = top;
+    document.body.scrollTop = top;
+    window.scrollTo({ top, behavior });
+  } catch (e) {
+    window.scrollTo(0, top);
+  }
+}
+
+// Special "Nuclear" scroll-to-top specifically FOR the hashtag management controls
+// This ignores containers and resets EVERY possible scroll layer to ensure 0.
+export function hashtagScrollToTop() {
+  const top = 0;
+  const behavior = 'instant';
+  
+  const feedCont = document.getElementById('feed-container');
+  if (feedCont) feedCont.scrollTop = top;
+
+  document.documentElement.scrollTop = top;
+  document.body.scrollTop = top;
+  try {
+    window.scrollTo({ top, behavior });
+  } catch (e) {
+    window.scrollTo(0, top);
   }
 }
 
@@ -340,10 +370,13 @@ export async function ensureHomeFeedLoaded() {
   if (!state.homeFeed) {
     const [posts, tags] = await Promise.all([
       apiGet('/api/v1/timelines/home?limit=40', state.token),
-      apiGet('/api/v1/followed_tags?limit=100', state.token).catch(() => [])
+      // Only fetch followed tags if we don't have them yet or they're empty
+      (state.followedHashtags && state.followedHashtags.length > 0)
+        ? Promise.resolve(state.followedHashtags)
+        : apiGet('/api/v1/followed_tags?limit=200', state.token).catch(() => [])
     ]);
 
-    state.followedHashtags = tags;
+    state.followedHashtags = tags || state.followedHashtags || [];
     const followedTagNames = new Set(tags.map(t => t.name.toLowerCase()));
 
     posts.forEach(p => {
@@ -369,32 +402,75 @@ async function loadHashtagsFeed() {
   const container = $('feed-posts');
   const gridView = $('hashtag-landing-grid-view');
   const activeHeader = $('hashtag-active-view-header');
-  const followRow = $('hashtag-follow-row');
   const wrapper = $('feed-content-wrapper');
 
   // 0. Ensure followed hashtags are loaded BEFORE checking UI statuses
+  // Only fetch if explicitly null or empty, AND if we haven't already marked it as loaded.
   if (state.token && (!state.followedHashtags || state.followedHashtags.length === 0)) {
     try {
-      state.followedHashtags = await apiGet('/api/v1/followed_tags?limit=100', state.token);
+      const fetchedTags = await apiGet('/api/v1/followed_tags?limit=200', state.token);
+      if (fetchedTags && Array.isArray(fetchedTags)) {
+        state.followedHashtags = fetchedTags;
+      }
     } catch (e) {
-      console.warn('Failed to fetch followed hashtags:', e);
+      console.warn('Failed to fetch followed hashtags in feed tab:', e);
       state.followedHashtags = state.followedHashtags || [];
     }
   }
 
   // 1. Determine if we are in "Landing" mode or "Feed" mode
   const isLanding = !state.selectedHashtagFilter || state.selectedHashtagFilter === 'landing';
+  const isSpecificTag = state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all' && state.selectedHashtagFilter !== 'landing';
+
+  const filterBar = $('hashtag-filter-bar');
+  if (filterBar) filterBar.style.display = 'block';
+
+  // Toggle consolidated follow button in the active pill
+  const followBtn = $('hashtag-header-follow-btn');
+  if (followBtn) {
+    if (isSpecificTag) {
+      followBtn.style.display = 'flex';
+      const tag = state.selectedHashtagFilter;
+      const isFollowed = (state.followedHashtags || []).some(t => t.name.toLowerCase() === tag.toLowerCase());
+      
+      const freshBtn = followBtn.cloneNode(true);
+      followBtn.replaceWith(freshBtn);
+      
+      // Set initial state matching profile.js requirements
+      freshBtn.dataset.tag = tag;
+      freshBtn.dataset.following = isFollowed ? 'true' : 'false';
+      freshBtn.classList.toggle('following', isFollowed);
+      // Initial text based on state (since we are removing ::after)
+      freshBtn.textContent = isFollowed ? 'Following' : 'Follow';
+
+      freshBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if (!state.token || state.demoMode) return;
+        
+        try {
+          const { handleHashtagFollowToggle } = await import('./profile.js');
+          await handleHashtagFollowToggle(freshBtn);
+          // Wait a beat for state to update, then reload if needed (UI already updated by handleHashtagFollowToggle)
+        } catch (err) {
+          console.error('Hashtag toggle failed:', err);
+        }
+      };
+    } else {
+      followBtn.style.display = 'none';
+    }
+  }
 
   if (isLanding) {
     updateURLParam('tag', null); // Clear tag from URL in landing mode
     if (wrapper) wrapper.style.display = 'none';
     if (activeHeader) activeHeader.style.display = 'none';
-    if (followRow) followRow.style.display = 'none';
     if (gridView) {
       gridView.style.display = 'block';
       // Signal to render the grid (defined in compose.js/hashtags.js)
       if (window.renderHashtagGrid) window.renderHashtagGrid();
     }
+    // Only scroll to top on hashtag landing - using the hashtag-specific reset
+    hashtagScrollToTop();
     return;
   }
 
@@ -409,21 +485,8 @@ async function loadHashtagsFeed() {
     if (titleEl) titleEl.textContent = state.selectedHashtagFilter;
   }
   container.innerHTML = '';
-
-  const followStripName = document.getElementById('hashtag-follow-strip-name');
-  const isSpecificTag = state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all';
-
-  if (followRow && followStripName && isSpecificTag) {
-    const isFollowed = state.followedHashtags && state.followedHashtags.some(t => t.name.toLowerCase() === state.selectedHashtagFilter.toLowerCase());
-    if (!isFollowed) {
-      followStripName.textContent = '#' + state.selectedHashtagFilter;
-      followRow.style.display = '';
-    } else {
-      followRow.style.display = 'none';
-    }
-  } else if (followRow) {
-    followRow.style.display = 'none';
-  }
+  // Only scroll to top on hashtag feed switch - using the hashtag-specific reset
+  hashtagScrollToTop();
 
   // DATA FETCHING
   let tagPostsPromise = null;
@@ -437,44 +500,6 @@ async function loadHashtagsFeed() {
     }
   } else if (!isSpecificTag) {
     await ensureHomeFeedLoaded();
-  }
-
-  const tags = state.followedHashtags || [];
-
-  // Handle follow in feed mode
-  if (!isLanding && followRow && followRow.style.display !== 'none') {
-    const selectedTag = state.selectedHashtagFilter;
-    const followStripBtn = document.getElementById('hashtag-follow-strip-btn');
-    if (followStripBtn) {
-      const newBtn = followStripBtn.cloneNode(true);
-      followStripBtn.replaceWith(newBtn);
-      newBtn.addEventListener('click', async () => {
-        newBtn.disabled = true;
-        newBtn.textContent = 'Following…';
-        try {
-          const res = await fetch(`https://${state.server}/api/v1/tags/${encodeURIComponent(selectedTag)}/follow`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
-            cache: 'no-store',
-          });
-          if (!res.ok) throw new Error('Failed to follow hashtag');
-          const tagInfo = await res.json();
-          if (!state.followedHashtags) state.followedHashtags = [];
-          if (!state.followedHashtags.some(t => t.name.toLowerCase() === selectedTag.toLowerCase())) {
-            state.followedHashtags.push(tagInfo);
-          }
-          const { showToast } = await import('./ui.js');
-          showToast(`Following #${selectedTag}`);
-          followRow.style.display = 'none';
-          loadHashtagsFeed();
-        } catch (err) {
-          newBtn.disabled = false;
-          newBtn.textContent = '+ Follow';
-          const { showToast } = await import('./ui.js');
-          showToast('Failed to follow: ' + err.message);
-        }
-      });
-    }
   }
 
   let display = [];
