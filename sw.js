@@ -10,7 +10,7 @@
  * NOTE: This file must live at the root of the origin so its default scope
  * is "/" and it can receive push events for all pages. If it were inside
  * /js/, the default scope would be "/js/" and push events would be silently
- * discarded on Android Chrome & Firefox.
+ * discarded on Android Chrome & Firefox. Fin
  */
 
 'use strict';
