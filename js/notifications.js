@@ -10,6 +10,59 @@ import { escapeHTML, relativeTime, updateURLParam } from './utils.js';
 import { openProfileDrawer } from './profile.js';
 import { openThreadDrawer } from './thread.js';
 
+/* ── Pagination / Observer ─────────────────────────────────────────── */
+let _notifLoadingMore = false;
+let _notifScrollObserver = null;
+
+function _attachNotifObserver() {
+  _disconnectNotifObserver();
+  const sentinel = $('notif-sentinel');
+  if (!sentinel) return;
+
+  _notifScrollObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !_notifLoadingMore) {
+      loadMoreNotifications();
+    }
+  }, {
+    root: $('notif-content'), // Using the scroll container as root
+    rootMargin: '200px',      // Start loading before we hit the bottom
+    threshold: 0,
+  });
+
+  _notifScrollObserver.observe(sentinel);
+}
+
+function _disconnectNotifObserver() {
+  if (_notifScrollObserver) {
+    _notifScrollObserver.disconnect();
+    _notifScrollObserver = null;
+  }
+}
+
+async function loadMoreNotifications() {
+  const filter = state.notifFilter;
+  const maxId = state.notifMaxId[filter];
+  if (_notifLoadingMore || !maxId) return;
+
+  _notifLoadingMore = true;
+  const sentinel = $('notif-sentinel');
+  if (sentinel) {
+    sentinel.innerHTML = '<div class="spinner" style="width:20px;height:20px;margin:20px auto;"></div>';
+  }
+
+  try {
+    await loadNotifications(true);
+  } finally {
+    _notifLoadingMore = false;
+    const currentMaxId = state.notifMaxId[filter];
+    // Only clear the spinner/sentinel if we still have a maxId (meaning we didn't reach the end).
+    // If currentMaxId is null, loadNotifications has already set the "end of notifications" message in the sentinel.
+    if (sentinel && currentMaxId) {
+      sentinel.innerHTML = '';
+    }
+  }
+}
+
 /* ── Service Worker messaging / Web Push ─────────────────────────────── */
 
 // Utility to convert VAPID key for PushManager
@@ -286,6 +339,7 @@ export function closeNotifDrawer() {
   document.body.style.overflow = '';
   state.notifDrawerOpen = false;
   updateURLParam('notifications', null);
+  _disconnectNotifObserver();
 }
 
 /* ── Badge ─────────────────────────────────────────────────────────── */
@@ -337,19 +391,32 @@ export async function loadNotifications(append = false) {
   }
 
   try {
-    let url = '/api/v1/notifications?limit=30';
-    if (filter !== 'all') url += `&types[]=${filter}`;
+    const params = new URLSearchParams({ limit: '40' });
+    if (filter !== 'all') params.append('types[]', filter);
     const maxId = state.notifMaxId[filter];
-    if (append && maxId) url += `&max_id=${maxId}`;
+    if (append && maxId) params.append('max_id', maxId);
 
+    const url = `/api/v1/notifications?${params.toString()}`;
     const notifs = await apiGet(url, state.token);
 
-    if (!append) setNotifCache(filter, notifs);
-    else setNotifCache(filter, [...cached, ...notifs]);
+    if (notifs.length > 0) {
+      state.notifMaxId[filter] = notifs[notifs.length - 1].id;
+    } else {
+      state.notifMaxId[filter] = null;
+      const sentinel = $('notif-sentinel');
+      if (sentinel) {
+        sentinel.innerHTML = '<div class="notif-end" style="text-align:center;padding:24px;font-size:11px;color:var(--text-dim);font-family:var(--font-mono);opacity:0.6;">— end of notifications —</div>';
+        _disconnectNotifObserver();
+      }
+    }
 
-    if (notifs.length > 0) state.notifMaxId[filter] = notifs[notifs.length - 1].id;
-
-    if (state.notifFilter === filter) renderNotifications();
+    if (!append) {
+      setNotifCache(filter, notifs);
+      if (state.notifFilter === filter) renderNotifications();
+    } else {
+      setNotifCache(filter, [...cached, ...notifs]);
+      if (state.notifFilter === filter) appendNotifications(notifs);
+    }
   } catch (err) {
     console.warn('Failed to load notifications:', err);
     if (!append && cached.length === 0) {
@@ -360,6 +427,7 @@ export async function loadNotifications(append = false) {
 
 /* ── Rendering ─────────────────────────────────────────────────────── */
 
+/** Repopulate the entire notification list from cache. */
 function renderNotifications() {
   const content = $('notif-content');
   const filter = state.notifFilter;
@@ -374,37 +442,68 @@ function renderNotifications() {
         </svg>
         <p style="font-size:13px;">No notifications${filter !== 'all' ? ' of this type' : ''}</p>
       </div>`;
+    _disconnectNotifObserver();
     return;
   }
 
   let html = items.map(n => renderNotifItem(n)).join('');
   const maxId = state.notifMaxId[filter];
-  if (items.length >= 30 && maxId) {
-    html += '<button class="notif-load-more" id="notif-load-more">Load more notifications</button>';
+
+  if (maxId) {
+    html += '<div id="notif-sentinel" class="notif-sentinel" style="min-height: 48px;"></div>';
+  } else {
+    html += '<div class="notif-end" style="text-align:center;padding:24px;font-size:11px;color:var(--text-dim);font-family:var(--font-mono);opacity:0.6;">— end of notifications —</div>';
   }
+
   content.innerHTML = html;
 
-  // Wire load-more
-  const loadMoreBtn = $('notif-load-more');
-  if (loadMoreBtn) {
-    loadMoreBtn.addEventListener('click', () => {
-      loadMoreBtn.textContent = 'Loading…';
-      loadMoreBtn.disabled = true;
-      loadNotifications(true);
-    });
+  if (maxId) {
+    _attachNotifObserver();
+  } else {
+    _disconnectNotifObserver();
   }
 
-  // Wire profile & status clicks
-  content.querySelectorAll('[data-notif-profile]').forEach(el => {
-    el.addEventListener('click', () => {
+  _wireEvents(content);
+}
+
+/** Append just the new batch of notifications to the existing DOM. */
+function appendNotifications(newItems) {
+  const content = $('notif-content');
+  const sentinel = $('notif-sentinel');
+  if (!content) return;
+
+  const html = newItems.map(n => renderNotifItem(n)).join('');
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+
+  const frag = document.createDocumentFragment();
+  while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+
+  if (sentinel) {
+    content.insertBefore(frag, sentinel);
+  } else {
+    content.appendChild(frag);
+  }
+
+  _wireEvents(content);
+}
+
+/** Wire up profile and status click handlers for a container. */
+function _wireEvents(container) {
+  container.querySelectorAll('[data-notif-profile]:not(.wired)').forEach(el => {
+    el.classList.add('wired');
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
       const id = el.dataset.notifProfile;
       const srv = el.dataset.notifServer || state.server;
       closeNotifDrawer();
       setTimeout(() => openProfileDrawer(id, srv), 180);
     });
   });
-  content.querySelectorAll('[data-notif-status]').forEach(el => {
-    el.addEventListener('click', () => {
+  container.querySelectorAll('[data-notif-status]:not(.wired)').forEach(el => {
+    el.classList.add('wired');
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
       const id = el.dataset.notifStatus;
       closeNotifDrawer();
       setTimeout(() => openThreadDrawer(id), 180);
@@ -486,7 +585,7 @@ export async function pollNotifications() {
   }
 
   try {
-    const notifs = await apiGet('/api/v1/notifications?limit=30', state.token);
+    const notifs = await apiGet('/api/v1/notifications?limit=40', state.token);
     state.notifications = notifs;
 
     if (notifs.length > 0) {
