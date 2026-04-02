@@ -21,7 +21,7 @@ export const REDIRECT_URI = (() => {
   return location.origin + path;
 })();
 
-export const SCOPES = 'read write write:statuses write:media write:favourites write:bookmarks push';
+export const SCOPES = 'read write follow write:statuses write:media write:favourites write:bookmarks push';
 
 /* ── localStorage wrapper ──────────────────────────────────────────── */
 

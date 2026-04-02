@@ -231,6 +231,7 @@
 .hashtag-feed-header {
   display: flex;
   align-items: center;
+  gap: 12px;
   animation: slideIn 0.2s ease;
   width: 100%;
 }
@@ -240,43 +241,87 @@
   align-items: center;
   background: var(--surface2);
   border: 1px solid var(--border);
-  padding: 4px 4px 4px 10px;
+  padding: 4px 4px 4px 12px;
   border-radius: 999px;
-  gap: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  gap: 0;
 }
 
 .hashtag-active-pill-symbol {
   color: var(--accent);
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: 800;
+  font-size: 14px;
   opacity: 0.9;
+  margin-right: 2px;
 }
 
 .hashtag-active-pill-name {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
   font-family: var(--font-body);
 }
 
+.hashtag-follow-btn-standalone {
+  flex-shrink: 0;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: all var(--trans);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 82px;
+  height: 30px;
+}
+
+.hashtag-follow-btn-standalone:hover {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.hashtag-follow-btn-standalone:active {
+  transform: scale(0.96);
+}
+
+.hashtag-follow-btn-standalone.following {
+  background: transparent;
+  border-color: var(--border2);
+  color: var(--text-muted);
+}
+
+.hashtag-follow-btn-standalone.following:hover {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: rgba(255, 107, 107, 0.4);
+  color: #ff8080;
+}
+
 .hashtag-active-pill-close {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: none;
-  background: var(--surface2);
+  background: transparent;
   color: var(--text-dim);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  opacity: 0.6;
+  margin-left: 4px;
 }
 
 .hashtag-active-pill-close:hover {
-  background: var(--surface);
-  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  opacity: 1;
 }
 
 #hashtag-landing-grid-view {
@@ -421,4 +466,35 @@
 .hashtag-follow-strip-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* --- Mobile Overrides (Disable Highlighting) --- */
+@media (max-width: 600px) {
+  .hashtag-view-container *,
+  .hashtag-header-box *,
+  .hashtag-active-pill,
+  .hashtag-active-pill *,
+  .hashtag-follow-btn-standalone,
+  .hashtag-manage-toggle,
+  .hashtag-card {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
+    -webkit-touch-callout: none !important;
+  }
+
+  /* Disable hover-based shifts/colors on mobile to prevent sticky states */
+  .hashtag-card:hover,
+  .hashtag-manage-toggle:hover,
+  .hashtag-follow-btn-standalone:hover,
+  .hashtag-active-pill-close:hover {
+    background: inherit !important;
+    transform: none !important;
+    box-shadow: none !important;
+    color: inherit !important;
+  }
+
+  .hashtag-card:active {
+    background: var(--surface2) !important;
+    opacity: 0.8;
+  }
 }

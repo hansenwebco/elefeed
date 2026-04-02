@@ -185,21 +185,35 @@ async function initApp(server, token, demo = false) {
   // Notify Android App if running in WebView
   saveMastodonToken(token, server);
 
-  // Load account info
-  try {
-    state.account = await apiGet('/api/v1/accounts/verify_credentials', token, server);
+  // Load core data in parallel for faster startup
+  const [accountRes, tagsRes, instanceV1Res] = await Promise.allSettled([
+    apiGet('/api/v1/accounts/verify_credentials', token, server),
+    apiGet('/api/v1/followed_tags?limit=200', token, server),
+    apiGet('/api/v1/instance', token, server)
+  ]);
+
+  if (accountRes.status === 'fulfilled') {
+    state.account = accountRes.value;
     const avatarEl = $('user-avatar');
-    avatarEl.onerror = () => { avatarEl.onerror = null; avatarEl.src = window._AVATAR_PLACEHOLDER; };
-    avatarEl.src = state.account.avatar_static || state.account.avatar;
-    avatarEl.alt = state.account.display_name || state.account.username;
+    if (avatarEl) {
+      avatarEl.onerror = () => { avatarEl.onerror = null; avatarEl.src = window._AVATAR_PLACEHOLDER; };
+      avatarEl.src = state.account.avatar_static || state.account.avatar;
+      avatarEl.alt = state.account.display_name || state.account.username;
+    }
     applyFollowingFeedFlag();
-  } catch (err) {
-    console.warn('Could not load account info:', err);
+  } else {
+    console.warn('Could not load account info:', accountRes.reason);
   }
 
-  // Load instance limit and check streaming support
-  try {
-    const v1Data = await apiGet('/api/v1/instance', token, server);
+  if (tagsRes.status === 'fulfilled') {
+    state.followedHashtags = tagsRes.value || [];
+  } else {
+    console.warn('Could not load followed hashtags at startup:', tagsRes.reason);
+    state.followedHashtags = state.followedHashtags || [];
+  }
+
+  if (instanceV1Res.status === 'fulfilled') {
+    const v1Data = instanceV1Res.value;
     state.serverVersion = v1Data.version;
 
     let chars = 500;
@@ -210,27 +224,21 @@ async function initApp(server, token, demo = false) {
       chars = v1Data.max_toot_chars;
     }
 
+    // Try V2 instance info for more details
     try {
       const v2Data = await apiGet('/api/v2/instance', token, server);
-      if (v2Data.version) {
-        state.serverVersion = v2Data.version;
-      }
-
-      if (v2Data.configuration?.statuses?.max_characters) {
-        chars = v2Data.configuration.statuses.max_characters;
-      }
-      if (v2Data.languages) {
-        languages = v2Data.languages;
-      }
-    } catch (err2) { }
+      if (v2Data.version) state.serverVersion = v2Data.version;
+      if (v2Data.configuration?.statuses?.max_characters) chars = v2Data.configuration.statuses.max_characters;
+      if (v2Data.languages) languages = v2Data.languages;
+    } catch (v2Err) { }
 
     state.maxTootChars = chars;
     state.instanceLanguages = languages;
     updateCharCount();
     updateSidebarCharCount();
     resetReplyState();
-  } catch (err) {
-    console.warn('Could not load instance info:', err);
+  } else {
+    console.warn('Could not load instance info:', instanceV1Res.reason);
   }
 
   // Probe public timelines — some servers intentionally disable local or federated timelines.
