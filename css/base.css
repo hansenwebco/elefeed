@@ -33,6 +33,9 @@
   --boost: #4ecdc4;
   --fav: #ffd93d;
 
+  --bg-rgb: 13, 13, 15;
+  --text-rgb: 232, 232, 240;
+
   /* Typography */
   --font-display: 'DM Serif Display', Georgia, serif;
   --font-body: 'DM Sans', sans-serif;
@@ -63,6 +66,9 @@
   --danger: #e03e3e;
   --boost: #249688;
   --fav: #e5a400;
+
+  --bg-rgb: 255, 255, 255;
+  --text-rgb: 29, 29, 36;
 }
 
 html {
