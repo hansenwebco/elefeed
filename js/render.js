@@ -387,17 +387,32 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
       <button class="post-stat post-bookmark-btn ${s.bookmarked ? 'bookmarked' : ''}" data-post-id="${s.id}" data-bookmarked="${s.bookmarked ? 'true' : 'false'}" title="${s.bookmarked ? 'Remove bookmark' : 'Bookmark'}">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
       </button>
-      ${showTranslate ? `
-      <div class="post-footer-separator"></div>
-      <button class="post-stat post-translate-btn" onclick="event.stopPropagation(); window.translatePost(this, '${s.id}', '${escapeHTML(postLang)}', '${escapeHTML(s.url || '')}')" data-original-label="Translate" title="Translate">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="m14 18h6"/></svg>
-        <span class="post-translate-btn-text">Translate</span>
-      </button>
-      ` : ''}
+
       <div style="margin-left:auto;display:flex;align-items:center;gap:2px;">
         ${analyticsHTML}
-        ${getVisibilityIcon(status.visibility, postLangName)}
-        <a href="${s.url}" target="_blank" rel="noopener" class="post-stat post-external-link" title="Open original"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>
+
+        <div style="position:relative;display:inline-flex;">
+          <button class="post-stat post-more-btn" data-post-id="${s.id}" title="More options" onclick="event.stopPropagation(); window.toggleFooterMoreMenu('${s.id}', this)" aria-haspopup="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <div class="boost-dropdown footer-more-dropdown" id="footer-more-menu-${s.id}" style="right:0; left:auto; top:auto; bottom:100%; margin-bottom:8px; min-width:210px; transform-origin: bottom right;">
+            <div class="boost-dropdown-item visibility-item" style="cursor:default; opacity:0.7; pointer-events:none;">
+               ${getVisibilityIcon(status.visibility, postLangName, true)}
+            </div>
+
+            <button class="boost-dropdown-item" onclick="event.stopPropagation(); window.open('${escapeHTML(s.url || '')}', '_blank', 'noopener'); document.querySelectorAll('.footer-more-dropdown').forEach(m => m.classList.remove('show'));">
+               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+               <span>View Original Post</span>
+            </button>
+
+            ${showTranslate ? `
+            <button class="boost-dropdown-item post-translate-btn" onclick="event.preventDefault(); event.stopPropagation(); window.translatePost(this, '${s.id}', '${escapeHTML(postLang || '')}', '${escapeHTML(s.url || '')}'); document.querySelectorAll('.footer-more-dropdown').forEach(m => m.classList.remove('show'));" data-original-label="Translate">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="m14 18h6"/></svg>
+              <span class="post-translate-btn-text">Translate</span>
+            </button>
+            ` : ''}
+          </div>
+        </div>
       </div>
     </div>`;
 
@@ -408,20 +423,26 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
    FEED POST
    ══════════════════════════════════════════════════════════════════════ */
 
-function getVisibilityIcon(visibility, langName) {
+function getVisibilityIcon(visibility, langName, forMenu = false) {
   const wrap = (title, svg) => {
     const fullTitle = langName ? `${title} - ${langName}` : title;
+    if (forMenu) {
+      // Let the parent's flex/gap handle it
+      return `
+        ${svg.replace(/width="11"/g, 'width="14"').replace(/height="11"/g, 'height="14"').replace(/stroke-width="2.5"/g, 'stroke-width="2"').replace(/viewBox/g, 'style="opacity:0.6;" viewBox')}
+        <span style="font-size:13px; font-weight:500;">${fullTitle}</span>`;
+    }
     return `<span class="post-stat post-vis-btn" title="${fullTitle}" style="cursor:default;">${svg}</span>`;
   };
   switch (visibility) {
     case 'public':
-      return wrap('Public', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`);
+      return wrap('Public', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`);
     case 'unlisted':
-      return wrap('Unlisted', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>`);
+      return wrap('Unlisted', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>`);
     case 'private':
-      return wrap('Followers only', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`);
+      return wrap('Followers only', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`);
     case 'direct':
-      return wrap('Direct', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>`);
+      return wrap('Direct', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>`);
     default:
       return '';
   }
@@ -1346,10 +1367,13 @@ window.playCardVideo = function playCardVideo(el, encodedHtml, aspectRatio) {
  * Falls back to a Google Translate link.
  */
 window.translatePost = async function translatePost(btn, statusId, postLang, postUrl) {
-  const article = btn.closest('article');
-  const contentEl = article ? article.querySelector('.post-content') : null;
+  const post = btn.closest('.post, .thread-post');
+  const contentEl = post ? post.querySelector('.post-content') : null;
   const label = btn.querySelector('.post-translate-btn-text');
-  if (!contentEl) return;
+  if (!contentEl) {
+    console.error('[Translate] Could not find post content container.');
+    return;
+  }
 
   const originalLabelText = btn.dataset.originalLabel || 'Translate';
 
@@ -1365,21 +1389,25 @@ window.translatePost = async function translatePost(btn, statusId, postLang, pos
   // Loading state
   label.textContent = '...';
   btn.disabled = true;
+  contentEl.classList.add('translating');
 
   let targetLang = 'browser';
   try { targetLang = localStorage.getItem('pref_translate_lang') || 'browser'; } catch { }
   if (targetLang === 'browser') targetLang = (navigator.language || 'en').split('-')[0];
 
   try {
+    const body = new URLSearchParams();
+    body.append('lang', targetLang);
+
     const res = await fetch(
       `https://${state.server}/api/v1/statuses/${encodeURIComponent(statusId)}/translate`,
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${state.token}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ lang: targetLang }),
+        body: body,
+        cache: 'no-store',
       }
     );
 
@@ -1400,18 +1428,19 @@ window.translatePost = async function translatePost(btn, statusId, postLang, pos
     btn.classList.add('active');
 
   } catch (err) {
-    // Fallback
-    if (postUrl) {
-      window.open(
-        `https://translate.google.com/translate?sl=${encodeURIComponent(postLang)}&tl=${encodeURIComponent(targetLang)}&u=${encodeURIComponent(postUrl)}`,
-        '_blank', 'noopener'
-      );
-      label.textContent = originalLabelText;
-      btn.disabled = false;
-    } else {
-      label.textContent = 'Error';
-      btn.disabled = true;
-    }
+    console.error('Translation failed:', err);
+    label.textContent = `${originalLabelText} (failed)`;
+    btn.disabled = false;
+    btn.classList.remove('active');
+    
+    // Reset to 'Translate' after a delay
+    setTimeout(() => {
+      if (label.textContent === `${originalLabelText} (failed)`) {
+        label.textContent = originalLabelText;
+      }
+    }, 4000);
+  } finally {
+    contentEl.classList.remove('translating');
   }
 };
 
@@ -1434,4 +1463,12 @@ window.toggleShowLessTags = function toggleShowLessTags(event, btn) {
   if (container) {
     container.classList.remove('post-tags--expanded');
   }
+};
+
+window.toggleFooterMoreMenu = function(postId, triggerBtn) {
+  document.querySelectorAll('.footer-more-dropdown').forEach(m => {
+    if (m.id !== `footer-more-menu-${postId}`) m.classList.remove('show');
+  });
+  const menu = triggerBtn.nextElementSibling;
+  if (menu) menu.classList.toggle('show');
 };

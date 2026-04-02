@@ -1964,7 +1964,7 @@ document.addEventListener('click', e => {
   }
 
   /* Post article click → open thread */
-  const INTERACTIVE = 'a, button, input, select, textarea, [data-profile-id], .post-footer, .cw-wrapper, .post-quote, .media-item, .boost-dropdown, video, .sensitive-overlay';
+  const INTERACTIVE = 'a, button, input, select, textarea, [data-profile-id], .post-footer, .cw-wrapper, .post-quote, .media-item, .boost-dropdown, .tab-dropdown-item, video, .sensitive-overlay';
   const postArticle = e.target.closest('article.post');
   if (postArticle && !e.target.closest(INTERACTIVE) && !e.target.closest('.thread-drawer, .thread-inline-panel')) {
     e.preventDefault();

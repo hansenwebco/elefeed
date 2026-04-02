@@ -1560,6 +1560,38 @@ body.hide-cards-enabled .post-card {
   display: flex;
 }
 
+/* Footer-specific more dropdown polish */
+.footer-more-dropdown {
+  backdrop-filter: blur(16px) saturate(1.8);
+  -webkit-backdrop-filter: blur(16px) saturate(1.8);
+  background: rgba(var(--bg-rgb), 0.88);
+  border: 1px solid var(--border);
+  padding: 6px;
+  gap: 2px;
+}
+
+.footer-more-dropdown .boost-dropdown-item {
+  border-radius: 6px;
+  gap: 12px;
+  opacity: 0.9;
+  padding: 10px 14px;
+}
+
+.footer-more-dropdown .boost-dropdown-item:hover {
+  background: var(--surface2);
+  opacity: 1;
+}
+
+.footer-more-dropdown .visibility-item {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
 .boost-dropdown-item {
   display: flex;
   align-items: center;
@@ -1648,6 +1680,49 @@ body.hide-cards-enabled .post-card {
 
 .post-bookmark-btn.bookmarked {
   color: var(--accent2);
+}
+
+/* ─── Translation Shimmer ─── */
+.post-content.translating {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+  user-select: none;
+  min-height: 40px;
+}
+
+.post-content.translating::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  background: var(--surface2);
+  border-radius: 4px;
+  opacity: 0.7;
+}
+
+.post-content.translating::after {
+  content: "";
+  position: absolute;
+  top: 28px;
+  left: 0;
+  width: 60%;
+  height: 12px;
+  background: var(--surface2);
+  border-radius: 4px;
+  opacity: 0.7;
+}
+
+@keyframes translate-skeleton-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.post-content.translating::before,
+.post-content.translating::after {
+  animation: translate-skeleton-pulse 1.2s infinite ease-in-out;
 }
 
 .post-bookmark-btn.bookmarked svg {

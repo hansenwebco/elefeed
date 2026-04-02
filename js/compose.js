@@ -358,7 +358,7 @@ window.toggleBoostMenu = function (postId, triggerBtn) {
 };
 
 window.addEventListener('click', () => {
-  document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
+  document.querySelectorAll('.boost-dropdown, .footer-more-dropdown').forEach(m => m.classList.remove('show'));
 });
 
 window.handleQuoteInit = function (postId, acct) {
@@ -540,7 +540,7 @@ window.togglePostMenu = function (postId, triggerBtn) {
 };
 
 window.addEventListener('click', () => {
-  document.querySelectorAll('.post-dropdown').forEach(m => m.classList.remove('show'));
+  document.querySelectorAll('.post-dropdown, .footer-more-dropdown').forEach(m => m.classList.remove('show'));
 });
 
 window.handleEditInit = async function (postId) {
