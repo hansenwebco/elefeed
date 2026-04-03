@@ -1577,6 +1577,20 @@ body.hide-cards-enabled .post-card {
   opacity: 1;
 }
 
+/* Quote */
+.post-quote-btn {
+  cursor: pointer;
+  transition: all var(--trans);
+}
+
+.post-quote-btn:hover {
+  color: var(--accent);
+}
+
+.post-quote-btn:hover svg {
+  opacity: 1;
+}
+
 /* Boost dropdown menu */
 .boost-dropdown {
   position: absolute;

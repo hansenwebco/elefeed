@@ -49,10 +49,10 @@ export function closeAllProfileMoreMenus() {
  * Also contains the bookmarks drawer and follow/notify/hashtag-follow toggles.
  */
 
-import { $, state } from './state.js';
+import { $, state, store } from './state.js';
 import { apiGet } from './api.js';
 import { applyCountsFromStatus } from './counts.js';
-import { showToast } from './ui.js';
+import { showToast, showConfirm } from './ui.js';
 import { renderPost } from './render.js';
 import {
   escapeHTML, sanitizeHTML, renderCustomEmojis, formatNum, updateURLParam,
@@ -651,8 +651,19 @@ export async function handleFollowToggle(btn) {
   const accountId = btn.dataset.accountId;
   const isFollowing = btn.dataset.following === 'true';
 
-  btn.disabled = true;
-  const originalText = btn.textContent;
+  if (isFollowing && store.get('pref_confirm_interactions') === 'true') {
+    const postEl = btn.closest('.feed-status, .post-item, .profile-drawer, .post-thread-item');
+    const name = postEl?.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this user';
+    const acct = postEl?.querySelector('.post-acct, .profile-acct')?.textContent || '';
+    const previewHTML = `<div style="font-weight:600;">Action on ${name}</div><div style="font-size:11px; opacity:0.7;">${acct}</div>`;
+
+    const confirmed = await showConfirm(`Are you sure you want to unfollow this user?`, `Confirm Unfollow`, previewHTML);
+    if (!confirmed) {
+      btn.disabled = false;
+      return;
+    }
+  }
+
   btn.textContent = '...';
 
   try {
@@ -742,8 +753,21 @@ export async function handleBlockToggle(btn) {
   const accountId = btn.dataset.accountId;
   const isBlocked = btn.dataset.blocked === 'true';
 
-  btn.disabled = true;
-  const originalText = btn.textContent;
+  if (store.get('pref_confirm_interactions') === 'true') {
+    const action = isBlocked ? 'unblock' : 'block';
+    // Find user context
+    const postEl = btn.closest('.feed-status, .post-item, .profile-drawer, .post-thread-item');
+    const name = postEl?.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this user';
+    const acct = postEl?.querySelector('.post-acct, .profile-acct')?.textContent || '';
+    const previewHTML = `<div style="font-weight:600;">Action on ${name}</div><div style="font-size:11px; opacity:0.7;">${acct}</div>`;
+
+    const confirmed = await showConfirm(`Are you sure you want to ${action} this user?`, `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`, previewHTML);
+    if (!confirmed) {
+      btn.disabled = false;
+      return;
+    }
+  }
+
   btn.textContent = '...';
 
   try {
@@ -807,8 +831,21 @@ export async function handleMuteToggle(btn) {
   const accountId = btn.dataset.accountId;
   const isMuted = btn.dataset.muted === 'true';
 
-  btn.disabled = true;
-  const originalText = btn.textContent;
+  if (store.get('pref_confirm_interactions') === 'true') {
+    const action = isMuted ? 'unmute' : 'mute';
+    // Find user context
+    const postEl = btn.closest('.feed-status, .post-item, .profile-drawer, .post-thread-item');
+    const name = postEl?.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this user';
+    const acct = postEl?.querySelector('.post-acct, .profile-acct')?.textContent || '';
+    const previewHTML = `<div style="font-weight:600;">Action on ${name}</div><div style="font-size:11px; opacity:0.7;">${acct}</div>`;
+
+    const confirmed = await showConfirm(`Are you sure you want to ${action} this user?`, `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`, previewHTML);
+    if (!confirmed) {
+      btn.disabled = false;
+      return;
+    }
+  }
+
   btn.textContent = '...';
 
   try {
@@ -914,6 +951,7 @@ export async function handleHashtagFollowToggle(btn) {
 /* ── Favorite / Bookmark toggles ───────────────────────────────────── */
 
 export async function handleFavoriteToggle(btn) {
+  window.handleFavoriteToggle = handleFavoriteToggle;
   if (btn.disabled) return;
   const postId = btn.dataset.postId;
   const isFavourited = btn.dataset.favourited === 'true';
@@ -924,6 +962,39 @@ export async function handleFavoriteToggle(btn) {
   const originalCount = countSpan ? parseInt(countSpan.textContent) || 0 : 0;
 
   btn.disabled = true;
+
+  if (store.get('pref_confirm_interactions') === 'true') {
+    const isActuallyFavourited = btn.dataset.favourited === 'true';
+    const action = isActuallyFavourited ? 'unfavorite' : 'favorite';
+    
+    // Find preview content by searching for the parent post container
+    const postEl = btn.closest('.feed-status, .post-item, .notification-item, .post-thread-item, article.post, .post') || 
+                   document.querySelector(`[data-id="${postId}"]`);
+    
+    // Capture content, media, and quotes for a high-fidelity preview
+    let previewHTML = '';
+    if (postEl) {
+      const content = postEl.querySelector('.post-content, .status-content')?.outerHTML || '';
+      const media = postEl.querySelector('.post-media, .post-media-grid')?.outerHTML || '';
+      const quote = postEl.querySelector('.post-quote')?.outerHTML || '';
+      const card = postEl.querySelector('.post-card')?.outerHTML || '';
+      
+      previewHTML = (content + media + quote + card).replace(/onclick="[^"]*"/g, ''); // Strip interactions
+    }
+    
+    // Fallback: if no text found, show author info
+    if (!previewHTML && postEl) {
+      const name = postEl.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this post';
+      const acct = postEl.querySelector('.post-acct, .profile-acct')?.textContent || '';
+      previewHTML = `<div style="font-weight:600;">Post by ${name}</div><div style="font-size:11px; opacity:0.7;">${acct}</div>`;
+    }
+
+    const confirmed = await showConfirm(`Are you sure you want to ${action} this post?`, `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`, previewHTML);
+    if (!confirmed) {
+      btn.disabled = false;
+      return;
+    }
+  }
 
   if (willBeFavourited) {
     btn.classList.add('favoriting');
@@ -1008,3 +1079,5 @@ export async function handleBookmarkToggle(btn) {
     btn.disabled = false;
   }
 }
+
+window.handleFavoriteToggle = handleFavoriteToggle;

@@ -36,7 +36,7 @@ function _log(...args) {
 
 /* -- State ----------------------------------------------------------------- */
 
-/** id -> { replies, boosts, favs, name } */
+/** id -> { replies, boosts, quotes, favs, name } */
 const knownCounts = new Map();
 
 let visibleIds       = new Set();
@@ -151,12 +151,14 @@ function _registerArticle(article) {
   if (!knownCounts.has(id)) {
     const replyEl = article.querySelector('.post-reply-count');
     const boostEl = article.querySelector('.boost-count');
+    const quoteEl = article.querySelector('.quote-count');
     const favEl   = article.querySelector('.post-fav-count');
     const nameEl  = article.querySelector('.post-display-name');
     const seed = {
       name:    nameEl  ? nameEl.textContent.trim() : id,
       replies: replyEl ? (parseInt(replyEl.textContent, 10) || 0) : 0,
       boosts:  boostEl ? (parseInt(boostEl.textContent, 10) || 0) : 0,
+      quotes:  quoteEl ? (parseInt(quoteEl.textContent, 10) || 0) : 0,
       favs:    favEl   ? (parseInt(favEl.textContent,   10) || 0) : 0,
     };
     knownCounts.set(id, seed);
@@ -201,9 +203,11 @@ function _applyUpdate(status, fromUserAction) {
   const id   = status.id;
   const prev = knownCounts.get(id);
 
+  const separate = store.get('pref_separate_boost_quote') === 'true';
   const next = {
     replies: status.replies_count    || 0,
-    boosts:  (status.reblogs_count   || 0) + (status.quotes_count || 0),
+    boosts:  separate ? (status.reblogs_count || 0) : ((status.reblogs_count || 0) + (status.quotes_count || status.quote_count || 0)),
+    quotes:  status.quotes_count || status.quote_count || 0,
     favs:    status.favourites_count || 0,
   };
 
@@ -215,14 +219,16 @@ function _applyUpdate(status, fromUserAction) {
 
   const rd = next.replies - prev.replies;
   const bd = next.boosts  - prev.boosts;
+  const qd = next.quotes  - prev.quotes;
   const fd = next.favs    - prev.favs;
 
-  if (rd === 0 && bd === 0 && fd === 0) return;
+  if (rd === 0 && bd === 0 && qd === 0 && fd === 0) return;
 
   const label = next.name || id;
   _log(LOG_PREFIX, `count change on "${label}":`,  
     rd !== 0 ? `replies ${prev.replies}->${next.replies}` : '',
     bd !== 0 ? `boosts ${prev.boosts}->${next.boosts}`    : '',
+    qd !== 0 ? `quotes ${prev.quotes}->${next.quotes}`    : '',
     fd !== 0 ? `favs ${prev.favs}->${next.favs}`          : '',
   );
 
@@ -237,11 +243,24 @@ function _applyUpdate(status, fromUserAction) {
       const el = article.querySelector('.boost-count');
       if (el) _animateCount(el, next.boosts, (!fromUserAction && bd > 0) ? 'boost' : null);
     }
-    if (fd !== 0) {
-      const el = article.querySelector('.post-fav-count');
-      if (el) _animateCount(el, next.favs, (!fromUserAction && fd > 0) ? 'fav' : null);
+    if (qd !== 0) {
+      const el = article.querySelector('.quote-count');
+      if (el) _animateCount(el, next.quotes, (!fromUserAction && qd > 0) ? 'quote' : null);
     }
-  });
+      if (fd !== 0) {
+        const el = article.querySelector('.post-fav-count');
+        if (el) _animateCount(el, next.favs, (!fromUserAction && fd > 0) ? 'fav' : null);
+      }
+
+      // Sync dropdown dropdown stats if they exist
+      const dropdown = article.querySelector('.boost-dropdown');
+      if (dropdown) {
+        const bStat = dropdown.querySelector('[data-action="boost"] .dropdown-stat-count');
+        if (bStat) bStat.textContent = status.reblogs_count || 0;
+        const qStat = dropdown.querySelector('[data-action="quote"] .dropdown-stat-count');
+        if (qStat) qStat.textContent = status.quotes_count || status.quote_count || 0;
+      }
+    });
 }
 
 /* -- Animation ------------------------------------------------------------- */
@@ -249,12 +268,14 @@ function _applyUpdate(status, fromUserAction) {
 const TYPE_CLASS = {
   reply: 'count-pop-reply',
   boost: 'count-pop-boost',
+  quote: 'count-pop-reply', // reuse reply animation for quote
   fav:   'count-pop-fav',
 };
 
 const SPARK_COLORS = {
   reply: ['#7b9cff', '#a0b8ff', '#5b80ff'],
   boost: ['var(--boost,#40c97e)', '#5de09b', '#2db36b'],
+  quote: ['var(--accent,#9b7fff)', '#c4b0ff', '#b499ff'],
   fav:   ['var(--fav,#ffb035)', '#ffd060', '#ff8c00'],
 };
 
