@@ -7,7 +7,7 @@
 
 import { $, state, composeState, store } from './state.js';
 import { apiGet } from './api.js';
-import { showToast } from './ui.js';
+import { showToast, showConfirm } from './ui.js';
 import { applyCountsFromStatus } from './counts.js';
 import { escapeHTML, renderCustomEmojis, placeCursorAtEnd } from './utils.js';
 import { loadFeedTab } from './feed.js';
@@ -361,7 +361,33 @@ window.addEventListener('click', () => {
   document.querySelectorAll('.boost-dropdown, .footer-more-dropdown').forEach(m => m.classList.remove('show'));
 });
 
-window.handleQuoteInit = function (postId, acct) {
+window.handleQuoteInit = async function (postId, acct, triggerEl) {
+  if (store.get('pref_confirm_interactions') === 'true') {
+    // Find preview content using the direct trigger element if available, fallback to query
+    const btn = triggerEl || document.querySelector(`.post-quote-btn[data-post-id="${postId}"]`) || 
+                document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`) ||
+                document.querySelector(`[data-id="${postId}"]`);
+    const postEl = btn ? btn.closest('.feed-status, .post-item, .notification-item, .post-thread-item, article.post, .post') : null;
+    
+    let previewHTML = '';
+    if (postEl) {
+      const content = postEl.querySelector('.post-content, .status-content')?.outerHTML || '';
+      const media = postEl.querySelector('.post-media, .post-media-grid')?.outerHTML || '';
+      const quote = postEl.querySelector('.post-quote')?.outerHTML || '';
+      const card = postEl.querySelector('.post-card')?.outerHTML || '';
+      previewHTML = (content + media + quote + card).replace(/onclick="[^"]*"/g, ''); // Strip interactions
+    }
+    
+    // Fallback: if no textFound, show author info
+    if (!previewHTML && postEl) {
+      const name = postEl.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this post';
+      const acctHandle = postEl.querySelector('.post-acct, .profile-acct')?.textContent || '';
+      previewHTML = `<div style="font-weight:600;">Post by ${name}</div><div style="font-size:11px; opacity:0.7;">${acctHandle}</div>`;
+    }
+
+    const confirmed = await showConfirm('Are you sure you want to quote this post?', 'Confirm Quote', previewHTML);
+    if (!confirmed) return;
+  }
   document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
   composeState.quoteId = postId;
   composeState.replyToAcct = acct;
@@ -388,20 +414,42 @@ window.handleQuoteInit = function (postId, acct) {
     quotePreview.style.display = 'block';
   }
 
-  // Fetch the status to get its URL and build a preview
-  apiGet(`/api/v1/statuses/${postId}`, state.token)
-    .then(status => {
-      // Append the URL to the textarea for backwards compatibility
-      const url = status.url || status.uri;
-      if (url && textarea && !textarea.innerText.includes(url)) {
-        const currentText = textarea.innerText.trim();
-        // Add a newline if there's already text, then the URL
-        textarea.innerText = (currentText ? currentText + '\n\n' : '') + url;
-        textarea.dispatchEvent(new Event('input'));
-      }
-      let contentHtml = status.content || '';
-      let temp = document.createElement('div');
-      temp.innerHTML = contentHtml;
+      // Fetch the status to get its URL and build a preview
+      apiGet(`/api/v1/statuses/${postId}`, state.token)
+        .then(status => {
+          // Append the URL to the textarea for backwards compatibility
+          const url = status.url || status.uri;
+          if (url && textarea) {
+            // contenteditable: use innerHTML/innerText
+            // Prepend a newline and set cursor at the top
+            textarea.innerHTML = `<div><br></div><div><br></div><div>${url}</div>`;
+            textarea.dispatchEvent(new Event('input'));
+            
+            // Move cursor to the very beginning using Selection/Range API
+            setTimeout(() => {
+              textarea.focus();
+              try {
+                const range = document.createRange();
+                const sel = window.getSelection();
+                range.setStart(textarea.childNodes[0], 0);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              } catch (e) {
+                // Fallback for empty or complex structures
+                const range = document.createRange();
+                const sel = window.getSelection();
+                range.selectNodeContents(textarea);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+              textarea.scrollTop = 0;
+            }, 100);
+          }
+          let contentHtml = status.content || '';
+          let temp = document.createElement('div');
+          temp.innerHTML = contentHtml;
       let textContent = temp.innerText || '';
 
       const avatarUrl = status.account && status.account.avatar ? status.account.avatar : '';
@@ -491,9 +539,38 @@ window.handleQuoteInit = function (postId, acct) {
   else placeCursorAtEnd(textarea);
 };
 
-window.handleBoostSubmit = async function (postId, isBoosted) {
+window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
   document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
   if (!state.token) { showToast('Please sign in to boost posts.'); return; }
+
+  const btnEl = triggerEl || document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`) || 
+                document.querySelector(`[data-id="${postId}"]`);
+
+  if (store.get('pref_confirm_interactions') === 'true') {
+    const actionLabel = isBoosted ? 'unboost' : 'boost';
+    
+    // Find preview content
+    const postEl = btnEl ? btnEl.closest('.feed-status, .post-item, .notification-item, .post-thread-item, article.post, .post') : null;
+    
+    let previewHTML = '';
+    if (postEl) {
+      const content = postEl.querySelector('.post-content, .status-content')?.outerHTML || '';
+      const media = postEl.querySelector('.post-media, .post-media-grid')?.outerHTML || '';
+      const quote = postEl.querySelector('.post-quote')?.outerHTML || '';
+      const card = postEl.querySelector('.post-card')?.outerHTML || '';
+      previewHTML = (content + media + quote + card).replace(/onclick="[^"]*"/g, ''); // Strip interactions
+    }
+
+    // Fallback: if no textFound, show author info
+    if (!previewHTML && postEl) {
+      const name = postEl.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this post';
+      const acctHandle = postEl.querySelector('.post-acct, .profile-acct')?.textContent || '';
+      previewHTML = `<div style="font-weight:600;">Post by ${name}</div><div style="font-size:11px; opacity:0.7;">${acctHandle}</div>`;
+    }
+
+    const confirmed = await showConfirm(`Are you sure you want to ${actionLabel} this post?`, `Confirm ${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)}`, previewHTML);
+    if (!confirmed) return;
+  }
 
   const endpoint = isBoosted
     ? `/api/v1/statuses/${postId}/unreblog`
@@ -514,7 +591,7 @@ window.handleBoostSubmit = async function (postId, isBoosted) {
       const countSpan = menuBtn.querySelector('.boost-count');
       const isNowBoosted = actualStatus.reblogged === true;
       menuBtn.classList.toggle('boosted', isNowBoosted);
-      if (countSpan) countSpan.textContent = (actualStatus.reblogs_count || 0) + (actualStatus.quotes_count || 0);
+      if (countSpan) countSpan.textContent = (actualStatus.reblogs_count || 0) + (actualStatus.quotes_count || actualStatus.quote_count || 0);
 
       const dropdownItems = menuBtn.nextElementSibling.querySelectorAll('.boost-dropdown-item');
       if (dropdownItems.length > 0) {
@@ -773,16 +850,27 @@ function showConfirmDialog({ title, message, confirmLabel, confirmClass = '' }) 
    DELETE  /  DELETE & REDRAFT
    ══════════════════════════════════════════════════════════════════════ */
 
-window.handleDeleteInit = async function (postId) {
+window.handleDeleteInit = async function (postId, triggerEl) {
   document.querySelectorAll('.post-dropdown').forEach(m => m.classList.remove('show'));
   if (!state.token) { showToast('Please sign in to delete posts.'); return; }
 
-  const confirmed = await showConfirmDialog({
-    title: 'Delete post?',
-    message: 'This will permanently delete the post. This action cannot be undone.',
-    confirmLabel: 'Delete',
-    confirmClass: 'confirm-dialog-btn--danger',
-  });
+  // Find preview content
+  const btn = triggerEl || document.querySelector(`[data-post-id="${postId}"]`) || 
+              document.querySelector(`[data-id="${postId}"]`);
+  const postEl = btn ? btn.closest('.feed-status, .post-item, .notification-item, .post-thread-item') : null;
+  let previewHTML = postEl ? postEl.querySelector('.post-content')?.innerHTML : '';
+  
+  if (!previewHTML && postEl) {
+    const name = postEl.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this post';
+    const acctHandle = postEl.querySelector('.post-acct, .profile-acct')?.textContent || '';
+    previewHTML = `<div style="font-weight:600;">Post by ${name}</div><div style="font-size:11px; opacity:0.7;">${acctHandle}</div>`;
+  }
+
+  const confirmed = await showConfirm(
+    'This will permanently delete the post. This action cannot be undone.',
+    'Delete post?',
+    previewHTML
+  );
   if (!confirmed) return;
 
   try {
@@ -808,7 +896,7 @@ window.handleDeleteInit = async function (postId) {
   }
 };
 
-window.handleDeleteRedraftInit = async function (postId) {
+window.handleDeleteRedraftInit = async function (postId, triggerEl) {
   document.querySelectorAll('.post-dropdown').forEach(m => m.classList.remove('show'));
   if (!state.token) { showToast('Please sign in to delete posts.'); return; }
 
@@ -832,12 +920,23 @@ window.handleDeleteRedraftInit = async function (postId) {
     return;
   }
 
-  const confirmed = await showConfirmDialog({
-    title: 'Delete & Redraft?',
-    message: 'The post will be deleted and its text placed in the compose box for you to edit and re-post.',
-    confirmLabel: 'Delete & Redraft',
-    confirmClass: 'confirm-dialog-btn--danger',
-  });
+  // Find preview content
+  const btn = triggerEl || document.querySelector(`[data-post-id="${postId}"]`) || 
+              document.querySelector(`[data-id="${postId}"]`);
+  const postEl = btn ? btn.closest('.feed-status, .post-item, .notification-item, .post-thread-item') : null;
+  let previewHTML = postEl ? postEl.querySelector('.post-content')?.innerHTML : '';
+  
+  if (!previewHTML && postEl) {
+    const name = postEl.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this post';
+    const acctHandle = postEl.querySelector('.post-acct, .profile-acct')?.textContent || '';
+    previewHTML = `<div style="font-weight:600;">Post by ${name}</div><div style="font-size:11px; opacity:0.7;">${acctHandle}</div>`;
+  }
+
+  const confirmed = await showConfirm(
+    'The post will be deleted and its text placed in the compose box for you to edit and re-post.',
+    'Delete & Redraft?',
+    previewHTML
+  );
   if (!confirmed) return;
 
   // Snapshot whatever is currently in the compose box BEFORE resetting

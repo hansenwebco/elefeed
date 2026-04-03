@@ -265,3 +265,61 @@ export function initVersion() {
   const modalEls = document.querySelectorAll('.about-version-num');
   modalEls.forEach(el => el.textContent = v);
 }
+
+/**
+ * Modern, premium confirmation modal.
+ * @param {string} msg - The message to display.
+ * @param {string} title - The title of the modal.
+ * @param {string} previewHTML - Optional post snippet / HTML to preview.
+ * @returns {Promise<boolean>} - Promise that resolves to true if confirmed, false otherwise.
+ */
+export function showConfirm(msg, title = 'Are you sure?', previewHTML = '') {
+  const modal = document.getElementById('confirm-modal');
+  if (!modal) return Promise.resolve(true); // Fallback
+
+  const titleEl = document.getElementById('confirm-modal-title');
+  const msgEl = document.getElementById('confirm-modal-msg');
+  const previewEl = document.getElementById('confirm-modal-preview');
+  const cancelBtn = document.getElementById('confirm-modal-cancel');
+  const confirmBtn = document.getElementById('confirm-modal-confirm');
+  const content = modal.querySelector('.modal-content');
+
+  titleEl.textContent = title;
+  msgEl.textContent = msg;
+
+  if (previewEl) {
+    if (previewHTML) {
+      previewEl.innerHTML = previewHTML;
+      previewEl.style.display = 'block';
+    } else {
+      previewEl.style.display = 'none';
+    }
+  }
+
+  modal.style.display = 'flex';
+  // Double-RAF ensures the browser has rendered the display: flex state before we animate opacity/scale
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      modal.style.opacity = '1';
+      if (content) {
+        content.style.transform = 'scale(1)';
+        content.style.opacity = '1';
+      }
+    });
+  });
+
+  return new Promise((resolve) => {
+    const cleanup = (result) => {
+      modal.style.opacity = '0';
+      if (content) content.style.transform = 'scale(0.92)';
+      setTimeout(() => {
+        modal.style.display = 'none';
+        resolve(result);
+      }, 200);
+    };
+
+    confirmBtn.onclick = (e) => { e.stopPropagation(); cleanup(true); };
+    cancelBtn.onclick = (e) => { e.stopPropagation(); cleanup(false); };
+    modal.onclick = (e) => { if (e.target === modal) cleanup(false); };
+  });
+}

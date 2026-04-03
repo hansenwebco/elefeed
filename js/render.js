@@ -11,7 +11,7 @@
  * rendered HTML are assigned to `window` at the bottom of this file.
  */
 
-import { state } from './state.js';
+import { state, store } from './state.js';
 import {
   escapeHTML, sanitizeHTML, processContent, extractTrailingHashtags,
   renderCustomEmojis, relativeTime,
@@ -116,11 +116,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   /* ── Quote ── */
   let quoteHTML = '';
   // Exhaustive search for quoted status across official and fork API formats
-  let qRaw = s.quoted_status || 
-             (s.quote && (s.quote.quoted_status || s.quote)) || 
-             status.quoted_status || 
-             (status.quote && (status.quote.quoted_status || status.quote));
-  
+  let qRaw = s.quoted_status ||
+    (s.quote && (s.quote.quoted_status || s.quote)) ||
+    status.quoted_status ||
+    (status.quote && (status.quote.quoted_status || status.quote));
+
   // Also check if the 's' itself is the quote (happens in some fork boost handling)
   if (qRaw && (qRaw.id === s.id || qRaw.id === status.id)) qRaw = null;
 
@@ -188,6 +188,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
           </div>
           ${qContentHTML}
           ${qMediaHTML}
+          <div class="quote-footer" style="display:flex; align-items:center; gap:10px; margin-top:8px; opacity:0.6; font-size:11px; font-family:var(--font-mono);">
+            <div style="display:flex; align-items:center; gap:3px;"><span style="font-weight:600;">${qStatus.replies_count || 0}</span> replies</div>
+            <div style="display:flex; align-items:center; gap:3px;"><span style="font-weight:600;">${(qStatus.reblogs_count || 0) + (qStatus.quotes_count || 0)}</span> boosts</div>
+            <div style="display:flex; align-items:center; gap:3px;"><span style="font-weight:600;">${qStatus.favourites_count || 0}</span> favs</div>
+          </div>
         </div>`;
   } else if (s.quote_id || s.quoted_status_id || (s.quote && typeof s.quote === 'string')) {
     // Fallback: we know it's a quote but we don't have the status object
@@ -289,7 +294,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
     if (postTags.length > 4) {
       const visible = postTags.slice(0, 4).join(' ');
       const extra = postTags.slice(4).join(' ');
-      
+
       // Extract plantext for the tooltip
       const extraText = postTags.slice(4).map(tagHTML => {
         const tmp = document.createElement('div');
@@ -358,44 +363,57 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   const footerHTML = `
     <div class="post-footer">
       <button class="post-stat post-reply-btn" data-post-id="${s.id}" data-account-acct="${s.account.acct}" title="Reply">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l5-5v3c8 0 13 4 13 11-3-4-7-5-13-5v3l-5-5z"></path></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
         <span class="post-reply-count">${s.replies_count || 0}</span>
       </button>
-      <div style="position:relative;display:inline-flex;">
+      <span style="position:relative;display:inline-flex;">
+        ${store.get('pref_separate_boost_quote') === 'true' ? `
+        <button class="post-stat post-boost-btn ${s.reblogged ? 'boosted' : ''}" data-post-id="${s.id}" title="${s.reblogged ? 'Undo Boost' : 'Boost'}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <span class="boost-count">${s.reblogs_count || 0}</span>
+        </button>
+        ${(!s.quote_approval || s.quote_approval.current_user !== 'denied') && s.visibility !== 'private' && s.visibility !== 'direct' ? `
+        <button class="post-stat post-quote-btn" data-post-id="${s.id}" data-acct="${escapeHTML(s.account.acct)}" title="Quote">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
+          <span class="quote-count">${s.quotes_count || s.quote_count || 0}</span>
+        </button>` : ''}
+        ` : `
         <button class="post-stat post-boost-btn ${s.reblogged ? 'boosted' : ''}" data-post-id="${s.id}" title="Boost or Quote">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--boost)"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          <span class="boost-count">${(s.reblogs_count || 0) + (s.quotes_count || 0)}</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <span class="boost-count">${(s.reblogs_count || 0) + (s.quotes_count || s.quote_count || 0)}</span>
         </button>
         <div class="boost-dropdown" id="boost-menu-${s.id}">
           <button class="boost-dropdown-item" data-action="boost" data-post-id="${s.id}" data-is-boosted="${s.reblogged ? 'true' : 'false'}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
             <span>${s.reblogged ? 'Undo Boost' : 'Boost'}</span>
             <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
           </button>
           ${(!s.quote_approval || s.quote_approval.current_user !== 'denied') && s.visibility !== 'private' && s.visibility !== 'direct' ? `
           <button class="boost-dropdown-item" data-action="quote" data-post-id="${s.id}" data-acct="${escapeHTML(s.account.acct)}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 11h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2zm10 0h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
             <span>Quote</span>
-            <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || 0}</span>
+            <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || s.quote_count || 0}</span>
           </button>` : ''}
         </div>
-      </div>
+        `}
+      </span>
       <button class="post-stat post-fav-btn ${s.favourited ? 'favourited' : ''}" data-post-id="${s.id}" data-favourited="${s.favourited ? 'true' : 'false'}" title="${s.favourited ? 'Unfavorite' : 'Favorite'}">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.favourited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" style="color:var(--fav)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         <span class="post-fav-count">${s.favourites_count || 0}</span>
       </button>
       <button class="post-stat post-bookmark-btn ${s.bookmarked ? 'bookmarked' : ''}" data-post-id="${s.id}" data-bookmarked="${s.bookmarked ? 'true' : 'false'}" title="${s.bookmarked ? 'Remove bookmark' : 'Bookmark'}">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
       </button>
 
       <div style="margin-left:auto;display:flex;align-items:center;gap:2px;">
         ${analyticsHTML}
 
         <div style="position:relative;display:inline-flex;">
-          <button class="post-stat post-more-btn" data-post-id="${s.id}" title="More options" onclick="event.stopPropagation(); window.toggleFooterMoreMenu('${s.id}', this)" aria-haspopup="true">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          <button class="post-stat post-more-btn" data-post-id="${s.id}" title="More options" onclick="event.stopPropagation(); window.toggleFooterMoreMenu('${s.id}', this)" aria-haspopup="true" style="position:relative; margin-right: -8px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            ${showTranslate ? '<span class="translate-indicator"><span>T</span></span>' : ''}
           </button>
-          <div class="boost-dropdown footer-more-dropdown" id="footer-more-menu-${s.id}" style="right:0; left:auto; top:auto; bottom:100%; margin-bottom:8px; min-width:210px; transform-origin: bottom right;">
+          <div class="boost-dropdown footer-more-dropdown" id="footer-more-menu-${s.id}" style="right:-2px; left:auto; top:auto; bottom:100%; margin-bottom:8px; min-width:210px; transform-origin: bottom right;">
             <div class="boost-dropdown-item visibility-item" style="cursor:default; opacity:0.7; pointer-events:none;">
                ${getVisibilityIcon(status.visibility, postLangName, true)}
             </div>
@@ -569,6 +587,7 @@ export function renderThreadPost(status, variant) {
         data-post-id="${s.id}"
         data-replies="${s.replies_count || 0}"
         data-boosts="${s.reblogs_count || 0}"
+        data-quotes="${s.quotes_count || s.quote_count || 0}"
         data-favs="${s.favourites_count || 0}"
         title="Post insights"
         style="color:var(--text-dim);">
@@ -581,14 +600,19 @@ export function renderThreadPost(status, variant) {
       <div class="boost-dropdown post-analytics-menu" id="post-analytics-menu-${s.id}"
         style="right:0;left:auto;top:auto;bottom:100%;margin-bottom:8px;min-width:188px;transform-origin:bottom right;">
         <button class="boost-dropdown-item post-analytics-item" data-action="replies" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l5-5v3c8 0 13 4 13 11-3-4-7-5-13-5v3l-5-5z"></path></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
           <span>Replies</span>
           <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.replies_count || 0}</span>
         </button>
         <button class="boost-dropdown-item post-analytics-item" data-action="boosts" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
           <span>Boosts</span>
           <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
+        </button>
+        <button class="boost-dropdown-item post-analytics-item" data-action="quotes" data-post-id="${s.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
+          <span>Quotes</span>
+          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || s.quote_count || 0}</span>
         </button>
         <button class="boost-dropdown-item post-analytics-item" data-action="favs" data-post-id="${s.id}">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
@@ -603,7 +627,7 @@ export function renderThreadPost(status, variant) {
   const boostLabelHTML = boostBy ? `
     <div class="boost-divider">
       <div class="boost-text">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
         <span class="post-display-name" data-profile-id="${boostBy.id}" data-profile-server="${profileServer}">${renderCustomEmojis(boostBy.display_name || boostBy.username, boostBy.emojis)}</span> <span style="opacity:0.8;text-transform:uppercase;font-size:11px;font-weight:500;">boosted</span>
       </div>
       <div class="boost-divider-line"></div>
@@ -983,7 +1007,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     const replyBtn = document.createElement('button');
     replyBtn.className = 'lightbox-action-btn lb-reply';
     replyBtn.title = 'Reply';
-    replyBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l5-5v3c8 0 13 4 13 11-3-4-7-5-13-5v3l-5-5z"></path></svg><span>${replyCount}</span>`;
+    replyBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg><span>${replyCount}</span>`;
     replyBtn.onclick = (e) => {
       e.stopPropagation();
       if (postReplyBtn) {
@@ -1005,7 +1029,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     const boostBtn = document.createElement('button');
     boostBtn.className = 'lightbox-action-btn lb-boost' + (isBoosted ? ' boosted' : '');
     boostBtn.title = 'Boost or Quote';
-    boostBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--boost)"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><span class="lb-boost-count">${boostCount}</span>`;
+    boostBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span class="lb-boost-count">${boostCount}</span>`;
 
     const boostDropdown = document.createElement('div');
     boostDropdown.className = 'lightbox-boost-dropdown';
@@ -1023,7 +1047,7 @@ window.expandMedia = function expandMedia(mediaItem) {
 
     const boostItem = document.createElement('button');
     boostItem.className = 'lightbox-boost-item';
-    boostItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><span class="lb-boost-label">${isBoosted ? 'Undo Boost' : 'Boost'}</span>`;
+    boostItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span class="lb-boost-label">${isBoosted ? 'Undo Boost' : 'Boost'}</span>`;
     boostItem.onclick = (e) => {
       e.stopPropagation();
       boostDropdown.classList.remove('show');
@@ -1035,7 +1059,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     if (canQuote) {
       const quoteItem = document.createElement('button');
       quoteItem.className = 'lightbox-boost-item';
-      quoteItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 11h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2zm10 0h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2z"/></svg><span>Quote</span>`;
+      quoteItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg><span>Quote</span>`;
       quoteItem.onclick = (e) => {
         e.stopPropagation();
         boostDropdown.classList.remove('show');
@@ -1080,16 +1104,15 @@ window.expandMedia = function expandMedia(mediaItem) {
         }
       }
       if (postFavBtn) {
-        // Article-backed: delegate so all existing API + UI logic runs
-        postFavBtn.click();
-        setTimeout(() => {
-          const pf = article.querySelector('.post-fav-btn');
-          if (!pf) return;
-          isFavourited = pf.classList.contains('favourited');
-          lbFavBtn.classList.toggle('favourited', isFavourited);
-          lbFavBtn.title = isFavourited ? 'Unfavorite' : 'Favorite';
-          if (lfc) lfc.textContent = pf.querySelector('.post-fav-count')?.textContent || '0';
-        }, 650);
+        // Use the global handler directly for better async control
+        window.handleFavoriteToggle(postFavBtn).then(() => {
+          setTimeout(() => {
+            isFavourited = postFavBtn.classList.contains('favourited');
+            lbFavBtn.classList.toggle('favourited', isFavourited);
+            lbFavBtn.title = isFavourited ? 'Unfavorite' : 'Favorite';
+            if (lfc) lfc.textContent = postFavBtn.querySelector('.post-fav-count')?.textContent || '0';
+          }, 300);
+        });
       } else {
         // Standalone: call API directly
         lbFavBtn.disabled = true;
@@ -1432,7 +1455,7 @@ window.translatePost = async function translatePost(btn, statusId, postLang, pos
     label.textContent = `${originalLabelText} (failed)`;
     btn.disabled = false;
     btn.classList.remove('active');
-    
+
     // Reset to 'Translate' after a delay
     setTimeout(() => {
       if (label.textContent === `${originalLabelText} (failed)`) {
@@ -1465,7 +1488,7 @@ window.toggleShowLessTags = function toggleShowLessTags(event, btn) {
   }
 };
 
-window.toggleFooterMoreMenu = function(postId, triggerBtn) {
+window.toggleFooterMoreMenu = function (postId, triggerBtn) {
   document.querySelectorAll('.footer-more-dropdown').forEach(m => {
     if (m.id !== `footer-more-menu-${postId}`) m.classList.remove('show');
   });

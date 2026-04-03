@@ -1012,9 +1012,19 @@ if (settingsMenuBtn) {
       autoOpenSensitiveToggle.checked = store.get('pref_auto_open_sensitive') === 'true';
     }
 
+    const separateBoostQuoteToggle = $('settings-separate-boost-quote-toggle');
+    if (separateBoostQuoteToggle) {
+      separateBoostQuoteToggle.checked = store.get('pref_separate_boost_quote') === 'true';
+    }
+
     const hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
     if (hideSensitiveMediaToggle) {
       hideSensitiveMediaToggle.checked = store.get('pref_hide_sensitive_media') === 'false'; // default: off (blur)
+    }
+
+    const confirmInteractionsToggle = $('settings-confirm-interactions-toggle');
+    if (confirmInteractionsToggle) {
+      confirmInteractionsToggle.checked = store.get('pref_confirm_interactions') === 'true';
     }
 
     const translateLangSel = $('settings-translate-lang');
@@ -1518,11 +1528,28 @@ if (_autoOpenSensitiveToggle) {
   });
 }
 
+// Separate boost/quote
+const _separateBoostQuoteToggle = $('settings-separate-boost-quote-toggle');
+if (_separateBoostQuoteToggle) {
+  _separateBoostQuoteToggle.addEventListener('change', () => {
+    store.set('pref_separate_boost_quote', _separateBoostQuoteToggle.checked ? 'true' : 'false');
+    showToast(_separateBoostQuoteToggle.checked ? 'Boost and Quote buttons separated' : 'Boost and Quote buttons combined');
+    loadFeedTab(false);
+  });
+}
+
 // Show sensitive media (default: off → blur by default)
 const _hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
 if (_hideSensitiveMediaToggle) {
   _hideSensitiveMediaToggle.addEventListener('change', () => {
     store.set('pref_hide_sensitive_media', _hideSensitiveMediaToggle.checked ? 'false' : 'true');
+  });
+}
+
+const _confirmInteractionsToggle = $('settings-confirm-interactions-toggle');
+if (_confirmInteractionsToggle) {
+  _confirmInteractionsToggle.addEventListener('change', () => {
+    store.set('pref_confirm_interactions', _confirmInteractionsToggle.checked ? 'true' : 'false');
   });
 }
 
@@ -1827,12 +1854,27 @@ document.addEventListener('click', e => {
     return;
   }
 
-  /* Boost button (opens dropdown) */
+  /* Boost button (opens dropdown or boosts directly) */
   const boostBtn = e.target.closest('.post-boost-btn');
   if (boostBtn) {
     e.preventDefault();
     e.stopPropagation();
-    window.toggleBoostMenu(boostBtn.dataset.postId, boostBtn);
+    if (store.get('pref_separate_boost_quote') === 'true') {
+      const postId = boostBtn.dataset.postId;
+      const isBoosted = boostBtn.classList.contains('boosted');
+      window.handleBoostSubmit(postId, isBoosted, boostBtn);
+    } else {
+      window.toggleBoostMenu(boostBtn.dataset.postId, boostBtn);
+    }
+    return;
+  }
+
+  /* Quote button (only when separate) */
+  const quoteBtn = e.target.closest('.post-quote-btn');
+  if (quoteBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    window.handleQuoteInit(quoteBtn.dataset.postId, quoteBtn.dataset.acct, quoteBtn);
     return;
   }
 
@@ -1855,15 +1897,15 @@ document.addEventListener('click', e => {
     e.preventDefault();
     e.stopPropagation();
     if (boostItem.dataset.action === 'boost') {
-      window.handleBoostSubmit(boostItem.dataset.postId, boostItem.dataset.isBoosted === 'true');
+      window.handleBoostSubmit(boostItem.dataset.postId, boostItem.dataset.isBoosted === 'true', boostItem);
     } else if (boostItem.dataset.action === 'quote') {
-      window.handleQuoteInit(boostItem.dataset.postId, boostItem.dataset.acct);
+      window.handleQuoteInit(boostItem.dataset.postId, boostItem.dataset.acct, boostItem);
     } else if (boostItem.dataset.action === 'edit') {
       window.handleEditInit(boostItem.dataset.postId);
     } else if (boostItem.dataset.action === 'delete') {
-      window.handleDeleteInit(boostItem.dataset.postId);
+      window.handleDeleteInit(boostItem.dataset.postId, boostItem);
     } else if (boostItem.dataset.action === 'delete-redraft') {
-      window.handleDeleteRedraftInit(boostItem.dataset.postId);
+      window.handleDeleteRedraftInit(boostItem.dataset.postId, boostItem);
     }
     return;
   }
