@@ -116,11 +116,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   /* ── Quote ── */
   let quoteHTML = '';
   // Exhaustive search for quoted status across official and fork API formats
-  let qRaw = s.quoted_status || 
-             (s.quote && (s.quote.quoted_status || s.quote)) || 
-             status.quoted_status || 
-             (status.quote && (status.quote.quoted_status || status.quote));
-  
+  let qRaw = s.quoted_status ||
+    (s.quote && (s.quote.quoted_status || s.quote)) ||
+    status.quoted_status ||
+    (status.quote && (status.quote.quoted_status || status.quote));
+
   // Also check if the 's' itself is the quote (happens in some fork boost handling)
   if (qRaw && (qRaw.id === s.id || qRaw.id === status.id)) qRaw = null;
 
@@ -289,7 +289,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
     if (postTags.length > 4) {
       const visible = postTags.slice(0, 4).join(' ');
       const extra = postTags.slice(4).join(' ');
-      
+
       // Extract plantext for the tooltip
       const extraText = postTags.slice(4).map(tagHTML => {
         const tmp = document.createElement('div');
@@ -392,10 +392,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
         ${analyticsHTML}
 
         <div style="position:relative;display:inline-flex;">
-          <button class="post-stat post-more-btn" data-post-id="${s.id}" title="More options" onclick="event.stopPropagation(); window.toggleFooterMoreMenu('${s.id}', this)" aria-haspopup="true">
+          <button class="post-stat post-more-btn" data-post-id="${s.id}" title="More options" onclick="event.stopPropagation(); window.toggleFooterMoreMenu('${s.id}', this)" aria-haspopup="true" style="position:relative; margin-right: -8px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            ${showTranslate ? '<span class="translate-indicator"><span>T</span></span>' : ''}
           </button>
-          <div class="boost-dropdown footer-more-dropdown" id="footer-more-menu-${s.id}" style="right:0; left:auto; top:auto; bottom:100%; margin-bottom:8px; min-width:210px; transform-origin: bottom right;">
+          <div class="boost-dropdown footer-more-dropdown" id="footer-more-menu-${s.id}" style="right:-2px; left:auto; top:auto; bottom:100%; margin-bottom:8px; min-width:210px; transform-origin: bottom right;">
             <div class="boost-dropdown-item visibility-item" style="cursor:default; opacity:0.7; pointer-events:none;">
                ${getVisibilityIcon(status.visibility, postLangName, true)}
             </div>
@@ -1432,7 +1433,7 @@ window.translatePost = async function translatePost(btn, statusId, postLang, pos
     label.textContent = `${originalLabelText} (failed)`;
     btn.disabled = false;
     btn.classList.remove('active');
-    
+
     // Reset to 'Translate' after a delay
     setTimeout(() => {
       if (label.textContent === `${originalLabelText} (failed)`) {
@@ -1465,7 +1466,7 @@ window.toggleShowLessTags = function toggleShowLessTags(event, btn) {
   }
 };
 
-window.toggleFooterMoreMenu = function(postId, triggerBtn) {
+window.toggleFooterMoreMenu = function (postId, triggerBtn) {
   document.querySelectorAll('.footer-more-dropdown').forEach(m => {
     if (m.id !== `footer-more-menu-${postId}`) m.classList.remove('show');
   });
