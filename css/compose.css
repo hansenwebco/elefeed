@@ -470,17 +470,24 @@
 .compose-post-btn {
   background: var(--accent);
   border: none;
-  border-radius: 6px;
-  padding: 8px 24px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: 20px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  height: 28px;
   color: var(--bg);
   cursor: pointer;
-  transition: all var(--trans);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 .compose-post-btn:hover:not(:disabled) {
   background: var(--accent2);
+  transform: translateY(-1px);
 }
 
 .compose-post-btn:disabled {
