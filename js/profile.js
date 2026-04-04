@@ -143,7 +143,7 @@ async function loadProfileTab(tabName, panel) {
   const tabState = profilePagination[tabName];
   let url;
   if (tabName === 'replies') {
-    url = `/api/v1/accounts/${accountId}/statuses?limit=20`;
+    url = `/api/v1/accounts/${accountId}/statuses?limit=20&exclude_reblogs=true`;
   } else if (tabName === 'media') {
     url = `/api/v1/accounts/${accountId}/statuses?limit=20&only_media=true`;
   } else return;
@@ -190,6 +190,7 @@ export async function loadMoreProfilePosts(btn) {
     const { accountId, server } = profilePagination;
     let url = `/api/v1/accounts/${accountId}/statuses?limit=20&max_id=${tabState.maxId}`;
     if (tabName === 'posts') url += '&exclude_replies=true';
+    if (tabName === 'replies') url += '&exclude_reblogs=true';
     if (tabName === 'media') url += '&only_media=true';
 
     const newPosts = await apiGet(url, state.token, server);
