@@ -301,18 +301,18 @@
     <!-- Compose Sidebar -->
     <aside class="compose-sidebar">
       <div class="compose-sidebar-body" style="display:flex; flex-direction:column; overflow:hidden;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:0; border-bottom:none;">
-          <button id="compose-lang-btn-sidebar" onclick="window.openVisibilityModal('-sidebar')" title="Change post language" style="border:none; border-radius:20px; background:var(--surface); border:1px solid var(--border); padding:4px 10px; font-size:12px; font-weight:700; color:var(--text-dim); font-family:var(--font-mono); cursor:pointer; display:flex; gap:6px; align-items:center; transition:all 0.2s;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              <line x1="2" y1="12" x2="22" y2="12" />
-            </svg>
-            <span id="compose-lang-text-sidebar">EN</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <button class="hashtag-filter-select compose-visibility-btn" id="compose-visibility-btn-sidebar" data-visibility="public" data-quote="public" onclick="window.openVisibilityModal('-sidebar')">
+            <span id="compose-visibility-icon-sidebar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg></span>
+            <span id="compose-visibility-text-sidebar">Public</span>
+            <span id="compose-lang-text-sidebar" class="lang-tag">EN</span>
           </button>
           <div style="display:flex; align-items:center; gap:14px;">
             <span class="compose-char-count" id="compose-char-count-sidebar" style="font-size:14px; font-family:var(--font-mono); font-variant-numeric:tabular-nums; color:var(--text-dim);">500</span>
-            <button class="compose-post-btn" id="compose-post-btn-sidebar" style="padding:7px 20px; font-size:14px; font-weight:600; border-radius:20px; letter-spacing:0.3px;">Post</button>
           </div>
         </div>
 
@@ -380,14 +380,7 @@
             <input type="file" id="compose-media-input-sidebar" accept="image/*,video/*" multiple style="display:none;" />
           </div>
           <div class="compose-toolbar-right" style="display:flex; gap:8px; align-items:center; margin-left:auto;">
-            <button class="hashtag-filter-select compose-visibility-btn" id="compose-visibility-btn-sidebar" data-visibility="public" data-quote="public" onclick="window.openVisibilityModal('-sidebar')">
-              <span id="compose-visibility-icon-sidebar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                </svg></span>
-              <span id="compose-visibility-text-sidebar">Public</span>
-            </button>
+            <button class="compose-post-btn" id="compose-post-btn-sidebar">Post</button>
           </div>
         </div>
       </div>
@@ -895,17 +888,17 @@
             </button>
             <span style="font-weight:600; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;" id="compose-header-title">New message</span>
           </div>
-          <div style="display:flex; align-items:center; gap:12px; z-index:2; flex-shrink:0;">
-            <button id="compose-lang-btn" onclick="window.openVisibilityModal('')" title="Change post language" style="border:none; border-radius:20px; background:var(--surface2); border:1px solid var(--border); padding:4px 10px; font-size:12px; font-weight:700; color:var(--text-dim); font-family:var(--font-mono); cursor:pointer; display:flex; gap:6px; align-items:center; transition:all 0.2s;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-              </svg>
-              <span id="compose-lang-text">EN</span>
+          <div style="display:flex; align-items:center; gap:8px; z-index:2; flex-shrink:0;">
+            <button class="hashtag-filter-select compose-visibility-btn" id="compose-visibility-btn" data-visibility="public" data-quote="public" onclick="window.openVisibilityModal('')">
+              <span id="compose-visibility-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg></span>
+              <span id="compose-visibility-text">Public</span>
+              <span id="compose-lang-text" class="lang-tag">EN</span>
             </button>
             <span class="compose-char-count" id="compose-char-count" style="font-size:14px; font-family:var(--font-mono); font-variant-numeric:tabular-nums; color:var(--text-dim);">500</span>
-            <button class="compose-post-btn" id="compose-post-btn" style="padding:7px 20px; font-size:14px; font-weight:600; border-radius:20px; letter-spacing:0.3px;">Post</button>
           </div>
         </div>
 
@@ -968,14 +961,7 @@
               <input type="file" id="compose-media-input" accept="image/*,video/*" multiple style="display:none;" />
             </div>
             <div class="compose-toolbar-right" style="display:flex; gap:8px; align-items:center; margin-left:auto;">
-              <button class="hashtag-filter-select compose-visibility-btn" id="compose-visibility-btn" data-visibility="public" data-quote="public" onclick="window.openVisibilityModal('')">
-                <span id="compose-visibility-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="2" y1="12" x2="22" y2="12" />
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  </svg></span>
-                <span id="compose-visibility-text">Public</span>
-              </button>
+              <button class="compose-post-btn" id="compose-post-btn">Post</button>
             </div>
           </div>
         </div>

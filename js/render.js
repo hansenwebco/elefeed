@@ -130,19 +130,20 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   if (qStatus) {
     let autoOpenSensitive = false;
     try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
-    const qHasCW = !autoOpenSensitive && ((qStatus.spoiler_text && qStatus.spoiler_text.length > 0) || qStatus.sensitive);
+    const qHasCW = (qStatus.spoiler_text && qStatus.spoiler_text.length > 0);
     const qCwText = qStatus.spoiler_text ? escapeHTML(qStatus.spoiler_text) : 'Sensitive content';
     const qCwId = `qcw-${idPrefix}${qStatus.id}-${status.id}`;
+    const qIsExpanded = autoOpenSensitive || !qHasCW;
 
     let qContentHTML = '';
     if (qHasCW) {
       qContentHTML = `
           <div class="cw-wrapper" style="margin:4px 0 0;">
             <div class="cw-summary" style="cursor:pointer; font-size:12px;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this.querySelector('.cw-toggle'))">
-              <span>${qCwText}</span>
-              <button class="cw-toggle" style="padding:3px 8px; font-size:11px;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this)">show</button>
+              <span>CW: ${qCwText}</span>
+              <button class="cw-toggle" style="padding:3px 8px; font-size:11px;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this)">${qIsExpanded ? 'hide' : 'show'}</button>
             </div>
-            <div class="cw-body" id="${qCwId}">
+            <div class="cw-body${qIsExpanded ? ' expanded' : ''}" id="${qCwId}">
               <div class="post-content" style="font-size:12.5px; opacity:0.9;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>
             </div>
           </div>`;
@@ -281,9 +282,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   /* ── Content warning wrapper ── */
   let autoOpenSensitive = false;
   try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
-  const hasCW = !autoOpenSensitive && ((s.spoiler_text && s.spoiler_text.length > 0) || s.sensitive);
-  const cwText = s.spoiler_text ? escapeHTML(s.spoiler_text) : 'Sensitive content';
+  
+  const hasSpoiler = s.spoiler_text && s.spoiler_text.length > 0;
+  const cwText = hasSpoiler ? escapeHTML(s.spoiler_text) : 'Sensitive content';
   const cwId = `cw-${idPrefix}${status.id}`;
+  const isExpanded = autoOpenSensitive;
   const { content: rawContent, tags: postTags } = extractTrailingHashtags(
     sanitizeHTML(s.content, { mentions: s.mentions, server: state.server })
   );
@@ -327,14 +330,14 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   };
 
   let contentHTML = '';
-  if (hasCW) {
+  if (hasSpoiler) {
     contentHTML = `
       <div class="cw-wrapper">
         <div class="cw-summary" style="cursor:pointer;" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this.querySelector('.cw-toggle'))">
-          <span>${cwText}</span>
-          <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this)">show</button>
+          <span>CW: ${cwText}</span>
+          <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this)">${isExpanded ? 'hide' : 'show'}</button>
         </div>
-        <div class="cw-body" id="${cwId}">
+        <div class="cw-body${isExpanded ? ' expanded' : ''}" id="${cwId}">
           ${wrapPostContent(postBody)}
           ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}${tagLineHTML}
         </div>
@@ -368,32 +371,32 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
       </button>
       <span style="position:relative;display:inline-flex;">
         ${store.get('pref_separate_boost_quote') === 'true' ? `
-        <button class="post-stat post-boost-btn ${s.reblogged ? 'boosted' : ''}" data-post-id="${s.id}" title="${s.reblogged ? 'Undo Boost' : 'Boost'}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
-          <span class="boost-count">${s.reblogs_count || 0}</span>
-        </button>
         ${(!s.quote_approval || s.quote_approval.current_user !== 'denied') && s.visibility !== 'private' && s.visibility !== 'direct' ? `
         <button class="post-stat post-quote-btn" data-post-id="${s.id}" data-acct="${escapeHTML(s.account.acct)}" title="Quote">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
           <span class="quote-count">${s.quotes_count || s.quote_count || 0}</span>
         </button>` : ''}
+        <button class="post-stat post-boost-btn ${s.reblogged ? 'boosted' : ''}" data-post-id="${s.id}" title="${s.reblogged ? 'Undo Boost' : 'Boost'}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <span class="boost-count">${s.reblogs_count || 0}</span>
+        </button>
         ` : `
         <button class="post-stat post-boost-btn ${s.reblogged ? 'boosted' : ''}" data-post-id="${s.id}" title="Boost or Quote">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
           <span class="boost-count">${(s.reblogs_count || 0) + (s.quotes_count || s.quote_count || 0)}</span>
         </button>
         <div class="boost-dropdown" id="boost-menu-${s.id}">
-          <button class="boost-dropdown-item" data-action="boost" data-post-id="${s.id}" data-is-boosted="${s.reblogged ? 'true' : 'false'}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
-            <span>${s.reblogged ? 'Undo Boost' : 'Boost'}</span>
-            <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
-          </button>
           ${(!s.quote_approval || s.quote_approval.current_user !== 'denied') && s.visibility !== 'private' && s.visibility !== 'direct' ? `
           <button class="boost-dropdown-item" data-action="quote" data-post-id="${s.id}" data-acct="${escapeHTML(s.account.acct)}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
             <span>Quote</span>
             <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || s.quote_count || 0}</span>
           </button>` : ''}
+          <button class="boost-dropdown-item" data-action="boost" data-post-id="${s.id}" data-is-boosted="${s.reblogged ? 'true' : 'false'}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+            <span>${s.reblogged ? 'Undo Boost' : 'Boost'}</span>
+            <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
+          </button>
         </div>
         `}
       </span>
@@ -448,7 +451,7 @@ function getVisibilityIcon(visibility, langName, forMenu = false) {
       // Let the parent's flex/gap handle it
       return `
         ${svg.replace(/width="11"/g, 'width="14"').replace(/height="11"/g, 'height="14"').replace(/stroke-width="2.5"/g, 'stroke-width="2"').replace(/viewBox/g, 'style="opacity:0.6;" viewBox')}
-        <span style="font-size:13px; font-weight:500;">${fullTitle}</span>`;
+        <span class="vis-label-text">${fullTitle}</span>`;
     }
     return `<span class="post-stat post-vis-btn" title="${fullTitle}" style="cursor:default;">${svg}</span>`;
   };
@@ -604,15 +607,15 @@ export function renderThreadPost(status, variant) {
           <span>Replies</span>
           <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.replies_count || 0}</span>
         </button>
-        <button class="boost-dropdown-item post-analytics-item" data-action="boosts" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
-          <span>Boosts</span>
-          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
-        </button>
         <button class="boost-dropdown-item post-analytics-item" data-action="quotes" data-post-id="${s.id}">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
           <span>Quotes</span>
           <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || s.quote_count || 0}</span>
+        </button>
+        <button class="boost-dropdown-item post-analytics-item" data-action="boosts" data-post-id="${s.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <span>Boosts</span>
+          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
         </button>
         <button class="boost-dropdown-item post-analytics-item" data-action="favs" data-post-id="${s.id}">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>

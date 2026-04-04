@@ -456,6 +456,7 @@
     padding: 9px 0;
   }
 }
+
 /* ─── Zen Mode ─── */
 #zen-btn {
   display: none !important;
@@ -485,4 +486,3 @@ body.zen-mode .compose-toolbar {
 .profile-dropdown-zen-active {
   color: var(--accent) !important;
 }
-
