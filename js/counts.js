@@ -214,6 +214,56 @@ function _applyUpdate(status, fromUserAction) {
   // Carry the name forward; update it if the API response has a better one
   next.name = status.account?.display_name || status.account?.acct || prev?.name || id;
   knownCounts.set(id, next);
+  const label = next.name || id;
+
+  // Sync button highlighted states, SVG fills, and datasets ALWAYS
+  // regardless of count change, to keep UI correct across different views.
+  document.querySelectorAll(`article[data-id="${id}"]`).forEach(article => {
+    const fb = article.querySelector('.post-fav-btn');
+    if (fb) {
+      fb.classList.toggle('favourited', !!status.favourited);
+      fb.dataset.favourited = status.favourited ? 'true' : 'false';
+      const svg = fb.querySelector('svg');
+      if (svg) svg.setAttribute('fill', status.favourited ? 'currentColor' : 'none');
+    }
+
+    const bb = article.querySelector('.post-boost-btn');
+    if (bb) {
+      bb.classList.toggle('boosted', !!status.reblogged);
+      bb.dataset.reblogged = status.reblogged ? 'true' : 'false';
+      const isBoosted = !!status.reblogged;
+      if (bb.title) {
+        if (separate) bb.title = isBoosted ? 'Undo Boost' : 'Boost';
+        else bb.title = isBoosted ? 'Undo Boost or Quote' : 'Boost or Quote';
+      }
+    }
+
+    const bkb = article.querySelector('.post-bookmark-btn');
+    if (bkb) {
+      bkb.classList.toggle('bookmarked', !!status.bookmarked);
+      bkb.dataset.bookmarked = status.bookmarked ? 'true' : 'false';
+    }
+
+    // Sync dropdown statistics and labels
+    const dropdown = article.querySelector('.boost-dropdown');
+    if (dropdown) {
+      const bStat = dropdown.querySelector('[data-action="boost"] .dropdown-stat-count');
+      if (bStat) bStat.textContent = status.reblogs_count || 0;
+      const qStat = dropdown.querySelector('[data-action="quote"] .dropdown-stat-count');
+      if (qStat) qStat.textContent = status.quotes_count || status.quote_count || 0;
+
+      // Sync dropdown labels and datasets
+      const boostItem = dropdown.querySelector('.boost-dropdown-item[data-action="boost"]');
+      if (boostItem) {
+        boostItem.dataset.isBoosted = status.reblogged ? 'true' : 'false';
+        const labelSpan = boostItem.querySelector('span:not(.dropdown-stat-count)');
+        if (labelSpan) labelSpan.textContent = status.reblogged ? 'Undo Boost' : 'Boost';
+        // Also handle lb-boost-label in lightbox
+        const lbLabelSpan = boostItem.querySelector('.lb-boost-label');
+        if (lbLabelSpan) lbLabelSpan.textContent = status.reblogged ? 'Undo Boost' : 'Boost';
+      }
+    }
+  });
 
   if (!prev) return; // first time seeing this post - no animation
 
@@ -224,7 +274,6 @@ function _applyUpdate(status, fromUserAction) {
 
   if (rd === 0 && bd === 0 && qd === 0 && fd === 0) return;
 
-  const label = next.name || id;
   _log(LOG_PREFIX, `count change on "${label}":`,  
     rd !== 0 ? `replies ${prev.replies}->${next.replies}` : '',
     bd !== 0 ? `boosts ${prev.boosts}->${next.boosts}`    : '',
@@ -232,8 +281,6 @@ function _applyUpdate(status, fromUserAction) {
     fd !== 0 ? `favs ${prev.favs}->${next.favs}`          : '',
   );
 
-  // NOTE: do NOT use CSS.escape() here - the id is an attribute value (quoted
-  // string), not a CSS identifier, so digit-leading values work as plain strings.
   document.querySelectorAll(`article[data-id="${id}"]`).forEach(article => {
     if (rd !== 0) {
       const el = article.querySelector('.post-reply-count');
@@ -247,20 +294,11 @@ function _applyUpdate(status, fromUserAction) {
       const el = article.querySelector('.quote-count');
       if (el) _animateCount(el, next.quotes, (!fromUserAction && qd > 0) ? 'quote' : null);
     }
-      if (fd !== 0) {
-        const el = article.querySelector('.post-fav-count');
-        if (el) _animateCount(el, next.favs, (!fromUserAction && fd > 0) ? 'fav' : null);
-      }
-
-      // Sync dropdown dropdown stats if they exist
-      const dropdown = article.querySelector('.boost-dropdown');
-      if (dropdown) {
-        const bStat = dropdown.querySelector('[data-action="boost"] .dropdown-stat-count');
-        if (bStat) bStat.textContent = status.reblogs_count || 0;
-        const qStat = dropdown.querySelector('[data-action="quote"] .dropdown-stat-count');
-        if (qStat) qStat.textContent = status.quotes_count || status.quote_count || 0;
-      }
-    });
+    if (fd !== 0) {
+      const el = article.querySelector('.post-fav-count');
+      if (el) _animateCount(el, next.favs, (!fromUserAction && fd > 0) ? 'fav' : null);
+    }
+  });
 }
 
 /* -- Animation ------------------------------------------------------------- */

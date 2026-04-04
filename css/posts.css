@@ -1151,6 +1151,15 @@
   transform: scale(1.1);
 }
 
+/* Quote — accent color on hover, matching the feed */
+.lightbox-action-btn.lb-quote:hover {
+  color: var(--accent);
+}
+
+.lightbox-action-btn.lb-quote:hover svg {
+  opacity: 1;
+}
+
 .lightbox-action-btn.favourited {
   color: var(--fav, #f4b942);
 }

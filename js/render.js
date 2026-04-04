@@ -982,10 +982,11 @@ window.expandMedia = function expandMedia(mediaItem) {
     // Article-backed context (feed / thread): read live state from DOM buttons.
     // Standalone context (profile media grid): read from data attributes on the media item.
     const postReplyBtn = article ? article.querySelector('.post-reply-btn') : null;
+    const postQuoteBtn = article ? article.querySelector('.post-quote-btn') : null;
     const postBoostBtn = article ? article.querySelector('.post-boost-btn') : null;
     const postFavBtn = article ? article.querySelector('.post-fav-btn') : null;
     const canQuote = article
-      ? !!article.querySelector('.boost-dropdown-item[data-action="quote"]')
+      ? (!!postQuoteBtn || !!article.querySelector('.boost-dropdown-item[data-action="quote"]'))
       : (_standalone && _standalone.dataset.canQuote === 'true');
     const acct = postReplyBtn
       ? postReplyBtn.dataset.accountAcct
@@ -1001,142 +1002,119 @@ window.expandMedia = function expandMedia(mediaItem) {
     const getCount = (el, sel) => el ? (el.querySelector(sel)?.textContent || '0') : '0';
     const safeCount = (el, sel, fallback) => el ? getCount(el, sel) : String(fallback || 0);
 
-    const actionBar = document.createElement('div');
+    const separate = store.get('pref_separate_boost_quote') === 'true';
+
+    const actionBar = document.createElement('article');
     actionBar.className = 'lightbox-action-bar';
+    actionBar.dataset.id = postId;
     actionBar.onclick = (e) => e.stopPropagation();
 
     // ── Reply button ──
     const replyCount = safeCount(postReplyBtn, '.post-reply-count', _standalone ? _standalone.dataset.repliesCount : 0);
     const replyBtn = document.createElement('button');
-    replyBtn.className = 'lightbox-action-btn lb-reply';
+    replyBtn.className = 'lightbox-action-btn lb-reply post-stat post-reply-btn';
     replyBtn.title = 'Reply';
-    replyBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg><span>${replyCount}</span>`;
+    replyBtn.dataset.postId = postId;
+    replyBtn.dataset.accountAcct = acct;
+    replyBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg><span class="post-reply-count">${replyCount}</span>`;
     replyBtn.onclick = (e) => {
       e.stopPropagation();
-      if (postReplyBtn) {
-        postReplyBtn.click();
-      } else {
-        // Standalone: call the handler directly
-        if (window.handleReply) window.handleReply(postId, acct);
-      }
+      if (window.handleReply) window.handleReply(postId, acct);
       close();
     };
     actionBar.appendChild(replyBtn);
 
-    // ── Boost / Quote button ──
-    const boostCount = safeCount(postBoostBtn, '.boost-count',
-      _standalone ? (parseInt(_standalone.dataset.reblogsCount || 0) + parseInt(_standalone.dataset.quotesCount || 0)) : 0);
-    const boostWrap = document.createElement('div');
-    boostWrap.className = 'lightbox-action-boost-wrap';
+    // ── Boost / Quote actions ──
+    if (separate) {
+      if (canQuote) {
+        const quoteCount = safeCount(postQuoteBtn, '.quote-count', _standalone ? _standalone.dataset.quotesCount : 0);
+        const quoteBtn = document.createElement('button');
+        quoteBtn.className = 'lightbox-action-btn lb-quote post-stat post-quote-btn';
+        quoteBtn.title = 'Quote';
+        quoteBtn.dataset.postId = postId;
+        quoteBtn.dataset.acct = acct;
+        quoteBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg><span class="quote-count">${quoteCount}</span>`;
+        quoteBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (window.handleQuoteInit) window.handleQuoteInit(postId, acct);
+          close();
+        };
+        actionBar.appendChild(quoteBtn);
+      }
 
-    const boostBtn = document.createElement('button');
-    boostBtn.className = 'lightbox-action-btn lb-boost' + (isBoosted ? ' boosted' : '');
-    boostBtn.title = 'Boost or Quote';
-    boostBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span class="lb-boost-count">${boostCount}</span>`;
+      const boostCount = safeCount(postBoostBtn, '.boost-count', _standalone ? _standalone.dataset.reblogsCount : 0);
+      const lbBoostBtn = document.createElement('button');
+      lbBoostBtn.className = 'lightbox-action-btn lb-boost post-stat post-boost-btn' + (isBoosted ? ' boosted' : '');
+      lbBoostBtn.title = isBoosted ? 'Undo Boost' : 'Boost';
+      lbBoostBtn.dataset.postId = postId;
+      lbBoostBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span class="boost-count">${boostCount}</span>`;
+      lbBoostBtn.onclick = (e) => {
+        e.stopPropagation();
+        const currentIsBoosted = lbBoostBtn.classList.contains('boosted');
+        window.handleBoostSubmit(postId, currentIsBoosted, lbBoostBtn);
+      };
+      actionBar.appendChild(lbBoostBtn);
+    } else {
+      const boostCount = safeCount(postBoostBtn, '.boost-count',
+        _standalone ? (parseInt(_standalone.dataset.reblogsCount || 0) + parseInt(_standalone.dataset.quotesCount || 0)) : 0);
+      const boostWrap = document.createElement('div');
+      boostWrap.className = 'lightbox-action-boost-wrap post-stat-wrap';
 
-    const boostDropdown = document.createElement('div');
-    boostDropdown.className = 'lightbox-boost-dropdown';
+      const boostBtn = document.createElement('button');
+      boostBtn.className = 'lightbox-action-btn lb-boost post-stat post-boost-btn' + (isBoosted ? ' boosted' : '');
+      boostBtn.title = 'Boost or Quote';
+      boostBtn.dataset.postId = postId;
+      boostBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span class="boost-count">${boostCount}</span>`;
 
-    const syncBoost = () => {
-      const pb = article.querySelector('.post-boost-btn');
-      if (!pb) return;
-      isBoosted = pb.classList.contains('boosted');
-      boostBtn.classList.toggle('boosted', isBoosted);
-      const lbc = boostBtn.querySelector('.lb-boost-count');
-      if (lbc) lbc.textContent = pb.querySelector('.boost-count')?.textContent || '0';
-      const bLabel = boostDropdown.querySelector('.lb-boost-label');
-      if (bLabel) bLabel.textContent = isBoosted ? 'Undo Boost' : 'Boost';
-    };
+      const boostDropdown = document.createElement('div');
+      boostDropdown.className = 'lightbox-boost-dropdown boost-dropdown';
 
-    const boostItem = document.createElement('button');
-    boostItem.className = 'lightbox-boost-item';
-    boostItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span class="lb-boost-label">${isBoosted ? 'Undo Boost' : 'Boost'}</span>`;
-    boostItem.onclick = (e) => {
-      e.stopPropagation();
-      boostDropdown.classList.remove('show');
-      window.handleBoostSubmit(postId, isBoosted);
-      close();
-    };
-    boostDropdown.appendChild(boostItem);
-
-    if (canQuote) {
-      const quoteItem = document.createElement('button');
-      quoteItem.className = 'lightbox-boost-item';
-      quoteItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg><span>Quote</span>`;
-      quoteItem.onclick = (e) => {
+      const boostItem = document.createElement('button');
+      boostItem.className = 'lightbox-boost-item boost-dropdown-item';
+      boostItem.dataset.action = 'boost';
+      boostItem.dataset.postId = postId;
+      boostItem.dataset.isBoosted = isBoosted ? 'true' : 'false';
+      boostItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span class="lb-boost-label">${isBoosted ? 'Undo Boost' : 'Boost'}</span><span class="dropdown-stat-count">${_standalone ? _standalone.dataset.reblogsCount : getCount(postBoostBtn, '.boost-count')}</span>`;
+      boostItem.onclick = (e) => {
         e.stopPropagation();
         boostDropdown.classList.remove('show');
-        window.handleQuoteInit(postId, acct);
-        close();
+        const currentIsBoosted = boostBtn.classList.contains('boosted');
+        window.handleBoostSubmit(postId, currentIsBoosted, boostBtn);
       };
-      boostDropdown.appendChild(quoteItem);
-    }
+      boostDropdown.appendChild(boostItem);
 
-    boostBtn.onclick = (e) => { e.stopPropagation(); boostDropdown.classList.toggle('show'); };
-    boostWrap.appendChild(boostBtn);
-    boostWrap.appendChild(boostDropdown);
-    actionBar.appendChild(boostWrap);
+      if (canQuote) {
+        const quoteItem = document.createElement('button');
+        quoteItem.className = 'lightbox-boost-item boost-dropdown-item';
+        quoteItem.dataset.action = 'quote';
+        quoteItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg><span>Quote</span><span class="dropdown-stat-count">${_standalone ? _standalone.dataset.quotesCount : getCount(postBoostBtn, '.quote-count')}</span>`;
+        quoteItem.onclick = (e) => {
+          e.stopPropagation();
+          boostDropdown.classList.remove('show');
+          window.handleQuoteInit(postId, acct);
+          close();
+        };
+        boostDropdown.appendChild(quoteItem);
+      }
+
+      boostBtn.onclick = (e) => { e.stopPropagation(); boostDropdown.classList.toggle('show'); };
+      boostWrap.appendChild(boostBtn);
+      boostWrap.appendChild(boostDropdown);
+      actionBar.appendChild(boostWrap);
+      overlay.addEventListener('click', () => boostDropdown.classList.remove('show'));
+    }
 
     // ── Favourite button ──
     const favCount = safeCount(postFavBtn, '.post-fav-count', _standalone ? _standalone.dataset.favouritesCount : 0);
     const lbFavBtn = document.createElement('button');
-    lbFavBtn.className = 'lightbox-action-btn lb-fav' + (isFavourited ? ' favourited' : '');
+    lbFavBtn.className = 'lightbox-action-btn lb-fav post-stat post-fav-btn' + (isFavourited ? ' favourited' : '');
     lbFavBtn.title = isFavourited ? 'Unfavorite' : 'Favorite';
-    lbFavBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="${isFavourited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" style="color:var(--fav)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg><span class="lb-fav-count">${favCount}</span>`;
+    lbFavBtn.dataset.postId = postId;
+    lbFavBtn.dataset.favourited = isFavourited ? 'true' : 'false';
+    lbFavBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="${isFavourited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" style="color:var(--fav)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg><span class="post-fav-count">${favCount}</span>`;
     lbFavBtn.onclick = (e) => {
       e.stopPropagation();
-      if (lbFavBtn.disabled) return;
-      const willFav = !isFavourited;
-      const svg = lbFavBtn.querySelector('svg');
-      const lfc = lbFavBtn.querySelector('.lb-fav-count');
-      // Mirror the feed's animation classes
-      if (willFav) {
-        lbFavBtn.classList.add('favoriting');
-        setTimeout(() => lbFavBtn.classList.remove('favoriting'), 500);
-      } else {
-        lbFavBtn.classList.add('unfavoriting');
-        setTimeout(() => lbFavBtn.classList.remove('unfavoriting'), 500);
-      }
-      if (svg) {
-        svg.setAttribute('fill', 'currentColor');
-        if (!willFav) {
-          setTimeout(() => {
-            lbFavBtn.classList.add('unfavorite-fade');
-            setTimeout(() => { svg.setAttribute('fill', 'none'); lbFavBtn.classList.remove('unfavorite-fade'); }, 300);
-          }, 500);
-        }
-      }
-      if (postFavBtn) {
-        // Use the global handler directly for better async control
-        window.handleFavoriteToggle(postFavBtn).then(() => {
-          setTimeout(() => {
-            isFavourited = postFavBtn.classList.contains('favourited');
-            lbFavBtn.classList.toggle('favourited', isFavourited);
-            lbFavBtn.title = isFavourited ? 'Unfavorite' : 'Favorite';
-            if (lfc) lfc.textContent = postFavBtn.querySelector('.post-fav-count')?.textContent || '0';
-          }, 300);
-        });
-      } else {
-        // Standalone: call API directly
-        lbFavBtn.disabled = true;
-        const currentCount = parseInt(lfc?.textContent || '0');
-        isFavourited = willFav;
-        lbFavBtn.classList.toggle('favourited', isFavourited);
-        lbFavBtn.title = isFavourited ? 'Unfavorite' : 'Favorite';
-        if (!willFav && svg) svg.setAttribute('fill', 'none');
-        if (lfc) lfc.textContent = willFav ? currentCount + 1 : Math.max(0, currentCount - 1);
-        if (state.token && state.server) {
-          const endpoint = willFav ? `/api/v1/statuses/${postId}/favourite` : `/api/v1/statuses/${postId}/unfavourite`;
-          fetch(`https://${state.server}${endpoint}`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
-          }).then(r => r.ok ? r.json() : null).then(post => {
-            if (post && lfc) lfc.textContent = post.favourites_count || 0;
-          }).catch(() => { }).finally(() => { lbFavBtn.disabled = false; });
-        } else {
-          lbFavBtn.disabled = false;
-        }
-      }
+      window.handleFavoriteToggle(lbFavBtn);
     };
     actionBar.appendChild(lbFavBtn);
 
@@ -1170,10 +1148,9 @@ window.expandMedia = function expandMedia(mediaItem) {
     lbAltBtn.title = 'Alt text';
     lbAltBtn.hidden = true;
     lbAltBtn.textContent = 'ALT';
-    lbAltBtn._sep = altSep; // keep reference so updateSlideState can show/hide the sep
+    lbAltBtn._sep = altSep; 
     lbAltBtn.onclick = (e) => {
       e.stopPropagation();
-      // Read alt text from the current item at click time to avoid stale state
       const currentAlt = (mediaItems[currentIndex]?.dataset.alt || '').trim();
       lbAltPanel.textContent = currentAlt;
       lbAltPanel.classList.toggle('visible');
@@ -1182,8 +1159,6 @@ window.expandMedia = function expandMedia(mediaItem) {
 
     overlay.appendChild(actionBar);
 
-    // Close boost dropdown when the overlay is clicked
-    overlay.addEventListener('click', () => boostDropdown.classList.remove('show'));
   }
 
   document.body.appendChild(overlay);

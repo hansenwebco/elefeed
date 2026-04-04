@@ -543,14 +543,14 @@ window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
   document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
   if (!state.token) { showToast('Please sign in to boost posts.'); return; }
 
-  const btnEl = triggerEl || document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`) || 
-                document.querySelector(`[data-id="${postId}"]`);
+  const btnEl = triggerEl || document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`);
+  const willBeBoosted = !isBoosted;
+  const originalBoosted = isBoosted;
 
   if (store.get('pref_confirm_interactions') === 'true') {
     const actionLabel = isBoosted ? 'unboost' : 'boost';
-    
-    // Find preview content
-    const postEl = btnEl ? btnEl.closest('.feed-status, .post-item, .notification-item, .post-thread-item, article.post, .post') : null;
+    const postEl = btnEl ? btnEl.closest('.feed-status, .post-item, .notification-item, .post-thread-item, article.post, .post') || 
+                   document.querySelector(`article[data-id="${postId}"]`) : null;
     
     let previewHTML = '';
     if (postEl) {
@@ -558,10 +558,9 @@ window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
       const media = postEl.querySelector('.post-media, .post-media-grid')?.outerHTML || '';
       const quote = postEl.querySelector('.post-quote')?.outerHTML || '';
       const card = postEl.querySelector('.post-card')?.outerHTML || '';
-      previewHTML = (content + media + quote + card).replace(/onclick="[^"]*"/g, ''); // Strip interactions
+      previewHTML = (content + media + quote + card).replace(/onclick="[^"]*"/g, '');
     }
 
-    // Fallback: if no textFound, show author info
     if (!previewHTML && postEl) {
       const name = postEl.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this post';
       const acctHandle = postEl.querySelector('.post-acct, .profile-acct')?.textContent || '';
@@ -570,6 +569,17 @@ window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
 
     const confirmed = await showConfirm(`Are you sure you want to ${actionLabel} this post?`, `Confirm ${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)}`, previewHTML);
     if (!confirmed) return;
+  }
+
+  // ── Optimistic update ──
+  const countSpan = btnEl?.querySelector('.boost-count, .dropdown-stat-count');
+  const originalCount = countSpan ? parseInt(countSpan.textContent) || 0 : 0;
+  
+  if (btnEl) {
+    btnEl.classList.toggle('boosted', willBeBoosted);
+    if (btnEl.dataset.isBoosted) btnEl.dataset.isBoosted = willBeBoosted ? 'true' : 'false';
+    if (btnEl.dataset.reblogged) btnEl.dataset.reblogged = willBeBoosted ? 'true' : 'false';
+    if (countSpan) countSpan.textContent = willBeBoosted ? originalCount + 1 : Math.max(0, originalCount - 1);
   }
 
   const endpoint = isBoosted
@@ -584,26 +594,17 @@ window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
     if (!res.ok) throw new Error('Failed to process boost');
     const statusResponse = await res.json();
     const actualStatus = statusResponse.reblog || statusResponse;
+
+    // Use our central sync engine to update everyone else correctly
     applyCountsFromStatus(actualStatus);
-
-    const menuBtn = document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`);
-    if (menuBtn) {
-      const countSpan = menuBtn.querySelector('.boost-count');
-      const isNowBoosted = actualStatus.reblogged === true;
-      menuBtn.classList.toggle('boosted', isNowBoosted);
-      if (countSpan) countSpan.textContent = (actualStatus.reblogs_count || 0) + (actualStatus.quotes_count || actualStatus.quote_count || 0);
-
-      const dropdownItems = menuBtn.nextElementSibling.querySelectorAll('.boost-dropdown-item');
-      if (dropdownItems.length > 0) {
-        const boostDropdownBtn = dropdownItems[0];
-        boostDropdownBtn.setAttribute('onclick', `event.stopPropagation(); window.handleBoostSubmit('${postId}', ${isNowBoosted})`);
-        const textSpan = boostDropdownBtn.querySelector('span:not(.dropdown-stat-count)');
-        if (textSpan) textSpan.textContent = isNowBoosted ? 'Undo Boost' : 'Boost';
-        const countNode = boostDropdownBtn.querySelector('.dropdown-stat-count');
-        if (countNode) countNode.textContent = actualStatus.reblogs_count || 0;
-      }
-    }
   } catch (e) {
+    // ── Rollback ──
+    if (btnEl) {
+      btnEl.classList.toggle('boosted', originalBoosted);
+      if (btnEl.dataset.isBoosted) btnEl.dataset.isBoosted = originalBoosted ? 'true' : 'false';
+      if (btnEl.dataset.reblogged) btnEl.dataset.reblogged = originalBoosted ? 'true' : 'false';
+      if (countSpan) countSpan.textContent = originalCount;
+    }
     showToast('Error updating boost: ' + e.message);
   }
 };
