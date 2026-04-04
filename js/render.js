@@ -130,19 +130,20 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   if (qStatus) {
     let autoOpenSensitive = false;
     try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
-    const qHasCW = !autoOpenSensitive && ((qStatus.spoiler_text && qStatus.spoiler_text.length > 0) || qStatus.sensitive);
+    const qHasCW = (qStatus.spoiler_text && qStatus.spoiler_text.length > 0);
     const qCwText = qStatus.spoiler_text ? escapeHTML(qStatus.spoiler_text) : 'Sensitive content';
     const qCwId = `qcw-${idPrefix}${qStatus.id}-${status.id}`;
+    const qIsExpanded = autoOpenSensitive || !qHasCW;
 
     let qContentHTML = '';
     if (qHasCW) {
       qContentHTML = `
           <div class="cw-wrapper" style="margin:4px 0 0;">
             <div class="cw-summary" style="cursor:pointer; font-size:12px;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this.querySelector('.cw-toggle'))">
-              <span>${qCwText}</span>
-              <button class="cw-toggle" style="padding:3px 8px; font-size:11px;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this)">show</button>
+              <span>CW: ${qCwText}</span>
+              <button class="cw-toggle" style="padding:3px 8px; font-size:11px;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this)">${qIsExpanded ? 'hide' : 'show'}</button>
             </div>
-            <div class="cw-body" id="${qCwId}">
+            <div class="cw-body${qIsExpanded ? ' expanded' : ''}" id="${qCwId}">
               <div class="post-content" style="font-size:12.5px; opacity:0.9;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>
             </div>
           </div>`;
@@ -281,9 +282,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   /* ── Content warning wrapper ── */
   let autoOpenSensitive = false;
   try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
-  const hasCW = !autoOpenSensitive && ((s.spoiler_text && s.spoiler_text.length > 0) || s.sensitive);
-  const cwText = s.spoiler_text ? escapeHTML(s.spoiler_text) : 'Sensitive content';
+  
+  const hasSpoiler = s.spoiler_text && s.spoiler_text.length > 0;
+  const cwText = hasSpoiler ? escapeHTML(s.spoiler_text) : 'Sensitive content';
   const cwId = `cw-${idPrefix}${status.id}`;
+  const isExpanded = autoOpenSensitive;
   const { content: rawContent, tags: postTags } = extractTrailingHashtags(
     sanitizeHTML(s.content, { mentions: s.mentions, server: state.server })
   );
@@ -327,14 +330,14 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
   };
 
   let contentHTML = '';
-  if (hasCW) {
+  if (hasSpoiler) {
     contentHTML = `
       <div class="cw-wrapper">
         <div class="cw-summary" style="cursor:pointer;" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this.querySelector('.cw-toggle'))">
-          <span>${cwText}</span>
-          <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this)">show</button>
+          <span>CW: ${cwText}</span>
+          <button class="cw-toggle" onclick="event.stopPropagation(); window.toggleCW('${cwId}', this)">${isExpanded ? 'hide' : 'show'}</button>
         </div>
-        <div class="cw-body" id="${cwId}">
+        <div class="cw-body${isExpanded ? ' expanded' : ''}" id="${cwId}">
           ${wrapPostContent(postBody)}
           ${mediaHTML}${cardHTML}${pollHTML}${quoteHTML}${tagLineHTML}
         </div>

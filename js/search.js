@@ -504,6 +504,9 @@ function renderStatus(status) {
   try { hideSensitiveMedia = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
   const startBlurred = s.sensitive && hideSensitiveMedia;
 
+  let autoOpenSensitive = false;
+  try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
+
   const hasMedia = s.media_attachments && s.media_attachments.length > 0;
   const mediaPreview = hasMedia ? `
     <div class="search-status-media">
@@ -511,7 +514,7 @@ function renderStatus(status) {
         <img src="${escapeHTML(m.preview_url || m.url)}" alt="" class="search-status-thumb${startBlurred ? ' media-sensitive-blur' : ''}" loading="lazy" />
       `).join('')}
       ${s.sensitive ? `
-        <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media" style="border-radius: 8px;">
+        <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); window.toggleSensitiveMedia(this)" aria-label="Toggle sensitive media" style="border-radius: 8px;">
            <div class="sp-card" style="padding: 6px 12px; border-radius: 8px;">
              <span class="sp-card-title" style="font-size:11px;">Sensitive</span>
            </div>
@@ -532,9 +535,21 @@ function renderStatus(status) {
         </div>
         <span class="search-status-time">${relativeTime(s.created_at)}</span>
       </div>
-      ${s.spoiler_text ? `<div class="search-status-cw">CW: ${escapeHTML(s.spoiler_text)}</div>` : ''}
-      <div class="search-status-preview">${previewHTML}</div>
-      ${mediaPreview}
+      ${s.spoiler_text ? `
+        <div class="cw-wrapper" style="margin-bottom: 8px;">
+          <div class="cw-summary" style="cursor:pointer; font-size:12px; padding: 4px 8px;" onclick="event.stopPropagation(); window.toggleCW('cw-search-${s.id}', this.querySelector('.cw-toggle'))">
+            <span style="font-family:var(--font-mono); color:var(--accent2);">CW: ${escapeHTML(s.spoiler_text)}</span>
+            <button class="cw-toggle" style="margin-left:auto; font-size:10px; padding:2px 6px;">${autoOpenSensitive ? 'hide' : 'show'}</button>
+          </div>
+          <div class="cw-body${autoOpenSensitive ? ' expanded' : ''}" id="cw-search-${s.id}">
+            <div class="search-status-preview" style="margin-top:8px;">${previewHTML}</div>
+            ${mediaPreview}
+          </div>
+        </div>
+      ` : `
+        <div class="search-status-preview">${previewHTML}</div>
+        ${mediaPreview}
+      `}
       <div class="search-status-footer">
         <span class="search-status-stat">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
