@@ -12,6 +12,8 @@ import {
   renderCustomEmojis, relativeTime,
   matchesLanguage,
 } from './utils.js';
+import { renderFollowingBadge } from './render.js';
+import { fetchRelationships } from './feed.js';
 
 /* ══════════════════════════════════════════════════════════════════════
    STATE
@@ -101,6 +103,9 @@ async function performSearch(query, filter) {
         && data.statuses && data.statuses.length === STATUS_PAGE;
     }
 
+    const { accounts = [], statuses = [] } = data;
+    await fetchRelationships([...accounts, ...statuses]);
+
     renderResults(data, query, filter);
     if (_hasMoreResults) _attachObserver(query, filter);
   } catch (err) {
@@ -146,6 +151,7 @@ async function loadMoreResults(query, filter) {
     _hasMoreResults = newItems.length === STATUS_PAGE;
 
     if (newItems.length > 0) {
+      await fetchRelationships(newItems);
       if (searchType === 'accounts') appendAccounts(newItems);
       else if (searchType === 'hashtags') appendHashtags(newItems);
       else appendPosts(newItems);
@@ -379,7 +385,10 @@ function renderAccount(account) {
 
   return `
     <div class="search-account-row" data-profile-id="${account.id}" data-profile-server="${server}" style="cursor:pointer;">
-      <img class="search-account-avatar" src="${escapeHTML(account.avatar_static || account.avatar)}" alt="" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER" />
+      <div style="position:relative; display:flex;">
+        <img class="search-account-avatar" src="${escapeHTML(account.avatar_static || account.avatar)}" alt="" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER" />
+        ${renderFollowingBadge(account.id)}
+      </div>
       <div class="search-account-info">
         <div class="search-account-name">${displayName}</div>
         <div class="search-account-acct">@${escapeHTML(account.acct)}</div>
@@ -526,8 +535,11 @@ function renderStatus(status) {
   return `
     <div class="search-status-row" data-status-id="${s.id}" style="cursor:pointer;">
       <div class="search-status-header">
-        <img class="search-status-avatar" src="${escapeHTML(s.account.avatar_static || s.account.avatar)}" alt=""
-          data-profile-id="${s.account.id}" data-profile-server="${server}" style="cursor:pointer;" loading="lazy" />
+        <div style="position:relative; display:flex;">
+          <img class="search-status-avatar" src="${escapeHTML(s.account.avatar_static || s.account.avatar)}" alt=""
+            data-profile-id="${s.account.id}" data-profile-server="${server}" style="cursor:pointer;" loading="lazy" />
+          ${renderFollowingBadge(s.account.id)}
+        </div>
         <div class="search-status-author" data-profile-id="${s.account.id}" data-profile-server="${server}" style="cursor:pointer;">
           <div class="search-status-name">${renderCustomEmojis(s.account.display_name || s.account.username, s.account.emojis)}</div>
           <div class="search-status-acct">@${escapeHTML(s.account.acct)}</div>

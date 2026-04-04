@@ -6,7 +6,7 @@
 import { $, state } from './state.js';
 import { apiGet } from './api.js';
 import { makeSkeleton, updateTabLabel } from './ui.js';
-import { renderPost } from './render.js';
+import { renderPost, renderFollowingBadge, renderThreadPost } from './render.js';
 import { escapeHTML, sanitizeHTML, renderCustomEmojis, formatCount, matchesLanguage } from './utils.js';
 import { fetchRelationships } from './feed.js';
 
@@ -41,6 +41,7 @@ export async function loadTrendingPosts(append = false) {
 
   try {
     const posts = await apiGet(`/api/v1/trends/statuses?limit=${limit}&offset=${state.trendingPostsOffset}`, state.token);
+    await fetchRelationships(posts);
     const loading = $('trending-posts-loading');
     if (loading) loading.style.display = 'none';
 
@@ -244,8 +245,9 @@ export async function loadTrendingPeople(append = false) {
       return `
       <div class="trending-person-card" data-profile-id="${escapeHTML(acct.id)}" data-profile-server="">
         <div class="trending-person-header">
-          <div class="trending-person-avatar">
+          <div class="trending-person-avatar" style="position:relative;">
             <img src="${escapeHTML(acct.avatar_static || acct.avatar)}" alt="${escapeHTML(acct.display_name || acct.username)}" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
+            ${renderFollowingBadge(acct.id)}
           </div>
           <div class="trending-person-meta">
             <div class="trending-person-author">

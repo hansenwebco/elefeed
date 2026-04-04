@@ -53,7 +53,8 @@ import { $, state, store } from './state.js';
 import { apiGet } from './api.js';
 import { applyCountsFromStatus } from './counts.js';
 import { showToast, showConfirm } from './ui.js';
-import { renderPost } from './render.js';
+import { renderPost, renderFollowingBadge } from './render.js';
+import { fetchRelationships } from './feed.js';
 import {
   escapeHTML, sanitizeHTML, renderCustomEmojis, formatNum, updateURLParam,
   matchesLanguage,
@@ -150,6 +151,7 @@ async function loadProfileTab(tabName, panel) {
 
   try {
     const statuses = await apiGet(url, state.token, server);
+    await fetchRelationships(statuses);
     tabState.maxId = statuses.length ? statuses[statuses.length - 1].id : null;
     panel.dataset.loaded = 'true';
     const loadMoreHtml = (statuses.length === 20 && tabState.maxId)
@@ -194,6 +196,7 @@ export async function loadMoreProfilePosts(btn) {
     if (tabName === 'media') url += '&only_media=true';
 
     const newPosts = await apiGet(url, state.token, server);
+    await fetchRelationships(newPosts);
     tabState.maxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
 
     const container = btn.parentNode;
@@ -292,9 +295,20 @@ export function openProfileDrawer(accountId, server) {
     apiGet(`/api/v1/accounts/${accountId}/statuses?limit=20&exclude_replies=true`, state.token, srv),
     apiGet(`/api/v1/accounts/relationships?id[]=${accountId}`, state.token, srv).catch(() => []),
     apiGet(`/api/v1/accounts/${accountId}/statuses?pinned=true`, state.token, srv).catch(() => []),
-  ]).then(([account, statuses, relationships, pinnedStatuses]) => {
+  ]).then(async ([account, statuses, relationships, pinnedStatuses]) => {
     const relationship = relationships && relationships.length ? relationships[0] : null;
     const isFollowing = relationship && relationship.following;
+    
+    // Update global following state
+    if (relationship) {
+      if (relationship.following || relationship.requested) {
+        state.knownFollowing.add(accountId);
+        state.knownNotFollowing.delete(accountId);
+      } else {
+        state.knownFollowing.delete(accountId);
+        state.knownNotFollowing.add(accountId);
+      }
+    }
 
     // Profile banner (label will be rendered after DOM insert)
     let headerImg = '';
@@ -371,6 +385,8 @@ export function openProfileDrawer(accountId, server) {
       ? '<button class="load-more-btn" data-feed="profile" data-tab="posts">Load More</button>'
       : '';
 
+    await fetchRelationships([...statuses, ...(pinnedStatuses || [])]);
+
     const preferredLang = state.preferredLanguage || 'all';
     let display = statuses;
     display = display.filter(s => {
@@ -430,7 +446,10 @@ export function openProfileDrawer(accountId, server) {
       ${headerImg}
       <div class="profile-identity">
         <div class="profile-avatar-wrap">
-          <img class="profile-avatar-large" src="${escapeHTML(account.avatar_static || account.avatar)}" alt="" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
+          <div style="position:relative;">
+            <img class="profile-avatar-large" src="${escapeHTML(account.avatar_static || account.avatar)}" alt="" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
+            ${renderFollowingBadge(account.id)}
+          </div>
           <div class="profile-action-group">${followButton}${notifyButton}${moreMenu}</div>
         </div>
         <div class="profile-name-row">

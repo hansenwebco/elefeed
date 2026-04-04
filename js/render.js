@@ -17,6 +17,20 @@ import {
   renderCustomEmojis, relativeTime,
 } from './utils.js';
 
+/**
+ * Returns the HTML for a small "following" badge if the account is followed.
+ * @param {string} accountId
+ * @returns {string}
+ */
+export function renderFollowingBadge(accountId) {
+  if (state.knownFollowing.has(accountId)) {
+    return `<div class="following-badge" title="Following">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+    </div>`;
+  }
+  return '';
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    SHARED INNER BODY
    ══════════════════════════════════════════════════════════════════════ */
@@ -27,7 +41,7 @@ import {
  *
  * Returns { contentHTML, footerHTML }
  */
-function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
+function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost = false) {
   let hideSensitiveMedia = true;
   try { hideSensitiveMedia = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
 
@@ -181,7 +195,10 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
     quoteHTML = `
         <div class="post-quote" style="padding:10px; margin-top:8px;" onclick="event.stopPropagation(); if (window.openThreadDrawer) window.openThreadDrawer('${qStatus.id}'); else window.open('${qStatus.url}', '_blank')">
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-            <img src="${qStatus.account.avatar_static || qStatus.account.avatar}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; background:var(--surface); flex-shrink:0;" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER">
+          <div style="position:relative; width:20px; height:20px; flex-shrink:0;">
+            <img src="${qStatus.account.avatar_static || qStatus.account.avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; background:var(--surface); display:block;" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER">
+            ${renderFollowingBadge(qStatus.account.id)}
+          </div>
             <div style="display:flex; flex-direction:column; line-height:1.2; overflow:hidden;">
               <span style="font-weight:600; font-size:12.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${renderCustomEmojis(qStatus.account.display_name || qStatus.account.username, qStatus.account.emojis)}</span>
               <span style="color:var(--text-dim); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${escapeHTML(qStatus.account.acct)}</span>
@@ -432,6 +449,22 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '') {
               <span class="post-translate-btn-text">Translate</span>
             </button>
             ` : ''}
+
+            ${isOwnPost ? `
+              <div class="boost-dropdown-separator"></div>
+              <button class="boost-dropdown-item" data-action="edit" data-post-id="${s.id}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                <span>Edit Post</span>
+              </button>
+              <button class="boost-dropdown-item boost-dropdown-item--danger" data-action="delete" data-post-id="${s.id}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                <span>Delete Post</span>
+              </button>
+              <button class="boost-dropdown-item boost-dropdown-item--redraft" data-action="delete-redraft" data-post-id="${s.id}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <span>Delete &amp; Redraft</span>
+              </button>
+            ` : ''}
           </div>
         </div>
       </div>
@@ -481,7 +514,8 @@ export function renderPost(status, opts = {}) {
   const s = isBoost ? status.reblog : status;
   const profileServer = escapeHTML(state.server || '');
 
-  const { contentHTML, footerHTML } = _buildPostBody(status, s);
+  const isOwnPost = !!(state.account && s.account.id === state.account.id);
+  const { contentHTML, footerHTML } = _buildPostBody(status, s, '', '', isOwnPost);
 
   /* ── Hashtag banner ── */
   const tagList = opts.tags && opts.tags.length ? opts.tags : (opts.tag ? [opts.tag] : []);
@@ -521,9 +555,7 @@ export function renderPost(status, opts = {}) {
       <div class="post-header post-header--with-server">
         <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer; align-self:center;">
           <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
-          ${state.knownFollowing.has(s.account.id) ? `<div class="following-badge" title="Following">
-            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          </div>` : ''}
+          ${renderFollowingBadge(s.account.id)}
         </div>
         <div class="post-meta post-meta--with-server">
           <div class="post-author post-author--with-server">
@@ -533,32 +565,6 @@ export function renderPost(status, opts = {}) {
           </div>
           <div class="post-server-address">${escapeHTML((s.account.url || '').split('/')[2] || '')}</div>
         </div>
-        ${state.account && s.account.id === state.account.id ? `
-        <div style="position:relative; margin-left:auto; display:inline-flex;">
-          <button class="icon-btn post-menu-btn" data-post-id="${s.id}" title="Post options" style="margin-right:-8px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="opacity:0.6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="1"/>
-              <circle cx="19" cy="12" r="1"/>
-              <circle cx="5" cy="12" r="1"/>
-            </svg>
-          </button>
-          <div class="boost-dropdown post-dropdown" id="post-menu-${s.id}" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:168px; transform-origin: top right;">
-            <button class="boost-dropdown-item" data-action="edit" data-post-id="${s.id}">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-              <span>Edit</span>
-            </button>
-            <div class="boost-dropdown-separator"></div>
-            <button class="boost-dropdown-item boost-dropdown-item--danger" data-action="delete" data-post-id="${s.id}">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-              <span>Delete</span>
-            </button>
-            <button class="boost-dropdown-item boost-dropdown-item--redraft" data-action="delete-redraft" data-post-id="${s.id}">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              <span>Delete &amp; Redraft</span>
-            </button>
-          </div>
-        </div>
-        ` : ''}
       </div>
       ${contentHTML}
       ${footerHTML}
@@ -625,7 +631,7 @@ export function renderThreadPost(status, variant) {
       </div>
     </div>` : '';
 
-  const { contentHTML, footerHTML } = _buildPostBody(status, s, 'thread-', analyticsMenuHTML);
+  const { contentHTML, footerHTML } = _buildPostBody(status, s, 'thread-', analyticsMenuHTML, isOwnPost);
 
   const boostLabelHTML = boostBy ? `
     <div class="boost-divider">
@@ -648,44 +654,14 @@ export function renderThreadPost(status, variant) {
   } else if (state.knownFollowing.has(s.account.id)) contextClass = ' post--following';
   else if (s.in_reply_to_id) contextClass = ' post--reply';
 
-  /* Right-side header: post-menu (own focal posts only) */
-  const rightHeaderHTML = isOwnPost
-    ? `<div style="position:relative; margin-left:auto; display:inline-flex; gap:2px; align-items:center;">
-        <button class="icon-btn post-menu-btn" data-post-id="${s.id}" title="Post options" style="margin-right:-8px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="opacity:0.6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="1"/>
-            <circle cx="19" cy="12" r="1"/>
-            <circle cx="5" cy="12" r="1"/>
-          </svg>
-        </button>
-        <div class="boost-dropdown post-dropdown" id="post-menu-${s.id}" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:168px; transform-origin: top right;">
-          <button class="boost-dropdown-item" data-action="edit" data-post-id="${s.id}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-            <span>Edit</span>
-          </button>
-          <div class="boost-dropdown-separator"></div>
-          <button class="boost-dropdown-item boost-dropdown-item--danger" data-action="delete" data-post-id="${s.id}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            <span>Delete</span>
-          </button>
-          <button class="boost-dropdown-item boost-dropdown-item--redraft" data-action="delete-redraft" data-post-id="${s.id}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            <span>Delete &amp; Redraft</span>
-          </button>
-        </div>
-      </div>`
-    : '';
-
   return `
     <div class="${variantClass}" data-status-id="${s.id}">
-      <article class="post${contextClass}" data-id="${status.id}">
+      <article class="post${contextClass}" data-id="${s.id}">
         ${boostLabelHTML}
         <div class="post-header post-header--with-server">
           <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer">
             <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
-            ${state.knownFollowing.has(s.account.id) ? `<div class="following-badge" title="Following">
-              <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-            </div>` : ''}
+            ${renderFollowingBadge(s.account.id)}
           </div>
           <div class="post-meta post-meta--with-server">
             <div class="post-author post-author--with-server">
@@ -695,7 +671,7 @@ export function renderThreadPost(status, variant) {
             </div>
             <div class="post-server-address">${escapeHTML((s.account.url || '').split('/')[2] || '')}</div>
           </div>
-          ${rightHeaderHTML}
+          ${analyticsMenuHTML}
         </div>
         ${contentHTML}
         ${footerHTML}
