@@ -1586,6 +1586,19 @@ body.hide-cards-enabled .post-card {
   opacity: 1;
 }
 
+.post-boost-btn.boosting,
+.post-boost-btn.unboosting {
+  color: var(--boost) !important;
+}
+
+.post-boost-btn.boosting svg {
+  animation: boostPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+}
+
+.post-boost-btn.unboosting svg {
+  animation: boostUnpop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+}
+
 /* Quote */
 .post-quote-btn {
   cursor: pointer;
