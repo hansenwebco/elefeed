@@ -17,6 +17,20 @@ import {
   renderCustomEmojis, relativeTime,
 } from './utils.js';
 
+/**
+ * Returns the HTML for a small "following" badge if the account is followed.
+ * @param {string} accountId
+ * @returns {string}
+ */
+export function renderFollowingBadge(accountId) {
+  if (state.knownFollowing.has(accountId)) {
+    return `<div class="following-badge" title="Following">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+    </div>`;
+  }
+  return '';
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    SHARED INNER BODY
    ══════════════════════════════════════════════════════════════════════ */
@@ -181,7 +195,10 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
     quoteHTML = `
         <div class="post-quote" style="padding:10px; margin-top:8px;" onclick="event.stopPropagation(); if (window.openThreadDrawer) window.openThreadDrawer('${qStatus.id}'); else window.open('${qStatus.url}', '_blank')">
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-            <img src="${qStatus.account.avatar_static || qStatus.account.avatar}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; background:var(--surface); flex-shrink:0;" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER">
+          <div style="position:relative; width:20px; height:20px; flex-shrink:0;">
+            <img src="${qStatus.account.avatar_static || qStatus.account.avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; background:var(--surface); display:block;" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER">
+            ${renderFollowingBadge(qStatus.account.id)}
+          </div>
             <div style="display:flex; flex-direction:column; line-height:1.2; overflow:hidden;">
               <span style="font-weight:600; font-size:12.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${renderCustomEmojis(qStatus.account.display_name || qStatus.account.username, qStatus.account.emojis)}</span>
               <span style="color:var(--text-dim); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${escapeHTML(qStatus.account.acct)}</span>
@@ -538,9 +555,7 @@ export function renderPost(status, opts = {}) {
       <div class="post-header post-header--with-server">
         <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer; align-self:center;">
           <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
-          ${state.knownFollowing.has(s.account.id) ? `<div class="following-badge" title="Following">
-            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          </div>` : ''}
+          ${renderFollowingBadge(s.account.id)}
         </div>
         <div class="post-meta post-meta--with-server">
           <div class="post-author post-author--with-server">
@@ -646,9 +661,7 @@ export function renderThreadPost(status, variant) {
         <div class="post-header post-header--with-server">
           <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer">
             <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
-            ${state.knownFollowing.has(s.account.id) ? `<div class="following-badge" title="Following">
-              <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-            </div>` : ''}
+            ${renderFollowingBadge(s.account.id)}
           </div>
           <div class="post-meta post-meta--with-server">
             <div class="post-author post-author--with-server">

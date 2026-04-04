@@ -9,6 +9,8 @@ import { apiGet } from './api.js';
 import { escapeHTML, relativeTime, updateURLParam } from './utils.js';
 import { openProfileDrawer } from './profile.js';
 import { openThreadDrawer } from './thread.js';
+import { renderFollowingBadge } from './render.js';
+import { fetchRelationships } from './feed.js';
 
 /* ── Pagination / Observer ─────────────────────────────────────────── */
 let _notifLoadingMore = false;
@@ -403,12 +405,16 @@ export async function loadNotifications(append = false) {
       state.notifMaxId[filter] = notifs[notifs.length - 1].id;
     } else {
       state.notifMaxId[filter] = null;
-      const sentinel = $('notif-sentinel');
-      if (sentinel) {
-        sentinel.innerHTML = '<div class="notif-end" style="text-align:center;padding:24px;font-size:11px;color:var(--text-dim);font-family:var(--font-mono);opacity:0.6;">— end of notifications —</div>';
-        _disconnectNotifObserver();
+        const sentinel = $('notif-sentinel');
+        if (sentinel) {
+          sentinel.innerHTML = '<div class="notif-end" style="text-align:center;padding:24px;font-size:11px;color:var(--text-dim);font-family:var(--font-mono);opacity:0.6;">— end of notifications —</div>';
+          _disconnectNotifObserver();
+        }
       }
-    }
+
+      const statuses = notifs.filter(n => !!n.status).map(n => n.status);
+      const accounts = notifs.map(n => n.account);
+      await fetchRelationships([...statuses, ...accounts]);
 
     if (!append) {
       setNotifCache(filter, notifs);
@@ -538,9 +544,12 @@ function renderNotifItem(n) {
       <div class="notif-icon ${typeClass}">${icon}</div>
       <div class="notif-body">
         <div class="notif-meta">
-          <img class="notif-avatar" src="${escapeHTML(avatarUrl)}" alt="" loading="lazy"
-               onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"
-               data-notif-profile="${account.id}" data-notif-server="${state.server}" />
+          <div style="position:relative; display:inline-flex;">
+            <img class="notif-avatar" src="${escapeHTML(avatarUrl)}" alt="" loading="lazy"
+                 onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"
+                 data-notif-profile="${account.id}" data-notif-server="${state.server}" />
+            ${renderFollowingBadge(account.id)}
+          </div>
           <span class="notif-who" data-notif-profile="${account.id}" data-notif-server="${state.server}">${displayName}</span>
           <span class="notif-action">${label}</span>
         </div>

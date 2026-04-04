@@ -6,6 +6,7 @@
 import { $, state } from './state.js';
 import { apiGet } from './api.js';
 import { renderThreadPost } from './render.js';
+import { fetchRelationships } from './feed.js';
 import { escapeHTML, updateURLParam } from './utils.js';
 
 /* ── Open / close ──────────────────────────────────────────────────── */
@@ -84,7 +85,10 @@ async function loadThread(statusId, container, preserveScroll = false) {
       apiGet(`/api/v1/statuses/${statusId}`, state.token),
       apiGet(`/api/v1/statuses/${statusId}/context`, state.token),
     ]);
-    renderThread(focalStatus, context.ancestors || [], context.descendants || [], container, preserveScroll ? currentScroll : 0);
+    const ancestors = context.ancestors || [];
+    const descendants = context.descendants || [];
+    await fetchRelationships([focalStatus, ...ancestors, ...descendants]);
+    renderThread(focalStatus, ancestors, descendants, container, preserveScroll ? currentScroll : 0);
   } catch (err) {
     container.innerHTML = `
       <div class="thread-status">
