@@ -200,19 +200,24 @@ async function _poll() {
 /* -- Diff + DOM update ----------------------------------------------------- */
 
 function _applyUpdate(status, fromUserAction) {
-  const id   = status.id;
-  const prev = knownCounts.get(id);
+  if (!status) return;
+
+  // Use the reblog object for counts if it exists, as that's where the 
+  // actual engagement statistics live in the Mastodon API.
+  const source   = status.reblog || status;
+  const id       = status.id;
+  const prev     = knownCounts.get(id);
 
   const separate = store.get('pref_separate_boost_quote') === 'true';
   const next = {
-    replies: status.replies_count    || 0,
-    boosts:  separate ? (status.reblogs_count || 0) : ((status.reblogs_count || 0) + (status.quotes_count || status.quote_count || 0)),
-    quotes:  status.quotes_count || status.quote_count || 0,
-    favs:    status.favourites_count || 0,
+    replies: source.replies_count    || 0,
+    boosts:  separate ? (source.reblogs_count || 0) : ((source.reblogs_count || 0) + (source.quotes_count || source.quote_count || 0)),
+    quotes:  source.quotes_count || source.quote_count || 0,
+    favs:    source.favourites_count || 0,
   };
 
   // Carry the name forward; update it if the API response has a better one
-  next.name = status.account?.display_name || status.account?.acct || prev?.name || id;
+  next.name = source.account?.display_name || source.account?.acct || prev?.name || id;
   knownCounts.set(id, next);
   const label = next.name || id;
 
@@ -221,17 +226,17 @@ function _applyUpdate(status, fromUserAction) {
   document.querySelectorAll(`article[data-id="${id}"]`).forEach(article => {
     const fb = article.querySelector('.post-fav-btn');
     if (fb) {
-      fb.classList.toggle('favourited', !!status.favourited);
-      fb.dataset.favourited = status.favourited ? 'true' : 'false';
+      fb.classList.toggle('favourited', !!source.favourited);
+      fb.dataset.favourited = source.favourited ? 'true' : 'false';
       const svg = fb.querySelector('svg');
-      if (svg) svg.setAttribute('fill', status.favourited ? 'currentColor' : 'none');
+      if (svg) svg.setAttribute('fill', source.favourited ? 'currentColor' : 'none');
     }
 
     const bb = article.querySelector('.post-boost-btn');
     if (bb) {
-      bb.classList.toggle('boosted', !!status.reblogged);
-      bb.dataset.reblogged = status.reblogged ? 'true' : 'false';
-      const isBoosted = !!status.reblogged;
+      bb.classList.toggle('boosted', !!source.reblogged);
+      bb.dataset.reblogged = source.reblogged ? 'true' : 'false';
+      const isBoosted = !!source.reblogged;
       if (bb.title) {
         if (separate) bb.title = isBoosted ? 'Undo Boost' : 'Boost';
         else bb.title = isBoosted ? 'Undo Boost or Quote' : 'Boost or Quote';
@@ -240,30 +245,35 @@ function _applyUpdate(status, fromUserAction) {
 
     const bkb = article.querySelector('.post-bookmark-btn');
     if (bkb) {
-      bkb.classList.toggle('bookmarked', !!status.bookmarked);
-      bkb.dataset.bookmarked = status.bookmarked ? 'true' : 'false';
+      bkb.classList.toggle('bookmarked', !!source.bookmarked);
+      bkb.dataset.bookmarked = source.bookmarked ? 'true' : 'false';
     }
 
     // Sync dropdown statistics and labels
     const dropdown = article.querySelector('.boost-dropdown');
     if (dropdown) {
       const bStat = dropdown.querySelector('[data-action="boost"] .dropdown-stat-count');
-      if (bStat) bStat.textContent = status.reblogs_count || 0;
+      if (bStat) bStat.textContent = source.reblogs_count || 0;
       const qStat = dropdown.querySelector('[data-action="quote"] .dropdown-stat-count');
-      if (qStat) qStat.textContent = status.quotes_count || status.quote_count || 0;
+      if (qStat) qStat.textContent = source.quotes_count || source.quote_count || 0;
 
       // Sync dropdown labels and datasets
       const boostItem = dropdown.querySelector('.boost-dropdown-item[data-action="boost"]');
       if (boostItem) {
-        boostItem.dataset.isBoosted = status.reblogged ? 'true' : 'false';
+        boostItem.dataset.isBoosted = source.reblogged ? 'true' : 'false';
         const labelSpan = boostItem.querySelector('span:not(.dropdown-stat-count)');
-        if (labelSpan) labelSpan.textContent = status.reblogged ? 'Undo Boost' : 'Boost';
+        if (labelSpan) labelSpan.textContent = source.reblogged ? 'Undo Boost' : 'Boost';
         // Also handle lb-boost-label in lightbox
         const lbLabelSpan = boostItem.querySelector('.lb-boost-label');
-        if (lbLabelSpan) lbLabelSpan.textContent = status.reblogged ? 'Undo Boost' : 'Boost';
+        if (lbLabelSpan) lbLabelSpan.textContent = source.reblogged ? 'Undo Boost' : 'Boost';
       }
     }
   });
+
+  // Recursively update the original status to keep all synchronized
+  if (status.reblog) {
+    _applyUpdate(status.reblog, fromUserAction);
+  }
 
   if (!prev) return; // first time seeing this post - no animation
 

@@ -678,7 +678,7 @@ export function renderThreadPost(status, variant) {
 
   return `
     <div class="${variantClass}" data-status-id="${s.id}">
-      <article class="post${contextClass}" data-id="${status.id}">
+      <article class="post${contextClass}" data-id="${s.id}">
         ${boostLabelHTML}
         <div class="post-header post-header--with-server">
           <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer">
