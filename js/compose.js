@@ -586,23 +586,28 @@ window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
     const actualStatus = statusResponse.reblog || statusResponse;
     applyCountsFromStatus(actualStatus);
 
-    const menuBtn = document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`);
-    if (menuBtn) {
-      const countSpan = menuBtn.querySelector('.boost-count');
-      const isNowBoosted = actualStatus.reblogged === true;
+    const isNowBoosted = actualStatus.reblogged === true;
+    const menuBtns = document.querySelectorAll(`.post-boost-btn[data-post-id="${postId}"]`);
+    menuBtns.forEach(menuBtn => {
       menuBtn.classList.toggle('boosted', isNowBoosted);
-      if (countSpan) countSpan.textContent = (actualStatus.reblogs_count || 0) + (actualStatus.quotes_count || actualStatus.quote_count || 0);
-
-      const dropdownItems = menuBtn.nextElementSibling.querySelectorAll('.boost-dropdown-item');
-      if (dropdownItems.length > 0) {
-        const boostDropdownBtn = dropdownItems[0];
-        boostDropdownBtn.setAttribute('onclick', `event.stopPropagation(); window.handleBoostSubmit('${postId}', ${isNowBoosted})`);
-        const textSpan = boostDropdownBtn.querySelector('span:not(.dropdown-stat-count)');
-        if (textSpan) textSpan.textContent = isNowBoosted ? 'Undo Boost' : 'Boost';
-        const countNode = boostDropdownBtn.querySelector('.dropdown-stat-count');
-        if (countNode) countNode.textContent = actualStatus.reblogs_count || 0;
+      const countSpan = menuBtn.querySelector('.boost-count');
+      if (countSpan) {
+        countSpan.textContent = (actualStatus.reblogs_count || 0) + (actualStatus.quotes_count || actualStatus.quote_count || 0);
       }
-    }
+
+      const dropdown = menuBtn.nextElementSibling;
+      if (dropdown && dropdown.classList.contains('boost-dropdown')) {
+        const boostDropdownBtn = dropdown.querySelector('.boost-dropdown-item[data-action="boost"]');
+        if (boostDropdownBtn) {
+          boostDropdownBtn.setAttribute('onclick', `event.stopPropagation(); window.handleBoostSubmit('${postId}', ${isNowBoosted})`);
+          boostDropdownBtn.dataset.isBoosted = isNowBoosted ? 'true' : 'false';
+          const textSpan = boostDropdownBtn.querySelector('span:not(.dropdown-stat-count)');
+          if (textSpan) textSpan.textContent = isNowBoosted ? 'Undo Boost' : 'Boost';
+          const countNode = boostDropdownBtn.querySelector('.dropdown-stat-count');
+          if (countNode) countNode.textContent = actualStatus.reblogs_count || 0;
+        }
+      }
+    });
   } catch (e) {
     showToast('Error updating boost: ' + e.message);
   }
