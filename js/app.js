@@ -1896,6 +1896,7 @@ document.addEventListener('click', e => {
   if (boostItem) {
     e.preventDefault();
     e.stopPropagation();
+    document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
     if (boostItem.dataset.action === 'boost') {
       window.handleBoostSubmit(boostItem.dataset.postId, boostItem.dataset.isBoosted === 'true', boostItem);
     } else if (boostItem.dataset.action === 'quote') {
