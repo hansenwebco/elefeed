@@ -131,6 +131,8 @@
     outline: none;
     transition: border-color var(--trans), box-shadow var(--trans);
     caret-color: var(--accent);
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 #search-input::placeholder {
