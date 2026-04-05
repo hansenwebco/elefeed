@@ -13,13 +13,20 @@ export function escapeHTML(str) {
     .replace(/"/g, '&quot;');
 }
 
+/** Escape a string for use in a regular expression. */
+export function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
- * Sanitize user-generated HTML: mark hashtag/mention links
- * and force all links to open in a new tab.
+ * Sanitize user-generated HTML: mark hashtag/mention links,
+ * force links to open in a new tab, and render custom emojis.
  */
 export function sanitizeHTML(html, context = null) {
   const div = document.createElement('div');
   div.innerHTML = html;
+
+  // 1. Process links (mentions, hashtags, external)
   div.querySelectorAll('a').forEach(a => {
     const text = a.textContent.trim();
     let isMention = false;
@@ -49,6 +56,60 @@ export function sanitizeHTML(html, context = null) {
     a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
   });
+
+  // 2. Process custom emojis in text nodes
+  if (context && context.emojis && context.emojis.length > 0) {
+    const emojis = context.emojis;
+    const walker = document.createTreeWalker(div, NodeFilter.SHOW_TEXT, null, false);
+    const nodesToReplace = [];
+    let node;
+    while (node = walker.nextNode()) {
+      if (node.parentElement.tagName === 'A' || node.parentElement.tagName === 'CODE') continue;
+      // Check if text matches any emoji shortcode
+      const text = node.textContent;
+      if (text.includes(':')) {
+        nodesToReplace.push(node);
+      }
+    }
+
+    nodesToReplace.forEach(textNode => {
+      let content = textNode.textContent;
+      let hasEmoji = false;
+      const fragment = document.createDocumentFragment();
+      
+      // Basic approach: regex replace shortcodes with placeholders, then split and build fragment
+      // More robust: sort emojis by length descending to avoid partial matches if that's a thing
+      let currentText = content;
+      
+      // Construct a single regex for all emojis
+      const pattern = emojis.map(e => escapeRegExp(`:${e.shortcode}:`)).join('|');
+      const regex = new RegExp(`(${pattern})`, 'g');
+      const parts = currentText.split(regex);
+      
+      parts.forEach(part => {
+        if (!part) return;
+        const matchingEmoji = emojis.find(e => `:${e.shortcode}:` === part);
+        if (matchingEmoji) {
+          const img = document.createElement('img');
+          const prefersStatic = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          img.src = (prefersStatic && matchingEmoji.static_url) ? matchingEmoji.static_url : matchingEmoji.url;
+          img.alt = part;
+          img.title = part;
+          img.className = 'custom-emoji';
+          img.loading = 'lazy';
+          fragment.appendChild(img);
+          hasEmoji = true;
+        } else {
+          fragment.appendChild(document.createTextNode(part));
+        }
+      });
+      
+      if (hasEmoji) {
+        textNode.parentNode.replaceChild(fragment, textNode);
+      }
+    });
+  }
+
   return div.innerHTML;
 }
 
@@ -170,11 +231,13 @@ export function renderCustomEmojis(text, emojis = []) {
   if (!text) return '';
   let escaped = escapeHTML(text);
   if (emojis && emojis.length > 0) {
+    const prefersStatic = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     emojis.forEach(e => {
-      const regex = new RegExp(`:${e.shortcode}:`, 'g');
+      const regex = new RegExp(escapeRegExp(`:${e.shortcode}:`), 'g');
+      const emojiUrl = (prefersStatic && e.static_url) ? e.static_url : e.url;
       escaped = escaped.replace(
         regex,
-        `<img src="${e.url}" alt=":${e.shortcode}:" title=":${e.shortcode}:" class="custom-emoji" />`
+        `<img src="${emojiUrl}" alt=":${e.shortcode}:" title=":${e.shortcode}:" class="custom-emoji" />`
       );
     });
   }
@@ -229,6 +292,26 @@ export function placeCursorAtEnd(el) {
     sel.removeAllRanges();
     sel.addRange(range);
   } catch { }
+}
+
+/** 
+ * Safely serialize contenteditable HTML to plain text, preserving 
+ * emoji shortcodes from <img> alt attributes.
+ */
+export function getEditorText(el) {
+  if (!el) return '';
+  // Clone to avoid mutations
+  const clone = el.cloneNode(true);
+  
+  // Replace custom emoji images with their alt text
+  clone.querySelectorAll('.compose-custom-emoji').forEach(img => {
+    img.parentNode.replaceChild(document.createTextNode(img.alt || ''), img);
+  });
+  
+  // Convert <br> and <div> wrappers to newlines if innerText is unreliable
+  // but innerText is usually okay once images are replaced.
+  const text = clone.innerText || clone.textContent || '';
+  return text.trim();
 }
 
 /** 

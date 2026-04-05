@@ -9,7 +9,7 @@ import { $, state, composeState, store } from './state.js';
 import { apiGet } from './api.js';
 import { showToast, showConfirm } from './ui.js';
 import { applyCountsFromStatus } from './counts.js';
-import { escapeHTML, renderCustomEmojis, placeCursorAtEnd } from './utils.js';
+import { escapeHTML, renderCustomEmojis, placeCursorAtEnd, getEditorText } from './utils.js';
 import { loadFeedTab } from './feed.js';
 import { updateCurrentThread } from './thread.js';
 import { openEmojiPicker, closeEmojiPicker, initEmojiPicker, initEmojiAutocomplete } from './emoji.js';
@@ -1156,7 +1156,7 @@ async function doPost(suffix = '') {
   const quote_approval_policy = visBtn ? (visBtn.dataset.quote || 'public') : 'public';
   const language = visBtn ? (visBtn.dataset.lang || 'browser') : 'browser';
   const sensitive = visBtn ? (visBtn.dataset.sensitive === 'true') : false;
-  const status = textarea.innerText.trim();
+  const status = getEditorText(textarea);
   const spoilerText = cwInput.value.trim();
 
   const isSidebar = suffix === '-sidebar';
