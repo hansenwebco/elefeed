@@ -149,11 +149,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
               <button class="cw-toggle" style="padding:3px 8px; font-size:11px;" onclick="event.stopPropagation(); window.toggleCW('${qCwId}', this)">${qIsExpanded ? 'hide' : 'show'}</button>
             </div>
             <div class="cw-body${qIsExpanded ? ' expanded' : ''}" id="${qCwId}">
-              <div class="post-content" style="font-size:12.5px; opacity:0.9;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>
+              <div class="post-content" style="font-size:12.5px; opacity:0.9;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, emojis: qStatus.emojis, server: state.server }))}</div>
             </div>
           </div>`;
     } else {
-      qContentHTML = `<div class="post-content" style="font-size:12.5px; opacity:0.9; margin-bottom:0; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, server: state.server }))}</div>`;
+      qContentHTML = `<div class="post-content" style="font-size:12.5px; opacity:0.9; margin-bottom:0; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;">${processContent(sanitizeHTML(qStatus.content, { mentions: qStatus.mentions, emojis: qStatus.emojis, server: state.server }))}</div>`;
     }
 
     let qMediaHTML = '';
@@ -292,11 +292,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
   
   const hasSpoiler = s.spoiler_text && s.spoiler_text.length > 0;
-  const cwText = hasSpoiler ? escapeHTML(s.spoiler_text) : 'Sensitive content';
+  const cwText = hasSpoiler ? renderCustomEmojis(s.spoiler_text, s.emojis) : 'Sensitive content';
   const cwId = `cw-${idPrefix}${status.id}`;
   const isExpanded = autoOpenSensitive;
   const { content: rawContent, tags: postTags } = extractTrailingHashtags(
-    sanitizeHTML(s.content, { mentions: s.mentions, server: state.server })
+    sanitizeHTML(s.content, { mentions: s.mentions, emojis: s.emojis, server: state.server })
   );
   const postBody = processContent(rawContent);
 
@@ -690,7 +690,7 @@ export function renderPoll(poll) {
       return `
         <label class="poll-option poll-option--voting" onclick="event.stopPropagation()">
           <input type="${inputType}" name="${inputName}" value="${idx}" class="poll-input">
-          <span class="poll-option-text">${renderCustomEmojis(escapeHTML(opt.title), poll.emojis)}</span>
+          <span class="poll-option-text">${renderCustomEmojis(opt.title, poll.emojis)}</span>
         </label>`;
     } else {
       const pct = total > 0 ? Math.round((opt.votes_count / total) * 100) : 0;
@@ -700,7 +700,7 @@ export function renderPoll(poll) {
           <div class="poll-bar" style="width:${pct}%"></div>
           <span class="poll-option-text">
             ${isOwnVote ? '<span class="poll-own-vote-icon" title="You voted for this">✓</span> ' : ''}
-            ${renderCustomEmojis(escapeHTML(opt.title), poll.emojis)}
+            ${renderCustomEmojis(opt.title, poll.emojis)}
           </span>
           <span class="poll-pct">${pct}%</span>
         </div>`;
