@@ -20,6 +20,7 @@
 
 import { state, store } from './state.js';
 import { apiGet } from './api.js';
+import { renderPoll } from './render.js';
 
 /* -- Config ---------------------------------------------------------------- */
 
@@ -266,6 +267,17 @@ function _applyUpdate(status, fromUserAction) {
         // Also handle lb-boost-label in lightbox
         const lbLabelSpan = boostItem.querySelector('.lb-boost-label');
         if (lbLabelSpan) lbLabelSpan.textContent = source.reblogged ? 'Undo Boost' : 'Boost';
+      }
+    }
+
+    // Sync poll if it exists
+    if (source.poll) {
+      const pollContainer = article.querySelector('.post-poll');
+      if (pollContainer) {
+        // Only update if the poll ID matches (sanity check)
+        if (pollContainer.dataset.pollId === source.poll.id) {
+          pollContainer.outerHTML = renderPoll(source.poll);
+        }
       }
     }
   });
