@@ -115,16 +115,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   /* ── Poll ── */
   let pollHTML = '';
   if (s.poll) {
-    const total = s.poll.votes_count || 1;
-    const options = s.poll.options.map(opt => {
-      const pct = total > 0 ? Math.round((opt.votes_count / total) * 100) : 0;
-      return `<div class="poll-option">
-        <div class="poll-bar" style="width:${pct}%"></div>
-        <span class="poll-option-text">${escapeHTML(opt.title)}</span>
-        <span class="poll-pct">${pct}%</span>
-      </div>`;
-    }).join('');
-    pollHTML = `<div class="post-poll">${options}<div class="poll-meta">${total} votes · ${s.poll.expired ? 'closed' : 'open'}</div></div>`;
+    pollHTML = renderPoll(s.poll);
   }
 
   /* ── Quote ── */
@@ -677,6 +668,48 @@ export function renderThreadPost(status, variant) {
         ${footerHTML}
       </article>
     </div>`;
+}
+
+/**
+ * Render the poll container (called by _buildPostBody and handlePollVote).
+ * @param {object} poll  Mastodon poll object
+ * @returns {string}
+ */
+export function renderPoll(poll) {
+  if (!poll) return '';
+  const isVoted = poll.voted;
+  const isClosed = poll.expired;
+  const canVote = !isVoted && !isClosed;
+  const total = poll.votes_count || 0;
+  const multiple = poll.multiple;
+
+  const options = poll.options.map((opt, idx) => {
+    if (canVote) {
+      const inputType = multiple ? 'checkbox' : 'radio';
+      const inputName = `poll-${poll.id}`;
+      return `
+        <label class="poll-option poll-option--voting" onclick="event.stopPropagation()">
+          <input type="${inputType}" name="${inputName}" value="${idx}" class="poll-input">
+          <span class="poll-option-text">${renderCustomEmojis(escapeHTML(opt.title), poll.emojis)}</span>
+        </label>`;
+    } else {
+      const pct = total > 0 ? Math.round((opt.votes_count / total) * 100) : 0;
+      const isOwnVote = isVoted && poll.own_votes && poll.own_votes.includes(idx);
+      return `
+        <div class="poll-option">
+          <div class="poll-bar" style="width:${pct}%"></div>
+          <span class="poll-option-text">
+            ${isOwnVote ? '<span class="poll-own-vote-icon" title="You voted for this">✓</span> ' : ''}
+            ${renderCustomEmojis(escapeHTML(opt.title), poll.emojis)}
+          </span>
+          <span class="poll-pct">${pct}%</span>
+        </div>`;
+    }
+  }).join('');
+
+  const voteBtn = canVote ? `<button class="poll-vote-btn" onclick="event.stopPropagation(); window.handlePollVote('${poll.id}', this.closest('.post-poll'))">Vote</button>` : '';
+  const pollMeta = `<div class="poll-meta">${total} votes · ${isClosed ? 'closed' : 'open'}</div>`;
+  return `<div class="post-poll" data-poll-id="${poll.id}">${options}${voteBtn}${pollMeta}</div>`;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -1448,4 +1481,55 @@ window.toggleFooterMoreMenu = function (postId, triggerBtn) {
   });
   const menu = triggerBtn.nextElementSibling;
   if (menu) menu.classList.toggle('show');
+};
+
+/** Handle voting in a poll. */
+window.handlePollVote = async function (pollId, pollEl) {
+  if (!state.token) {
+    import('./ui.js').then(m => m.showToast('Please sign in to vote in polls.'));
+    return;
+  }
+
+  const inputs = pollEl.querySelectorAll('input:checked');
+  if (inputs.length === 0) {
+    import('./ui.js').then(m => m.showToast('Please select at least one option.'));
+    return;
+  }
+
+  const choices = Array.from(inputs).map(i => parseInt(i.value, 10));
+  const voteBtn = pollEl.querySelector('.poll-vote-btn');
+  
+  if (voteBtn) {
+    voteBtn.disabled = true;
+    voteBtn.textContent = 'Voting...';
+  }
+
+  try {
+    const res = await fetch(`https://${state.server}/api/v1/polls/${pollId}/votes`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${state.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ choices })
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${res.status}`);
+    }
+
+    const updatedPoll = await res.json();
+    
+    // Re-render the poll container in place
+    pollEl.outerHTML = renderPoll(updatedPoll);
+    
+  } catch (err) {
+    console.error('Poll vote failed:', err);
+    import('./ui.js').then(m => m.showToast('Failed to vote: ' + err.message));
+    if (voteBtn) {
+      voteBtn.disabled = false;
+      voteBtn.textContent = 'Vote';
+    }
+  }
 };
