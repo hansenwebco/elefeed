@@ -31,6 +31,54 @@ export function renderFollowingBadge(accountId) {
   return '';
 }
 
+/**
+ * Returns the HTML for the "Insights" / Analytics menu button and dropdown.
+ * @param {object} s The status object
+ * @returns {string}
+ */
+export function renderAnalyticsMenu(s) {
+  return `
+    <div style="position:relative;display:inline-flex;">
+      <button class="icon-btn post-analytics-btn"
+        data-post-id="${s.id}"
+        data-replies="${s.replies_count || 0}"
+        data-boosts="${s.reblogs_count || 0}"
+        data-quotes="${s.quotes_count || s.quote_count || 0}"
+        data-favs="${s.favourites_count || 0}"
+        title="Post insights"
+        style="color:var(--text-dim);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      </button>
+      <div class="boost-dropdown post-analytics-menu" id="post-analytics-menu-${s.id}"
+        style="right:0;left:auto;top:auto;bottom:100%;margin-bottom:8px;min-width:188px;transform-origin:bottom right;">
+        <button class="boost-dropdown-item post-analytics-item" data-action="replies" data-post-id="${s.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+          <span>Replies</span>
+          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.replies_count || 0}</span>
+        </button>
+        <button class="boost-dropdown-item post-analytics-item" data-action="quotes" data-post-id="${s.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
+          <span>Quotes</span>
+          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || s.quote_count || 0}</span>
+        </button>
+        <button class="boost-dropdown-item post-analytics-item" data-action="boosts" data-post-id="${s.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <span>Boosts</span>
+          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
+        </button>
+        <button class="boost-dropdown-item post-analytics-item" data-action="favs" data-post-id="${s.id}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>Favorites</span>
+          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.favourites_count || 0}</span>
+        </button>
+      </div>
+    </div>`;
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    SHARED INNER BODY
    ══════════════════════════════════════════════════════════════════════ */
@@ -506,7 +554,8 @@ export function renderPost(status, opts = {}) {
   const profileServer = escapeHTML(state.server || '');
 
   const isOwnPost = !!(state.account && s.account.id === state.account.id);
-  const { contentHTML, footerHTML } = _buildPostBody(status, s, '', '', isOwnPost);
+  const analyticsHTML = isOwnPost ? renderAnalyticsMenu(s) : '';
+  const { contentHTML, footerHTML } = _buildPostBody(status, s, '', analyticsHTML, isOwnPost);
 
   /* ── Hashtag banner ── */
   const tagList = opts.tags && opts.tags.length ? opts.tags : (opts.tag ? [opts.tag] : []);
@@ -580,49 +629,9 @@ export function renderThreadPost(status, variant) {
   /* ── Analytics button + dropdown (focal posts only) ── */
   const isFocal = variant === 'focal';
   const isOwnPost = !!(state.account && s.account.id === state.account.id);
+  const analyticsHTML = (isFocal || isOwnPost) ? renderAnalyticsMenu(s) : '';
 
-  const analyticsMenuHTML = isFocal ? `
-    <div style="position:relative;display:inline-flex;">
-      <button class="icon-btn post-analytics-btn"
-        data-post-id="${s.id}"
-        data-replies="${s.replies_count || 0}"
-        data-boosts="${s.reblogs_count || 0}"
-        data-quotes="${s.quotes_count || s.quote_count || 0}"
-        data-favs="${s.favourites_count || 0}"
-        title="Post insights"
-        style="color:var(--text-dim);">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="20" x2="18" y2="10"/>
-          <line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6" y1="20" x2="6" y2="14"/>
-        </svg>
-      </button>
-      <div class="boost-dropdown post-analytics-menu" id="post-analytics-menu-${s.id}"
-        style="right:0;left:auto;top:auto;bottom:100%;margin-bottom:8px;min-width:188px;transform-origin:bottom right;">
-        <button class="boost-dropdown-item post-analytics-item" data-action="replies" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
-          <span>Replies</span>
-          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.replies_count || 0}</span>
-        </button>
-        <button class="boost-dropdown-item post-analytics-item" data-action="quotes" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
-          <span>Quotes</span>
-          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || s.quote_count || 0}</span>
-        </button>
-        <button class="boost-dropdown-item post-analytics-item" data-action="boosts" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
-          <span>Boosts</span>
-          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
-        </button>
-        <button class="boost-dropdown-item post-analytics-item" data-action="favs" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-          <span>Favorites</span>
-          <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.favourites_count || 0}</span>
-        </button>
-      </div>
-    </div>` : '';
-
-  const { contentHTML, footerHTML } = _buildPostBody(status, s, 'thread-', analyticsMenuHTML, isOwnPost);
+  const { contentHTML, footerHTML } = _buildPostBody(status, s, 'thread-', analyticsHTML, isOwnPost);
 
   const boostLabelHTML = boostBy ? `
     <div class="boost-divider">
@@ -662,7 +671,6 @@ export function renderThreadPost(status, variant) {
             </div>
             <div class="post-server-address">${escapeHTML((s.account.url || '').split('/')[2] || '')}</div>
           </div>
-          ${analyticsMenuHTML}
         </div>
         ${contentHTML}
         ${footerHTML}
