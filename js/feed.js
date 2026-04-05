@@ -287,20 +287,25 @@ export async function fetchRelationships(page) {
   }
   const idsToCheck = new Set();
   page.forEach(p => {
-    // Add top-level account inherently if this came from home timeline? 
-    // We'll just check what's given.
-    const accountId = p.account.id;
-    const authorId = (p.reblog || p).account.id;
-    const quoteAuthorId = (p.reblog || p).quote?.account?.id;
+    // page can contain statuses (with .account), accounts (with .username), or tags (with neither)
+    const isStatus = !!p.account;
+    const isAccount = !isStatus && !!p.username;
+    
+    if (isAccount) {
+      if (!state.knownFollowing.has(p.id) && !state.knownNotFollowing.has(p.id)) {
+        idsToCheck.add(p.id);
+      }
+    } else if (isStatus) {
+      const s = p.reblog || p;
+      const authorId = s.account.id;
+      const boostAuthorId = p.reblog ? p.account.id : null;
+      const quoteAuthorId = s.quote?.account?.id || s.quoted_status?.account?.id;
 
-    if (!state.knownFollowing.has(accountId) && !state.knownNotFollowing.has(accountId)) {
-      idsToCheck.add(accountId);
-    }
-    if (!state.knownFollowing.has(authorId) && !state.knownNotFollowing.has(authorId)) {
-      idsToCheck.add(authorId);
-    }
-    if (quoteAuthorId && !state.knownFollowing.has(quoteAuthorId) && !state.knownNotFollowing.has(quoteAuthorId)) {
-      idsToCheck.add(quoteAuthorId);
+      [authorId, boostAuthorId, quoteAuthorId].forEach(id => {
+        if (id && !state.knownFollowing.has(id) && !state.knownNotFollowing.has(id)) {
+          idsToCheck.add(id);
+        }
+      });
     }
   });
 
