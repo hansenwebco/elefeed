@@ -36,14 +36,17 @@ import {
   openNotifDrawer, closeNotifDrawer, pollNotifications,
   initNotifications, startSwPolling, stopSwPolling,
   requestNotifPermission, getNotifPermission, updateSwConfig,
+  showLatestNotifToast,
 } from './notifications.js';
 import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply, updateCharCount, updateSidebarCharCount, resetReplyState, refreshComposeDefaults } from './compose.js';
 import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
 import { openPostAnalyticsDrawer, closePostAnalyticsDrawer, appendMoreAnalyticsUsers } from './analytics.js';
 import { startCountPolling, stopCountPolling, applyCountsFromStatus } from './counts.js';
 
-// Expose drawer openers needed by render.js (no module imports there)
+// Expose drawer openers needed by render.js and ui.js toasts
 window.openThreadDrawer = openThreadDrawer;
+window.openProfileDrawer = openProfileDrawer;
+window.openNotifDrawer = openNotifDrawer;
 window.handleReply = handleReply;
 
 // Drawer state tracking for history
@@ -1254,6 +1257,16 @@ if (_followingFeedToggle) {
 }
 
 // Wire notification settings controls (elements exist in DOM at load time)
+// In-app notifications
+const _inAppNotifToggle = $('settings-in-app-notif-toggle');
+if (_inAppNotifToggle) {
+  _inAppNotifToggle.checked = store.get('pref_in_app_notifs') !== 'false';
+  _inAppNotifToggle.addEventListener('change', () => {
+    store.set('pref_in_app_notifs', _inAppNotifToggle.checked ? 'true' : 'false');
+  });
+}
+
+// Background notifications toggle
 const _permBtn = $('settings-notif-perm-btn');
 const _bgToggle = $('settings-bg-notif-toggle');
 const _intervalSel = $('settings-notif-interval');
@@ -1684,6 +1697,16 @@ $('logout-btn').addEventListener('click', () => {
 /* ══════════════════════════════════════════════════════════════════════
    SCROLL / WHEEL / TOUCH
    ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Shortcut Keys ──────────────────────────────────────────────────── */
+
+document.addEventListener('keydown', e => {
+  // Ctrl+Alt+N → Trigger latest notification preview
+  if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'n') {
+    e.preventDefault();
+    showLatestNotifToast();
+  }
+});
 
 let scrollTimeout = null;
 function attachScrollListener() {

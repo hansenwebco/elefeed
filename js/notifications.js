@@ -11,6 +11,8 @@ import { openProfileDrawer } from './profile.js';
 import { openThreadDrawer } from './thread.js';
 import { renderFollowingBadge } from './render.js';
 import { fetchRelationships } from './feed.js';
+import { NOTIF_ICONS, NOTIF_LABELS } from './notif_constants.js';
+import { showNotificationToast } from './ui.js';
 
 /* ── Pagination / Observer ─────────────────────────────────────────── */
 let _notifLoadingMore = false;
@@ -273,30 +275,6 @@ if ('serviceWorker' in navigator) {
     }
   });
 }
-
-/* ── Icon / label maps ─────────────────────────────────────────────── */
-
-const NOTIF_ICONS = {
-  mention: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-  reblog: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
-  favourite: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-  follow: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
-  follow_request: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
-  poll: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="8" x2="9" y2="16"/><line x1="15" y1="11" x2="15" y2="16"/></svg>',
-  update: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
-  status: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-};
-
-const NOTIF_LABELS = {
-  mention: 'mentioned you',
-  reblog: 'boosted your post',
-  favourite: 'favorited your post',
-  follow: 'followed you',
-  follow_request: 'requested to follow you',
-  poll: 'poll ended',
-  update: 'edited a post',
-  status: 'posted',
-};
 
 /* ── Open / close ──────────────────────────────────────────────────── */
 
@@ -637,42 +615,38 @@ export async function pollNotifications() {
       // silently seed the ID so only truly new arrivals trigger an alert.
       if (state._lastFiredNotifId === null) {
         state._lastFiredNotifId = newest.id;
+        return;
       }
 
       const alreadyFired = state._lastFiredNotifId >= newest.id;
+      if (!alreadyFired) {
+        state._lastFiredNotifId = newest.id;
+        
+        // Trigger in-app notification toast (handles its own pref check)
+        showNotificationToast(newest);
 
-      if (!alreadyFired && Notification.permission === 'granted') {
-        const bgEnabled = store.get('pref_bg_notifications') !== 'false';
-        if (bgEnabled) {
-          state._lastFiredNotifId = newest.id;
+        // OS persistent notification
+        if (Notification.permission === 'granted') {
+          const bgEnabled = store.get('pref_bg_notifications') !== 'false';
+          if (bgEnabled) {
+            const who = newest.account?.display_name || newest.account?.username || 'Someone';
+            const action = NOTIF_LABELS[newest.type] || newest.type;
+            const bodyText = state.notifUnreadCount > 1
+              ? `${who} and ${state.notifUnreadCount - 1} other${state.notifUnreadCount > 2 ? 's' : ''}`
+              : `${who} ${action}`;
 
-          const LABELS = {
-            mention: 'mentioned you',
-            reblog: 'boosted your post',
-            favourite: 'favorited your post',
-            follow: 'followed you',
-            follow_request: 'requested to follow you',
-            poll: 'poll ended',
-            update: 'edited a post',
-            status: 'posted',
-          };
-          const who = newest.account?.display_name || newest.account?.username || 'Someone';
-          const action = LABELS[newest.type] || newest.type;
-          const bodyText = state.notifUnreadCount > 1
-            ? `${who} and ${state.notifUnreadCount - 1} other${state.notifUnreadCount > 2 ? 's' : ''}`
-            : `${who} ${action}`;
-
-          try {
-            const reg = await navigator.serviceWorker.ready;
-            await reg.showNotification('Elefeed', {
-              body: bodyText,
-              icon: newest.account?.avatar_static || '/icon512x512.png',
-              badge: '/icon512x512.png',
-              tag: `elefeed-fg-${newest.id}`,
-              data: { url: '/?notifications=true' },
-            });
-          } catch (e) {
-            console.debug('[Elefeed] Foreground notification failed:', e.message);
+            try {
+              const reg = await navigator.serviceWorker.ready;
+              await reg.showNotification('Elefeed', {
+                body: bodyText,
+                icon: newest.account?.avatar_static || '/icon512x512.png',
+                badge: '/icon512x512.png',
+                tag: `elefeed-fg-${newest.id}`,
+                data: { url: '/?notifications=true' },
+              });
+            } catch (e) {
+              console.debug('[Elefeed] Foreground notification failed:', e.message);
+            }
           }
         }
       }
@@ -701,4 +675,37 @@ export function initNotifications() {
   $('notif-btn').addEventListener('click', openNotifDrawer);
   $('notif-close').addEventListener('click', closeNotifDrawer);
   $('notif-backdrop').addEventListener('click', closeNotifDrawer);
+}
+
+/**
+ * Trigger an in-app toast for the absolute latest notification.
+ * Used for the secret shortcut (Ctrl+Alt+N).
+ */
+export async function showLatestNotifToast() {
+  if (!state.token || !state.server) return;
+
+  try {
+    // Fetch just the single newest notification
+    const params = new URLSearchParams({ limit: 1 });
+    const res = await apiGet(`/api/v1/notifications?${params.toString()}`, state.token, state.server);
+    
+    // apiGet might return the array directly
+    const notifs = Array.isArray(res) ? res : [];
+
+    if (notifs.length > 0) {
+      showNotificationToast(notifs[0]);
+    } else {
+      showNotificationToast({
+        type: 'status',
+        account: {
+          display_name: 'elefeed',
+          username: 'system',
+          avatar_static: 'favicon.svg'
+        },
+        status: { content: 'No notifications found yet! Stay tuned for more.' }
+      });
+    }
+  } catch (err) {
+    console.error('[Elefeed] Failed to fetch latest notification for shortcut:', err);
+  }
 }

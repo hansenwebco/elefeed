@@ -6,7 +6,9 @@
  * boot time from app.js via registerTabLoader() to avoid circular imports.
  */
 
-import { $, state, CLIENT_VERSION } from './state.js';
+import { $, state, CLIENT_VERSION, store } from './state.js';
+import { escapeHTML } from './utils.js';
+import { NOTIF_ICONS, NOTIF_LABELS } from './notif_constants.js';
 
 /* ── Tab loader registry (avoids circular imports) ─────────────────── */
 
@@ -118,7 +120,106 @@ export function showToast(msg, typeOrDuration = 'info', duration = 2800) {
   }
 
   const timer = setTimeout(dismiss, duration);
-  closeBtn.addEventListener('click', () => { clearTimeout(timer); dismiss(); });
+  closeBtn.addEventListener('click', (e) => { e.stopPropagation(); clearTimeout(timer); dismiss(); });
+}
+
+/**
+ * Show a premium in-app notification preview.
+ * @param {object} notif - The Mastodon notification object.
+ */
+export function showNotificationToast(notif) {
+  // Respect user preference (will add toggle in settings later)
+  const enabled = store.get('pref_in_app_notifs') !== 'false';
+  if (!enabled) return;
+
+  const account = notif.account;
+  if (!account) return;
+
+  const region = _getRegion();
+  const icon = NOTIF_ICONS[notif.type] || NOTIF_ICONS.mention;
+  const label = NOTIF_LABELS[notif.type] || notif.type;
+  const avatarUrl = account.avatar_static || account.avatar;
+  const displayName = account.display_name || account.username;
+
+  let preview = '';
+  if (notif.status && notif.status.content) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = notif.status.content;
+    preview = (tempDiv.textContent || tempDiv.innerText || '').substring(0, 100);
+    if (preview.length >= 100) preview = preview.trim() + '…';
+  }
+
+  const item = document.createElement('div');
+  item.className = `toast-item toast-notification toast-notif-${notif.type}`;
+  item.setAttribute('role', 'alert');
+  item.setAttribute('data-id', notif.id);
+
+  // If clicked, we go to notifications or the specific item
+  item.addEventListener('click', (e) => {
+    // Only if we didn't click the close button
+    if (e.target.closest('.toast-close')) return;
+    
+    // Smoothly close the toast
+    const dismissEvent = new MouseEvent('click', { bubbles: true });
+    item.querySelector('.toast-close').dispatchEvent(dismissEvent);
+
+    // Open notifications drawer
+    // We can't import openNotifDrawer here safely (circular), 
+    // so we use a window-level helper or event.
+    if (window.openNotifDrawer) window.openNotifDrawer();
+    else if (notif.status) window.openThreadDrawer?.(notif.status.id);
+    else if (account) window.openProfileDrawer?.(account.id);
+  });
+
+  item.innerHTML = `
+    <div class="toast-notif-avatar-wrap">
+      <img class="toast-notif-avatar" src="${escapeHTML(avatarUrl)}" alt="" 
+           onerror="this.src=window._AVATAR_PLACEHOLDER" />
+      <div class="toast-notif-icon-badge toast-notif-icon-${notif.type}">${icon}</div>
+    </div>
+    <div class="toast-msg-content">
+      <div class="toast-notif-who">
+        <div class="toast-notif-name">${escapeHTML(displayName)}</div>
+        <div class="toast-notif-action">${escapeHTML(label)}</div>
+      </div>
+      ${preview ? `<div class="toast-notif-preview">${escapeHTML(preview)}</div>` : ''}
+    </div>
+    <button class="toast-close" aria-label="Dismiss">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="toast-progress"></div>
+  `;
+
+  region.appendChild(item);
+
+  // Animate in
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => item.classList.add('toast-show'));
+  });
+
+  // Progress/dismiss logic (longer for notifications: 5s)
+  const duration = 5000;
+  const progress = item.querySelector('.toast-progress');
+  progress.style.transition = `transform ${duration}ms linear`;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      progress.style.transform = 'scaleX(0)';
+    });
+  });
+
+  function dismiss() {
+    item.classList.add('toast-hiding');
+    item.classList.remove('toast-show');
+    item.addEventListener('transitionend', () => item.remove(), { once: true });
+    setTimeout(() => item.remove(), 400);
+  }
+
+  const timer = setTimeout(dismiss, duration);
+  item.querySelector('.toast-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearTimeout(timer);
+    dismiss();
+  });
 }
 
 // Convenience helpers
