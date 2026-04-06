@@ -1,8 +1,24 @@
 # Elefeed Test Suite - Implementation Summary
 
-## What Was Created
+## Design Philosophy
 
-A complete, self-contained test suite for Elefeed that validates functionality without modifying any real data. The test suite is **independent of your production code** and contains no external dependencies.
+This test suite validates **your real production code** without:
+- ❌ Creating stub/fake DOM elements
+- ❌ Modifying app code
+- ❌ Adding dependencies
+- ❌ Posting/deleting data
+
+It **WILL FAIL** if production code is missing, ensuring broken deployments are caught.
+
+## Recent Refactoring (Apr 2026)
+
+Previously, the test suite created stub DOM elements when production code didn't load, which meant tests would pass even if real code was deleted. This has been fixed:
+
+- ✅ Stub creation **completely removed**
+- ✅ Tests now require real `index.html` and `app.js` to exist
+- ✅ If production code is deleted → tests fail with clear error messages
+- ✅ Tests only validate real functionality (not stubs)
+- ✅ Mock API still prevents data loss (safety preserved)
 
 ## Files Created
 

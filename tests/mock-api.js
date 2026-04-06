@@ -177,6 +177,17 @@ function handleMockGET(pathname, search, url, init) {
     return mockResponse(getMockTokenResponse());
   }
 
+  // Pass through static files (HTML, CSS, JS) to real fetch for actual validation
+  if (pathname === '/index.html' || pathname.endsWith('.html') || pathname.endsWith('.css') || pathname.endsWith('.js')) {
+    console.log(`[MOCK API] Passing through static file to real server: ${pathname}`);
+    // Construct absolute URL and call real fetch
+    const absoluteUrl = new URL(window.location.origin + pathname).href;
+    return originalFetch(absoluteUrl, init).then(response => {
+      // Important: return response as-is (including 404) so tests can validate
+      return response;
+    });
+  }
+
   console.warn(`[MOCK API] No handler for ${init.method} ${pathname}${url.search}`);
   return Promise.reject(new Error(`Unhandled mock request: ${pathname}`));
 }

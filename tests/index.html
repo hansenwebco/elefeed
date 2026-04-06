@@ -335,7 +335,8 @@
   </div>
 
   <script type="module">
-    // Load and run test suite
+    // Load and run tests
+    // (Tests will verify production HTML exists and has correct structure)
     import('./test-scenarios.js').catch(err => {
       console.error('Failed to load test scenarios:', err);
       const status = document.getElementById('test-panel-status');

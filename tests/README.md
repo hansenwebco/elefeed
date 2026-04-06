@@ -1,13 +1,21 @@
 # Elefeed Test Suite
 
-Welcome! You've just been set up with a complete test suite for Elefeed.
+A production-focused test suite that **validates your real app code** without modifying it or creating stubs.
+
+## ⚡ Key Design
+
+- ✅ Tests validate **REAL production code** (not stubs or mocks)
+- ✅ **Fails if production code is deleted/missing** (catches broken deployments)
+- ✅ Mock API blocks all destructive operations (safe)
+- ✅ Zero dependencies, zero modifications to app code
+- ✅ Runs on any HTTP server
 
 ## Getting Started (Pick One)
 
 ### 1️⃣ **I want to run tests NOW** 
 → Open [QUICKSTART.md](QUICKSTART.md) (5 minutes)
 
-### 2️⃣ **I want to understand the full setup**
+### 2️⃣ **I want to understand the design**
 → Read [IMPLEMENTATION.md](IMPLEMENTATION.md) (10 minutes)
 
 ### 3️⃣ **I want detailed documentation**
