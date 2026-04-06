@@ -1815,7 +1815,7 @@ document.addEventListener('click', e => {
   const link = e.target.closest('a');
   if (link && !link.hasAttribute('data-profile-id') && !link.classList.contains('hashtag') && !link.classList.contains('show-more-btn')) {
     // If it's a standard link, let the browser handle it (nav to href).
-    // Return early so we don't accidentally intercept this in the post-article logic.
+    // We return early so we don't accidentally preventDefault() it later.
     return;
   }
 
@@ -2039,9 +2039,10 @@ document.addEventListener('click', e => {
   }
 
   /* Post article click → open thread */
-  const INTERACTIVE = 'a, a *, button, button *, input, select, textarea, [data-profile-id], [data-profile-id] *, .post-footer, .post-footer *, .cw-wrapper, .cw-wrapper *, .post-quote, .post-quote *, .media-item, .media-item *, .boost-dropdown, .tab-dropdown-item, video, .sensitive-overlay, [onclick]';
+  // List of selectors that should NOT trigger opening the full thread.
+  const INTERACTIVE = 'a, a *, button, button *, input, select, textarea, [data-profile-id], [data-profile-id] *, .post-footer, .post-footer *, .cw-wrapper, .cw-wrapper *, .post-quote, .post-quote *, .media-item, .media-item *, .post-poll, .post-poll *, .boost-dropdown, .tab-dropdown-item, video, .sensitive-overlay, .sensitive-pill, .hashtag, .hashtag *, [onclick]';
   const postArticle = e.target.closest('article.post');
-  if (postArticle && !e.target.closest(INTERACTIVE) && !e.target.closest('.thread-drawer, .thread-inline-panel')) {
+  if (postArticle && !e.target.closest(INTERACTIVE) && !e.target.closest('.thread-drawer, .thread-inline-panel, .post-analytics-drawer')) {
     e.preventDefault();
     const statusId = postArticle.dataset.id;
     if (statusId) {
