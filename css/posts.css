@@ -113,8 +113,15 @@
   border-top: 1px solid var(--border);
   margin-top: -1px;
 
-
+  /* Mobile interaction polish */
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
+
+.post:active {
+  background: rgba(255, 255, 255, 0.025);
+}
+
 
 .post:hover {
   background: rgba(255, 255, 255, 0.015);
@@ -486,11 +493,16 @@
 .post-content a {
   color: var(--accent2);
   text-decoration: none;
+  -webkit-tap-highlight-color: rgba(155, 127, 255, 0.15);
+  position: relative;
+  z-index: 1; /* ensure links are above the article background */
 }
 
-.post-content a:hover {
-  text-decoration: underline;
+.post-content a:active {
+  background: rgba(155, 127, 255, 0.1);
+  border-radius: 3px;
 }
+
 
 /* External links are visually quieter than hashtags/mentions */
 .post-content .ext-link {
