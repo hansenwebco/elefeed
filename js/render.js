@@ -232,7 +232,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
     }
 
     quoteHTML = `
-        <div class="post-quote" style="padding:10px; margin-top:8px;" onclick="event.stopPropagation(); if (window.openThreadDrawer) window.openThreadDrawer('${qStatus.id}'); else window.open('${qStatus.url}', '_blank')">
+        <div class="post-quote" style="padding:10px; margin-top:8px;" onclick="if (window.openThreadDrawer) window.openThreadDrawer('${qStatus.id}'); else window.open('${qStatus.url}', '_blank')">
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
           <div style="position:relative; width:20px; height:20px; flex-shrink:0;">
             <img src="${qStatus.account.avatar_static || qStatus.account.avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; background:var(--surface); display:block;" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER">
@@ -310,7 +310,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
     const titleHTML = s.card.title ? `<div class="post-card-title">${isVideo ? `<a href="${s.card.url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;" onclick="event.stopPropagation()">${titleText}</a>` : titleText}</div>` : '';
     const cardOnclick = sensitiveCardLocked
       ? 'handleSensitiveCardClick(event, this)'
-      : 'event.stopPropagation()';
+      : '';
 
     cardHTML = `
       <${tag} ${hrefAttr} class="post-card" onclick="${cardOnclick}">
