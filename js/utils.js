@@ -308,9 +308,16 @@ export function getEditorText(el) {
     img.parentNode.replaceChild(document.createTextNode(img.alt || ''), img);
   });
   
-  // Convert <br> and <div> wrappers to newlines if innerText is unreliable
-  // but innerText is usually okay once images are replaced.
+  // To get reliable newlines for block elements (div, p, etc.) in contenteditable,
+  // innerText must be called on a node that is ATTACHED to the document's layout.
+  // Otherwise, browsers often return a flattened string (similar to textContent).
+  const temp = document.createElement('div');
+  temp.style.cssText = 'position:fixed; pointer-events:none; opacity:0; left:-9999px; white-space:pre-wrap;';
+  document.body.appendChild(temp);
+  temp.appendChild(clone);
   const text = clone.innerText || clone.textContent || '';
+  document.body.removeChild(temp);
+
   return text.trim();
 }
 
