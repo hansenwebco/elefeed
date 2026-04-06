@@ -1218,7 +1218,7 @@ function refreshNotifSettingsUI() {
   const debugSection = $('settings-debug-section');
   const acct = state.account?.acct || '';
   const server = state.server || '';
-  const isDev = acct === 'stonedonkey' && server === 'mastodon.social';
+  const isDev = acct === 'TheStoneDonkey' && server === 'beige.party';
   if (debugSection) debugSection.style.display = isDev ? '' : 'none';
 
   // Sync the feature flag toggle state
@@ -1240,7 +1240,7 @@ function applyFollowingFeedFlag() {
   if (!btn) return;
   const acct = state.account?.acct || '';
   const srv = state.server || '';
-  const isDev = acct === 'stonedonkey' && srv === 'mastodon.social';
+  const isDev = acct === 'TheStoneDonkey' && srv === 'beige.party';
   const enabled = isDev && store.get('pref_following_feed') === 'true';
   btn.style.display = enabled ? '' : 'none';
 }
