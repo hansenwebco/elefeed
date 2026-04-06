@@ -1,2 +1,8 @@
 
 *.bak
+
+# Test environment (never commit credentials)
+tests/.testenv
+tests/.testenv.local
+tests/test-results.json
+tests/coverage/
