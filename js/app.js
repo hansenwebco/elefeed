@@ -1811,9 +1811,18 @@ document.addEventListener('click', e => {
    ══════════════════════════════════════════════════════════════════════ */
 
 document.addEventListener('click', e => {
+  /* 0. Special handling for standard links to avoid catch-all interactions */
+  const link = e.target.closest('a');
+  if (link && !link.hasAttribute('data-profile-id') && !link.classList.contains('hashtag') && !link.classList.contains('show-more-btn')) {
+    // If it's a standard link, let the browser handle it (nav to href).
+    // Return early so we don't accidentally intercept this in the post-article logic.
+    return;
+  }
+
   /* Follow / unfollow */
   const followBtn = e.target.closest('.profile-follow-btn[data-account-id]');
   if (followBtn) { e.preventDefault(); closeAllProfileMoreMenus(); handleFollowToggle(followBtn); return; }
+
 
   /* Notify toggle */
   const notifyBtn = e.target.closest('.profile-notify-btn');
@@ -2030,7 +2039,7 @@ document.addEventListener('click', e => {
   }
 
   /* Post article click → open thread */
-  const INTERACTIVE = 'a, button, input, select, textarea, [data-profile-id], .post-footer, .cw-wrapper, .post-quote, .media-item, .boost-dropdown, .tab-dropdown-item, video, .sensitive-overlay';
+  const INTERACTIVE = 'a, a *, button, button *, input, select, textarea, [data-profile-id], [data-profile-id] *, .post-footer, .post-footer *, .cw-wrapper, .cw-wrapper *, .post-quote, .post-quote *, .media-item, .media-item *, .boost-dropdown, .tab-dropdown-item, video, .sensitive-overlay, [onclick]';
   const postArticle = e.target.closest('article.post');
   if (postArticle && !e.target.closest(INTERACTIVE) && !e.target.closest('.thread-drawer, .thread-inline-panel')) {
     e.preventDefault();
@@ -2042,6 +2051,8 @@ document.addEventListener('click', e => {
     }
   }
 });
+
+
 
 /* ══════════════════════════════════════════════════════════════════════
    USER HOVER CARD (desktop only)
