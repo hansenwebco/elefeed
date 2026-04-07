@@ -187,11 +187,26 @@
   color: var(--accent2);
   font-weight: 500;
   text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
   transition: color var(--trans);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .post-hashtag-banner-tag:hover {
   color: var(--accent);
+}
+
+.post-hashtag-banner-tag:active {
+  opacity: 0.8;
 }
 
 .post-hashtag-banner-tag+.post-hashtag-banner-tag::before {

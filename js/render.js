@@ -565,7 +565,7 @@ export function renderPost(status, opts = {}) {
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
       via
       <div class="post-hashtag-banner-tags">${tagList.map(t =>
-    `<a href="#" class="hashtag post-hashtag-banner-tag">#${escapeHTML(t)}</a>`
+    `<button type="button" class="hashtag post-hashtag-banner-tag" onclick="event.preventDefault(); event.stopPropagation(); window.handleHashtagClick(this)">#${escapeHTML(t)}</button>`
   ).join('')}</div>
     </div>` : '';
 
@@ -1540,4 +1540,32 @@ window.handlePollVote = async function (pollId, pollEl) {
       voteBtn.textContent = 'Vote';
     }
   }
+};
+
+/**
+ * Handle hashtag clicks from button elements.
+ * Extracts hashtag text and navigates to the hashtag feed.
+ * Mobile-friendly since buttons receive click events reliably on all devices.
+ */
+window.handleHashtagClick = function (btn) {
+  const rawText = (btn.textContent || btn.innerText || '').trim();
+  const tag = rawText.replace(/^#/, '').split(/\s+/)[0].toLowerCase();
+  if (!tag) return;
+  
+  // Use the existing hashtag navigation logic from app.js
+  // by dispatching through click handler delegation
+  const hashtagLink = document.createElement('a');
+  hashtagLink.className = 'hashtag';
+  hashtagLink.href = '#';
+  hashtagLink.textContent = rawText;
+  hashtagLink.style.display = 'none';
+  document.body.appendChild(hashtagLink);
+  
+  const evt = new MouseEvent('click', {
+    bubbles: true,
+    cancelable: true,
+    view: window
+  });
+  hashtagLink.dispatchEvent(evt);
+  hashtagLink.remove();
 };
