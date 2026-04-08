@@ -53,6 +53,7 @@ input::-ms-reveal {
 
   --bg-rgb: 13, 13, 15;
   --text-rgb: 232, 232, 240;
+  --accent-rgb: 155, 127, 255;
 
   /* Typography */
   --font-display: 'DM Serif Display', Georgia, serif;
@@ -87,6 +88,7 @@ input::-ms-reveal {
 
   --bg-rgb: 255, 255, 255;
   --text-rgb: 29, 29, 36;
+  --accent-rgb: 106, 70, 255;
 }
 
 html {
