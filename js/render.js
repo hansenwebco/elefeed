@@ -1341,9 +1341,57 @@ window.toggleShowMore = function toggleShowMore(btn) {
   const content = wrap ? wrap.querySelector('.post-content') : null;
   if (!wrap || !content) return;
 
-  const isCollapsed = wrap.classList.toggle('collapsed-active');
-  content.classList.toggle('post-content--collapsed', isCollapsed);
-  btn.textContent = isCollapsed ? 'Show more' : 'Show less';
+  const isExpanding = content.classList.contains('post-content--collapsed');
+
+  if (isExpanding) {
+    // 1. Get the current height (collapsed)
+    const startHeight = content.offsetHeight;
+    
+    // 2. Temporarily expand to get the full scroll height
+    content.classList.remove('post-content--collapsed');
+    content.style.maxHeight = 'none';
+    const endHeight = content.scrollHeight;
+    
+    // 3. Reset to start height and force reflow
+    content.style.maxHeight = startHeight + 'px';
+    content.offsetHeight; // force reflow
+    
+    // 4. Animate to full height
+    content.style.maxHeight = endHeight + 'px';
+    wrap.classList.remove('collapsed-active');
+    btn.textContent = 'Show less';
+    
+    // 5. Clean up after animation
+    const onEnd = (e) => {
+      if (e.propertyName === 'max-height') {
+        content.style.maxHeight = 'none';
+        content.removeEventListener('transitionend', onEnd);
+      }
+    };
+    content.addEventListener('transitionend', onEnd);
+  } else {
+    // 1. Get the current height (actual expanded height)
+    const startHeight = content.scrollHeight;
+    
+    // 2. Fix the height so the transition has a starting point other than 'none'
+    content.style.maxHeight = startHeight + 'px';
+    content.offsetHeight; // force reflow
+    
+    // 3. Animate to collapsed height (400px)
+    content.style.maxHeight = '400px';
+    content.classList.add('post-content--collapsed');
+    wrap.classList.add('collapsed-active');
+    btn.textContent = 'Show more';
+    
+    // 4. Clean up after animation
+    const onEnd = (e) => {
+      if (e.propertyName === 'max-height') {
+        // No need to set maxHeight to 400px here as it's already set
+        content.removeEventListener('transitionend', onEnd);
+      }
+    };
+    content.addEventListener('transitionend', onEnd);
+  }
 };
 
 /** Load the video iframe within a card */
