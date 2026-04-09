@@ -2171,9 +2171,16 @@ body.hide-cards-enabled .post-card {
 }
 
 .video-player-wrap:hover .vid-controls,
-.video-player-wrap.vp-playing .vid-controls {
+.video-player-wrap.vp-controls-visible .vid-controls {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Hide controls & overlay when content is blurred behind a sensitive warning */
+.video-player-wrap:has(video.media-sensitive-blur) .vid-controls,
+.video-player-wrap:has(video.media-sensitive-blur) .vid-overlay-play {
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 /* Small icon buttons */
@@ -2212,10 +2219,20 @@ body.hide-cards-enabled .post-card {
   cursor: pointer;
   position: relative;
   transition: height 0.15s;
+  overflow: visible;
 }
 
-.video-player-wrap:hover .vid-progress {
-  height: 4px;
+/* Expand the touch/click target without changing the visual size */
+.vid-progress::before {
+  content: "";
+  position: absolute;
+  inset: -10px 0;
+  z-index: 1;
+}
+
+.video-player-wrap:hover .vid-progress,
+.vid-progress.vp-scrubbing {
+  height: 5px;
 }
 
 .vid-progress-fill {
@@ -2224,7 +2241,44 @@ body.hide-cards-enabled .post-card {
   background: #fff;
   width: 0%;
   pointer-events: none;
-  transition: width 0.08s linear;
+  position: relative;
+  overflow: visible;
+}
+
+/* Remove the linear width transition while scrubbing so it tracks the finger */
+.vid-progress.vp-scrubbing .vid-progress-fill {
+  transition: none;
+}
+
+/* Scrub knob — sits at the leading edge of the fill */
+.vid-progress-fill::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  transform: translateY(-50%) scale(0);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Show knob when controls are visible */
+.video-player-wrap:hover .vid-progress-fill::after,
+.video-player-wrap.vp-controls-visible .vid-progress-fill::after,
+.vid-progress.vp-scrubbing .vid-progress-fill::after {
+  transform: translateY(-50%) scale(1);
+}
+
+/* Slightly larger knob while actively dragging */
+.vid-progress.vp-scrubbing .vid-progress-fill::after {
+  width: 12px;
+  height: 12px;
+  right: -6px;
 }
 
 /* Time readout */
