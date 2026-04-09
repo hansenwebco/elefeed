@@ -1263,6 +1263,83 @@ window.vpWrapperClick = function (e, wrap) {
   }
 };
 
+// ── Drag-to-scrub on .vid-progress bars ──────────────────────────────────
+// Works via delegation so it covers every player (feed + lightbox) without
+// per-element setup.  Supports both mouse and touch interactions.
+(function () {
+  let _scrubState = null; // { bar, vid, wrap, wasPlaying }
+
+  function scrubFromEvent(clientX) {
+    if (!_scrubState) return;
+    const { bar, vid } = _scrubState;
+    if (!vid.duration) return;
+    const rect = bar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    vid.currentTime = pct * vid.duration;
+    // Update fill immediately for responsive feedback
+    const fill = bar.querySelector('.vid-progress-fill');
+    if (fill) fill.style.width = (pct * 100) + '%';
+  }
+
+  function startScrub(bar, clientX) {
+    const wrap = bar.closest('.video-player-wrap');
+    const vid = wrap && wrap.querySelector('video');
+    if (!wrap || !vid) return;
+    const wasPlaying = !vid.paused;
+    if (wasPlaying) vid.pause();
+    bar.classList.add('vp-scrubbing');
+    _scrubState = { bar, vid, wrap, wasPlaying };
+    scrubFromEvent(clientX);
+  }
+
+  function endScrub() {
+    if (!_scrubState) return;
+    const { bar, vid, wasPlaying } = _scrubState;
+    bar.classList.remove('vp-scrubbing');
+    if (wasPlaying) vid.play().catch(() => {});
+    _scrubState = null;
+  }
+
+  // Mouse events
+  document.addEventListener('mousedown', (e) => {
+    const bar = e.target.closest('.vid-progress');
+    if (!bar) return;
+    e.preventDefault();
+    startScrub(bar, e.clientX);
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!_scrubState) return;
+    e.preventDefault();
+    scrubFromEvent(e.clientX);
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (_scrubState) endScrub();
+  });
+
+  // Touch events
+  document.addEventListener('touchstart', (e) => {
+    const bar = e.target.closest('.vid-progress');
+    if (!bar) return;
+    startScrub(bar, e.touches[0].clientX);
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!_scrubState) return;
+    e.preventDefault(); // prevent scroll while scrubbing
+    scrubFromEvent(e.touches[0].clientX);
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => {
+    if (_scrubState) endScrub();
+  });
+
+  document.addEventListener('touchcancel', () => {
+    if (_scrubState) endScrub();
+  });
+})();
+
 // Capture-phase listeners keep the progress bar & icons in sync
 // across all players without requiring per-element setup.
 document.addEventListener('timeupdate', (e) => {
@@ -1271,7 +1348,9 @@ document.addEventListener('timeupdate', (e) => {
   if (!wrap) return;
   const fill = wrap.querySelector('.vid-progress-fill');
   const timeEl = wrap.querySelector('.vid-time');
-  if (fill && e.target.duration) {
+  // Skip fill updates while the user is dragging to avoid fighting the thumb
+  const bar = wrap.querySelector('.vid-progress');
+  if (fill && e.target.duration && !(bar && bar.classList.contains('vp-scrubbing'))) {
     fill.style.width = (e.target.currentTime / e.target.duration * 100) + '%';
   }
   if (timeEl) {
@@ -1284,14 +1363,54 @@ document.addEventListener('timeupdate', (e) => {
 document.addEventListener('play', (e) => {
   if (!(e.target instanceof HTMLVideoElement)) return;
   const wrap = e.target.closest('.video-player-wrap');
-  if (wrap) wrap.classList.add('vp-playing');
+  if (wrap) {
+    wrap.classList.add('vp-playing');
+    _vpShowControls(wrap);
+  }
 }, true);
 
 document.addEventListener('pause', (e) => {
   if (!(e.target instanceof HTMLVideoElement)) return;
   const wrap = e.target.closest('.video-player-wrap');
-  if (wrap) wrap.classList.remove('vp-playing');
+  if (wrap) {
+    wrap.classList.remove('vp-playing');
+    // Keep controls visible while paused
+    _vpClearHideTimer(wrap);
+    wrap.classList.add('vp-controls-visible');
+  }
 }, true);
+
+// ── Auto-hide controls after inactivity ──────────────────────────────────
+const _vpHideTimers = new WeakMap();
+const VP_HIDE_DELAY = 2500; // ms
+
+function _vpShowControls(wrap) {
+  wrap.classList.add('vp-controls-visible');
+  _vpClearHideTimer(wrap);
+  // Only auto-hide while playing
+  const vid = wrap.querySelector('video');
+  if (vid && !vid.paused) {
+    _vpHideTimers.set(wrap, setTimeout(() => {
+      wrap.classList.remove('vp-controls-visible');
+    }, VP_HIDE_DELAY));
+  }
+}
+
+function _vpClearHideTimer(wrap) {
+  const t = _vpHideTimers.get(wrap);
+  if (t) { clearTimeout(t); _vpHideTimers.delete(wrap); }
+}
+
+// Any mouse movement or touch on the player resets the hide timer
+document.addEventListener('mousemove', (e) => {
+  const wrap = e.target.closest('.video-player-wrap');
+  if (wrap && wrap.classList.contains('vp-playing')) _vpShowControls(wrap);
+});
+
+document.addEventListener('touchstart', (e) => {
+  const wrap = e.target.closest('.video-player-wrap');
+  if (wrap && wrap.classList.contains('vp-playing')) _vpShowControls(wrap);
+}, { passive: true });
 
 /** Toggle blur on all sensitive media in the post on/off. */
 window.toggleSensitiveMedia = function (btn) {
