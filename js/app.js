@@ -1017,7 +1017,7 @@ if (settingsMenuBtn) {
 
     const separateBoostQuoteToggle = $('settings-separate-boost-quote-toggle');
     if (separateBoostQuoteToggle) {
-      separateBoostQuoteToggle.checked = store.get('pref_separate_boost_quote') === 'true';
+      separateBoostQuoteToggle.checked = store.get('pref_combine_boost_quote') === 'true';
     }
 
     const hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
@@ -1541,12 +1541,12 @@ if (_autoOpenSensitiveToggle) {
   });
 }
 
-// Separate boost/quote
+// Combine boost/quote
 const _separateBoostQuoteToggle = $('settings-separate-boost-quote-toggle');
 if (_separateBoostQuoteToggle) {
   _separateBoostQuoteToggle.addEventListener('change', () => {
-    store.set('pref_separate_boost_quote', _separateBoostQuoteToggle.checked ? 'true' : 'false');
-    showToast(_separateBoostQuoteToggle.checked ? 'Boost and Quote buttons separated' : 'Boost and Quote buttons combined');
+    store.set('pref_combine_boost_quote', _separateBoostQuoteToggle.checked ? 'true' : 'false');
+    showToast(_separateBoostQuoteToggle.checked ? 'Boost and Quote buttons combined' : 'Boost and Quote buttons separated');
     loadFeedTab(false);
   });
 }
@@ -1891,7 +1891,7 @@ document.addEventListener('click', e => {
   if (boostBtn) {
     e.preventDefault();
     e.stopPropagation();
-    if (store.get('pref_separate_boost_quote') === 'true') {
+    if (store.get('pref_combine_boost_quote') !== 'true') {
       const postId = boostBtn.dataset.postId;
       const isBoosted = boostBtn.classList.contains('boosted');
       window.handleBoostSubmit(postId, isBoosted, boostBtn);

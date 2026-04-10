@@ -209,7 +209,7 @@ function _applyUpdate(status, fromUserAction) {
   const id       = status.id;
   const prev     = knownCounts.get(id);
 
-  const separate = store.get('pref_separate_boost_quote') === 'true';
+  const separate = store.get('pref_combine_boost_quote') !== 'true';
   const next = {
     replies: source.replies_count    || 0,
     boosts:  separate ? (source.reblogs_count || 0) : ((source.reblogs_count || 0) + (source.quotes_count || source.quote_count || 0)),
@@ -276,7 +276,12 @@ function _applyUpdate(status, fromUserAction) {
       if (pollContainer) {
         // Only update if the poll ID matches (sanity check)
         if (pollContainer.dataset.pollId === source.poll.id) {
-          pollContainer.outerHTML = renderPoll(source.poll);
+          // Skip re-rendering votable polls — the user may have checkbox/radio
+          // selections in progress that would be wiped by an outerHTML replace.
+          const isVotable = !source.poll.voted && !source.poll.expired;
+          if (!isVotable) {
+            pollContainer.outerHTML = renderPoll(source.poll);
+          }
         }
       }
     }
