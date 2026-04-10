@@ -290,20 +290,16 @@ export function openNotifDrawer() {
   // Update URL state
   updateURLParam('notifications', 'true', true);
 
-  // Track what was seen BEFORE this open, to highlight new items
-  state._lastSeenAtOpen = store.get('lastSeenNotifId_' + state.server) || state.lastSeenNotifId || 0;
+  // Restore read IDs from storage
+  _loadReadIds();
 
   if (state.notifications.length > 0) {
     renderNotifications();
-    state.lastSeenNotifId = state.notifications[0].id;
-    store.set('lastSeenNotifId_' + state.server, state.lastSeenNotifId);
-    // Reset the foreground-alert tracker so the next genuinely new
-    // notification (arriving after the drawer is closed) will alert again.
-    state._lastFiredNotifId = state.lastSeenNotifId;
-    state.notifUnreadCount = 0;
-    updateNotifBadge();
+    // Update the lastSeenNotifId for the badge counter / SW,
+    // but individual read state is tracked separately.
+    // Tells the server we have seen up to the latest notification in the client
     dismissNotifMarker();
-    // Tell the SW the user has seen up to this ID
+    // Tells the SW the user has seen up to this ID
     swSyncSeen();
   }
 
@@ -345,6 +341,62 @@ async function dismissNotifMarker() {
       body: JSON.stringify({ notifications: { last_read_id: state.lastSeenNotifId } }),
     });
   } catch { /* silent */ }
+}
+
+/* ── Read / unread tracking (server-synced) ────────────────────────── */
+
+/** 
+ * Check whether a notification is read. 
+ * Source of truth: ID compared against state.lastSeenNotifId (which is synced via Marker API)
+ */
+function _isNotifRead(notifId) {
+  if (!state.lastSeenNotifId) return false;
+  // Numerical comparison of IDs
+  // Mastodon IDs are strings but numerical.
+  return BigInt(notifId) <= BigInt(state.lastSeenNotifId);
+}
+
+/** Mark a single notification as read and sync with server marker. */
+function markNotifRead(notifId) {
+  // Only update if it's actually newer than what we have
+  if (!_isNotifRead(notifId)) {
+    state.lastSeenNotifId = notifId;
+    store.set('lastSeenNotifId_' + state.server, notifId);
+    dismissNotifMarker();
+    
+    _recalcUnreadCount();
+    updateNotifBadge();
+
+    // Update the DOM for all items that are now "read" (equal or older)
+    document.querySelectorAll('.notif-item.unread').forEach(el => {
+      if (_isNotifRead(el.dataset.notifId)) {
+        el.classList.remove('unread');
+      }
+    });
+  }
+}
+
+/** Mark ALL current notifications as read by jumping the marker to the top item. */
+function markAllRead() {
+  const allNotifs = state.notifications;
+  if (allNotifs.length === 0) return;
+
+  const newestId = allNotifs[0].id;
+  state.lastSeenNotifId = newestId;
+  store.set('lastSeenNotifId_' + state.server, newestId);
+  dismissNotifMarker();
+  swSyncSeen();
+
+  state.notifUnreadCount = 0;
+  updateNotifBadge();
+
+  // Visually remove all unread highlights
+  document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+}
+
+/** Recalculate the unread count from the notifications cache. */
+function _recalcUnreadCount() {
+  state.notifUnreadCount = state.notifications.filter(n => !_isNotifRead(n.id)).length;
 }
 
 /* ── Cache helpers ─────────────────────────────────────────────────── */
@@ -480,6 +532,9 @@ function _wireEvents(container) {
       e.stopPropagation();
       const id = el.dataset.notifProfile;
       const srv = el.dataset.notifServer || state.server;
+      // Mark this notification as read when the user clicks to view
+      const notifEl = el.closest('.notif-item[data-notif-id]');
+      if (notifEl) markNotifRead(notifEl.dataset.notifId);
       closeNotifDrawer();
       setTimeout(() => openProfileDrawer(id, srv), 180);
     });
@@ -489,6 +544,9 @@ function _wireEvents(container) {
     el.addEventListener('click', (e) => {
       e.stopPropagation();
       const id = el.dataset.notifStatus;
+      // Mark this notification as read when the user clicks to view
+      const notifEl = el.closest('.notif-item[data-notif-id]');
+      if (notifEl) markNotifRead(notifEl.dataset.notifId);
       closeNotifDrawer();
       setTimeout(() => openThreadDrawer(id), 180);
     });
@@ -514,11 +572,11 @@ function renderNotifItem(n) {
     if (text) preview = `<div class="notif-preview" data-notif-status="${n.status.id}">${escapeHTML(text)}</div>`;
   }
 
-  const isNew = state._lastSeenAtOpen && n.id > state._lastSeenAtOpen;
-  const itemClass = isNew ? 'notif-item unread' : 'notif-item';
+  const isUnread = !_isNotifRead(n.id);
+  const itemClass = isUnread ? 'notif-item unread' : 'notif-item';
 
   return `
-    <div class="${itemClass}">
+    <div class="${itemClass}" data-notif-id="${n.id}">
       <div class="notif-icon ${typeClass}">${icon}</div>
       <div class="notif-body">
         <div class="notif-meta">
@@ -578,15 +636,18 @@ export async function pollNotifications() {
     if (notifs.length > 0) {
       state.notifMaxId['all'] = notifs[notifs.length - 1].id;
 
-      // Final logical fallback: If still null after checking markers, 
-      // assume the user has seen current content to avoid starting with 30 unread.
-      if (!state.lastSeenNotifId) {
-        state.lastSeenNotifId = notifs[0].id;
-        state.notifUnreadCount = 0;
-        store.set('lastSeenNotifId_' + state.server, state.lastSeenNotifId);
-      } else {
-        state.notifUnreadCount = notifs.filter(n => n.id > state.lastSeenNotifId).length;
-      }
+      // Sync marker from server every poll to ensure cross-device consistency
+      try {
+        const markers = await apiGet('/api/v1/markers?timeline[]=notifications', state.token);
+        const markerId = markers?.notifications?.last_read_id;
+        if (markerId && (!state.lastSeenNotifId || BigInt(markerId) > BigInt(state.lastSeenNotifId))) {
+          state.lastSeenNotifId = markerId;
+          store.set('lastSeenNotifId_' + state.server, markerId);
+        }
+      } catch (e) { console.debug('[Elefeed] Marker sync failed:', e.message); }
+
+      // Recalc based on synced marker
+      _recalcUnreadCount();
     } else {
       state.notifUnreadCount = 0;
     }
@@ -675,6 +736,9 @@ export function initNotifications() {
   $('notif-btn').addEventListener('click', openNotifDrawer);
   $('notif-close').addEventListener('click', closeNotifDrawer);
   $('notif-backdrop').addEventListener('click', closeNotifDrawer);
+
+  // Mark all read button
+  $('notif-clear-all').addEventListener('click', markAllRead);
 }
 
 /**

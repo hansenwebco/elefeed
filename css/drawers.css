@@ -1665,8 +1665,16 @@ body.manage-inline-active .manage-inline-panel {
   gap: 12px;
   padding: 14px 18px;
   border-bottom: 1px solid var(--border);
-  transition: background var(--trans);
+  transition: background var(--trans), border-color 300ms ease, opacity 300ms ease;
   cursor: default;
+  position: relative;
+  border-left: 3px solid transparent;
+}
+
+/* ── Unread state — prominent indicator ── */
+.notif-item.unread {
+  background: rgba(155, 127, 255, 0.04);
+  border-left-color: var(--accent);
 }
 
 .notif-item.unread .notif-icon {
@@ -1678,8 +1686,59 @@ body.manage-inline-active .manage-inline-panel {
   color: var(--surface);
 }
 
+.notif-item.unread .notif-who {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ── Read state — slightly muted ── */
+.notif-item:not(.unread) {
+  opacity: 0.7;
+}
+
+.notif-item:not(.unread):hover {
+  opacity: 1;
+}
+
+/* Smooth transition when marking as read */
+.notif-icon {
+  transition: background 300ms ease, box-shadow 300ms ease;
+}
+
+.notif-icon svg {
+  transition: color 300ms ease;
+}
+
 .notif-item:hover {
   background: var(--surface2);
+}
+
+/* Mark All Read button in header */
+.notif-clear-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all var(--trans);
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+.notif-clear-all-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(155, 127, 255, 0.06);
+}
+
+.notif-clear-all-btn svg {
+  flex-shrink: 0;
 }
 
 .notif-icon {
