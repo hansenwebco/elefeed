@@ -68,6 +68,20 @@
     }
     metaTheme.content = themeColor;
 
+    // Font & Font Size initialization
+    const _f = localStorage.getItem('pref_font_family') || 'sans';
+    const _fs = localStorage.getItem('pref_font_size') || '14px';
+    const fontMap = {
+      'sans': "'DM Sans', system-ui, -apple-system, sans-serif",
+      'serif': "Charter, Georgia, 'Times New Roman', serif",
+      'atkinson': "'Atkinson Hyperlegible', sans-serif",
+      'lexend': "'Lexend', sans-serif",
+      'bitter': "'Bitter', serif",
+      'mono': "'DM Mono', monospace"
+    };
+    document.documentElement.style.setProperty('--font-body', fontMap[_f] || fontMap['sans']);
+    document.documentElement.style.setProperty('--app-font-size', _fs);
+
     window._AVATAR_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%236b6b6b'/%3E%3Ccircle cx='20' cy='16' r='8' fill='%23c0c0c0'/%3E%3Cellipse cx='20' cy='40' rx='14' ry='10' fill='%23c0c0c0'/%3E%3C/svg%3E";
   </script>
 
@@ -146,7 +160,7 @@
   <!-- ═══════════════════ FONTS ═══════════════════ -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Bitter:ital,wght@0,100..900;1,100..900&family=Lexend:wght@100..900&display=swap" rel="stylesheet" />
   <link rel="manifest" href="manifest.json">
 
   <!-- ═══════════════════ STYLESHEETS ═══════════════════ -->
@@ -1171,6 +1185,37 @@
                 System
               </button>
             </div>
+          </div>
+          <!-- Font Family -->
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-size:13px; color:var(--text); font-weight:500;">Font</span>
+            <select id="settings-font-family" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
+              <option value="sans">System Sans (Default)</option>
+              <option value="atkinson">Atkinson Hyperlegible</option>
+              <option value="lexend">Lexend</option>
+              <option value="serif">System Serif</option>
+              <option value="bitter">Bitter</option>
+              <option value="mono">Monospace</option>
+            </select>
+          </div>
+          <!-- Font Size -->
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">Font size</span>
+              <span id="settings-font-size-value" style="font-size:11px; color:var(--text-dim); font-family:var(--font-mono);">15px</span>
+            </div>
+            <select id="settings-font-size" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
+              <option value="12px">12px</option>
+              <option value="13px">13px</option>
+              <option value="14px">14px (Default)</option>
+              <option value="15px">15px</option>
+              <option value="16px">16px</option>
+              <option value="17px">17px</option>
+              <option value="18px">18px</option>
+              <option value="20px">20px</option>
+              <option value="22px">22px</option>
+              <option value="24px">24px</option>
+            </select>
           </div>
           <!-- New post indicator -->
           <div style="display:flex; flex-direction:column; gap:6px;">

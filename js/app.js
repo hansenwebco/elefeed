@@ -995,6 +995,16 @@ if (settingsMenuBtn) {
       btn.classList.toggle('active', btn.dataset.value === newpostStyleCurrent);
     });
 
+    const currentFont = store.get('pref_font_family') || 'sans';
+    const fontSel = $('settings-font-family');
+    if (fontSel) fontSel.value = currentFont;
+
+    const currentFontSize = store.get('pref_font_size') || '14px';
+    const fontSizeSel = $('settings-font-size');
+    if (fontSizeSel) fontSizeSel.value = currentFontSize;
+    const fontSizeVal = $('settings-font-size-value');
+    if (fontSizeVal) fontSizeVal.textContent = currentFontSize;
+
     const hideCardsToggle = $('settings-hide-cards-toggle');
     if (hideCardsToggle) {
       hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
@@ -1165,6 +1175,34 @@ document.querySelectorAll('#settings-theme-group .theme-segment-btn').forEach(bt
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
   const t = store.get('theme') || 'system';
   if (t === 'system') applyTheme('system');
+});
+
+function applyFont(f) {
+  store.set('pref_font_family', f);
+  const fontMap = {
+    'sans': "'DM Sans', system-ui, -apple-system, sans-serif",
+    'serif': "Charter, Georgia, 'Times New Roman', serif",
+    'atkinson': "'Atkinson Hyperlegible', sans-serif",
+    'lexend': "'Lexend', sans-serif",
+    'bitter': "'Bitter', serif",
+    'mono': "'DM Mono', monospace"
+  };
+  document.documentElement.style.setProperty('--font-body', fontMap[f] || fontMap['sans']);
+}
+
+$('settings-font-family')?.addEventListener('change', (e) => {
+  applyFont(e.target.value);
+});
+
+function applyFontSize(s) {
+  store.set('pref_font_size', s);
+  document.documentElement.style.setProperty('--app-font-size', s);
+  const valDisp = $('settings-font-size-value');
+  if (valDisp) valDisp.textContent = s;
+}
+
+$('settings-font-size')?.addEventListener('change', (e) => {
+  applyFontSize(e.target.value);
 });
 
 /* ── Notification settings ─────────────────────────────────────────── */
