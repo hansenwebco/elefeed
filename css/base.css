@@ -99,7 +99,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: var(--app-font-size, 14px);
   line-height: 1.6;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;

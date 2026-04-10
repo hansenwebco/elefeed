@@ -280,9 +280,9 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 10px 12px;
-  font-size: 14px;
+  font-size: var(--app-font-size, 14px);
   color: var(--text);
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
 }
 
 .compose-cw-input:focus {
@@ -296,9 +296,9 @@
   min-height: 48px;
   background: transparent;
   border: none;
-  font-size: 15px;
+  font-size: var(--app-font-size, 15px);
   color: var(--text);
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   resize: none;
   line-height: 1.5;
   overflow-y: visible;
