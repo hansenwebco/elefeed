@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   COMPOSE — Drawer, Sidebar, Toolbar, Emoji Picker, Mentions
+   COMPOSE - Drawer, Sidebar, Toolbar, Emoji Picker, Mentions
    ═══════════════════════════════════════════════ */
 
 /* ─── Compose Backdrop ─── */
@@ -520,7 +520,7 @@
   width: 100%;
 }
 
-/* Row 1: select + manage — never wraps */
+/* Row 1: select + manage - never wraps */
 .hashtag-filter-row--top {
   flex-wrap: nowrap;
 }

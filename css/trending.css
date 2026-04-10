@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   TRENDING — Hashtags, People, News, Posts
+   TRENDING - Hashtags, People, News, Posts
    ═══════════════════════════════════════════════ */
 
 .trending-section {
@@ -434,7 +434,7 @@
   display: block;
 }
 
-/* Trending from Following — digest header */
+/* Trending from Following - digest header */
 .trending-following-header {
   display: flex;
   align-items: center;

@@ -45,7 +45,7 @@ export function closeAllProfileMoreMenus() {
 
 /**
  * @module profile
- * Profile drawer — loads and renders a user's profile, statuses, pinned posts.
+ * Profile drawer - loads and renders a user's profile, statuses, pinned posts.
  * Also contains the bookmarks drawer and follow/notify/hashtag-follow toggles.
  */
 
@@ -262,7 +262,7 @@ export function openProfileDrawer(accountId, server) {
     if (inner && _profileCache.scrollTop > 0) {
       requestAnimationFrame(() => { inner.scrollTop = _profileCache.scrollTop; });
     }
-    // scroll listener may have been detached — recheck
+    // scroll listener may have been detached - recheck
     if (!profileScrollListenerAttached) attachProfileScrollListener();
     setTimeout(checkProfileInfiniteScroll, 200);
     return;
@@ -637,8 +637,10 @@ export function openBookmarksDrawer() {
     .then(bookmarks => {
       if (!bookmarks.length) {
         content.innerHTML = `
+          <div class="thread-drawer-header">
+            <span class="thread-drawer-title">Bookmarks</span>
+          </div>
           <div style="padding:40px 20px;text-align:center;">
-            <h2 style="font-family:var(--font-display);font-size:20px;margin-bottom:8px;">Bookmarks</h2>
             <p style="color:var(--text-muted);font-size:13px;">No bookmarks yet. Bookmark posts to save them here.</p>
           </div>`;
         return;
@@ -651,11 +653,11 @@ export function openBookmarksDrawer() {
       });
       const postsHtml = display.map(s => renderPost(s)).join('');
       content.innerHTML = `
-        <div style="padding:20px 20px 12px;">
-          <h2 style="font-family:var(--font-display);font-size:20px;margin-bottom:4px;">Bookmarks</h2>
-          <p style="color:var(--text-muted);font-size:12px;font-family:var(--font-mono);">${display.length} saved post${display.length !== 1 ? 's' : ''}</p>
+        <div class="thread-drawer-header">
+          <span class="thread-drawer-title">Bookmarks</span>
+          <span style="margin-left:auto;color:var(--text-dim);font-size:11px;font-family:var(--font-mono);opacity:0.8;">${display.length} post${display.length !== 1 ? 's' : ''}</span>
         </div>
-        <div style="border-top:1px solid var(--border);">${postsHtml}</div>`;
+        <div>${postsHtml}</div>`;
     })
     .catch(err => {
       content.innerHTML = `<div style="padding:40px 20px;text-align:center;">

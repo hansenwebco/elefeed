@@ -1,6 +1,6 @@
 /**
  * @module emoji
- * Emoji picker — loads standard (emojibase CDN) and custom (instance) emojis.
+ * Emoji picker - loads standard (emojibase CDN) and custom (instance) emojis.
  */
 
 import { $, state } from './state.js';
@@ -48,7 +48,7 @@ async function loadStandardEmojis() {
     standardEmojis = standard
       .filter(e => e.unicode && e.group !== 2)
       .map(e => {
-        // shortcodes is an array like ["smile", "happy"] — use first as display name
+        // shortcodes is an array like ["smile", "happy"] - use first as display name
         const codes = Array.isArray(e.shortcodes) && e.shortcodes.length ? e.shortcodes : null;
         const primaryName = codes ? codes[0] : e.label.toLowerCase();
         // searchable string includes all shortcodes + the label
@@ -353,7 +353,7 @@ async function handleEmojiAutocompleteInput(textarea) {
   if (!sel.rangeCount) { closeEmojiSuggestions(); return; }
   const range = sel.getRangeAt(0);
 
-  // Get text before cursor — handle both text nodes and element nodes
+  // Get text before cursor - handle both text nodes and element nodes
   let textBefore = '';
   const node = range.startContainer;
   if (node.nodeType === Node.TEXT_NODE) {

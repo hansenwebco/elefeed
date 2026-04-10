@@ -137,7 +137,7 @@ window.addEventListener('popstate', async e => {
         b.classList.toggle('active', b.dataset.filter === 'hashtags'));
       $('hashtag-filter-bar').style.display = '';
     } else if (state.feedFilter === 'hashtags') {
-      // Navigating back out of a hashtag view — reset filter
+      // Navigating back out of a hashtag view - reset filter
       state.feedFilter = feedParam || 'all';
       state.selectedHashtagFilter = null;
       document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(b =>
@@ -151,7 +151,7 @@ window.addEventListener('popstate', async e => {
       // switchToTab (called by the click) will reload the appropriate tab
       document.getElementById(`tab-btn-${newTab}`)?.click();
     } else if (newTab === 'feed' && state.feedFilter !== prevFeedFilter) {
-      // Same tab but filter changed — reload the feed
+      // Same tab but filter changed - reload the feed
       updateTabLabel('feed');
       const anchor = prevFeedFilter === 'hashtags' ? e.state?.scrollAnchor : null;
       await loadFeedTab(!anchor);
@@ -244,7 +244,7 @@ async function initApp(server, token, demo = false) {
     console.warn('Could not load instance info:', instanceV1Res.reason);
   }
 
-  // Probe public timelines — some servers intentionally disable local or federated timelines.
+  // Probe public timelines - some servers intentionally disable local or federated timelines.
   state.localSupported = true;
   state.federatedSupported = true;
 
@@ -1227,7 +1227,7 @@ function refreshNotifSettingsUI() {
 
   const permLabels = {
     granted: '✅ Notifications allowed',
-    denied: '🚫 Blocked — enable in browser/OS settings',
+    denied: '🚫 Blocked - enable in browser/OS settings',
     default: '⬜ Permission not yet requested',
     unsupported: '⚠️ Not supported in this browser',
   };
@@ -1323,7 +1323,7 @@ if (_permBtn) {
       showToast('Notifications enabled!');
       startSwPolling();
     } else if (result === 'denied') {
-      showToast('Permission denied — check your browser/OS settings.');
+      showToast('Permission denied - check your browser/OS settings.');
     }
   });
 }
@@ -1344,7 +1344,7 @@ if (_intervalSel) {
   });
 }
 
-// Alert type toggles — changing them forces a push subscription update
+// Alert type toggles - changing them forces a push subscription update
 const _alertTypes = ['mention', 'follow', 'reblog', 'favourite', 'follow_request', 'poll', 'status', 'update'];
 for (const type of _alertTypes) {
   const elId = type === 'follow_request' ? 'settings-alert-follow-request' : `settings-alert-${type}`;
@@ -1410,7 +1410,7 @@ if (_debugRegisterBtn) {
     console.log('[Debug] Manually triggering startSwPolling…');
     try {
       await startSwPolling();
-      debugUpdateStatus('startSwPolling() complete — check console for [Elefeed] logs.');
+      debugUpdateStatus('startSwPolling() complete - check console for [Elefeed] logs.');
     } catch (err) {
       debugUpdateStatus('Error: ' + err.message);
       console.error('[Debug] startSwPolling failed:', err);
@@ -1434,7 +1434,7 @@ if (_debugForceBtn) {
         }
       }
       await startSwPolling();
-      debugUpdateStatus('Force re-register complete — check console for [Elefeed] logs.');
+      debugUpdateStatus('Force re-register complete - check console for [Elefeed] logs.');
     } catch (err) {
       debugUpdateStatus('Error: ' + err.message);
       console.error('[Debug] Force re-register failed:', err);
@@ -1448,18 +1448,18 @@ if (_debugTestBtn) {
     console.log('[Debug] Firing local test notification…');
     try {
       if (Notification.permission !== 'granted') {
-        debugUpdateStatus('⚠️ No permission — grant notification permission first.');
+        debugUpdateStatus('⚠️ No permission - grant notification permission first.');
         return;
       }
       const reg = await navigator.serviceWorker.ready;
-      await reg.showNotification('Elefeed — Test Notification 🔔', {
+      await reg.showNotification('Elefeed - Test Notification 🔔', {
         body: 'If you see this, your SW and OS notifications are working correctly.',
         icon: '/icon512x512.png',
         badge: '/icon512x512.png',
         tag: 'elefeed-debug-test',
         data: { url: '/?notifications=true' }
       });
-      debugUpdateStatus('✅ Test notification fired — did it appear as an OS alert?');
+      debugUpdateStatus('✅ Test notification fired - did it appear as an OS alert?');
       console.log('[Debug] Test notification fired.');
     } catch (err) {
       debugUpdateStatus('Error: ' + err.message);
@@ -2229,7 +2229,7 @@ function _dismissHoverCard() {
   }
 }
 
-// Mouseover delegation — start show timer when entering a name/avatar trigger
+// Mouseover delegation - start show timer when entering a name/avatar trigger
 document.addEventListener('mouseover', e => {
   if (!_hoverIsDesktop()) return;
   const trigger = e.target.closest('[data-profile-id]');
@@ -2241,7 +2241,7 @@ document.addEventListener('mouseover', e => {
   const accountId = trigger.dataset.profileId;
   const server = trigger.dataset.profileServer || state.server;
 
-  // Already showing this card — cancel any pending hide
+  // Already showing this card - cancel any pending hide
   if (_hoverCurrentId === accountId) {
     clearTimeout(_hoverHideTimer);
     return;
@@ -2256,7 +2256,7 @@ document.addEventListener('mouseover', e => {
   }, 350);
 });
 
-// Mouseout delegation — start hide timer when leaving a trigger
+// Mouseout delegation - start hide timer when leaving a trigger
 document.addEventListener('mouseout', e => {
   if (!_hoverIsDesktop()) return;
   const trigger = e.target.closest('[data-profile-id]');
@@ -2364,7 +2364,7 @@ async function boot() {
   const code = params.get('code');
   if (code) { await handleCallback(code); return; }
 
-  // Detect file:// — OAuth popups need a real HTTP origin
+  // Detect file:// - OAuth popups need a real HTTP origin
   if (location.protocol === 'file:') {
     showScreen('login-screen');
     showLoginError(

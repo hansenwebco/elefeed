@@ -1,6 +1,6 @@
 /**
  * @module utils
- * Pure utility functions — no DOM mutations, no state dependencies.
+ * Pure utility functions - no DOM mutations, no state dependencies.
  */
 
 /** HTML-escape a string for safe insertion into markup. */

@@ -3,7 +3,7 @@
 }
 
 /* ═══════════════════════════════════════════════
-   POSTS — Post Cards, Media, Polls, Lightbox, Skeletons
+   POSTS - Post Cards, Media, Polls, Lightbox, Skeletons
    ═══════════════════════════════════════════════
    Styles for the main post/status card component used
    throughout the feed, profile, and thread views.
@@ -1029,7 +1029,7 @@
   transform: rotate(90deg);
 }
 
-/* Dot indicators — positioned over the overlay, above the action bar */
+/* Dot indicators - positioned over the overlay, above the action bar */
 .lightbox-dots {
   position: absolute;
   bottom: 76px;
@@ -1074,7 +1074,7 @@
   right: 0;
 }
 
-/* Standalone ALT badge — only used when there is no action bar */
+/* Standalone ALT badge - only used when there is no action bar */
 .lightbox-alt-badge {
   position: absolute;
   bottom: 24px;
@@ -1175,7 +1175,7 @@
   justify-content: center;
 }
 
-/* inline-flex overrides the HTML `hidden` attribute — restore expected behaviour */
+/* inline-flex overrides the HTML `hidden` attribute - restore expected behaviour */
 .lightbox-action-btn[hidden],
 .lightbox-action-sep[hidden] {
   display: none;
@@ -1186,7 +1186,7 @@
   color: #fff;
 }
 
-/* Reply — teal hover matching the feed */
+/* Reply - teal hover matching the feed */
 .lightbox-action-btn.lb-reply:hover {
   color: var(--teal);
 }
@@ -1195,7 +1195,7 @@
   opacity: 1;
 }
 
-/* Boost — accent color on hover / active, matching the feed */
+/* Boost - accent color on hover / active, matching the feed */
 .lightbox-action-btn.lb-boost:hover,
 .lightbox-action-btn.boosted {
   color: var(--boost, #6e9ef5);
@@ -1206,7 +1206,7 @@
   opacity: 1;
 }
 
-/* Favourite — star animations matching the feed */
+/* Favourite - star animations matching the feed */
 .lightbox-action-btn.lb-fav:hover {
   color: var(--fav, #f4b942);
 }
@@ -1216,7 +1216,7 @@
   transform: scale(1.1);
 }
 
-/* Quote — accent color on hover, matching the feed */
+/* Quote - accent color on hover, matching the feed */
 .lightbox-action-btn.lb-quote:hover {
   color: var(--accent);
 }
@@ -2100,7 +2100,7 @@ body.hide-cards-enabled .post-card {
    CUSTOM VIDEO PLAYER
    ═══════════════════════════════════════════════ */
 
-/* Wrapper — disables the default browser chrome */
+/* Wrapper - disables the default browser chrome */
 .video-player-wrap {
   cursor: default;
 }
@@ -2110,7 +2110,7 @@ body.hide-cards-enabled .post-card {
   display: block;
 }
 
-/* Big centered play overlay — visible while paused */
+/* Big centered play overlay - visible while paused */
 .vid-overlay-play {
   position: absolute;
   inset: 0;
@@ -2250,7 +2250,7 @@ body.hide-cards-enabled .post-card {
   transition: none;
 }
 
-/* Scrub knob — sits at the leading edge of the fill */
+/* Scrub knob - sits at the leading edge of the fill */
 .vid-progress-fill::after {
   content: "";
   position: absolute;
@@ -2291,7 +2291,7 @@ body.hide-cards-enabled .post-card {
   letter-spacing: 0.02em;
 }
 
-/* Icon visibility — controlled via CSS classes */
+/* Icon visibility - controlled via CSS classes */
 .video-player-wrap .vp-icon-pause {
   display: none;
 }

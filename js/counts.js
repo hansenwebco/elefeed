@@ -276,7 +276,7 @@ function _applyUpdate(status, fromUserAction) {
       if (pollContainer) {
         // Only update if the poll ID matches (sanity check)
         if (pollContainer.dataset.pollId === source.poll.id) {
-          // Skip re-rendering votable polls — the user may have checkbox/radio
+          // Skip re-rendering votable polls - the user may have checkbox/radio
           // selections in progress that would be wiped by an outerHTML replace.
           const isVotable = !source.poll.voted && !source.poll.expired;
           if (!isVotable) {

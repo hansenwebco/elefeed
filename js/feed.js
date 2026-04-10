@@ -145,12 +145,12 @@ export function updateTabPill(feedKey) {
   if (count === 0) {
     overlayPill.style.display = 'none';
     overlayPill.textContent = 'New posts';
-    document.title = 'Elefeed — A Tidy Mastodon Client';
+    document.title = 'Elefeed - A Tidy Mastodon Client';
     if (refreshBadge) { refreshBadge.textContent = ''; refreshBadge.classList.remove('visible'); }
     return;
   }
   const label = count > 99 ? '99+' : String(count);
-  document.title = `Elefeed (${label}) — A Tidy Mastodon Client`;
+  document.title = `Elefeed (${label}) - A Tidy Mastodon Client`;
   if (style === 'pill') {
     overlayPill.textContent = count > 99 ? '99+ new posts' : `${count} new post${count > 1 ? 's' : ''}`;
     overlayPill.style.display = '';
@@ -197,22 +197,22 @@ function setupOverlayPillScroll() {
     const pending = getFilteredPendingPosts(feedKey);
     if (pending.length === 0) {
       overlayPill.style.display = 'none';
-      document.title = 'Elefeed — A Tidy Mastodon Client';
+      document.title = 'Elefeed - A Tidy Mastodon Client';
       return;
     }
     const currentY = getScrollTop();
     if (currentY < 150 && scrollingUp) {
       overlayPillDismissed = true;
       overlayPill.style.display = 'none';
-      document.title = 'Elefeed — A Tidy Mastodon Client';
+      document.title = 'Elefeed - A Tidy Mastodon Client';
       return;
     }
     overlayPill.style.display = pending.length > 0 && !overlayPillDismissed ? '' : 'none';
     if (overlayPill.style.display === 'none') {
-      document.title = 'Elefeed — A Tidy Mastodon Client';
+      document.title = 'Elefeed - A Tidy Mastodon Client';
     } else {
       const count = pending.length;
-      document.title = `Elefeed (${count > 99 ? '99+' : count}) — A Tidy Mastodon Client`;
+      document.title = `Elefeed (${count > 99 ? '99+' : count}) - A Tidy Mastodon Client`;
     }
     positionOverlayPill();
   };
@@ -712,7 +712,7 @@ export function startFederatedStream() {
     const frag = document.createDocumentFragment();
     while (tmp.firstChild) frag.appendChild(tmp.firstChild);
 
-    // Just insert — browser's native scroll anchoring keeps the viewport stable
+    // Just insert - browser's native scroll anchoring keeps the viewport stable
     container.insertBefore(frag, container.firstChild);
   }
 
@@ -737,7 +737,7 @@ export function startFederatedStream() {
     if (state.feedFilter !== 'federated' || !isFeedActive) {
       stopFederatedStream();
     }
-    // Otherwise EventSource will auto-reconnect — no action needed
+    // Otherwise EventSource will auto-reconnect - no action needed
   };
 }
 
@@ -748,7 +748,7 @@ async function pollForNewPosts() {
   if (!state.token || state.demoMode || !isFeedActive) return;
   const filter = state.feedFilter;
 
-  // Federated is handled entirely by SSE streaming — poller does nothing for it
+  // Federated is handled entirely by SSE streaming - poller does nothing for it
   if (filter === 'federated') return;
 
   let minIdToUse = state.homeFeed && state.homeFeed.length > 0 ? state.homeFeed[0].id : null;
@@ -757,7 +757,7 @@ async function pollForNewPosts() {
   } else if (filter === 'live') {
     minIdToUse = state.localFeed && state.localFeed.length > 0 ? state.localFeed[0].id : null;
   }
-  // Also factor in any posts already waiting in the pending queue — they are
+  // Also factor in any posts already waiting in the pending queue - they are
   // newer than the feed's tip and must advance min_id so we don't re-fetch them.
   const _feedKey = activeFeedKey();
   const _pending = state.pendingPosts[_feedKey] || [];
@@ -859,7 +859,7 @@ export function flushPendingPosts(feedKey, scrollToTop) {
   const frag = document.createDocumentFragment();
   while (tmp.firstChild) frag.appendChild(tmp.firstChild);
 
-  // Just insert — browser's native scroll anchoring keeps the viewport stable
+  // Just insert - browser's native scroll anchoring keeps the viewport stable
   container.insertBefore(frag, container.firstChild);
   if (scrollToTop) {
     scrollContainerTo(0, 'smooth');

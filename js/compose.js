@@ -888,13 +888,13 @@ window.handleDeleteInit = async function (postId, triggerEl) {
     });
     if (!res.ok) throw new Error('Failed to delete post');
 
-    // Remove from DOM — data-id lives on <article>, data-status-id on thread wrappers
+    // Remove from DOM - data-id lives on <article>, data-status-id on thread wrappers
     document.querySelectorAll(`[data-id="${postId}"]`).forEach(el => {
       // Feed article: remove the article itself (or its parent .post wrapper if any)
       el.remove();
     });
     document.querySelectorAll(`[data-status-id="${postId}"]`).forEach(el => {
-      // Thread wrapper div — remove it
+      // Thread wrapper div - remove it
       el.remove();
     });
 
@@ -920,7 +920,7 @@ window.handleDeleteRedraftInit = async function (postId, triggerEl) {
     ]);
     sourceText = sourceResponse.text || '';
     spoilerText = sourceResponse.spoiler_text || '';
-    // Unwrap reblogs — the media lives on the inner reblog object if it's a boost
+    // Unwrap reblogs - the media lives on the inner reblog object if it's a boost
     actualStatus = statusResponse.reblog || statusResponse;
     deletedPostMedia = actualStatus.media_attachments || [];
   } catch (err) {
@@ -975,11 +975,11 @@ window.handleDeleteRedraftInit = async function (postId, triggerEl) {
     });
     if (!res.ok) throw new Error('Failed to delete post');
 
-    // Remove from DOM — data-id lives on <article>, data-status-id on thread wrappers
+    // Remove from DOM - data-id lives on <article>, data-status-id on thread wrappers
     document.querySelectorAll(`[data-id="${postId}"]`).forEach(el => el.remove());
     document.querySelectorAll(`[data-status-id="${postId}"]`).forEach(el => el.remove());
 
-    // resetReplyState wipes & revokes blob URLs — do it before rebuilding media
+    // resetReplyState wipes & revokes blob URLs - do it before rebuilding media
     resetReplyState();
 
     const textarea = $('compose-textarea' + suffix);
@@ -1056,7 +1056,7 @@ window.handleDeleteRedraftInit = async function (postId, triggerEl) {
     };
 
     // 1) Restore previously-drafted media from the compose box.
-    //    For local file uploads, file is a File object — create a fresh blob URL.
+    //    For local file uploads, file is a File object - create a fresh blob URL.
     //    For server-hosted media already in the compose box (e.g. from an edit), file is null.
     savedMediaFiles.forEach((file, i) => {
       const freshUrl = file ? URL.createObjectURL(file) : savedMediaUrls[i];
@@ -1077,7 +1077,7 @@ window.handleDeleteRedraftInit = async function (postId, triggerEl) {
       handleQuoteInit(savedQuoteId, savedQuoteAcct);
     }
 
-    showToast('Post deleted — edit and re-post below.', 'success');
+    showToast('Post deleted - edit and re-post below.', 'success');
   } catch (err) {
     showToast('Could not delete post: ' + err.message, 'error');
   }

@@ -1,6 +1,6 @@
 /**
  * @module notifications
- * Notification drawer — loading, rendering, polling, filter tabs, badges.
+ * Notification drawer - loading, rendering, polling, filter tabs, badges.
  * Also manages the Service Worker bridge for background notifications.
  */
 
@@ -249,7 +249,7 @@ export async function requestNotifPermission() {
   }
 }
 
-/** Current permission status string — used by the settings panel. */
+/** Current permission status string - used by the settings panel. */
 export function getNotifPermission() {
   if (!('Notification' in window)) return 'unsupported';
   return Notification.permission; // 'default' | 'granted' | 'denied'
@@ -268,7 +268,7 @@ if ('serviceWorker' in navigator) {
       }
       // Update the in-memory lastSeen so the next foreground poll is accurate
       if (newestId && (!state.lastSeenNotifId || newestId > state.lastSeenNotifId)) {
-        // Don't overwrite lastSeenNotifId — the user hasn't *seen* them yet,
+        // Don't overwrite lastSeenNotifId - the user hasn't *seen* them yet,
         // but record that we know they exist so we don't double-count.
         state._swLastKnownId = newestId;
       }
@@ -434,7 +434,7 @@ export async function loadNotifications(append = false) {
       state.notifMaxId[filter] = null;
         const sentinel = $('notif-sentinel');
         if (sentinel) {
-          sentinel.innerHTML = '<div class="notif-end" style="text-align:center;padding:24px;font-size:11px;color:var(--text-dim);font-family:var(--font-mono);opacity:0.6;">— end of notifications —</div>';
+          sentinel.innerHTML = '<div class="notif-end" style="text-align:center;padding:24px;font-size:11px;color:var(--text-dim);font-family:var(--font-mono);opacity:0.6;">- end of notifications -</div>';
           _disconnectNotifObserver();
         }
       }
@@ -485,7 +485,7 @@ function renderNotifications() {
   if (maxId) {
     html += '<div id="notif-sentinel" class="notif-sentinel" style="min-height: 48px;"></div>';
   } else {
-    html += '<div class="notif-end" style="text-align:center;padding:24px;font-size:11px;color:var(--text-dim);font-family:var(--font-mono);opacity:0.6;">— end of notifications —</div>';
+    html += '<div class="notif-end" style="text-align:center;padding:24px;font-size:11px;color:var(--text-dim);font-family:var(--font-mono);opacity:0.6;">- end of notifications -</div>';
   }
 
   content.innerHTML = html;

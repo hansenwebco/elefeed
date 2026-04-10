@@ -1,6 +1,6 @@
 /**
  * @module api
- * Mastodon API helpers — generic GET, app registration, OAuth token exchange.
+ * Mastodon API helpers - generic GET, app registration, OAuth token exchange.
  */
 
 import { state, store, REDIRECT_URI, SCOPES, CLIENT_NAME, CLIENT_WEBSITE } from './state.js';

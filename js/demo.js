@@ -31,7 +31,7 @@ export function getDemoHomePosts() {
         replies_count: 22, reblogs_count: 341, favourites_count: 1204,
         url: '#', poll: null, media_attachments: [],
         account: { id: 'a3', acct: 'mireille@fosstodon.org', display_name: 'Mireille Chen', avatar: 'https://i.pravatar.cc/80?img=5', avatar_static: 'https://i.pravatar.cc/80?img=5', url: '#' },
-        content: `<p>The thing nobody tells you about open source is that the hardest part isn't writing the code—it's writing the docs clearly enough that someone at 2am in a timezone 12 hours from yours can figure it out without asking. That empathy muscle is the actual skill.</p>`,
+        content: `<p>The thing nobody tells you about open source is that the hardest part isn't writing the code-it's writing the docs clearly enough that someone at 2am in a timezone 12 hours from yours can figure it out without asking. That empathy muscle is the actual skill.</p>`,
       },
       replies_count: 0, reblogs_count: 0, favourites_count: 0, poll: null, media_attachments: [],
       _sourceTags: [],
@@ -77,7 +77,7 @@ export function getDemoHomePosts() {
       url: '#', poll: null, media_attachments: [],
       _sourceTags: [],
       account: { id: 'a7', acct: 'nevada@mastodon.social', display_name: 'Nevada Park', avatar: 'https://i.pravatar.cc/80?img=22', avatar_static: 'https://i.pravatar.cc/80?img=22', url: '#' },
-      content: `<p>Reminder that "move fast and break things" was never good advice — it just happened to work for a narrow window when consumer internet was forgiving and the stakes were low. Both those things are very much no longer true. <a href="#" class="hashtag">#tech</a> <a href="#" class="hashtag">#engineering</a></p>`,
+      content: `<p>Reminder that "move fast and break things" was never good advice - it just happened to work for a narrow window when consumer internet was forgiving and the stakes were low. Both those things are very much no longer true. <a href="#" class="hashtag">#tech</a> <a href="#" class="hashtag">#engineering</a></p>`,
     },
   ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
@@ -103,7 +103,7 @@ export function getDemoHashtagData() {
       reblog: null, replies_count: 11, reblogs_count: 31, favourites_count: 156,
       url: '#', poll: null, media_attachments: [], _tag: 'fediverse',
       account: { id: 'ha2', acct: 'orion@chaos.social', display_name: 'Orion Wells', avatar: 'https://i.pravatar.cc/80?img=60', avatar_static: 'https://i.pravatar.cc/80?img=60', url: '#' },
-      content: `<p>The fediverse is doing something quietly remarkable: proving that decentralized social infrastructure can actually work at scale. Not perfectly, not without challenges — but it works, and it's growing. <a href="#" class="hashtag">#fediverse</a> <a href="#" class="hashtag">#activitypub</a></p>`,
+      content: `<p>The fediverse is doing something quietly remarkable: proving that decentralized social infrastructure can actually work at scale. Not perfectly, not without challenges - but it works, and it's growing. <a href="#" class="hashtag">#fediverse</a> <a href="#" class="hashtag">#activitypub</a></p>`,
     },
     {
       id: 'h3', created_at: t(1000 * 60 * 48), spoiler_text: '', sensitive: false,
