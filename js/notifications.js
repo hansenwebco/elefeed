@@ -290,9 +290,6 @@ export function openNotifDrawer() {
   // Update URL state
   updateURLParam('notifications', 'true', true);
 
-  // Restore read IDs from storage
-  _loadReadIds();
-
   if (state.notifications.length > 0) {
     renderNotifications();
     // Update the lastSeenNotifId for the badge counter / SW,
