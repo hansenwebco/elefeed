@@ -1560,7 +1560,7 @@ body.manage-inline-active .manage-inline-panel {
   bottom: 0;
   width: min(420px, 100%);
   background: var(--surface);
-  border-left: 1px solid var(--border);
+  box-shadow: inset 1px 0 0 var(--border);
   z-index: 251;
   transform: translateX(100%);
   transition: transform 260ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -1577,6 +1577,7 @@ body.manage-inline-active .manage-inline-panel {
   .notif-drawer {
     width: 100%;
     border-left: none;
+    box-shadow: none;
   }
 }
 
@@ -1588,6 +1589,7 @@ body.manage-inline-active .manage-inline-panel {
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   background: var(--surface);
+  box-shadow: inset 1px 0 0 var(--border);
   min-height: 52px;
 }
 
@@ -1630,6 +1632,7 @@ body.manage-inline-active .manage-inline-panel {
   gap: 6px;
   padding: 12px 18px;
   border-bottom: 1px solid var(--border);
+  box-shadow: inset 1px 0 0 var(--border);
   overflow-x: auto;
   flex-shrink: 0;
 }
@@ -1663,18 +1666,27 @@ body.manage-inline-active .manage-inline-panel {
 .notif-item {
   display: flex;
   gap: 12px;
-  padding: 14px 18px;
+  padding: 14px 18px 14px 21px;
   border-bottom: 1px solid var(--border);
   transition: background var(--trans), border-color 300ms ease, opacity 300ms ease;
   cursor: default;
   position: relative;
-  border-left: 3px solid transparent;
 }
 
 /* ── Unread state — prominent indicator ── */
 .notif-item.unread {
   background: rgba(155, 127, 255, 0.04);
-  border-left-color: var(--accent);
+}
+
+.notif-item.unread::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  z-index: 2;
 }
 
 .notif-item.unread .notif-icon {
