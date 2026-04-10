@@ -1181,9 +1181,13 @@ function applyFont(f) {
   store.set('pref_font_family', f);
   const fontMap = {
     'sans': "'DM Sans', system-ui, -apple-system, sans-serif",
-    'serif': "Charter, Georgia, 'Times New Roman', serif",
+    'outfit': "'Outfit', sans-serif",
+    'plex': "'IBM Plex Sans', sans-serif",
     'atkinson': "'Atkinson Hyperlegible', sans-serif",
     'lexend': "'Lexend', sans-serif",
+    'serif': "Charter, Georgia, 'Times New Roman', serif",
+    'literata': "'Literata', serif",
+    'lora': "'Lora', serif",
     'bitter': "'Bitter', serif",
     'mono': "'DM Mono', monospace"
   };
