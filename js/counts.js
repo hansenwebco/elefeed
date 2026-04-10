@@ -209,7 +209,7 @@ function _applyUpdate(status, fromUserAction) {
   const id       = status.id;
   const prev     = knownCounts.get(id);
 
-  const separate = store.get('pref_separate_boost_quote') === 'true';
+  const separate = store.get('pref_combine_boost_quote') !== 'true';
   const next = {
     replies: source.replies_count    || 0,
     boosts:  separate ? (source.reblogs_count || 0) : ((source.reblogs_count || 0) + (source.quotes_count || source.quote_count || 0)),

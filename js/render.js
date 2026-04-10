@@ -426,7 +426,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
         <span class="post-reply-count">${s.replies_count || 0}</span>
       </button>
       <span style="position:relative;display:inline-flex;">
-        ${store.get('pref_separate_boost_quote') === 'true' ? `
+        ${store.get('pref_combine_boost_quote') !== 'true' ? `
         ${(!s.quote_approval || s.quote_approval.current_user !== 'denied') && s.visibility !== 'private' && s.visibility !== 'direct' ? `
         <button class="post-stat post-quote-btn" data-post-id="${s.id}" data-acct="${escapeHTML(s.account.acct)}" title="Quote">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
@@ -1019,7 +1019,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     const getCount = (el, sel) => el ? (el.querySelector(sel)?.textContent || '0') : '0';
     const safeCount = (el, sel, fallback) => el ? getCount(el, sel) : String(fallback || 0);
 
-    const separate = store.get('pref_separate_boost_quote') === 'true';
+    const separate = store.get('pref_combine_boost_quote') !== 'true';
 
     const actionBar = document.createElement('article');
     actionBar.className = 'lightbox-action-bar';
