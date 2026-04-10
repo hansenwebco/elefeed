@@ -68,7 +68,7 @@ export function closeSearchDrawer() {
    ══════════════════════════════════════════════════════════════════════ */
 
 /**
- * Fresh search — resets pagination and replaces results.
+ * Fresh search - resets pagination and replaces results.
  */
 async function performSearch(query, filter) {
   if (!query || query.length < 2) { renderEmpty(); return; }
@@ -161,9 +161,9 @@ async function loadMoreResults(query, filter) {
     const sent = document.getElementById('search-sentinel');
     if (sent) {
       if (_hasMoreResults) {
-        sent.innerHTML = ''; // empty — observer will trigger again
+        sent.innerHTML = ''; // empty - observer will trigger again
       } else {
-        sent.innerHTML = `<div class="search-end-of-results">— end of results —</div>`;
+        sent.innerHTML = `<div class="search-end-of-results">- end of results -</div>`;
         _disconnectObserver();
       }
     }
@@ -449,7 +449,7 @@ function buildStatusPreviewHTML(s) {
   const tmp = document.createElement('div');
   tmp.innerHTML = s.content;
 
-  // Replace all <a> tags — mentions become clickable spans, hashtags become clickable spans, others become plain text
+  // Replace all <a> tags - mentions become clickable spans, hashtags become clickable spans, others become plain text
   tmp.querySelectorAll('a').forEach(a => {
     const text = a.textContent.trim();
     const isHashtag = a.classList.contains('hashtag') || text.startsWith('#');
@@ -607,7 +607,7 @@ export function initSearch() {
   if (closeBtn) closeBtn.addEventListener('click', closeSearchDrawer);
   if (backdrop) backdrop.addEventListener('click', closeSearchDrawer);
 
-  // Input → debounced search (400ms — comfortable pause before firing)
+  // Input → debounced search (400ms - comfortable pause before firing)
   input.addEventListener('input', () => {
     const q = input.value.trim();
     _currentQuery = q;
@@ -629,7 +629,7 @@ export function initSearch() {
     });
   }
 
-  // Enter key — fire immediately, skip debounce
+  // Enter key - fire immediately, skip debounce
   input.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeSearchDrawer(); return; }
     if (e.key === 'Enter') {
@@ -665,7 +665,7 @@ export function initSearch() {
     const profileTrigger = e.target.closest('[data-profile-id]');
     if (profileTrigger) {
       closeSearchDrawer();
-      // Don't call preventDefault/stopPropagation — let app.js delegation open the profile drawer
+      // Don't call preventDefault/stopPropagation - let app.js delegation open the profile drawer
       return;
     }
 

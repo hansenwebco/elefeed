@@ -1,5 +1,5 @@
 /**
- * @file sw.js  (served from root — scope covers entire origin)
+ * @file sw.js  (served from root - scope covers entire origin)
  * Elefeed Service Worker
  *
  * Responsibilities:
@@ -30,7 +30,7 @@ self.addEventListener('fetch', event => {
 
 self.addEventListener('push', event => {
   // event.waitUntil() MUST receive a Promise that resolves only after the
-  // notification has been shown — otherwise Android kills the SW first.
+  // notification has been shown - otherwise Android kills the SW first.
   event.waitUntil(handlePush(event));
 });
 

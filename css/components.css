@@ -86,7 +86,7 @@
 }
 
 /* ═══════════════════════════════════════════════
-   COMPONENTS — Toast, Error Banner, Load More, Offline, etc.
+   COMPONENTS - Toast, Error Banner, Load More, Offline, etc.
    ═══════════════════════════════════════════════ */
 
 /* ─── Live Stream Bar ─── */
@@ -129,7 +129,7 @@
 
 /* ─── Toast System ─── */
 
-/* Hidden legacy element kept for backward compat — do not remove */
+/* Hidden legacy element kept for backward compat - do not remove */
 .toast {
   display: none !important;
 }
@@ -665,7 +665,7 @@
 }
 
 /* ═══════════════════════════════════════════════
-   USER HOVER CARD — desktop-only user popover
+   USER HOVER CARD - desktop-only user popover
    ═══════════════════════════════════════════════ */
 
 /* Only render on devices that support hover/fine pointer */

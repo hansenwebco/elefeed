@@ -2,7 +2,7 @@
  * @module state
  * Global constants, persistent storage helpers, and application state.
  *
- * Every other module imports from here — this file has zero internal imports
+ * Every other module imports from here - this file has zero internal imports
  * to guarantee it can never participate in a circular dependency.
  */
 
@@ -12,7 +12,7 @@ export const CLIENT_NAME = 'Elefeed';
 export const CLIENT_WEBSITE = location.origin;
 export const CLIENT_VERSION = '0.0.0-dev';
 
-/** Normalized redirect URI — must match exactly between registration and authorization. */
+/** Normalized redirect URI - must match exactly between registration and authorization. */
 export const REDIRECT_URI = (() => {
   const path = location.pathname;
   if (path === '/' || path.endsWith('/')) {

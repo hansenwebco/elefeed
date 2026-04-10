@@ -1,6 +1,6 @@
 /**
  * @module thread
- * Thread drawer — loading, rendering, and reply-tree building.
+ * Thread drawer - loading, rendering, and reply-tree building.
  */
 
 import { $, state } from './state.js';

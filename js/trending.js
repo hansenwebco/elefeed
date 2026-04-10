@@ -1,6 +1,6 @@
 /**
  * @module trending
- * Explore tab — loads and renders trending posts, hashtags, people, and news.
+ * Explore tab - loads and renders trending posts, hashtags, people, and news.
  */
 
 import { $, state } from './state.js';
@@ -463,7 +463,7 @@ export async function loadTrendingFollowing() {
     await fetchRelationships(allPosts);
 
     // Unwrap every timeline entry to its original post, deduplicating by original ID.
-    // Only include originals whose author the user directly follows — boosts from followed
+    // Only include originals whose author the user directly follows - boosts from followed
     // accounts that point to non-followed authors are used purely for the engagement signal,
     // but the original must itself be authored by a followed account to appear in the digest.
     const originalsMap = new Map(); // original post id → original Status object

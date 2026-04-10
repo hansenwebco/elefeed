@@ -1,6 +1,6 @@
 /**
  * @module analytics
- * Post analytics drawer — shows who replied, boosted, or favourited a focal post.
+ * Post analytics drawer - shows who replied, boosted, or favourited a focal post.
  * Opened via the bar-chart icon on the root (focal) post in a thread.
  */
 
@@ -162,7 +162,7 @@ export async function appendMoreAnalyticsUsers(btn) {
     }
 
     if (accounts.length === 80) {
-      // More pages remain — update cursor and re-observe
+      // More pages remain - update cursor and re-observe
       btn.dataset.maxId = accounts[accounts.length - 1].id;
       btn.textContent = 'Load more';
       btn.disabled = false;

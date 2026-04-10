@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   DRAWERS — Profile, Thread, Notification panels
+   DRAWERS - Profile, Thread, Notification panels
    ═══════════════════════════════════════════════ */
 
 /* ────────────────────────────────────────────────
@@ -1416,7 +1416,7 @@ body.manage-inline-active .manage-inline-panel {
   margin-left: 10px;
 }
 
-/* Posts inside thread drawers — keep feed styling, just remove clickable cursor */
+/* Posts inside thread drawers - keep feed styling, just remove clickable cursor */
 .thread-drawer-inner .post,
 .thread-inline-inner .post {
   cursor: default;
@@ -1673,7 +1673,7 @@ body.manage-inline-active .manage-inline-panel {
   position: relative;
 }
 
-/* ── Unread state — prominent indicator ── */
+/* ── Unread state - prominent indicator ── */
 .notif-item.unread {
   background: rgba(155, 127, 255, 0.04);
 }
@@ -1703,7 +1703,7 @@ body.manage-inline-active .manage-inline-panel {
   font-weight: 600;
 }
 
-/* ── Read state — slightly muted ── */
+/* ── Read state - slightly muted ── */
 .notif-item:not(.unread) {
   opacity: 0.7;
 }

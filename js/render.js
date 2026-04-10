@@ -1,6 +1,6 @@
 /**
  * @module render
- * Post rendering — builds the HTML for feed posts and thread posts.
+ * Post rendering - builds the HTML for feed posts and thread posts.
  *
  * Both renderPost() and renderThreadPost() share identical media / poll /
  * quote / CW / footer logic.  The private _buildPostBody() helper handles
@@ -326,7 +326,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
           domain = new URL(s.card.url).hostname;
           faviconHTML = `<img class="post-card-favicon" src="https://www.google.com/s2/favicons?domain=${domain}&sz=16" alt="" loading="lazy" onerror="this.style.display='none'">`;
         } catch (e) { }
-        const domainHTML = domain ? `<span class="post-card-provider-domain"> — ${escapeHTML(domain)}</span>` : '';
+        const domainHTML = domain ? `<span class="post-card-provider-domain"> - ${escapeHTML(domain)}</span>` : '';
         return providerName
           ? `<div class="post-card-provider">${faviconHTML}<span class="post-card-provider-name">${escapeHTML(providerName)}</span>${domainHTML}</div>`
           : '';
@@ -868,7 +868,7 @@ window.expandMedia = function expandMedia(mediaItem) {
       }
     });
 
-    // Alt text — integrated into action bar when available, standalone badge otherwise
+    // Alt text - integrated into action bar when available, standalone badge otherwise
     if (lbAltBtn && lbAltPanel) {
       const altText = (mediaItems[currentIndex].dataset.alt || '').trim();
       lbAltBtn.hidden = !altText;
@@ -893,7 +893,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     }
 
     // Sample the dominant color from the active image's edge pixels and tint the backdrop.
-    // Edges are used because that's where the image meets the overlay — matching those colours
+    // Edges are used because that's where the image meets the overlay - matching those colours
     // makes the transition look seamless. Hue is resolved via a saturation-weighted circular
     // mean (HSL approach) so vivid edge tones win over neutral grey fringing.
     const { mediaEl } = slideData[currentIndex];
@@ -910,7 +910,7 @@ window.expandMedia = function expandMedia(mediaItem) {
           let sinSum = 0, cosSum = 0, satSum = 0, n = 0;
           for (let py = 0; py < S; py++) {
             for (let px = 0; px < S; px++) {
-              // Only use the perimeter strip — these pixels sit at the image/backdrop boundary
+              // Only use the perimeter strip - these pixels sit at the image/backdrop boundary
               if (px >= BORDER && px < S - BORDER && py >= BORDER && py < S - BORDER) continue;
               const idx = (py * S + px) * 4;
               const r = d[idx] / 255, g = d[idx + 1] / 255, b = d[idx + 2] / 255;
@@ -939,7 +939,7 @@ window.expandMedia = function expandMedia(mediaItem) {
           // Power curve gives more presence at low saturations without washing out vivid images
           const bgSat = Math.round(Math.min(Math.pow(avgSat, 0.6) * 100, 80));
           overlay.style.backgroundColor = `hsl(${Math.round(avgHue)}, ${bgSat}%, 22%)`;
-        } catch (_e) { /* cross-origin canvas taint — keep default dark background */ }
+        } catch (_e) { /* cross-origin canvas taint - keep default dark background */ }
       };
       if (imgEl.complete && imgEl.naturalWidth > 0) doExtract();
       else imgEl.addEventListener('load', doExtract, { once: true });
@@ -1221,7 +1221,7 @@ window.expandMedia = function expandMedia(mediaItem) {
   document.addEventListener('keydown', handleKeydown);
 };
 
-// adjustImageAlignment removed — single-image containers now use CSS
+// adjustImageAlignment removed - single-image containers now use CSS
 // aspect-ratio set from attachment metadata at render time.
 
 /* ── Custom Video Player helpers ───────────────────── */
@@ -1253,7 +1253,7 @@ window.vpSeek = function (e, wrap) {
   vid.currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * vid.duration;
 };
 
-/** Wrapper click: if already playing — pause; if paused — open lightbox. */
+/** Wrapper click: if already playing - pause; if paused - open lightbox. */
 window.vpWrapperClick = function (e, wrap) {
   const vid = wrap && wrap.querySelector('video');
   if (vid && !vid.paused) {
