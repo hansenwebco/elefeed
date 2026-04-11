@@ -1855,7 +1855,7 @@ document.addEventListener('click', e => {
 document.addEventListener('click', e => {
   /* 0. Special handling for standard links to avoid catch-all interactions */
   const link = e.target.closest('a');
-  if (link && !link.hasAttribute('data-profile-id') && !link.classList.contains('hashtag') && !link.classList.contains('show-more-btn')) {
+  if (link && !link.hasAttribute('data-profile-id') && !link.hasAttribute('data-trending-tag') && !link.classList.contains('hashtag') && !link.classList.contains('show-more-btn')) {
     // If it's a standard link, let the browser handle it (nav to href).
     // We return early so we don't accidentally preventDefault() it later.
     return;
