@@ -13,6 +13,16 @@
   padding: 0;
 }
 
+/* Ensure form elements inherit font family and size */
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
 /* Remove default search decoration and clear buttons in WebKit/Blink */
 input[type="search"]::-webkit-search-cancel-button,
 input[type="search"]::-webkit-search-decoration,

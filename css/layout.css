@@ -452,7 +452,7 @@
   }
 
   .tab-btn {
-    font-size: 12px;
+    font-size: calc(var(--app-font-size, 14px) * 0.85);
     padding: 9px 0;
   }
 }
