@@ -2084,7 +2084,7 @@ body.hide-cards-enabled .post-card {
   }
 
   .post-content {
-    font-size: 14px;
+    font-size: var(--app-font-size, 14px);
   }
 
   .post-media,

@@ -2321,6 +2321,10 @@ async function boot() {
   initNotifications();
   initSearch();
 
+  // Apply saved font preferences (safety call in case index.html script was bypassed)
+  applyFont(store.get('pref_font_family') || 'sans');
+  applyFontSize(store.get('pref_font_size') || '14px');
+
   // Search button
   const searchBtn = $('search-btn');
   if (searchBtn) searchBtn.addEventListener('click', () => openSearchDrawer());
