@@ -353,25 +353,6 @@ function _isNotifRead(notifId) {
   return BigInt(notifId) <= BigInt(state.lastSeenNotifId);
 }
 
-/** Mark a single notification as read and sync with server marker. */
-function markNotifRead(notifId) {
-  // Only update if it's actually newer than what we have
-  if (!_isNotifRead(notifId)) {
-    state.lastSeenNotifId = notifId;
-    store.set('lastSeenNotifId_' + state.server, notifId);
-    dismissNotifMarker();
-    
-    _recalcUnreadCount();
-    updateNotifBadge();
-
-    // Update the DOM for all items that are now "read" (equal or older)
-    document.querySelectorAll('.notif-item.unread').forEach(el => {
-      if (_isNotifRead(el.dataset.notifId)) {
-        el.classList.remove('unread');
-      }
-    });
-  }
-}
 
 /** Mark ALL current notifications as read by jumping the marker to the top item. */
 function markAllRead() {
@@ -529,9 +510,6 @@ function _wireEvents(container) {
       e.stopPropagation();
       const id = el.dataset.notifProfile;
       const srv = el.dataset.notifServer || state.server;
-      // Mark this notification as read when the user clicks to view
-      const notifEl = el.closest('.notif-item[data-notif-id]');
-      if (notifEl) markNotifRead(notifEl.dataset.notifId);
       closeNotifDrawer();
       setTimeout(() => openProfileDrawer(id, srv), 180);
     });
@@ -541,9 +519,6 @@ function _wireEvents(container) {
     el.addEventListener('click', (e) => {
       e.stopPropagation();
       const id = el.dataset.notifStatus;
-      // Mark this notification as read when the user clicks to view
-      const notifEl = el.closest('.notif-item[data-notif-id]');
-      if (notifEl) markNotifRead(notifEl.dataset.notifId);
       closeNotifDrawer();
       setTimeout(() => openThreadDrawer(id), 180);
     });
