@@ -1722,7 +1722,6 @@ if (typeof window.AndroidBridge !== 'undefined') {
       window.AndroidBridge.postMessage(JSON.stringify({
         type: "requestAlarmPermission"
       }));
-      showToast('Alarm permission request sent to system.');
     });
   }
 }
