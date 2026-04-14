@@ -519,6 +519,19 @@ export function openProfileDrawer(accountId, server) {
           loadProfileTab(tabName, panel);
         }
         setTimeout(checkProfileInfiniteScroll, 200);
+
+        // Scroll tabs to top of container - use a small delay to ensure layout has settled
+        setTimeout(() => {
+          const inner = drawer.querySelector('.profile-drawer-inner');
+          const tabs = content.querySelector('.profile-tabs');
+          const panel = content.querySelector(`#profile-tab-${tabName}`);
+          if (inner && tabs && panel) {
+            inner.scrollTo({
+              top: panel.offsetTop - tabs.offsetHeight,
+              behavior: 'smooth'
+            });
+          }
+        }, 10);
       });
     });
 
