@@ -1360,6 +1360,21 @@ for (const type of _alertTypes) {
 
 /* ── Developer Debug Panel ──────────────────────────────────────────── */
 
+// Wire up collapsible debug toggle
+const _debugToggle = $('settings-debug-toggle');
+const _debugContent = $('settings-debug-content');
+if (_debugToggle && _debugContent) {
+  _debugToggle.addEventListener('click', () => {
+    const isExpanded = _debugToggle.getAttribute('aria-expanded') === 'true';
+    _debugToggle.setAttribute('aria-expanded', !isExpanded);
+    _debugContent.style.display = isExpanded ? 'none' : 'flex';
+    const chevron = _debugToggle.querySelector('.debug-chevron');
+    if (chevron) {
+      chevron.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
+  });
+}
+
 async function debugUpdateStatus(msg) {
   const el = $('debug-sub-status');
   if (el) el.innerHTML = msg;
@@ -1685,6 +1700,31 @@ if (_alwaysSensitiveToggle) {
     showToast.success(_alwaysSensitiveToggle.checked ? 'Always mark media as sensitive' : 'Media sensitivity reset to default');
     refreshComposeDefaults();
   });
+}
+
+// Android Alarm Permission handling
+if (typeof window.AndroidBridge !== 'undefined') {
+  // Show Android-specific setting
+  const alarmSection = $('settings-android-alarm-section');
+  if (alarmSection) alarmSection.style.display = 'flex';
+
+  // Hide Web Push settings (they don't work reliably in WebView)
+  const webPushSection = $('settings-web-push-section');
+  if (webPushSection) webPushSection.style.display = 'none';
+
+  // Hide standard background notification options
+  const webPushOptions = $('settings-web-push-options');
+  if (webPushOptions) webPushOptions.style.display = 'none';
+
+  const alarmBtn = $('settings-android-alarm-btn');
+  if (alarmBtn) {
+    alarmBtn.addEventListener('click', () => {
+      window.AndroidBridge.postMessage(JSON.stringify({
+        type: "requestAlarmPermission"
+      }));
+      showToast('Alarm permission request sent to system.');
+    });
+  }
 }
 
 /* Logout */

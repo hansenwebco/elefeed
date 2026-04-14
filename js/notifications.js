@@ -319,13 +319,16 @@ export function closeNotifDrawer() {
 
 export function updateNotifBadge() {
   const badge = $('notif-badge');
+  const clearBtn = $('notif-clear-all');
   if (!badge) return;
   if (state.notifUnreadCount > 0) {
     badge.textContent = state.notifUnreadCount > 99 ? '99+' : String(state.notifUnreadCount);
     badge.classList.add('visible');
+    if (clearBtn) clearBtn.classList.add('has-unread');
   } else {
     badge.classList.remove('visible');
     badge.textContent = '';
+    if (clearBtn) clearBtn.classList.remove('has-unread');
   }
 }
 
