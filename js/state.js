@@ -68,6 +68,7 @@ export const state = {
   pendingPosts: { feed: [] },
   demoMode: false,
   zenMode: store.get('zen_mode') === 'true',
+  desktopMenu: store.get('pref_desktop_menu') === 'true',
 
   /* Trending flags */
   trendingPostsLoaded: false,

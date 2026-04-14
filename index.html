@@ -408,6 +408,9 @@
           </div>
         </div>
       </div>
+      
+      <nav class="sidebar-nav" id="sidebar-nav" style="display:none;"></nav>
+
       <div class="sidebar-footer">
         <div class="sidebar-footer-brand">elefeed <span id="client-version">v0.0.0-dev</span></div>
         <div class="sidebar-footer-server" style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-align:center; opacity:0.8; margin-top:2px; display:flex; flex-wrap:wrap; justify-content:center; align-items:baseline; gap:4px; line-height:1.4;">
@@ -824,6 +827,10 @@
       </main>
     </div>
     <!-- end main-wrapper -->
+    
+    <aside class="right-sidebar" id="right-sidebar" style="display:none;">
+      <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    </aside>
 
     <!-- Profile Drawer -->
     <div class="profile-backdrop" id="profile-backdrop"></div>
@@ -1309,6 +1316,18 @@
               </div>
               <label class="settings-toggle" style="flex-shrink:0;" title="Combine boost and quote buttons">
                 <input type="checkbox" id="settings-separate-boost-quote-toggle" />
+                <span class="settings-toggle-track"></span>
+              </label>
+            </div>
+            
+            <!-- Desktop Post Menu -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Show navigation under post box</span>
+                <span style="font-size:11px; color:var(--text-muted);">Display primary navigation links below the compose area, right-aligned next to the feed.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Show menu under post box">
+                <input type="checkbox" id="settings-desktop-menu-toggle" />
                 <span class="settings-toggle-track"></span>
               </label>
             </div>
