@@ -68,7 +68,7 @@
 
 /* Sidebar Navigation (below compose area) */
 .sidebar-nav {
-  margin-top: 32px;
+  margin-top: 26px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -83,7 +83,8 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 8px;
-  padding-left: 4px; /* Align with icons */
+  padding-left: 4px;
+  /* Align with icons */
   opacity: 0.6;
 }
 
@@ -93,7 +94,8 @@
   justify-content: flex-start;
   gap: 12px;
   padding: 8px 10px;
-  margin-left: -10px; /* Pull left so icons align with content above while hover-pill is centered */
+  margin-left: -10px;
+  /* Pull left so icons align with content above while hover-pill is centered */
   border-radius: 8px;
   color: var(--text-muted);
   font-family: var(--font-body);
@@ -103,7 +105,8 @@
   transition: all 0.15s ease;
   background: transparent;
   border: none;
-  width: calc(100% + 20px); /* Allow pill to breathe */
+  width: calc(100% + 20px);
+  /* Allow pill to breathe */
   text-align: left;
 }
 

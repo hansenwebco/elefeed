@@ -600,7 +600,15 @@ export async function loadFeedTab(scrollTop = true) {
 
   try {
     const wrapper = $('feed-content-wrapper');
-    if (filter !== 'hashtags' && wrapper) wrapper.style.display = 'block';
+    if (filter !== 'hashtags') {
+      if (wrapper) wrapper.style.display = 'block';
+      const gridView = $('hashtag-landing-grid-view');
+      if (gridView) gridView.style.display = 'none';
+      const activeHeader = $('hashtag-active-view-header');
+      if (activeHeader) activeHeader.style.display = 'none';
+      const filterBar = $('hashtag-filter-bar');
+      if (filterBar) filterBar.style.display = 'none';
+    }
 
     if (filter === 'all') {
       await ensureHomeFeedLoaded();

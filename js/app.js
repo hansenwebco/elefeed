@@ -308,6 +308,7 @@ async function initApp(server, token, demo = false) {
 
   updateTabLabel('feed');
   updateTabLabel('explore');
+  updateSidebarNav();
 
   if (state.activeTab === 'explore') {
     const isFeedContext = state.exploreSubtab === 'live' || state.exploreSubtab === 'federated';
@@ -797,6 +798,7 @@ document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item 
     $('hashtag-filter-bar').style.display = (filter === 'hashtags') ? '' : 'none';
     updateTabLabel('feed');
     closeAllTabDropdowns();
+    updateSidebarNav();
 
     // Switch to feed tab visually and functionally, or just reload the feed if already there
     if (state.activeTab !== 'feed') {
@@ -860,6 +862,7 @@ document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(it
     updateURLParam('explore', subtab);
 
     updateTabLabel('explore');
+    updateSidebarNav();
     closeAllTabDropdowns();
 
     if (isFeedContext) {
@@ -1641,27 +1644,27 @@ function updateSidebarNav() {
   nav.style.display = 'flex';
   nav.innerHTML = `
     <div class="sidebar-nav-header">Feeds</div>
-    <button class="sidebar-nav-item" data-action="home">
+    <button class="sidebar-nav-item${state.activeTab === 'feed' && state.feedFilter === 'all' ? ' active' : ''}" data-action="home">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>Home</span>
     </button>
-    <button class="sidebar-nav-item" data-action="following">
+    <button class="sidebar-nav-item${state.activeTab === 'feed' && state.feedFilter === 'following' ? ' active' : ''}" data-action="following">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
       <span>Followed Profiles</span>
     </button>
-    <button class="sidebar-nav-item" data-action="followed-hashtags">
+    <button class="sidebar-nav-item${state.activeTab === 'feed' && state.feedFilter === 'hashtags' ? ' active' : ''}" data-action="followed-hashtags">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
       <span>Followed Hashtags</span>
     </button>
-    <button class="sidebar-nav-item" data-action="trending">
+    <button class="sidebar-nav-item${state.activeTab === 'explore' && state.exploreSubtab === 'posts' ? ' active' : ''}" data-action="trending">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
       <span>Trending</span>
     </button>
-    <button class="sidebar-nav-item" data-action="local">
+    <button class="sidebar-nav-item${state.activeTab === 'explore' && state.exploreSubtab === 'live' ? ' active' : ''}" data-action="local">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5a13 13 0 0 1 21 0" /><path d="M5 12a10 10 0 0 1 14 0" /><path d="M8.5 15.5a7 7 0 0 1 7 0" /><circle cx="12" cy="19" r="1" fill="currentColor" /></svg>
       <span>Local Feed</span>
     </button>
-    <button class="sidebar-nav-item" data-action="federated">
+    <button class="sidebar-nav-item${state.activeTab === 'explore' && state.exploreSubtab === 'federated' ? ' active' : ''}" data-action="federated">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
       <span>Federated Feed</span>
     </button>
@@ -1684,19 +1687,18 @@ function updateSidebarNav() {
       <span>Manage Hashtags</span>
     </button>
     <button class="sidebar-nav-item" data-action="zen">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5 4.5 4.5 0 1 1 16.5 12 4.5 4.5 0 1 1 12 16.5"></path></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5 4.5 4.5 0 1 1 12 16.5"></path></svg>
       <span>Zen Mode</span>
     </button>
   `;
 }
+window.updateSidebarNav = updateSidebarNav;
 
-$('sidebar-nav')?.addEventListener('click', async e => {
+$('sidebar-nav')?.addEventListener('click', e => {
   const item = e.target.closest('.sidebar-nav-item');
   if (!item) return;
 
   const action = item.dataset.action;
-  const { switchToTab, updateTabLabel } = await import('./ui.js');
-  const { loadFeedTab } = await import('./feed.js');
 
   if (action === 'home') {
     state.feedFilter = 'all';
@@ -1739,13 +1741,14 @@ $('sidebar-nav')?.addEventListener('click', async e => {
     $('profile-zen-btn')?.click();
   }
 
-  updateTabLabel(state.activeTab);
-  if (state.activeTab === 'explore') {
-    document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(i => {
-      i.classList.toggle('active', i.dataset.subtab === state.exploreSubtab);
-    });
-    updateTabLabel('explore');
-  }
+  // Synchronize dropdown active states
+  document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.filter === state.feedFilter);
+  });
+  document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.subtab === state.exploreSubtab);
+  });
+
   updateSidebarNav();
 });
 
