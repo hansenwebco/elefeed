@@ -1484,7 +1484,7 @@
           </div>
 
           <!-- OS Background Notifications → grouped -->
-          <div style="display:flex; flex-direction:column; gap:16px; margin-top:4px;">
+          <div id="settings-web-push-section" style="display:flex; flex-direction:column; gap:16px; margin-top:4px;">
             <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Push Notifications (OS)</span>
 
             <!-- Permission row -->
@@ -1499,6 +1499,23 @@
               </button>
             </div>
           </div>
+
+          <!-- Android Alarm Permission (Hidden by default, shown by JS if AndroidBridge exists) -->
+          <div id="settings-android-alarm-section" style="display:none; flex-direction:column; gap:6px; padding:12px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-top:16px;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">Android Alarm Permission</span>
+              <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Allow the app to schedule exact alarms for time-critical notifications.</span>
+            </div>
+            <button id="settings-android-alarm-btn" style="align-self:flex-start; padding:7px 14px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:12px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Request Alarm Permission
+            </button>
+          </div>
+
+          <div id="settings-web-push-options" style="display:flex; flex-direction:column; gap:16px; margin-top:16px;">
 
           <!-- Background notifications toggle -->
           <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
@@ -1560,13 +1577,14 @@
               </label>
             </div>
           </div>
-
         </div>
       </div>
+    </div>
 
-      <!-- Debug Panel (developer only - shown via JS) -->
-      <div id="settings-debug-section" style="display:none; padding:16px; border-top:1px solid var(--border);">
-        <h4 style="font-size:11px; text-transform:uppercase; color:#f59e0b; margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono); display:flex; align-items:center; gap:6px;">
+    <!-- Debug Panel (developer only - shown via JS) -->
+    <div id="settings-debug-section" style="display:none; padding:16px; border-top:1px solid var(--border);">
+      <button id="settings-debug-toggle" style="width:100%; border:none; background:none; padding:0; margin:0; display:flex; align-items:center; justify-content:space-between; cursor:pointer; outline:none;" aria-expanded="false" aria-controls="settings-debug-content">
+        <h4 style="font-size:11px; text-transform:uppercase; color:#f59e0b; letter-spacing:0.08em; font-family:var(--font-mono); display:flex; align-items:center; gap:6px; margin:0;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
             <line x1="12" y1="8" x2="12" y2="12" />
@@ -1574,63 +1592,45 @@
           </svg>
           Developer Debug
         </h4>
-        <div style="display:flex; flex-direction:column; gap:10px;">
+        <svg class="debug-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-dim); transition:transform 0.2s;">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
 
-          <!-- Feature Flags -->
-          <div>
-            <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.08em; font-family:var(--font-mono);">Feature Flags</h5>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                  <span style="font-size:13px; color:var(--text); font-weight:500;">From Following digest</span>
-                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a ranked feed of top posts from people you follow in Explore.</span>
-                </div>
-                <label class="settings-toggle" style="flex-shrink:0;" title="Enable From Following digest">
-                  <input type="checkbox" id="debug-following-feed-toggle" />
-                  <span class="settings-toggle-track"></span>
-                </label>
+      <div id="settings-debug-content" style="display:none; flex-direction:column; gap:10px; margin-top:16px;">
+        <!-- Feature Flags -->
+        <div>
+          <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.08em; font-family:var(--font-mono);">Feature Flags</h5>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">From Following digest</span>
+                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a ranked feed of top posts from people you follow in Explore.</span>
               </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Enable From Following digest">
+                <input type="checkbox" id="debug-following-feed-toggle" />
+                <span class="settings-toggle-track"></span>
+              </label>
             </div>
           </div>
+        </div>
 
-          <!-- Notification Testing -->
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin:0 0 0 0; letter-spacing:0.08em; font-family:var(--font-mono);">Notification Testing</h5>
-
-            <!-- Subscription status -->
-            <div id="debug-sub-status" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:10px; line-height:1.6; word-break:break-all;">
-              Click "Check Status" to inspect subscription…
-            </div>
-
-            <div style="display:flex; flex-wrap:wrap; gap:8px;">
-              <!-- Check subscription status -->
-              <button id="debug-check-sub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
-                🔍 Check Status
-              </button>
-
-              <!-- Re-run startSwPolling -->
-              <button id="debug-register-push-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
-                🔄 Re-register Push
-              </button>
-
-              <!-- Clear cached endpoint and re-register -->
-              <button id="debug-force-register-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid #f59e0b44; border-radius:6px; color:#f59e0b; font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
-                ⚡ Force Re-register
-              </button>
-
-              <!-- Fire a local test notification -->
-              <button id="debug-test-notif-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
-                🔔 Test Notification
-              </button>
-
-              <!-- Unsubscribe entirely -->
-              <button id="debug-unsub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:var(--danger); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">
-                🗑 Unsubscribe
-              </button>
-            </div>
-          </div><!-- /Notification Testing -->
+        <!-- Notification Testing -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin:0 0 0 0; letter-spacing:0.08em; font-family:var(--font-mono);">Notification Testing</h5>
+          <div id="debug-sub-status" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:10px; line-height:1.6; word-break:break-all;">
+            Click "Check Status" to inspect subscription…
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button id="debug-check-sub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔍 Check Status</button>
+            <button id="debug-register-push-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔄 Re-register Push</button>
+            <button id="debug-force-register-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid #f59e0b44; border-radius:6px; color:#f59e0b; font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">⚡ Force Re-register</button>
+            <button id="debug-test-notif-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔔 Test Notification</button>
+            <button id="debug-unsub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:var(--danger); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🗑 Unsubscribe</button>
+          </div>
         </div>
       </div>
+    </div>
 
     </div>
   </div>
