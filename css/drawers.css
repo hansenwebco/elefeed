@@ -102,6 +102,11 @@
   display: block;
 }
 
+.analytics-user-avatar .following-badge {
+  bottom: -1px;
+  right: -1px;
+}
+
 .analytics-user-info {
   flex: 1;
   min-width: 0;
@@ -441,6 +446,20 @@
   background: var(--surface2);
   object-fit: cover;
   margin-top: -28px;
+}
+
+.profile-avatar-wrap .following-badge {
+  width: 18px;
+  height: 18px;
+  bottom: 6px;
+  right: 2px;
+  border-width: 1.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.profile-avatar-wrap .following-badge svg {
+  width: 10px;
+  height: 10px;
 }
 
 /* Badges */
@@ -978,6 +997,10 @@
 .profile-tab.active {
   color: var(--accent);
   border-bottom-color: var(--accent);
+}
+
+.profile-tab-panel {
+  min-height: 100vh;
 }
 
 .profile-tab-panel[hidden] {
