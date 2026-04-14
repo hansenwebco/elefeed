@@ -345,6 +345,8 @@ export function switchToTab(tab) {
   tabSwitchTimeout = setTimeout(() => {
     _tabLoaders[tab]?.();
   }, 100);
+
+  window.updateSidebarNav?.();
 }
 
 /* ── About Modal ───────────────────────────────────────────────────── */
