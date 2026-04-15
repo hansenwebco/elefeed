@@ -82,6 +82,17 @@ export function updateSidebarCharCount() {
   counter.classList.toggle('warning', remaining <= 50 && remaining > 0);
   counter.classList.toggle('error', remaining < 0);
   $('compose-post-btn' + suffix).disabled = remaining < 0 || (textLength === 0 && composeState.sidebarMediaFiles.length === 0);
+
+  const nav = $('sidebar-nav');
+  if (nav && state.desktopMenu && window.innerWidth > 900) {
+    const hasContent = textLength > 0 || cwLength > 0 || composeState.sidebarMediaFiles.length > 0 || composeState.replyToId !== null || composeState.quoteId !== null || composeState.editPostId !== null;
+    const isFocused = document.activeElement === textarea || document.activeElement === cwInput;
+    if (hasContent || isFocused) {
+      nav.classList.add('hidden-for-compose');
+    } else {
+      nav.classList.remove('hidden-for-compose');
+    }
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2034,6 +2045,10 @@ export function initCompose() {
   // --- Sidebar compose ---
   $('compose-textarea-sidebar').addEventListener('input', updateSidebarCharCount);
   $('compose-cw-input-sidebar').addEventListener('input', updateSidebarCharCount);
+  $('compose-textarea-sidebar').addEventListener('focus', updateSidebarCharCount);
+  $('compose-textarea-sidebar').addEventListener('blur', () => setTimeout(updateSidebarCharCount, 50));
+  $('compose-cw-input-sidebar').addEventListener('focus', updateSidebarCharCount);
+  $('compose-cw-input-sidebar').addEventListener('blur', () => setTimeout(updateSidebarCharCount, 50));
   $('compose-cw-btn-sidebar').addEventListener('click', () => {
     const section = $('compose-cw-section-sidebar');
     const btn = $('compose-cw-btn-sidebar');
