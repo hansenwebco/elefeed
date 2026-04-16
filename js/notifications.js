@@ -290,6 +290,8 @@ export function openNotifDrawer() {
   // Update URL state
   updateURLParam('notifications', 'true', true);
 
+  window.updateSidebarNav?.();
+
   if (state.notifications.length > 0) {
     renderNotifications();
     // Update the lastSeenNotifId for the badge counter / SW,
@@ -313,6 +315,7 @@ export function closeNotifDrawer() {
   state.notifDrawerOpen = false;
   updateURLParam('notifications', null);
   _disconnectNotifObserver();
+  window.updateSidebarNav?.();
 }
 
 /* ── Badge ─────────────────────────────────────────────────────────── */

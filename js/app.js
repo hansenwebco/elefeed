@@ -161,6 +161,7 @@ window.addEventListener('popstate', async e => {
     }
 
     setTimeout(setOverlayPillVisibility, 10);
+    updateSidebarNav();
   } finally {
     window._isRouting = false;
   }
@@ -1591,9 +1592,9 @@ if (_countPollingToggle) {
   _countPollingToggle.addEventListener('change', () => {
     store.set('pref_count_polling', _countPollingToggle.checked ? 'true' : 'false');
     if (_countPollingToggle.checked) {
-      startCountPolling();
+      if (window.startCountPolling) startCountPolling();
     } else {
-      stopCountPolling();
+      if (window.stopCountPolling) stopCountPolling();
     }
   });
 }
@@ -1611,12 +1612,12 @@ const _separateBoostQuoteToggle = $('settings-separate-boost-quote-toggle');
 if (_separateBoostQuoteToggle) {
   _separateBoostQuoteToggle.addEventListener('change', () => {
     store.set('pref_combine_boost_quote', _separateBoostQuoteToggle.checked ? 'true' : 'false');
-    showToast(_separateBoostQuoteToggle.checked ? 'Boost and Quote buttons combined' : 'Boost and Quote buttons separated');
-    loadFeedTab(false);
+    import('./ui.js').then(m => m.showToast(_separateBoostQuoteToggle.checked ? 'Boost and Quote combined' : 'Boost and Quote separated'));
+    import('./feed.js').then(m => m.loadFeedTab(false));
   });
 }
 
-// Show sensitive media (default: off → blur by default)
+// Show sensitive media
 const _hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
 if (_hideSensitiveMediaToggle) {
   _hideSensitiveMediaToggle.addEventListener('change', () => {
@@ -1631,7 +1632,7 @@ if (_confirmInteractionsToggle) {
   });
 }
 
-// Desktop Menu (navigation under post box)
+// Sidebar Navigation
 function updateSidebarNav() {
   const nav = $('sidebar-nav');
   if (!nav) return;
@@ -1642,104 +1643,175 @@ function updateSidebarNav() {
   }
 
   nav.style.display = 'flex';
-  nav.innerHTML = `
-    <div class="sidebar-nav-header">Feeds</div>
-    <button class="sidebar-nav-item${state.activeTab === 'feed' && state.feedFilter === 'all' ? ' active' : ''}" data-action="home">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span>Home</span>
-    </button>
-    <button class="sidebar-nav-item${state.activeTab === 'feed' && state.feedFilter === 'following' ? ' active' : ''}" data-action="following">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-      <span>Followed Profiles</span>
-    </button>
-    <button class="sidebar-nav-item${state.activeTab === 'feed' && state.feedFilter === 'hashtags' ? ' active' : ''}" data-action="followed-hashtags">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
-      <span>Followed Hashtags</span>
-    </button>
-    <button class="sidebar-nav-item${state.activeTab === 'explore' && state.exploreSubtab === 'posts' ? ' active' : ''}" data-action="trending">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-      <span>Trending</span>
-    </button>
-    <button class="sidebar-nav-item${state.activeTab === 'explore' && state.exploreSubtab === 'live' ? ' active' : ''}" data-action="local">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8.5a13 13 0 0 1 21 0" /><path d="M5 12a10 10 0 0 1 14 0" /><path d="M8.5 15.5a7 7 0 0 1 7 0" /><circle cx="12" cy="19" r="1" fill="currentColor" /></svg>
-      <span>Local Feed</span>
-    </button>
-    <button class="sidebar-nav-item${state.activeTab === 'explore' && state.exploreSubtab === 'federated' ? ' active' : ''}" data-action="federated">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-      <span>Federated Feed</span>
-    </button>
 
-    <div class="sidebar-nav-header" style="margin-top: 16px;">Explore</div>
-    <button class="sidebar-nav-item" data-action="notifications">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span>Notifications</span>
-    </button>
-    <button class="sidebar-nav-item" data-action="bookmarks">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-      <span>Bookmarks</span>
-    </button>
-    <button class="sidebar-nav-item" data-action="search">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <span>Search</span>
-    </button>
-    <button class="sidebar-nav-item" data-action="hashtags">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
-      <span>Manage Hashtags</span>
-    </button>
-    <button class="sidebar-nav-item" data-action="zen">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5 4.5 4.5 0 1 1 12 16.5"></path></svg>
-      <span>Zen Mode</span>
+  const primaryItems = [
+    { action: 'home', label: 'Home', icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>', active: state.activeTab === 'feed' && state.feedFilter === 'all' },
+    { action: 'following', label: 'Followed Profiles', icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />', active: state.activeTab === 'feed' && state.feedFilter === 'following' },
+    { action: 'followed-hashtags', label: 'Followed Hashtags', icon: '<line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line>', active: state.activeTab === 'feed' && state.feedFilter === 'hashtags' },
+    { action: 'trending', label: 'Trending', icon: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline>', active: state.activeTab === 'explore' && state.exploreSubtab === 'posts' },
+    { action: 'notifications', label: 'Notifications', icon: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>', active: state.notifDrawerOpen },
+    { action: 'search', label: 'Search', icon: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' }
+  ];
+
+  const secondaryItems = [
+    { action: 'local', label: 'Local Feed', icon: '<path d="M1.5 8.5a13 13 0 0 1 21 0" /><path d="M5 12a10 10 0 0 1 14 0" /><path d="M8.5 15.5a7 7 0 0 1 7 0" /><circle cx="12" cy="19" r="1" fill="currentColor" />', active: state.activeTab === 'explore' && state.exploreSubtab === 'live' },
+    { action: 'federated', label: 'Federated Feed', icon: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>', active: state.activeTab === 'explore' && state.exploreSubtab === 'federated' },
+    { action: 'bookmarks', label: 'Bookmarks', icon: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>', active: state.bookmarksActive },
+    { action: 'hashtags', label: 'Manage Hashtags', icon: '<line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line>' },
+    { action: 'zen', label: 'Zen Mode', icon: '<circle cx="12" cy="12" r="3"></circle><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5 4.5 4.5 0 1 1 12 16.5"></path>' }
+  ];
+
+  const renderItem = (item) => `
+    <button class="sidebar-nav-item${item.active ? ' active' : ''}" data-action="${item.action}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
+      <span>${item.label}</span>
     </button>
   `;
+
+  const container = $('compose-sidebar');
+  const composeBody = container?.querySelector('.compose-sidebar-body');
+  const bottomFooter = container?.querySelector('.sidebar-footer');
+  
+  // Measure available room with more conservative buffers
+  const sidebarHeight = container?.clientHeight || window.innerHeight;
+  // Header "Feeds" + Primary Items + Extra Padding
+  const navTopHeight = 40 + (primaryItems.length * 36); 
+  const fixedHeight = (composeBody?.clientHeight || 300) + (bottomFooter?.clientHeight || 40) + navTopHeight + 80;
+  let remainingHeight = sidebarHeight - fixedHeight;
+
+  // Render top group
+  let html = `<div class="sidebar-nav-header">Feeds</div>`;
+  html += primaryItems.map(renderItem).join('');
+  
+  // Render explore group
+  const totalSecondaryHeight = secondaryItems.length * 36 + 30; // 30 for Explore header
+  
+  if (remainingHeight >= totalSecondaryHeight) {
+    // Everything fits comfortably
+    html += `<div class="sidebar-nav-header" style="margin-top:10px;">Explore</div>`;
+    html += secondaryItems.map(renderItem).join('');
+  } else {
+    // Need to split into list + dots menu
+    remainingHeight -= 50; // Reserve space for the dots button and its margin
+    
+    let headerShown = false;
+    const overflowingSecondary = [];
+
+    secondaryItems.forEach(item => {
+      // Check if we can fit the header and this item
+      const needed = headerShown ? 36 : (36 + 26);
+      if (remainingHeight >= needed) {
+        if (!headerShown) {
+           html += `<div class="sidebar-nav-header" style="margin-top:10px;">Explore</div>`;
+           remainingHeight -= 26;
+           headerShown = true;
+        }
+        html += renderItem(item);
+        remainingHeight -= 36;
+      } else {
+        overflowingSecondary.push(item);
+      }
+    });
+
+    if (overflowingSecondary.length > 0) {
+      html += `
+        <div class="sidebar-more-wrapper">
+          <button class="sidebar-nav-more-btn" id="sidebar-more-btn" title="More Actions" onclick="event.stopPropagation(); window.toggleSidebarMoreMenu(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
+          <div class="sidebar-more-dropdown" id="sidebar-more-menu">
+            ${overflowingSecondary.map(renderItem).join('')}
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  nav.innerHTML = html;
 }
+
+window.toggleSidebarMoreMenu = function(btn) {
+  const menu = document.getElementById('sidebar-more-menu');
+  if (menu) {
+    document.querySelectorAll('.boost-dropdown, .footer-more-dropdown').forEach(m => m.classList.remove('show'));
+    menu.classList.toggle('show');
+  }
+};
+
 window.updateSidebarNav = updateSidebarNav;
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.sidebar-more-wrapper')) {
+    document.querySelectorAll('.sidebar-more-dropdown').forEach(m => m.classList.remove('show'));
+  }
+});
+
+if (window.ResizeObserver) {
+  const sidebarEl = $('compose-sidebar');
+  if (sidebarEl) {
+    new ResizeObserver(() => updateSidebarNav()).observe(sidebarEl);
+  }
+}
 
 $('sidebar-nav')?.addEventListener('click', e => {
   const item = e.target.closest('.sidebar-nav-item');
   if (!item) return;
 
   const action = item.dataset.action;
+  
+  // Close the menu if an item was clicked
+  document.querySelectorAll('.sidebar-more-dropdown').forEach(m => m.classList.remove('show'));
 
   if (action === 'home') {
     state.feedFilter = 'all';
-    switchToTab('feed');
-    loadFeedTab();
   } else if (action === 'following') {
     state.feedFilter = 'following';
-    switchToTab('feed');
-    loadFeedTab();
   } else if (action === 'followed-hashtags') {
     state.feedFilter = 'hashtags';
     state.selectedHashtagFilter = 'all';
-    switchToTab('feed');
-    loadFeedTab();
   } else if (action === 'local') {
     state.feedFilter = 'live';
     state.exploreSubtab = 'live';
-    switchToTab('explore');
-    loadFeedTab();
   } else if (action === 'federated') {
     state.feedFilter = 'federated';
     state.exploreSubtab = 'federated';
-    switchToTab('explore');
-    loadFeedTab();
   } else if (action === 'profile' && state.account) {
-    openProfileDrawer(state.account.id, state.server);
+    if (window.openProfileDrawer) openProfileDrawer(state.account.id, state.server);
+    return;
   } else if (action === 'notifications') {
-    window.openNotifDrawer?.();
+    if (window.openNotifDrawer) window.openNotifDrawer();
+    return;
   } else if (action === 'trending') {
     state.exploreSubtab = 'posts';
-    switchToTab('explore');
-    loadFeedTab();
   } else if (action === 'search') {
     $('search-btn')?.click();
+    return;
   } else if (action === 'bookmarks') {
-    openBookmarksDrawer();
+    if (window.openBookmarksDrawer) openBookmarksDrawer();
+    else {
+      state.bookmarksActive = true;
+      history.pushState({}, '', '?bookmarks=true');
+      loadFeedTab();
+    }
+    return;
   } else if (action === 'hashtags') {
-    window.openManageHashtagsPanel?.();
+    if (window.openManageHashtagsPanel) window.openManageHashtagsPanel();
+    else {
+      $('manage-hashtag-drawer')?.classList.add('visible');
+      $('manage-hashtag-backdrop')?.classList.add('visible');
+    }
+    return;
   } else if (action === 'zen') {
-    $('profile-zen-btn')?.click();
+    state.zenMode = !state.zenMode;
+    store.set('zen_mode', state.zenMode);
+    if (window.applyZenMode) applyZenMode();
+    import('./ui.js').then(m => m.showToast(state.zenMode ? 'Zen Mode enabled' : 'Zen Mode disabled'));
+    return;
   }
+
+  // Determine target tab
+  const feedActions = ['home', 'following', 'followed-hashtags'];
+  const targetTab = feedActions.includes(action) ? 'feed' : 'explore';
 
   // Synchronize dropdown active states
   document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
@@ -1749,6 +1821,16 @@ $('sidebar-nav')?.addEventListener('click', e => {
     i.classList.toggle('active', i.dataset.subtab === state.exploreSubtab);
   });
 
+  // Hashtag filter bar visibility
+  const filterBar = $('hashtag-filter-bar');
+  if (filterBar) filterBar.style.display = (state.feedFilter === 'hashtags') ? '' : 'none';
+
+  import('./ui.js').then(m => {
+    m.switchToTab(targetTab);
+    m.updateTabLabel('feed');
+    m.updateTabLabel('explore');
+  });
+  import('./feed.js').then(m => m.loadFeedTab());
   updateSidebarNav();
 });
 
@@ -2532,6 +2614,7 @@ async function boot() {
     $('hashtag-filter-bar').style.display = '';
     state.activeTab = 'feed';
     updateTabLabel('feed');
+    updateSidebarNav();
     closeProfileDrawer();
     closeThreadDrawer();
     closeComposeDrawer();
