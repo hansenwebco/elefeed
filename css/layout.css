@@ -69,25 +69,18 @@
 
 /* Sidebar Navigation (below compose area) */
 .sidebar-nav {
-  margin-top: 26px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0 16px;
-  align-items: flex-start;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  max-height: 600px;
-  overflow: hidden;
-  opacity: 1;
+  padding: 10px 16px;
+  gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  scrollbar-width: none;
 }
 
-.sidebar-nav.hidden-for-compose {
-  max-height: 0;
-  margin-top: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  opacity: 0;
-  pointer-events: none;
+.sidebar-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .sidebar-nav-header {
@@ -162,6 +155,103 @@
 
 .sidebar-nav-item.danger svg {
   color: var(--danger);
+}
+
+.sidebar-nav-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 34px;
+  border-radius: 10px;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all var(--trans);
+  margin: auto auto 10px 0;
+}
+
+.sidebar-nav-more-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.sidebar-more-wrapper {
+  position: relative;
+  margin-top: auto;
+}
+
+.sidebar-more-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: -10px;
+  backdrop-filter: blur(16px) saturate(1.8);
+  -webkit-backdrop-filter: blur(16px) saturate(1.8);
+  background: rgba(var(--bg-rgb), 0.88);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px 0;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  z-index: 500;
+  min-width: 210px;
+  overflow: hidden;
+  transform-origin: bottom left;
+  animation: sidebarMenuAppear 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes sidebarMenuAppear {
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.sidebar-more-dropdown.show {
+  display: flex;
+}
+
+.sidebar-more-dropdown .sidebar-nav-item {
+  width: 100%;
+  margin: 0;
+  padding: 10px 16px;
+  gap: 12px;
+  border-radius: 0;
+  background: transparent;
+}
+
+.sidebar-more-dropdown .sidebar-nav-item:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.sidebar-more-dropdown .sidebar-nav-item.active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.sidebar-more-dropdown .sidebar-nav-item svg {
+  color: var(--accent);
+  opacity: 0.5;
+  width: 18px;
+}
+
+.sidebar-more-dropdown .sidebar-nav-item:hover svg {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.sidebar-more-dropdown .sidebar-nav-header {
+  padding: 8px 14px 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+  opacity: 0.7;
 }
 
 /* Sidebar Footer */
