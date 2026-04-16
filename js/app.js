@@ -1661,12 +1661,21 @@ function updateSidebarNav() {
     { action: 'zen', label: 'Zen Mode', icon: '<circle cx="12" cy="12" r="3"></circle><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5 4.5 4.5 0 1 1 12 16.5"></path>' }
   ];
 
-  const renderItem = (item) => `
-    <button class="sidebar-nav-item${item.active ? ' active' : ''}" data-action="${item.action}">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
-      <span>${item.label}</span>
-    </button>
-  `;
+  const renderItem = (item) => {
+    let badgeHtml = '';
+    if (item.action === 'notifications' && state.notifUnreadCount > 0) {
+      const displayCount = state.notifUnreadCount > 99 ? '99+' : state.notifUnreadCount;
+      badgeHtml = `<span class="sidebar-notif-badge">${displayCount}</span>`;
+    }
+
+    return `
+      <button class="sidebar-nav-item${item.active ? ' active' : ''}" data-action="${item.action}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
+        <span>${item.label}</span>
+        ${badgeHtml}
+      </button>
+    `;
+  };
 
   const container = $('compose-sidebar');
   const composeBody = container?.querySelector('.compose-sidebar-body');

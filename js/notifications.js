@@ -333,6 +333,9 @@ export function updateNotifBadge() {
     badge.textContent = '';
     if (clearBtn) clearBtn.classList.remove('has-unread');
   }
+  
+  // Also update sidebar if available
+  window.updateSidebarNav?.();
 }
 
 async function dismissNotifMarker() {
