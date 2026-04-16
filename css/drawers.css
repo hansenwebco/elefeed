@@ -25,7 +25,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(420px, 100%);
+  width: min(460px, 100%);
   background: var(--surface);
   border-left: 1px solid var(--border);
   z-index: 511;
@@ -195,7 +195,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(420px, 100%);
+  width: min(460px, 100%);
   background: var(--surface);
   border-left: 1px solid var(--border);
   z-index: 521;
@@ -243,7 +243,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(420px, 100%);
+  width: min(460px, 100%);
   background: var(--surface);
   border-left: 1px solid var(--border);
   z-index: 201;
@@ -1195,7 +1195,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(600px, 100%);
+  width: min(700px, 100%);
   background: var(--surface);
   border-left: 1px solid var(--border);
   z-index: 301;
@@ -1581,7 +1581,7 @@ body.manage-inline-active .manage-inline-panel {
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(420px, 100%);
+  width: min(460px, 100%);
   background: var(--surface);
   box-shadow: inset 1px 0 0 var(--border);
   z-index: 251;
@@ -1924,3 +1924,13 @@ body.manage-inline-active .manage-inline-panel {
 .notif-load-more:hover {
   background: var(--surface2);
 }
+/* Large Desktop Overrides */
+@media (min-width: 1400px) {
+  .post-analytics-drawer, .profile-drawer, .manage-hashtag-drawer, .settings-drawer, .notif-drawer {
+    width: min(560px, 100%) !important;
+  }
+  .thread-drawer {
+    width: min(840px, 100%) !important;
+  }
+}
+

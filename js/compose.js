@@ -5,7 +5,7 @@
  * reply/quote context, and posting.
  */
 
-import { $, state, composeState, store } from './state.js';
+import { $, qs, state, composeState, store } from './state.js';
 import { apiGet } from './api.js';
 import { showToast, showConfirm } from './ui.js';
 import { applyCountsFromStatus } from './counts.js';
@@ -84,13 +84,16 @@ export function updateSidebarCharCount() {
   $('compose-post-btn' + suffix).disabled = remaining < 0 || (textLength === 0 && composeState.sidebarMediaFiles.length === 0);
 
   const nav = $('sidebar-nav');
-  if (nav && state.desktopMenu && window.innerWidth > 900) {
+  const footer = qs('.sidebar-footer');
+  if (state.desktopMenu && window.innerWidth > 900) {
     const hasContent = textLength > 0 || cwLength > 0 || composeState.sidebarMediaFiles.length > 0 || composeState.replyToId !== null || composeState.quoteId !== null || composeState.editPostId !== null;
     const isFocused = document.activeElement === textarea || document.activeElement === cwInput;
     if (hasContent || isFocused) {
-      nav.classList.add('hidden-for-compose');
+      if (nav) nav.classList.add('hidden-for-compose');
+      if (footer) footer.classList.add('hidden-for-compose');
     } else {
-      nav.classList.remove('hidden-for-compose');
+      if (nav) nav.classList.remove('hidden-for-compose');
+      if (footer) footer.classList.remove('hidden-for-compose');
     }
   }
 }
@@ -375,11 +378,11 @@ window.addEventListener('click', () => {
 window.handleQuoteInit = async function (postId, acct, triggerEl) {
   if (store.get('pref_confirm_interactions') === 'true') {
     // Find preview content using the direct trigger element if available, fallback to query
-    const btn = triggerEl || document.querySelector(`.post-quote-btn[data-post-id="${postId}"]`) || 
-                document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`) ||
-                document.querySelector(`[data-id="${postId}"]`);
+    const btn = triggerEl || document.querySelector(`.post-quote-btn[data-post-id="${postId}"]`) ||
+      document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`) ||
+      document.querySelector(`[data-id="${postId}"]`);
     const postEl = btn ? btn.closest('.feed-status, .post-item, .notification-item, .post-thread-item, article.post, .post') : null;
-    
+
     let previewHTML = '';
     if (postEl) {
       const content = postEl.querySelector('.post-content, .status-content')?.outerHTML || '';
@@ -388,7 +391,7 @@ window.handleQuoteInit = async function (postId, acct, triggerEl) {
       const card = postEl.querySelector('.post-card')?.outerHTML || '';
       previewHTML = (content + media + quote + card).replace(/onclick="[^"]*"/g, ''); // Strip interactions
     }
-    
+
     // Fallback: if no textFound, show author info
     if (!previewHTML && postEl) {
       const name = postEl.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this post';
@@ -425,42 +428,42 @@ window.handleQuoteInit = async function (postId, acct, triggerEl) {
     quotePreview.style.display = 'block';
   }
 
-      // Fetch the status to get its URL and build a preview
-      apiGet(`/api/v1/statuses/${postId}`, state.token)
-        .then(status => {
-          // Append the URL to the textarea for backwards compatibility
-          const url = status.url || status.uri;
-          if (url && textarea) {
-            // contenteditable: use innerHTML/innerText
-            // Prepend a newline and set cursor at the top
-            textarea.innerHTML = `<div><br></div><div><br></div><div>${url}</div>`;
-            textarea.dispatchEvent(new Event('input'));
-            
-            // Move cursor to the very beginning using Selection/Range API
-            setTimeout(() => {
-              textarea.focus();
-              try {
-                const range = document.createRange();
-                const sel = window.getSelection();
-                range.setStart(textarea.childNodes[0], 0);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-              } catch (e) {
-                // Fallback for empty or complex structures
-                const range = document.createRange();
-                const sel = window.getSelection();
-                range.selectNodeContents(textarea);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-              }
-              textarea.scrollTop = 0;
-            }, 100);
+  // Fetch the status to get its URL and build a preview
+  apiGet(`/api/v1/statuses/${postId}`, state.token)
+    .then(status => {
+      // Append the URL to the textarea for backwards compatibility
+      const url = status.url || status.uri;
+      if (url && textarea) {
+        // contenteditable: use innerHTML/innerText
+        // Prepend a newline and set cursor at the top
+        textarea.innerHTML = `<div><br></div><div><br></div><div>${url}</div>`;
+        textarea.dispatchEvent(new Event('input'));
+
+        // Move cursor to the very beginning using Selection/Range API
+        setTimeout(() => {
+          textarea.focus();
+          try {
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.setStart(textarea.childNodes[0], 0);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          } catch (e) {
+            // Fallback for empty or complex structures
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(textarea);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
           }
-          let contentHtml = status.content || '';
-          let temp = document.createElement('div');
-          temp.innerHTML = contentHtml;
+          textarea.scrollTop = 0;
+        }, 100);
+      }
+      let contentHtml = status.content || '';
+      let temp = document.createElement('div');
+      temp.innerHTML = contentHtml;
       let textContent = temp.innerText || '';
 
       const avatarUrl = status.account && status.account.avatar ? status.account.avatar : '';
@@ -560,9 +563,9 @@ window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
 
   if (store.get('pref_confirm_interactions') === 'true') {
     const actionLabel = isBoosted ? 'unboost' : 'boost';
-    const postEl = btnEl ? btnEl.closest('.feed-status, .post-item, .notification-item, .post-thread-item, article.post, .post') || 
-                   document.querySelector(`article[data-id="${postId}"]`) : null;
-    
+    const postEl = btnEl ? btnEl.closest('.feed-status, .post-item, .notification-item, .post-thread-item, article.post, .post') ||
+      document.querySelector(`article[data-id="${postId}"]`) : null;
+
     let previewHTML = '';
     if (postEl) {
       const content = postEl.querySelector('.post-content, .status-content')?.outerHTML || '';
@@ -585,7 +588,7 @@ window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
   // ── Optimistic update ──
   const countSpan = btnEl?.querySelector('.boost-count, .dropdown-stat-count');
   const originalCount = countSpan ? parseInt(countSpan.textContent) || 0 : 0;
-  
+
   if (btnEl) {
     btnEl.classList.toggle('boosted', willBeBoosted);
     if (willBeBoosted) {
@@ -874,11 +877,11 @@ window.handleDeleteInit = async function (postId, triggerEl) {
   if (!state.token) { showToast('Please sign in to delete posts.'); return; }
 
   // Find preview content
-  const btn = triggerEl || document.querySelector(`[data-post-id="${postId}"]`) || 
-              document.querySelector(`[data-id="${postId}"]`);
+  const btn = triggerEl || document.querySelector(`[data-post-id="${postId}"]`) ||
+    document.querySelector(`[data-id="${postId}"]`);
   const postEl = btn ? btn.closest('.feed-status, .post-item, .notification-item, .post-thread-item') : null;
   let previewHTML = postEl ? postEl.querySelector('.post-content')?.innerHTML : '';
-  
+
   if (!previewHTML && postEl) {
     const name = postEl.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this post';
     const acctHandle = postEl.querySelector('.post-acct, .profile-acct')?.textContent || '';
@@ -940,11 +943,11 @@ window.handleDeleteRedraftInit = async function (postId, triggerEl) {
   }
 
   // Find preview content
-  const btn = triggerEl || document.querySelector(`[data-post-id="${postId}"]`) || 
-              document.querySelector(`[data-id="${postId}"]`);
+  const btn = triggerEl || document.querySelector(`[data-post-id="${postId}"]`) ||
+    document.querySelector(`[data-id="${postId}"]`);
   const postEl = btn ? btn.closest('.feed-status, .post-item, .notification-item, .post-thread-item') : null;
   let previewHTML = postEl ? postEl.querySelector('.post-content')?.innerHTML : '';
-  
+
   if (!previewHTML && postEl) {
     const name = postEl.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this post';
     const acctHandle = postEl.querySelector('.post-acct, .profile-acct')?.textContent || '';
