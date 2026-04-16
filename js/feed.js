@@ -538,7 +538,10 @@ export async function loadFeedTab(scrollTop = true) {
   // Safeguard: if clicking the Home tab while a public feed was active in Explore, revert to 'all'
   if (state.activeTab === 'feed' && (state.feedFilter === 'live' || state.feedFilter === 'federated')) {
     state.feedFilter = 'all';
-    import('./ui.js').then(m => m.updateTabLabel('feed'));
+    import('./ui.js').then(m => {
+      m.updateTabLabel('feed');
+      window.updateSidebarNav?.();
+    });
     document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
       i.classList.toggle('active', i.dataset.filter === 'all');
     });

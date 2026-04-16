@@ -529,6 +529,7 @@ export async function loadTrendingTab() {
     p.classList.toggle('active', p.id === `trending-subpanel-${activeSubtab}`);
   });
   updateTabLabel('explore');
+  window.updateSidebarNav?.();
 
   if (activeSubtab === 'posts' && !state.trendingPostsLoaded) loadTrendingPosts();
   else if (activeSubtab === 'hashtags' && !state.trendingHashtagsLoaded) loadTrendingHashtags();

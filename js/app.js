@@ -161,6 +161,7 @@ window.addEventListener('popstate', async e => {
     }
 
     setTimeout(setOverlayPillVisibility, 10);
+    updateSidebarNav();
   } finally {
     window._isRouting = false;
   }
@@ -1702,46 +1703,44 @@ $('sidebar-nav')?.addEventListener('click', e => {
 
   if (action === 'home') {
     state.feedFilter = 'all';
-    switchToTab('feed');
-    loadFeedTab();
   } else if (action === 'following') {
     state.feedFilter = 'following';
-    switchToTab('feed');
-    loadFeedTab();
   } else if (action === 'followed-hashtags') {
     state.feedFilter = 'hashtags';
     state.selectedHashtagFilter = 'all';
-    switchToTab('feed');
-    loadFeedTab();
   } else if (action === 'local') {
     state.feedFilter = 'live';
     state.exploreSubtab = 'live';
-    switchToTab('explore');
-    loadFeedTab();
   } else if (action === 'federated') {
     state.feedFilter = 'federated';
     state.exploreSubtab = 'federated';
-    switchToTab('explore');
-    loadFeedTab();
   } else if (action === 'profile' && state.account) {
     openProfileDrawer(state.account.id, state.server);
+    return;
   } else if (action === 'notifications') {
     window.openNotifDrawer?.();
+    return;
   } else if (action === 'trending') {
     state.exploreSubtab = 'posts';
-    switchToTab('explore');
-    loadFeedTab();
   } else if (action === 'search') {
     $('search-btn')?.click();
+    return;
   } else if (action === 'bookmarks') {
     openBookmarksDrawer();
+    return;
   } else if (action === 'hashtags') {
     window.openManageHashtagsPanel?.();
+    return;
   } else if (action === 'zen') {
     $('profile-zen-btn')?.click();
+    return;
   }
 
-  // Synchronize dropdown active states
+  // Determine target tab
+  const feedActions = ['home', 'following', 'followed-hashtags'];
+  const targetTab = feedActions.includes(action) ? 'feed' : 'explore';
+
+  // Synchronize dropdown active states BEFORE tab switch so labels update correctly
   document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
     i.classList.toggle('active', i.dataset.filter === state.feedFilter);
   });
@@ -1749,6 +1748,14 @@ $('sidebar-nav')?.addEventListener('click', e => {
     i.classList.toggle('active', i.dataset.subtab === state.exploreSubtab);
   });
 
+  // Hashtag filter bar visibility
+  const filterBar = $('hashtag-filter-bar');
+  if (filterBar) filterBar.style.display = (state.feedFilter === 'hashtags') ? '' : 'none';
+
+  switchToTab(targetTab);
+  updateTabLabel('feed');
+  updateTabLabel('explore');
+  loadFeedTab();
   updateSidebarNav();
 });
 
@@ -2532,6 +2539,7 @@ async function boot() {
     $('hashtag-filter-bar').style.display = '';
     state.activeTab = 'feed';
     updateTabLabel('feed');
+    updateSidebarNav();
     closeProfileDrawer();
     closeThreadDrawer();
     closeComposeDrawer();
