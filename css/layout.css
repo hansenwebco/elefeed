@@ -77,6 +77,19 @@
   overflow-y: auto;
   border-right: 1px solid var(--border);
   scrollbar-width: none;
+  transition: all 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 800px;
+  opacity: 1;
+}
+
+.sidebar-nav.hidden-for-compose {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  flex: 0;
 }
 
 .sidebar-nav::-webkit-scrollbar {
@@ -204,8 +217,15 @@
 }
 
 @keyframes sidebarMenuAppear {
-  from { opacity: 0; transform: translateY(10px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .sidebar-more-dropdown.show {
@@ -265,6 +285,19 @@
   gap: 10px;
   background: transparent;
   border-top: 1px solid var(--border);
+  transition: all 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 200px;
+  opacity: 1;
+}
+
+.sidebar-footer.hidden-for-compose {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-top: none;
 }
 
 .sidebar-footer-brand {
