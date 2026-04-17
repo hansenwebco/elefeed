@@ -576,7 +576,8 @@ function renderNotifItem(n) {
   }
 
   return `
-    <div class="${itemClass}" data-notif-id="${n.id}">
+    <div class="${itemClass}" data-notif-id="${n.id}" 
+         ${n.status ? `data-notif-status="${n.status.id}"` : `data-notif-profile="${account.id}" data-notif-server="${state.server}"`}>
       <div class="notif-icon ${typeClass}">${icon}</div>
       <div class="notif-body">
         <div class="notif-meta">
