@@ -1692,7 +1692,7 @@ body.manage-inline-active .manage-inline-panel {
   padding: 14px 18px 14px 21px;
   border-bottom: 1px solid var(--border);
   transition: background var(--trans), border-color 300ms ease, opacity 300ms ease;
-  cursor: default;
+  cursor: pointer;
   position: relative;
 }
 

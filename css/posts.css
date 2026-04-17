@@ -428,8 +428,21 @@
   font-size: 11px;
   color: var(--text-dim);
   white-space: nowrap;
-  margin-left: auto;
-  padding-left: 8px;
+}
+
+.post-edited {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  opacity: 0.55;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-transform: lowercase;
+}
+
+.post-edited svg {
+  flex-shrink: 0;
 }
 
 .post-vis-icon {
