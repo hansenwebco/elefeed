@@ -1906,6 +1906,53 @@ body.manage-inline-active .manage-inline-panel {
   opacity: 0.4;
 }
 
+/* ── Follow Profile Snippet ── */
+.notif-follow-panel {
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--bg2); /* Subtle contrast against the surface */
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.notif-follow-panel:hover {
+  background: var(--surface2);
+  border-color: var(--accent);
+}
+
+.notif-follow-bio {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notif-follow-bio p {
+  margin: 0;
+}
+
+.notif-follow-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.notif-follow-stat strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
 .notif-load-more {
   display: block;
   width: 100%;
