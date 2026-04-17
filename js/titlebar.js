@@ -49,12 +49,7 @@ export function updateTitleBar() {
   const suffix = alerts.length > 0 ? ` - ${alerts.join(' · ')}` : '';
   document.title = `Elefeed${suffix}`;
 
-  // Update App Header (Internal UI) indicators
-  const wordmark = document.getElementById('header-wordmark-btn');
-  if (wordmark) {
-    wordmark.classList.toggle('has-new-content', postCount > 0);
-  }
-  
+
   const notifBell = document.querySelector('.notif-bell-wrap');
   if (notifBell) {
     notifBell.classList.toggle('has-new-notifications', notifCount > 0);

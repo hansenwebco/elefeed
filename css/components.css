@@ -96,23 +96,7 @@
 }
 
 /* Header Polish & Animations */
-@keyframes breathing-glow {
-  0%, 100% { 
-    text-shadow: 0 0 0px var(--accent); 
-    filter: drop-shadow(0 0 0px var(--accent));
-  }
-  50% { 
-    text-shadow: 0 0 10px var(--accent); 
-    filter: drop-shadow(0 0 4px var(--accent));
-    opacity: 0.9;
-  }
-}
 
-.header-wordmark.has-new-content span {
-  animation: breathing-glow 2.5s ease-in-out infinite;
-}
-
-/* Notif Bell Shiver animation */
 @keyframes bell-shiver {
   0%, 100% { transform: rotate(0); }
   10% { transform: rotate(18deg); }
