@@ -6,7 +6,7 @@
 
 import { $, store, state } from './state.js';
 import { apiGet } from './api.js';
-import { escapeHTML, relativeTime, updateURLParam } from './utils.js';
+import { escapeHTML, relativeTime, updateURLParam, formatCount, sanitizeHTML, renderCustomEmojis } from './utils.js';
 import { openProfileDrawer } from './profile.js';
 import { openThreadDrawer } from './thread.js';
 import { renderFollowingBadge } from './render.js';
@@ -556,6 +556,25 @@ function renderNotifItem(n) {
   const isUnread = !_isNotifRead(n.id);
   const itemClass = isUnread ? 'notif-item unread' : 'notif-item';
 
+  let followProfile = '';
+  if ((n.type === 'follow' || n.type === 'follow_request') && account) {
+    const headerUrl = account.header_static || account.header;
+    const bio = account.note ? sanitizeHTML(account.note, { emojis: account.emojis }) : '';
+    const followers = formatCount(account.followers_count || 0);
+    const following = formatCount(account.following_count || 0);
+    const statuses = formatCount(account.statuses_count || 0);
+    
+    followProfile = `
+      <div class="notif-follow-panel" data-notif-profile="${account.id}" data-notif-server="${state.server}">
+        ${bio ? `<div class="notif-follow-bio">${bio}</div>` : ''}
+        <div class="notif-follow-stats">
+          <span class="notif-follow-stat"><strong>${followers}</strong> followers</span>
+          <span class="notif-follow-stat"><strong>${following}</strong> following</span>
+          <span class="notif-follow-stat"><strong>${statuses}</strong> posts</span>
+        </div>
+      </div>`;
+  }
+
   return `
     <div class="${itemClass}" data-notif-id="${n.id}">
       <div class="notif-icon ${typeClass}">${icon}</div>
@@ -567,10 +586,11 @@ function renderNotifItem(n) {
                  data-notif-profile="${account.id}" data-notif-server="${state.server}" />
             ${renderFollowingBadge(account.id)}
           </div>
-          <span class="notif-who" data-notif-profile="${account.id}" data-notif-server="${state.server}">${displayName}</span>
+          <span class="notif-who" data-notif-profile="${account.id}" data-notif-server="${state.server}">${renderCustomEmojis(account.display_name || account.username, account.emojis)}</span>
           <span class="notif-action">${label}</span>
         </div>
         ${preview}
+        ${followProfile}
         <div class="notif-time">${time}</div>
       </div>
     </div>`;
