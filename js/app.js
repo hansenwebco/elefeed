@@ -42,12 +42,15 @@ import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply, update
 import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
 import { openPostAnalyticsDrawer, closePostAnalyticsDrawer, appendMoreAnalyticsUsers } from './analytics.js';
 import { startCountPolling, stopCountPolling, applyCountsFromStatus } from './counts.js';
+import { initTitleBar, updateTitleBar } from './titlebar.js';
 
 // Expose drawer openers needed by render.js and ui.js toasts
 window.openThreadDrawer = openThreadDrawer;
 window.openProfileDrawer = openProfileDrawer;
 window.openNotifDrawer = openNotifDrawer;
 window.handleReply = handleReply;
+window.getFilteredPendingPosts = getFilteredPendingPosts;
+window.activeFeedKey = activeFeedKey;
 
 // Drawer state tracking for history
 function isAnyDrawerOpen() {
@@ -179,6 +182,7 @@ async function initApp(server, token, demo = false) {
   state.demoMode = demo;
   showScreen('app-screen');
   initVersion();
+  initTitleBar();
 
   if (demo) {
     $('demo-notice').style.display = 'block';
@@ -2005,6 +2009,9 @@ $('logout-btn').addEventListener('click', () => {
   stopPolling();
   stopCountPolling();
   stopSwPolling();
+  
+  state.notifUnreadCount = 0;
+  updateTitleBar();
 });
 
 /* ══════════════════════════════════════════════════════════════════════

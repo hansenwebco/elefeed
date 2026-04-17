@@ -102,6 +102,7 @@ import { setLoading, setError, showToast, updateTabLabel } from './ui.js';
 import { renderPost } from './render.js';
 import { getDemoHomePosts, getDemoHashtagData } from './demo.js';
 import { matchesLanguage, updateURLParam } from './utils.js';
+import { updateTitleBar } from './titlebar.js';
 
 /* ── Key helpers ───────────────────────────────────────────────────── */
 
@@ -141,25 +142,28 @@ export function updateTabPill(feedKey) {
   const refreshBadge = document.getElementById('refresh-badge');
   const count = getFilteredPendingPosts(feedKey).length;
   const style = store.get('pref_newpost_style') || 'badge'; // default: Refresh Notification
-  if (!overlayPill) return;
-  if (count === 0) {
-    overlayPill.style.display = 'none';
-    overlayPill.textContent = 'New posts';
-    document.title = 'Elefeed - A Tidy Mastodon Client';
-    if (refreshBadge) { refreshBadge.textContent = ''; refreshBadge.classList.remove('visible'); }
-    return;
+  
+  if (overlayPill) {
+    if (count === 0) {
+      overlayPill.style.display = 'none';
+      overlayPill.textContent = 'New posts';
+      if (refreshBadge) { refreshBadge.textContent = ''; refreshBadge.classList.remove('visible'); }
+    } else {
+      const label = count > 99 ? '99+' : String(count);
+      if (style === 'pill') {
+        overlayPill.textContent = count > 99 ? '99+ new posts' : `${count} new post${count > 1 ? 's' : ''}`;
+        overlayPill.style.display = '';
+        if (refreshBadge) { refreshBadge.textContent = ''; refreshBadge.classList.remove('visible'); }
+        positionOverlayPill();
+      } else {
+        overlayPill.style.display = 'none';
+        if (refreshBadge) { refreshBadge.textContent = label; refreshBadge.classList.add('visible'); }
+      }
+    }
   }
-  const label = count > 99 ? '99+' : String(count);
-  document.title = `Elefeed (${label}) - A Tidy Mastodon Client`;
-  if (style === 'pill') {
-    overlayPill.textContent = count > 99 ? '99+ new posts' : `${count} new post${count > 1 ? 's' : ''}`;
-    overlayPill.style.display = '';
-    if (refreshBadge) { refreshBadge.textContent = ''; refreshBadge.classList.remove('visible'); }
-    positionOverlayPill();
-  } else {
-    overlayPill.style.display = 'none';
-    if (refreshBadge) { refreshBadge.textContent = label; refreshBadge.classList.add('visible'); }
-  }
+
+  // Use the new consolidated titlebar updater
+  updateTitleBar();
 }
 
 // ...existing code...
@@ -208,12 +212,7 @@ function setupOverlayPillScroll() {
       return;
     }
     overlayPill.style.display = pending.length > 0 && !overlayPillDismissed ? '' : 'none';
-    if (overlayPill.style.display === 'none') {
-      document.title = 'Elefeed - A Tidy Mastodon Client';
-    } else {
-      const count = pending.length;
-      document.title = `Elefeed (${count > 99 ? '99+' : count}) - A Tidy Mastodon Client`;
-    }
+    updateTitleBar();
     positionOverlayPill();
   };
 
