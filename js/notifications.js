@@ -13,6 +13,7 @@ import { renderFollowingBadge } from './render.js';
 import { fetchRelationships } from './feed.js';
 import { NOTIF_ICONS, NOTIF_LABELS } from './notif_constants.js';
 import { showNotificationToast } from './ui.js';
+import { updateTitleBar } from './titlebar.js';
 
 /* ── Pagination / Observer ─────────────────────────────────────────── */
 let _notifLoadingMore = false;
@@ -336,6 +337,9 @@ export function updateNotifBadge() {
   
   // Also update sidebar if available
   window.updateSidebarNav?.();
+  
+  // Update browser title & favicon
+  updateTitleBar();
 }
 
 async function dismissNotifMarker() {
