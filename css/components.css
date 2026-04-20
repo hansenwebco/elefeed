@@ -97,18 +97,12 @@
 
 /* Header Polish & Animations */
 
-@keyframes bell-shiver {
-  0%, 100% { transform: rotate(0); }
-  10% { transform: rotate(18deg); }
-  20% { transform: rotate(-12deg); }
-  30% { transform: rotate(8deg); }
-  40% { transform: rotate(-8deg); }
-  50% { transform: rotate(0); }
+.notif-bell-wrap.has-new-notifications svg {
+  color: var(--accent);
 }
 
-.notif-bell-wrap.has-new-notifications svg {
-  animation: bell-shiver 2.5s ease-in-out infinite;
-  color: var(--accent);
+.refresh-btn-spinning svg {
+  animation: spin 0.8s linear infinite;
 }
 
 
