@@ -1784,8 +1784,8 @@ body.manage-inline-active .manage-inline-panel {
 
 .notif-icon {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1835,15 +1835,31 @@ body.manage-inline-active .manage-inline-panel {
 .notif-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 2px;
+  gap: 10px;
+  margin-bottom: 4px;
 }
 
 .notif-avatar {
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  border: 1px solid var(--border);
   cursor: pointer;
+  background: var(--surface2);
+  object-fit: cover;
+}
+
+.notif-meta .following-badge {
+  width: 15px;
+  height: 15px;
+  bottom: -1px;
+  right: -1px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.notif-meta .following-badge svg {
+  width: 9px;
+  height: 9px;
 }
 
 .notif-who {

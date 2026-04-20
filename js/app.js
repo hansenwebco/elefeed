@@ -54,6 +54,7 @@ window.getFilteredPendingPosts = getFilteredPendingPosts;
 window.activeFeedKey = activeFeedKey;
 window.openFiltersDrawer = openFiltersDrawer;
 window.closeFiltersDrawer = closeFiltersDrawer;
+window.openBookmarksDrawer = openBookmarksDrawer;
 
 // Drawer state tracking for history
 function isAnyDrawerOpen() {
@@ -734,21 +735,32 @@ document.addEventListener('touchmove', (e) => {
 let tabSwitchTimeout = null;
 
 function switchToTab(tab) {
-  if (tab === state.activeTab) return;
-  closeAllTabDropdowns();
+  const tabChanged = tab !== state.activeTab;
+  
+  if (tabChanged) {
+    closeAllTabDropdowns();
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === tab);
+      b.setAttribute('aria-selected', b.dataset.tab === tab);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.toggle('active', p.id === `panel-${tab}`);
+    });
+    state.activeTab = tab;
+    updateURLParam('tab', tab);
+  }
 
-  document.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.tab === tab);
-    b.setAttribute('aria-selected', b.dataset.tab === tab);
+  // Ensure dropdown selection classes match state
+  document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.filter === state.feedFilter);
   });
-  document.querySelectorAll('.tab-panel').forEach(p => {
-    p.classList.toggle('active', p.id === `panel-${tab}`);
+  document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.subtab === state.exploreSubtab);
   });
 
-  state.activeTab = tab;
-  updateURLParam('tab', tab);
   updateTabLabel('feed');
   updateTabLabel('explore');
+  updateSidebarNav();
 
   clearTimeout(tabSwitchTimeout);
   tabSwitchTimeout = setTimeout(() => {
@@ -764,9 +776,6 @@ function switchToTab(tab) {
       const isFeedContext = state.exploreSubtab === 'live' || state.exploreSubtab === 'federated';
       if (isFeedContext) {
         state.feedFilter = state.exploreSubtab;
-        document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(b => {
-          b.classList.toggle('active', b.dataset.subtab === state.exploreSubtab);
-        });
         import('./feed.js').then(m => m.loadFeedTab());
       } else {
         stopFederatedStream(); // SSE must stop when leaving the feed tab for standard explore
@@ -809,24 +818,14 @@ document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item 
     const filter = item.dataset.filter;
     if (filter === state.feedFilter && state.activeTab === 'feed') { closeAllTabDropdowns(); return; }
 
-    document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
-      i.classList.toggle('active', i.dataset.filter === filter);
-    });
-
     state.feedFilter = filter;
     updateURLParam('feed', filter);
 
-    $('hashtag-filter-bar').style.display = (filter === 'hashtags') ? '' : 'none';
-    updateTabLabel('feed');
-    closeAllTabDropdowns();
-    updateSidebarNav();
+    const filterBar = $('hashtag-filter-bar');
+    if (filterBar) filterBar.style.display = (filter === 'hashtags') ? '' : 'none';
 
-    // Switch to feed tab visually and functionally, or just reload the feed if already there
-    if (state.activeTab !== 'feed') {
-      import('./ui.js').then(m => m.switchToTab('feed'));
-    } else {
-      import('./feed.js').then(m => m.loadFeedTab());
-    }
+    closeAllTabDropdowns();
+    switchToTab('feed');
   });
 });
 
@@ -872,33 +871,11 @@ document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(it
 
     if (subtab === state.exploreSubtab && state.activeTab === 'explore') { closeAllTabDropdowns(); return; }
 
-    document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(i => {
-      i.classList.toggle('active', i.dataset.subtab === subtab);
-    });
-    document.querySelectorAll('.trending-subpanel').forEach(p => {
-      p.classList.toggle('active', p.id === `trending-subpanel-${subtab}`);
-    });
-
     state.exploreSubtab = subtab;
     updateURLParam('explore', subtab);
 
-    updateTabLabel('explore');
-    updateSidebarNav();
     closeAllTabDropdowns();
-
-    if (isFeedContext) {
-      state.feedFilter = subtab;
-      loadFeedTab();
-    } else {
-      if (subtab === 'posts' && !state.trendingPostsLoaded) loadTrendingPosts();
-      else if (subtab === 'hashtags' && !state.trendingHashtagsLoaded) loadTrendingHashtags();
-      else if (subtab === 'people' && !state.trendingPeopleLoaded) loadTrendingPeople();
-      else if (subtab === 'news' && !state.trendingNewsLoaded) loadTrendingNews();
-      else if (subtab === 'following' && !state.trendingFollowingLoaded) loadTrendingFollowing();
-
-      // Stop federated stream if moving away from it in Explore
-      stopFederatedStream();
-    }
+    switchToTab('explore');
   });
 });
 
@@ -1801,17 +1778,22 @@ $('sidebar-nav')?.addEventListener('click', e => {
 
   if (action === 'home') {
     state.feedFilter = 'all';
+    updateURLParam('feed', 'all');
   } else if (action === 'following') {
     state.feedFilter = 'following';
+    updateURLParam('feed', 'following');
   } else if (action === 'followed-hashtags') {
     state.feedFilter = 'hashtags';
     state.selectedHashtagFilter = 'all';
+    updateURLParam('feed', 'hashtags');
   } else if (action === 'local') {
     state.feedFilter = 'live';
     state.exploreSubtab = 'live';
+    updateURLParam('explore', 'live');
   } else if (action === 'federated') {
     state.feedFilter = 'federated';
     state.exploreSubtab = 'federated';
+    updateURLParam('explore', 'federated');
   } else if (action === 'profile' && state.account) {
     if (window.openProfileDrawer) openProfileDrawer(state.account.id, state.server);
     return;
@@ -1820,16 +1802,12 @@ $('sidebar-nav')?.addEventListener('click', e => {
     return;
   } else if (action === 'trending') {
     state.exploreSubtab = 'posts';
+    updateURLParam('explore', 'posts');
   } else if (action === 'search') {
     $('search-btn')?.click();
     return;
   } else if (action === 'bookmarks') {
-    if (window.openBookmarksDrawer) openBookmarksDrawer();
-    else {
-      state.bookmarksActive = true;
-      history.pushState({}, '', '?bookmarks=true');
-      loadFeedTab();
-    }
+    openBookmarksDrawer();
     return;
   } else if (action === 'hashtags') {
     if (window.openManageHashtagsPanel) window.openManageHashtagsPanel();
@@ -1850,25 +1828,11 @@ $('sidebar-nav')?.addEventListener('click', e => {
   const feedActions = ['home', 'following', 'followed-hashtags'];
   const targetTab = feedActions.includes(action) ? 'feed' : 'explore';
 
-  // Synchronize dropdown active states
-  document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
-    i.classList.toggle('active', i.dataset.filter === state.feedFilter);
-  });
-  document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(i => {
-    i.classList.toggle('active', i.dataset.subtab === state.exploreSubtab);
-  });
-
   // Hashtag filter bar visibility
   const filterBar = $('hashtag-filter-bar');
   if (filterBar) filterBar.style.display = (state.feedFilter === 'hashtags') ? '' : 'none';
 
-  import('./ui.js').then(m => {
-    m.switchToTab(targetTab);
-    m.updateTabLabel('feed');
-    m.updateTabLabel('explore');
-  });
-  import('./feed.js').then(m => m.loadFeedTab());
-  updateSidebarNav();
+  switchToTab(targetTab);
 });
 
 const _desktopMenuToggle = $('settings-desktop-menu-toggle');

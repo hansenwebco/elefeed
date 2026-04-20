@@ -273,6 +273,8 @@ export function openProfileDrawer(accountId, server) {
   drawer.setAttribute('aria-hidden', 'false');
   backdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
+  state.bookmarksActive = false;
+  if (window.updateSidebarNav) window.updateSidebarNav();
 
   // Update URL state
   updateURLParam('profile', accountId, true);
@@ -628,6 +630,8 @@ export function closeProfileDrawer() {
   if (!analyticsOpen) document.body.style.overflow = '';
   updateURLParam('profile', null);
   updateURLParam('bookmarks', null);
+  state.bookmarksActive = false;
+  if (window.updateSidebarNav) window.updateSidebarNav();
 }
 
 /* ── Bookmarks drawer ──────────────────────────────────────────────── */
@@ -642,6 +646,8 @@ export function openBookmarksDrawer() {
   drawer.setAttribute('aria-hidden', 'false');
   backdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
+  state.bookmarksActive = true;
+  if (window.updateSidebarNav) window.updateSidebarNav();
 
   // Update URL state
   updateURLParam('bookmarks', 'true', true);
