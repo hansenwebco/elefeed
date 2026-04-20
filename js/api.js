@@ -14,10 +14,11 @@ import { state, store, REDIRECT_URI, SCOPES, CLIENT_NAME, CLIENT_WEBSITE } from 
  */
 export async function apiGet(path, token, server, signal) {
   const base = server || state.server;
+  const bearer = token || state.token;
   let res;
   try {
     res = await fetch(`https://${base}${path}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: bearer ? { Authorization: `Bearer ${bearer}` } : {},
       cache: 'no-store',
       signal,
     });
@@ -32,6 +33,94 @@ export async function apiGet(path, token, server, signal) {
     throw new Error(`API error ${res.status}${detail ? ': ' + detail : ` (${res.statusText})`}`);
   }
   return res.json();
+}
+
+/**
+ * Generic POST request.
+ */
+export async function apiPost(path, body, token, server) {
+  const base = server || state.server;
+  const res = await fetch(`https://${base}${path}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token || state.token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail = '';
+    try { const j = await res.json(); detail = j.error || ''; } catch { }
+    throw new Error(`API error ${res.status}${detail ? ': ' + detail : ` (${res.statusText})`}`);
+  }
+  return res.json();
+}
+
+/**
+ * Generic PUT request.
+ */
+export async function apiPut(path, body, token, server) {
+  const base = server || state.server;
+  const res = await fetch(`https://${base}${path}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token || state.token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail = '';
+    try { const j = await res.json(); detail = j.error || ''; } catch { }
+    throw new Error(`API error ${res.status}${detail ? ': ' + detail : ` (${res.statusText})`}`);
+  }
+  return res.json();
+}
+
+/**
+ * Generic DELETE request.
+ */
+export async function apiDelete(path, token, server) {
+  const base = server || state.server;
+  const res = await fetch(`https://${base}${path}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token || state.token}`,
+    },
+  });
+  if (!res.ok) {
+    let detail = '';
+    try { const j = await res.json(); detail = j.error || ''; } catch { }
+    throw new Error(`API error ${res.status}${detail ? ': ' + detail : ` (${res.statusText})`}`);
+  }
+  return res.ok;
+}
+
+/**
+ * Mastodon V2 Filter Methods
+ */
+export async function getFiltersV2() {
+  return apiGet('/api/v2/filters');
+}
+
+export async function createFilterV2(params) {
+  return apiPost('/api/v2/filters', params);
+}
+
+export async function updateFilterV2(id, params) {
+  return apiPut(`/api/v2/filters/${id}`, params);
+}
+
+export async function deleteFilterV2(id) {
+  return apiDelete(`/api/v2/filters/${id}`);
+}
+
+export async function addFilterKeywordV2(filterId, keyword, wholeWord = true) {
+  return apiPost(`/api/v2/filters/${filterId}/keywords`, { keyword, whole_word: wholeWord });
+}
+
+export async function removeFilterKeywordV2(keywordId) {
+  return apiDelete(`/api/v2/filters/keywords/${keywordId}`);
 }
 
 /**

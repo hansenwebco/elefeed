@@ -133,6 +133,20 @@ export function getFilteredPendingPosts(feedKey) {
 
     const postLang = inner.language || p.language;
     if (!matchesLanguage(postLang, preferredLang)) return false;
+
+    // Filter hidden content from pending count
+    const filterResults = p.filtered || [];
+    const serverHide = filterResults.some(fr => fr.filter.filter_action === 'hide');
+    if (serverHide) return false;
+
+    // Client-side hide fallback
+    const context = (state.feedFilter === 'all') ? 'home' : 'public';
+    const ctxFilters = state.filterRegexes[context];
+    if (ctxFilters && ctxFilters.hide) {
+      const text = ((inner.spoiler_text || '') + ' ' + (inner.content || '')).toLowerCase();
+      if (ctxFilters.hide.test(text)) return false;
+    }
+
     return true;
   });
 }

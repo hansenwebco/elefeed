@@ -184,6 +184,7 @@
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/search.css" />
   <link rel="stylesheet" href="css/hashtags.css" />
+  <link rel="stylesheet" href="css/filters.css" />
 </head>
 
 <body>
@@ -488,6 +489,20 @@
                     <line x1="16" y1="3" x2="14" y2="21"></line>
                   </svg>
                   <span>Manage Hashtags</span>
+                </button>
+                <button class="boost-dropdown-item" id="manage-filters-menu-btn" style="white-space:nowrap;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="4" y1="21" x2="4" y2="14"></line>
+                    <line x1="4" y1="10" x2="4" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12" y2="3"></line>
+                    <line x1="20" y1="21" x2="20" y2="16"></line>
+                    <line x1="20" y1="12" x2="20" y2="3"></line>
+                    <line x1="1" y1="14" x2="7" y2="14"></line>
+                    <line x1="9" y1="8" x2="15" y2="8"></line>
+                    <line x1="17" y1="16" x2="23" y2="16"></line>
+                  </svg>
+                  <span>Manage Filters</span>
                 </button>
                 <button class="boost-dropdown-item" id="settings-menu-btn" style="white-space:nowrap;">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1139,7 +1154,85 @@
     </div>
   </div>
 
-  <!-- Emoji Picker -->
+  <!-- Manage Filters Drawer -->
+  <div class="manage-hashtag-backdrop" id="manage-filters-backdrop" onclick="window.closeFiltersDrawer()"></div>
+  <div class="manage-hashtag-drawer" id="manage-filters-drawer">
+    <div class="thread-drawer-header">
+      <span class="thread-drawer-title">Manage Filters</span>
+      <button class="thread-close-btn" id="manage-filters-close" aria-label="Close" onclick="window.closeFiltersDrawer()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="manage-hashtag-drawer-inner" id="manage-filters-body">
+      <div style="padding:16px; border-bottom:1px solid var(--border);">
+         <p style="font-size:12px; color:var(--text-muted); margin:0;">Server-side filters allow you to hide or warn content based on keywords across all your Mastodon apps.</p>
+      </div>
+      <div id="filters-list-container" style="padding:16px;">
+        <div class="thread-status"><div class="spinner"></div></div>
+      </div>
+      <div style="padding:16px; border-top:1px solid var(--border); margin-top:auto;">
+        <button class="hashtag-follow-btn-standalone" id="add-filter-btn" style="width:100%; justify-content:center; gap:8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Create New Filter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Edit Modal -->
+  <div id="filter-edit-modal" class="compose-alt-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,13,15,0.85); align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
+    <div style="background:var(--surface); width:min(400px, 100%); margin: 0 16px; border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 32px rgba(0,0,0,0.5);">
+      <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size:16px; font-weight:500;" id="filter-modal-title">Edit Filter</h3>
+        <button onclick="document.getElementById('filter-edit-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div style="padding:16px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:13px; font-weight:500; color:var(--text);">Filter Title</label>
+          <input type="text" id="filter-title-input" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; outline:none; box-sizing:border-box;" placeholder="e.g. Spoilers">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:13px; font-weight:500; color:var(--text);">Action</label>
+          <select id="filter-action-select" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; outline:none;">
+            <option value="warn">Warn (Collapse with warning)</option>
+            <option value="hide">Hide (Remove from feed)</option>
+          </select>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <label style="font-size:13px; font-weight:500; color:var(--text);">Applies to:</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px;">
+            <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="filter-context-checkbox" value="home" checked style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Home
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="filter-context-checkbox" value="notifications" checked style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Notifications
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="filter-context-checkbox" value="public" checked style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Public feeds
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="filter-context-checkbox" value="thread" checked style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Threads
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+              <input type="checkbox" class="filter-context-checkbox" value="account" checked style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Profiles
+            </label>
+          </div>
+        </div>
+      </div>
+      <div style="padding:16px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:12px;">
+        <button onclick="document.getElementById('filter-edit-modal').style.display='none'" style="padding:8px 16px; background:none; border:1px solid var(--border); border-radius:6px; color:var(--text); cursor:pointer;">Cancel</button>
+        <button id="filter-save-btn" style="padding:8px 16px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-weight:500; cursor:pointer;">Save Filter</button>
+      </div>
+    </div>
+  </div>
   <div class="emoji-picker" id="emoji-picker">
     <div class="emoji-picker-header">
       <input type="text" id="emoji-search" class="emoji-picker-search" placeholder="Search emojis..." autocomplete="off">

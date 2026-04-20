@@ -506,6 +506,18 @@ function buildStatusPreviewHTML(s) {
 
 function renderStatus(status) {
   const s = status.reblog || status;
+  
+  // ── Filter Support ──
+  const filterResults = status.filtered || [];
+  let isFiltered = filterResults.length > 0;
+  let filterAction = isFiltered ? filterResults[0].filter.filter_action : null;
+  let filterTitle = isFiltered ? filterResults[0].filter.title : null;
+
+  // Apply "hide" action
+  if (isFiltered && filterAction === 'hide') {
+    return ''; // Do not render in search if hidden
+  }
+
   const server = escapeHTML(state.server || '');
   const previewHTML = buildStatusPreviewHTML(s);
 
@@ -547,10 +559,10 @@ function renderStatus(status) {
         </div>
         <span class="search-status-time">${relativeTime(s.created_at)}</span>
       </div>
-      ${s.spoiler_text ? `
+      ${(s.spoiler_text || (isFiltered && filterAction === 'warn')) ? `
         <div class="cw-wrapper" style="margin-bottom: 8px;">
           <div class="cw-summary" style="cursor:pointer; font-size:12px; padding: 4px 8px;" onclick="event.stopPropagation(); window.toggleCW('cw-search-${s.id}', this.querySelector('.cw-toggle'))">
-            <span style="font-family:var(--font-mono); color:var(--accent2);">CW: ${escapeHTML(s.spoiler_text)}</span>
+            <span style="font-family:var(--font-mono); color:var(--accent2);">CW: ${escapeHTML((isFiltered && filterAction === 'warn') ? (filterTitle || 'Filtered') : s.spoiler_text)}</span>
             <button class="cw-toggle" style="margin-left:auto; font-size:10px; padding:2px 6px;">${autoOpenSensitive ? 'hide' : 'show'}</button>
           </div>
           <div class="cw-body${autoOpenSensitive ? ' expanded' : ''}" id="cw-search-${s.id}">

@@ -551,10 +551,33 @@ function renderNotifItem(n) {
 
   let preview = '';
   if (n.status && n.status.content) {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = n.status.content;
-    const text = (tempDiv.textContent || tempDiv.innerText || '').substring(0, 200);
-    if (text) preview = `<div class="notif-preview" data-notif-status="${n.status.id}">${escapeHTML(text)}</div>`;
+    const s = n.status.reblog || n.status;
+    
+    // Check for 'warn' filter
+    const filterResults = n.status.filtered || [];
+    let isFiltered = filterResults.length > 0;
+    let filterAction = isFiltered ? filterResults[0].filter.filter_action : null;
+    let filterTitle = isFiltered ? filterResults[0].filter.title : null;
+
+    if (!isFiltered) {
+      const ctxFilters = state.filterRegexes.notifications;
+      if (ctxFilters) {
+        const text = ((s.spoiler_text || '') + ' ' + (s.content || '')).toLowerCase();
+        if (ctxFilters.warn && ctxFilters.warn.test(text)) {
+          isFiltered = true;
+          filterAction = 'warn';
+        }
+      }
+    }
+
+    if (isFiltered && filterAction === 'warn') {
+      preview = `<div class="notif-preview-filtered" style="font-size:11px; opacity:0.6; font-style:italic;">Filtered: ${escapeHTML(filterTitle || 'Custom Filter')}</div>`;
+    } else {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = s.content;
+      const text = (tempDiv.textContent || tempDiv.innerText || '').substring(0, 200);
+      if (text) preview = `<div class="notif-preview" data-notif-status="${s.id}">${escapeHTML(text)}</div>`;
+    }
   }
 
   const isUnread = !_isNotifRead(n.id);
@@ -636,7 +659,25 @@ export async function pollNotifications() {
   }
 
   try {
-    const notifs = await apiGet('/api/v1/notifications?limit=40', state.token);
+    let notifs = await apiGet('/api/v1/notifications?limit=40', state.token);
+    
+    // Filter out notifications associated with hidden statuses
+    notifs = notifs.filter(n => {
+      if (!n.status) return true;
+      const s = n.status.reblog || n.status;
+      
+      // Server-side hide
+      if (n.status.filtered && n.status.filtered.some(fr => fr.filter.filter_action === 'hide')) return false;
+      
+      // Client-side fallback
+      const ctxFilters = state.filterRegexes.notifications;
+      if (ctxFilters && ctxFilters.hide) {
+        const text = ((s.spoiler_text || '') + ' ' + (s.content || '')).toLowerCase();
+        if (ctxFilters.hide.test(text)) return false;
+      }
+      return true;
+    });
+
     state.notifications = notifs;
 
     if (notifs.length > 0) {

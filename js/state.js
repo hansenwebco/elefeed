@@ -96,6 +96,11 @@ export const state = {
   _swLastKnownId: null,
   preferredLanguage: store.get('pref_feed_lang') || 'all',
   sidebarExpanded: store.get('pref_sidebar_expanded') !== 'false' && window.innerHeight >= 800,
+  bookmarksActive: false,
+  
+  /* Filters */
+  filters: [],
+  filterRegexes: {}, // Map of context -> { hide: Regex, warn: Regex }
 };
 
 /* ── Compose form state (shared between drawer & sidebar) ──────────── */
