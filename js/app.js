@@ -43,6 +43,7 @@ import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
 import { openPostAnalyticsDrawer, closePostAnalyticsDrawer, appendMoreAnalyticsUsers } from './analytics.js';
 import { startCountPolling, stopCountPolling, applyCountsFromStatus } from './counts.js';
 import { initTitleBar, updateTitleBar } from './titlebar.js';
+import { openFiltersDrawer, closeFiltersDrawer, initFiltersUI, loadFilters } from './filters.js';
 
 // Expose drawer openers needed by render.js and ui.js toasts
 window.openThreadDrawer = openThreadDrawer;
@@ -51,6 +52,8 @@ window.openNotifDrawer = openNotifDrawer;
 window.handleReply = handleReply;
 window.getFilteredPendingPosts = getFilteredPendingPosts;
 window.activeFeedKey = activeFeedKey;
+window.openFiltersDrawer = openFiltersDrawer;
+window.closeFiltersDrawer = closeFiltersDrawer;
 
 // Drawer state tracking for history
 function isAnyDrawerOpen() {
@@ -62,7 +65,8 @@ function isAnyDrawerOpen() {
     $('manage-hashtag-drawer') && $('manage-hashtag-drawer').classList.contains('open') ||
     $('settings-drawer') && $('settings-drawer').classList.contains('open') ||
     $('search-drawer') && $('search-drawer').classList.contains('open') ||
-    $('post-analytics-drawer') && $('post-analytics-drawer').classList.contains('open')
+    $('post-analytics-drawer') && $('post-analytics-drawer').classList.contains('open') ||
+    $('manage-filters-drawer') && $('manage-filters-drawer').classList.contains('open')
   );
 }
 
@@ -85,6 +89,7 @@ function closeAnyDrawer() {
   if ($('compose-drawer') && $('compose-drawer').classList.contains('open')) closeComposeDrawer();
   if ($('search-drawer') && $('search-drawer').classList.contains('open')) closeSearchDrawer();
   if ($('post-analytics-drawer') && $('post-analytics-drawer').classList.contains('open')) closePostAnalyticsDrawer();
+  if ($('manage-filters-drawer') && $('manage-filters-drawer').classList.contains('open')) closeFiltersDrawer();
   if ($('manage-hashtag-drawer') && $('manage-hashtag-drawer').classList.contains('open')) {
     $('manage-hashtag-drawer').classList.remove('open');
     const bd = $('manage-hashtag-backdrop');
@@ -125,6 +130,9 @@ window.addEventListener('popstate', async e => {
 
     if (currentParams.get('notifications')) {
       openNotifDrawer();
+    }
+    if (currentParams.get('manage_filters')) {
+      openFiltersDrawer();
     }
 
     // Restore or clear hashtag filter state based on URL params
@@ -194,10 +202,11 @@ async function initApp(server, token, demo = false) {
   saveMastodonToken(token, server);
 
   // Load core data in parallel for faster startup
-  const [accountRes, tagsRes, instanceV1Res] = await Promise.allSettled([
+  const [accountRes, tagsRes, instanceV1Res, _filtersRes] = await Promise.allSettled([
     apiGet('/api/v1/accounts/verify_credentials', token, server),
     apiGet('/api/v1/followed_tags?limit=200', token, server),
-    apiGet('/api/v1/instance', token, server)
+    apiGet('/api/v1/instance', token, server),
+    loadFilters()
   ]);
 
   if (accountRes.status === 'fulfilled') {
@@ -351,6 +360,13 @@ async function initApp(server, token, demo = false) {
   if (notifications) {
     setTimeout(() => openNotifDrawer(), 300);
   }
+  const manageFilters = urlParams.get('manage_filters');
+  if (manageFilters) {
+    setTimeout(() => openFiltersDrawer(), 300);
+  }
+
+  // Initialize UI components
+  initFiltersUI();
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -976,6 +992,14 @@ if (manageTagsMenuBtn) {
   manageTagsMenuBtn.addEventListener('click', () => {
     $('profile-dropdown').classList.remove('show');
     if (window.openManageHashtagsPanel) window.openManageHashtagsPanel();
+  });
+}
+
+const manageFiltersMenuBtn = $('manage-filters-menu-btn');
+if (manageFiltersMenuBtn) {
+  manageFiltersMenuBtn.addEventListener('click', () => {
+    $('profile-dropdown').classList.remove('show');
+    openFiltersDrawer();
   });
 }
 

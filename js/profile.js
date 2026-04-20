@@ -172,7 +172,7 @@ async function loadProfileTab(tabName, panel) {
         : '<div class="feed-status"><p style="font-size:13px;">No media yet.</p></div>';
     } else {
       panel.innerHTML = display.length
-        ? display.map(s => renderPost(s)).join('') + loadMoreHtml
+        ? display.map(s => renderPost(s, { context: 'account' })).join('') + loadMoreHtml
         : '<div class="feed-status"><p style="font-size:13px;">No posts matching your language filter.</p></div>';
     }
   } catch (err) {
@@ -217,7 +217,7 @@ export async function loadMoreProfilePosts(btn) {
         const postLang = (s.reblog || s).language || s.language;
         return matchesLanguage(postLang, preferredLang);
       });
-      const html = display.map(s => renderPost(s)).join('');
+      const html = display.map(s => renderPost(s, { context: 'account' })).join('');
       const tmp = document.createElement('div');
       tmp.innerHTML = html;
       while (tmp.firstChild) container.insertBefore(tmp.firstChild, btn);
@@ -395,7 +395,7 @@ export function openProfileDrawer(accountId, server) {
     });
 
     const postsHtml = display.length
-      ? display.map(s => renderPost(s)).join('') + loadMoreHtml
+      ? display.map(s => renderPost(s, { context: 'account' })).join('') + loadMoreHtml
       : '<div class="feed-status"><p style="font-size:13px;">No posts matching your language filter.</p></div>';
 
     /* ── Pinned posts ── */
@@ -408,12 +408,12 @@ export function openProfileDrawer(accountId, server) {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/></svg>
             pinned
           </div></div>
-          <div class="pinned-single">${renderPost(pinned[0])}</div>
+          <div class="pinned-single">${renderPost(pinned[0], { context: 'account' })}</div>
         </div>`;
     } else if (pinned.length > 1) {
       const carouselId = `pinned-carousel-${accountId}`;
       const slides = pinned.map((s, i) =>
-        `<div class="pinned-slide${i === 0 ? ' active' : ''}" data-index="${i}">${renderPost(s)}</div>`
+        `<div class="pinned-slide${i === 0 ? ' active' : ''}" data-index="${i}">${renderPost(s, { context: 'account' })}</div>`
       ).join('');
       pinnedHtml = `
         <div class="pinned-section">
@@ -664,7 +664,7 @@ export function openBookmarksDrawer() {
         const postLang = (s.reblog || s).language || s.language;
         return matchesLanguage(postLang, preferredLang);
       });
-      const postsHtml = display.map(s => renderPost(s)).join('');
+      const postsHtml = display.map(s => renderPost(s, { context: 'account' })).join('');
       content.innerHTML = `
         <div class="thread-drawer-header">
           <span class="thread-drawer-title">Bookmarks</span>

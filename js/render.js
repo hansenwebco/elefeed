@@ -89,7 +89,7 @@ export function renderAnalyticsMenu(s) {
  *
  * Returns { contentHTML, footerHTML }
  */
-function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost = false) {
+function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost = false, context = 'home') {
   let hideSensitiveMedia = true;
   try { hideSensitiveMedia = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
 
@@ -338,11 +338,39 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   /* ── Content warning wrapper ── */
   let autoOpenSensitive = false;
   try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
-  
-  const hasSpoiler = s.spoiler_text && s.spoiler_text.length > 0;
-  const cwText = hasSpoiler ? renderCustomEmojis(s.spoiler_text, s.emojis) : 'Sensitive content';
+
+  /* ── Server-side filtering (Mastodon V2) ── */
+  const filterResults = status.filtered || [];
+  let isFiltered = filterResults.length > 0;
+  let filterAction = isFiltered ? filterResults[0].filter.filter_action : null;
+  let filterTitle = isFiltered ? filterResults[0].filter.title : null;
+
+  // Client-side fallback: check status content against context-specific regexes
+  if (!isFiltered) {
+    const ctxFilters = state.filterRegexes[context];
+    if (ctxFilters) {
+      const text = ((s.spoiler_text || '') + ' ' + (s.content || '')).toLowerCase();
+      if (ctxFilters.hide && ctxFilters.hide.test(text)) {
+        isFiltered = true;
+        filterAction = 'hide';
+      } else if (ctxFilters.warn && ctxFilters.warn.test(text)) {
+        isFiltered = true;
+        filterAction = 'warn';
+      }
+    }
+  }
+
+  // Apply "hide" action: return empty if filtered to hide
+  if (isFiltered && filterAction === 'hide') {
+    return { contentHTML: '', footerHTML: '', isHidden: true };
+  }
+
+  const hasSpoiler = (s.spoiler_text && s.spoiler_text.length > 0) || (isFiltered && filterAction === 'warn');
+  const cwText = (isFiltered && filterAction === 'warn')
+    ? `Filtered: ${escapeHTML(filterTitle || 'Custom Filter')}`
+    : (hasSpoiler ? renderCustomEmojis(s.spoiler_text, s.emojis) : 'Sensitive content');
   const cwId = `cw-${idPrefix}${status.id}`;
-  const isExpanded = autoOpenSensitive;
+  const isExpanded = isFiltered ? false : autoOpenSensitive;
   const { content: rawContent, tags: postTags } = extractTrailingHashtags(
     sanitizeHTML(s.content, { mentions: s.mentions, emojis: s.emojis, server: state.server })
   );
@@ -555,7 +583,10 @@ export function renderPost(status, opts = {}) {
 
   const isOwnPost = !!(state.account && s.account.id === state.account.id);
   const analyticsHTML = isOwnPost ? renderAnalyticsMenu(s) : '';
-  const { contentHTML, footerHTML } = _buildPostBody(status, s, '', analyticsHTML, isOwnPost);
+  const context = opts.context || 'home';
+  const { contentHTML, footerHTML, isHidden } = _buildPostBody(status, s, '', analyticsHTML, isOwnPost, context);
+
+  if (isHidden) return '';
 
   /* ── Hashtag banner ── */
   const tagList = opts.tags && opts.tags.length ? opts.tags : (opts.tag ? [opts.tag] : []);
@@ -636,7 +667,9 @@ export function renderThreadPost(status, variant) {
   const isOwnPost = !!(state.account && s.account.id === state.account.id);
   const analyticsHTML = (isFocal || isOwnPost) ? renderAnalyticsMenu(s) : '';
 
-  const { contentHTML, footerHTML } = _buildPostBody(status, s, 'thread-', analyticsHTML, isOwnPost);
+  const { contentHTML, footerHTML, isHidden } = _buildPostBody(status, s, 'thread-', analyticsHTML, isOwnPost, 'thread');
+
+  if (isHidden) return '';
 
   const boostLabelHTML = boostBy ? `
     <div class="boost-divider">
