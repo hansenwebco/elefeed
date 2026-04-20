@@ -900,35 +900,43 @@ window.addEventListener('resize', (() => {
    REFRESH / AVATAR / BOOKMARKS / LOGOUT
    ══════════════════════════════════════════════════════════════════════ */
 
-const doRefresh = () => {
+const doRefresh = async () => {
+  const refreshBtn = $('refresh-btn');
+  if (refreshBtn) refreshBtn.classList.add('refresh-btn-spinning');
+
   const tab = state.activeTab;
   const feedKey = activeFeedKey();
   // If there are buffered new posts, act like clicking the pill
   if (tab === 'feed' && getFilteredPendingPosts(feedKey).length > 0) {
     flushPendingPosts(feedKey, true);
+    if (refreshBtn) refreshBtn.classList.remove('refresh-btn-spinning');
     return;
   }
   state.pendingPosts[feedKey] = [];
   updateTabPill(feedKey);
 
-  if (tab === 'feed') {
-    state.homeFeed = null;
-    state.hashtagFeed = null;
-    loadFeedTab();
-  } else if (tab === 'explore') {
-    const isFeedContext = state.exploreSubtab === 'live' || state.exploreSubtab === 'federated';
-    if (isFeedContext) {
-      if (state.exploreSubtab === 'live') state.localFeed = null;
-      if (state.exploreSubtab === 'federated') state.federatedFeed = null;
-      loadFeedTab();
-    } else {
-      state.trendingPostsLoaded = false;
-      state.trendingHashtagsLoaded = false;
-      state.trendingPeopleLoaded = false;
-      state.trendingNewsLoaded = false;
-      state.trendingFollowingLoaded = false;
-      loadExploreTab();
+  try {
+    if (tab === 'feed') {
+      state.homeFeed = null;
+      state.hashtagFeed = null;
+      await loadFeedTab();
+    } else if (tab === 'explore') {
+      const isFeedContext = state.exploreSubtab === 'live' || state.exploreSubtab === 'federated';
+      if (isFeedContext) {
+        if (state.exploreSubtab === 'live') state.localFeed = null;
+        if (state.exploreSubtab === 'federated') state.federatedFeed = null;
+        await loadFeedTab();
+      } else {
+        state.trendingPostsLoaded = false;
+        state.trendingHashtagsLoaded = false;
+        state.trendingPeopleLoaded = false;
+        state.trendingNewsLoaded = false;
+        state.trendingFollowingLoaded = false;
+        await loadExploreTab();
+      }
     }
+  } finally {
+    if (refreshBtn) refreshBtn.classList.remove('refresh-btn-spinning');
   }
   showToast('Refreshing…');
 };
