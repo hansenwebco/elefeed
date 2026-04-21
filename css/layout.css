@@ -75,12 +75,12 @@
   gap: 4px;
   flex: 1;
   overflow-y: auto;
-  border-right: 1px solid var(--border);
   scrollbar-width: none;
   transition: all 0.32s cubic-bezier(0.4, 0, 0.2, 1);
   max-height: 800px;
   opacity: 1;
 }
+
 
 .sidebar-nav.hidden-for-compose {
   max-height: 0;

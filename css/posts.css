@@ -130,26 +130,27 @@
 
 /* Context border colors */
 .post.post--hashtag {
-  border-left-color: rgba(155, 127, 255, 0.5);
-  background: rgba(155, 127, 255, 0.04);
+  border-left-color: var(--hashtag-color);
+  background: color-mix(in srgb, var(--hashtag-color) 4%, transparent);
 }
 
 .post.post--hashtag:hover {
-  border-left-color: rgba(155, 127, 255, 0.7);
-  background: rgba(155, 127, 255, 0.07);
+  border-left-color: var(--hashtag-color);
+  background: color-mix(in srgb, var(--hashtag-color) 7%, transparent);
 }
 
 .post.post--boost,
 .post.post--following {
-  border-left-color: rgba(78, 205, 196, 0.5);
-  background: rgba(78, 205, 196, 0.04);
+  border-left-color: var(--following-color);
+  background: color-mix(in srgb, var(--following-color) 4%, transparent);
 }
 
 .post.post--boost:hover,
 .post.post--following:hover {
-  border-left-color: rgba(78, 205, 196, 0.7);
-  background: rgba(78, 205, 196, 0.07);
+  border-left-color: var(--following-color);
+  background: color-mix(in srgb, var(--following-color) 7%, transparent);
 }
+
 
 .post.post--reply {
   border-left-color: rgba(136, 136, 160, 0.3);
@@ -493,7 +494,7 @@
   color: var(--text);
   word-break: break-word;
   overflow-wrap: anywhere;
-  
+
   /* Animation for show more/less expansion (height managed via JS) */
   max-height: none;
   overflow: hidden;
@@ -560,9 +561,10 @@
 .post-tags .hashtag,
 .post-tags-toggle,
 .post-tags-less-toggle {
-  color: var(--green);
+  color: var(--hashtag-color);
   text-decoration: none;
 }
+
 
 .hashtag-pills-enabled .post-content .hashtag,
 .hashtag-pills-enabled .post-tags .hashtag,
@@ -612,8 +614,9 @@
 }
 
 .post-content .mention {
-  color: var(--accent);
+  color: var(--following-color);
 }
+
 
 .custom-emoji {
   height: 1.25em;

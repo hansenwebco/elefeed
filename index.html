@@ -54,14 +54,22 @@
       });
     }
     let _t = 'system';
-    try { _t = localStorage.getItem('theme') || 'system'; } catch (e) { }
+    let _p = 'classic';
+    try {
+      _t = localStorage.getItem('theme') || 'system';
+      _p = localStorage.getItem('pref_palette') || 'classic';
+    } catch (e) { }
 
     const isDark = _t === 'dark' || (_t === 'system' && !window.matchMedia('(prefers-color-scheme: light)').matches);
+    document.documentElement.setAttribute('data-mode', isDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-palette', _p);
     if (!isDark) {
       document.documentElement.setAttribute('data-theme', 'light');
     }
+
     // Set theme color meta tag to match theme early
     const themeColor = isDark ? '#0d0d0f' : '#f4f4f7';
+
     let metaTheme = document.querySelector('meta[name="theme-color"]');
     if (!metaTheme) {
       metaTheme = document.createElement('meta');
@@ -1264,7 +1272,7 @@
         <div style="display:flex; flex-direction:column; gap:16px;">
           <!-- Theme -->
           <div style="display:flex; flex-direction:column; gap:6px;">
-            <span style="font-size:13px; color:var(--text); font-weight:500;">Theme</span>
+            <span style="font-size:13px; color:var(--text); font-weight:500;">Appearance</span>
             <div class="theme-selector" id="settings-theme-group">
               <button class="theme-segment-btn" data-value="light">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1295,6 +1303,22 @@
                 System
               </button>
             </div>
+          </div>
+          <!-- Theme (Palette) -->
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-size:13px; color:var(--text); font-weight:500;">Theme</span>
+            <select id="settings-palette-select" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
+              <option value="classic">Classic (Default Slate & Purple)</option>
+              <option value="ocean">Oceanic (Deep Blue & Teal)</option>
+              <option value="nord">Nordic (Arctic Gray & Frost Blue)</option>
+              <option value="rose">Rose (Warm Pink & Burgundy)</option>
+              <option value="forest">Forest Sanctuary (Natural Green & Earthy)</option>
+              <option value="cyber">Cyber Neon (OLED Black & Neon Vibes)</option>
+              <option value="coffee">Coffee Shop (Warm Brew & Cozy Tan)</option>
+              <option value="dusk">Dusk Horizon (Indigo Night & Sunset Gold)</option>
+              <option value="mint">Midnight Mint (Refreshing Teal & Slate)</option>
+              <option value="legibility">High Contrast (Accessibility Focused)</option>
+            </select>
           </div>
           <!-- Font Family -->
           <div style="display:flex; flex-direction:column; gap:6px;">
