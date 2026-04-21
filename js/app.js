@@ -995,9 +995,15 @@ if (settingsMenuBtn) {
 
     // Set active button
     const currentTheme = store.get('theme') || 'system';
-    document.querySelectorAll('.theme-segment-btn').forEach(btn => {
+    document.querySelectorAll('#settings-theme-group .theme-segment-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.value === currentTheme);
     });
+
+    const currentPalette = store.get('pref_palette') || 'classic';
+    const paletteSel = $('settings-palette-select');
+    if (paletteSel) paletteSel.value = currentPalette;
+
+
 
     // Sync notification permission status and toggles
     refreshNotifSettingsUI();
@@ -1177,12 +1183,29 @@ $('settings-backdrop')?.addEventListener('click', () => {
 });
 
 function applyTheme(t) {
-  store.set('theme', t);
-  if (t === 'light' || (t === 'system' && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+  if (t) store.set('theme', t);
+  const mode = store.get('theme') || 'system';
+  const palette = store.get('pref_palette') || 'classic';
+
+  let actualMode = mode;
+  if (mode === 'system') {
+    actualMode = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
+  document.documentElement.setAttribute('data-mode', actualMode);
+  document.documentElement.setAttribute('data-palette', palette);
+
+  // Backward compatibility for existing CSS [data-theme="light"]
+  if (actualMode === 'light') {
     document.documentElement.setAttribute('data-theme', 'light');
   } else {
     document.documentElement.removeAttribute('data-theme');
   }
+}
+
+function applyPalette(p) {
+  store.set('pref_palette', p);
+  applyTheme();
 }
 
 document.querySelectorAll('#settings-theme-group .theme-segment-btn').forEach(btn => {
@@ -1193,6 +1216,14 @@ document.querySelectorAll('#settings-theme-group .theme-segment-btn').forEach(bt
     applyTheme(value);
   });
 });
+
+
+$('settings-palette-select')?.addEventListener('change', (e) => {
+  applyPalette(e.target.value);
+});
+
+
+
 
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
   const t = store.get('theme') || 'system';
