@@ -92,7 +92,7 @@ async function loadThread(statusId, container, preserveScroll = false) {
   } catch (err) {
     container.innerHTML = `
       <div class="thread-status">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <iconify-icon icon="ph:warning-circle-bold" style="font-size: 20px;"></iconify-icon>
         <span>Could not load thread: ${escapeHTML(err.message)}</span>
       </div>`;
   }
@@ -156,7 +156,7 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
     const topAncestorId = ancestors[0].reblog ? ancestors[0].reblog.id : ancestors[0].id;
     parts.push(`<div class="thread-section-label context-jump-btn" data-status-id="${topAncestorId}" title="View full context">
       <span>View full context </span>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      <iconify-icon icon="ph:arrow-up-bold" style="font-size: 14px;"></iconify-icon>
     </div>`);
   } else {
     // If no ancestors were returned, but the post is a reply (technically or in spirit),
@@ -171,7 +171,7 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
       parts.push(`
         <div class="thread-status" style="border-bottom:1px solid var(--border); padding:16px 20px; background:var(--surface2); margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:10px; color:var(--text-muted); font-size:13px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+            <iconify-icon icon="ph:arrow-bend-up-left-bold" style="font-size: 14px; flex-shrink:0;"></iconify-icon>
             <span style="line-height: 1.4;">This post is a reply to ${nameText}, but the parent post was not found on this server.</span>
           </div>
         </div>

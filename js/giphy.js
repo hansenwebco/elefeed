@@ -108,7 +108,17 @@ async function searchGifs(query) {
     url.searchParams.append('limit', 20);
 
     const res = await fetch(url.toString());
-    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const text = await res.text();
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (e) {
+      console.error('Failed to parse Giphy response as JSON:', text);
+      throw new Error('Invalid JSON response from Giphy proxy');
+    }
     
     renderGifs(result.data || []);
   } catch (err) {
@@ -194,7 +204,7 @@ async function selectGif(gif) {
 
     const removeBtn = document.createElement('button');
     removeBtn.className = 'compose-media-remove';
-    removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    removeBtn.innerHTML = '<iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>';
     removeBtn.onclick = () => {
       const index = composeState[mediaUrlsKey].indexOf(blobUrl);
       if (index > -1) {

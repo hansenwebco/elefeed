@@ -225,9 +225,7 @@ function renderEmpty() {
   if (!body) return;
   body.innerHTML = `
     <div class="search-empty">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
+      <iconify-icon icon="ph:magnifying-glass-bold" style="font-size: 40px; opacity:0.6;"></iconify-icon>
       <p>Type to search profiles, posts, and hashtags</p>
     </div>`;
 }
@@ -256,9 +254,7 @@ function renderResults(data, query, filter) {
   if (!hasAny) {
     body.innerHTML = `
       <div class="search-empty">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
+        <iconify-icon icon="ph:magnifying-glass-bold" style="font-size: 40px; opacity:0.6;"></iconify-icon>
         <p>No results for <strong>${escapeHTML(query)}</strong></p>
       </div>`;
     return;
@@ -272,10 +268,7 @@ function renderResults(data, query, filter) {
       <div class="search-section">
         ${filter === 'all' ? `
         <div class="search-section-header">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
+          <iconify-icon icon="ph:user-bold" style="font-size: 13px;"></iconify-icon>
           <span>Profiles</span>
         </div>` : ''}
         <div id="search-accounts-list">
@@ -293,10 +286,7 @@ function renderResults(data, query, filter) {
       <div class="search-section">
         ${filter === 'all' ? `
         <div class="search-section-header">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/>
-            <line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
-          </svg>
+          <iconify-icon icon="ph:hash-bold" style="font-size: 13px;"></iconify-icon>
           <span>Hashtags</span>
         </div>` : ''}
         <div id="search-hashtags-list">
@@ -315,9 +305,7 @@ function renderResults(data, query, filter) {
       <div class="search-section" id="search-posts-section">
         ${filter === 'all' ? `
         <div class="search-section-header">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
+          <iconify-icon icon="ph:chat-circle-text-bold" style="font-size: 13px;"></iconify-icon>
           <span>Posts</span>
         </div>` : ''}
         <div id="search-posts-list">
@@ -413,10 +401,7 @@ function renderHashtag(tag) {
   return `
     <div class="search-hashtag-row" data-hashtag="${escapeHTML(tag.name)}" style="cursor:pointer;">
       <div class="search-hashtag-icon">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/>
-          <line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
-        </svg>
+        <iconify-icon icon="ph:hash-bold" style="font-size: 14px;"></iconify-icon>
       </div>
       <div class="search-hashtag-info">
         <div class="search-hashtag-name">#${escapeHTML(tag.name)}</div>
@@ -579,22 +564,15 @@ function renderStatus(status) {
       `}
       <div class="search-status-footer">
         <span class="search-status-stat">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 10l5-5v3c8 0 13 4 13 11-3-4-7-5-13-5v3l-5-5z"/>
-          </svg>
+          <iconify-icon icon="ph:arrow-bend-up-left-bold" style="font-size: 11px;"></iconify-icon>
           ${s.replies_count || 0}
         </span>
         <span class="search-status-stat">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--boost)">
-            <path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-            <path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-          </svg>
+          <iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 11px; color:var(--boost);"></iconify-icon>
           ${s.reblogs_count || 0}
         </span>
         <span class="search-status-stat">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="${s.favourited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" style="color:var(--fav)">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
+          <iconify-icon icon="ph:star-bold" style="font-size: 11px; color:var(--fav);"></iconify-icon>
           ${s.favourites_count || 0}
         </span>
         <a href="${escapeHTML(s.url)}" target="_blank" rel="noopener" class="search-status-link"

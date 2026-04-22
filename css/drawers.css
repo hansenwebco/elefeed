@@ -1297,7 +1297,8 @@
   color: var(--accent2);
 }
 
-.thread-back-btn svg {
+.thread-back-btn svg,
+.thread-back-btn iconify-icon {
   flex-shrink: 0;
 }
 
@@ -1476,12 +1477,14 @@ body.manage-inline-active .manage-inline-panel {
   color: var(--accent2);
 }
 
-.thread-section-label.context-jump-btn svg {
+.thread-section-label.context-jump-btn svg,
+.thread-section-label.context-jump-btn iconify-icon {
   opacity: 0.8;
   transition: transform var(--trans);
 }
 
-.thread-section-label.context-jump-btn:hover svg {
+.thread-section-label.context-jump-btn:hover svg,
+.thread-section-label.context-jump-btn:hover iconify-icon {
   transform: translate(2px, -2px);
   opacity: 1;
 }
@@ -1661,6 +1664,9 @@ body.manage-inline-active .manage-inline-panel {
 }
 
 .notif-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 99px;
@@ -1717,7 +1723,8 @@ body.manage-inline-active .manage-inline-panel {
   box-shadow: 0 0 12px -2px currentColor;
 }
 
-.notif-item.unread .notif-icon svg {
+.notif-item.unread .notif-icon svg,
+.notif-item.unread .notif-icon iconify-icon {
   color: var(--surface);
 }
 
@@ -1740,7 +1747,8 @@ body.manage-inline-active .manage-inline-panel {
   transition: background 300ms ease, box-shadow 300ms ease;
 }
 
-.notif-icon svg {
+.notif-icon svg,
+.notif-icon iconify-icon {
   transition: color 300ms ease;
 }
 
@@ -1778,7 +1786,8 @@ body.manage-inline-active .manage-inline-panel {
   background: rgba(155, 127, 255, 0.06);
 }
 
-.notif-clear-all-btn svg {
+.notif-clear-all-btn svg,
+.notif-clear-all-btn iconify-icon {
   flex-shrink: 0;
 }
 
@@ -1857,7 +1866,8 @@ body.manage-inline-active .manage-inline-panel {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-.notif-meta .following-badge svg {
+.notif-meta .following-badge svg,
+.notif-meta .following-badge iconify-icon {
   width: 9px;
   height: 9px;
 }
@@ -1917,7 +1927,8 @@ body.manage-inline-active .manage-inline-panel {
   text-align: center;
 }
 
-.notif-empty svg {
+.notif-empty svg,
+.notif-empty iconify-icon {
   margin-bottom: 12px;
   opacity: 0.4;
 }

@@ -97,11 +97,13 @@
 
 /* Header Polish & Animations */
 
-.notif-bell-wrap.has-new-notifications svg {
+.notif-bell-wrap.has-new-notifications svg,
+.notif-bell-wrap.has-new-notifications iconify-icon {
   color: var(--accent);
 }
 
-.refresh-btn-spinning svg {
+.refresh-btn-spinning svg,
+.refresh-btn-spinning iconify-icon {
   animation: spin 0.8s linear infinite;
 }
 
@@ -349,7 +351,8 @@
   z-index: 2;
 }
 
-.toast-notif-icon-badge svg {
+.toast-notif-icon-badge svg,
+.toast-notif-icon-badge iconify-icon {
   width: 12px;
   height: 12px;
 }
@@ -615,7 +618,9 @@
 }
 
 .boost-dropdown-item--danger svg,
-.boost-dropdown-item--redraft svg {
+.boost-dropdown-item--danger iconify-icon,
+.boost-dropdown-item--redraft svg,
+.boost-dropdown-item--redraft iconify-icon {
   color: var(--danger);
 }
 

@@ -1211,3 +1211,92 @@
     max-height: 70vh;
   }
 }
+
+/* ─── Visibility Modal Custom UI ─── */
+.visibility-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px -8px;
+}
+
+.visibility-option-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.visibility-option-item:hover {
+  background: var(--surface2);
+}
+
+.visibility-option-item.active {
+  background: var(--accent-alpha, rgba(155, 127, 255, 0.1));
+  border-color: var(--accent);
+}
+
+.visibility-option-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 20px;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+
+.visibility-option-item.active .visibility-option-icon {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.visibility-option-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.visibility-option-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.visibility-option-description {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.visibility-option-check {
+  font-size: 18px;
+  color: var(--accent);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.visibility-option-item.active .visibility-option-check {
+  opacity: 1;
+  transform: scale(1);
+}
+/* ─── Visibility Drawer Stack ─── */
+/* Ensure the visibility selection appears on top of the compose drawer */
+#visibility-backdrop {
+  z-index: 11000;
+}
+#visibility-modal {
+  z-index: 11001;
+}

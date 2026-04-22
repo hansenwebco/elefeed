@@ -25,7 +25,7 @@ import {
 export function renderFollowingBadge(accountId) {
   if (state.knownFollowing.has(accountId)) {
     return `<div class="following-badge" title="Following">
-      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <iconify-icon icon="ph:heart-fill" style="font-size: 10px; display: block; margin-left: -0.5px;"></iconify-icon>
     </div>`;
   }
   return '';
@@ -47,31 +47,27 @@ export function renderAnalyticsMenu(s) {
         data-favs="${s.favourites_count || 0}"
         title="Post insights"
         style="color:var(--text-dim);">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="20" x2="18" y2="10"/>
-          <line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6" y1="20" x2="6" y2="14"/>
-        </svg>
+        <iconify-icon icon="ph:chart-bar-bold" style="font-size: 15px;"></iconify-icon>
       </button>
       <div class="boost-dropdown post-analytics-menu" id="post-analytics-menu-${s.id}"
         style="right:0;left:auto;top:auto;bottom:100%;margin-bottom:8px;min-width:188px;transform-origin:bottom right;">
         <button class="boost-dropdown-item post-analytics-item" data-action="replies" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+          <iconify-icon icon="ph:arrow-bend-up-left-bold" style="font-size: 15px;"></iconify-icon>
           <span>Replies</span>
           <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.replies_count || 0}</span>
         </button>
         <button class="boost-dropdown-item post-analytics-item" data-action="quotes" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
+          <iconify-icon icon="garden:quote-fill-12" style="font-size: 15px;"></iconify-icon>
           <span>Quotes</span>
           <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || s.quote_count || 0}</span>
         </button>
         <button class="boost-dropdown-item post-analytics-item" data-action="boosts" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 15px;"></iconify-icon>
           <span>Boosts</span>
           <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
         </button>
         <button class="boost-dropdown-item post-analytics-item" data-action="favs" data-post-id="${s.id}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <iconify-icon icon="ph:star-bold" style="font-size: 15px;"></iconify-icon>
           <span>Favorites</span>
           <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.favourites_count || 0}</span>
         </button>
@@ -105,7 +101,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
           <span class="sp-card-title">Sensitive content</span>
           <span class="sp-card-sub">Click to show</span>
         </div>
-        <svg class="sp-icon sp-icon-eye" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <iconify-icon icon="ph:eye-bold" class="sp-icon sp-icon-eye" style="font-size: 13px;"></iconify-icon>
         <span class="sp-revealed-label">hide</span>
       </button>` : '';
 
@@ -138,18 +134,18 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
         return `<div class="media-item video-player-wrap vp-muted" data-full-url="${m.url}" data-type="video" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="vpWrapperClick(event,this)"${itemStyle}>
           <video src="${m.url}" poster="${m.preview_url || ''}" muted playsinline class="${blurClass}"></video>
           <div class="vid-overlay-play" onclick="event.stopPropagation();vpTogglePlay(this.closest('.video-player-wrap'))">
-            <div class="vid-overlay-btn"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg></div>
+            <div class="vid-overlay-btn"><iconify-icon icon="ph:play-fill" style="font-size: 24px;"></iconify-icon></div>
           </div>
           <div class="vid-controls" onclick="event.stopPropagation()">
             <button class="vid-btn" onclick="vpTogglePlay(this.closest('.video-player-wrap'))">
-              <svg class="vp-icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg>
-              <svg class="vp-icon-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+              <iconify-icon icon="ph:play-fill" class="vp-icon-play" style="font-size: 18px;"></iconify-icon>
+              <iconify-icon icon="ph:pause-fill" class="vp-icon-pause" style="font-size: 18px;"></iconify-icon>
             </button>
             <div class="vid-progress" onclick="vpSeek(event,this.closest('.video-player-wrap'))"><div class="vid-progress-fill"></div></div>
             <span class="vid-time">0:00</span>
             <button class="vid-btn" onclick="vpToggleMute(this.closest('.video-player-wrap'))">
-              <svg class="vp-icon-sound" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-              <svg class="vp-icon-mute" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <iconify-icon icon="ph:speaker-high-fill" class="vp-icon-sound" style="font-size: 18px;"></iconify-icon>
+              <iconify-icon icon="ph:speaker-slash-fill" class="vp-icon-mute" style="font-size: 18px;"></iconify-icon>
             </button>
           </div>
         </div>`;
@@ -219,7 +215,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
                 <span class="sp-card-title" style="font-size:12px;">Sensitive content</span>
                 <span class="sp-card-sub" style="font-size:10px;">Click to show</span>
               </div>
-              <svg class="sp-icon sp-icon-eye" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <iconify-icon icon="ph:eye-bold" class="sp-icon sp-icon-eye" style="font-size: 10px;"></iconify-icon>
               <span class="sp-revealed-label" style="font-size:10px;">hide</span>
             </button>` : '';
 
@@ -257,7 +253,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
     if (qid) {
       quoteHTML = `<div class="post-quote" style="padding:10px; margin-top:8px; border-style:dashed; opacity:0.7;" onclick="event.stopPropagation(); if (window.openThreadDrawer) window.openThreadDrawer('${qid}');">
           <div style="font-size:12px; color:var(--text-dim); display:flex; align-items:center; gap:6px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 11h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2zm10 0h-4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2z"/></svg>
+            <iconify-icon icon="garden:quote-fill-12" style="font-size: 12px;"></iconify-icon>
             Quoted post (click to load)
           </div>
         </div>`;
@@ -282,7 +278,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
         <div class="post-card-video-wrapper" onclick="event.preventDefault(); event.stopPropagation(); window.playCardVideo(this, '${encodedHtml}', '${ratio}')">
           ${cardMediaHTML}
           <div class="post-card-play-overlay">
-            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="8 5 19 12 8 19"></polygon></svg>
+            <iconify-icon icon="ph:play-fill" style="font-size: 24px; color:#fff;"></iconify-icon>
           </div>
         </div>`;
     }
@@ -293,7 +289,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
     if (cardSensitive && cardMediaHTML) {
       const cardPill = `<button class="sensitive-pill" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
         <div class="sp-card"><span class="sp-card-title">Sensitive content</span><span class="sp-card-sub">Click to show</span></div>
-        <svg class="sp-icon sp-icon-eye" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <iconify-icon icon="ph:eye-bold" class="sp-icon sp-icon-eye" style="font-size: 13px;"></iconify-icon>
         <span class="sp-revealed-label">hide</span>
       </button>`;
       cardMediaHTML = `<div class="post-card-img-wrap">${cardMediaHTML}${cardPill}</div>`;
@@ -450,34 +446,34 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   const footerHTML = `
     <div class="post-footer">
       <button class="post-stat post-reply-btn" data-post-id="${s.id}" data-account-acct="${s.account.acct}" title="Reply">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+        <iconify-icon icon="ph:arrow-bend-up-left-bold" style="font-size: 13px;"></iconify-icon>
         <span class="post-reply-count">${s.replies_count || 0}</span>
       </button>
       <span style="position:relative;display:inline-flex;">
         ${store.get('pref_combine_boost_quote') !== 'true' ? `
         ${(!s.quote_approval || s.quote_approval.current_user !== 'denied') && s.visibility !== 'private' && s.visibility !== 'direct' ? `
         <button class="post-stat post-quote-btn" data-post-id="${s.id}" data-acct="${escapeHTML(s.account.acct)}" title="Quote">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
+          <iconify-icon icon="garden:quote-fill-12" style="font-size: 13px;"></iconify-icon>
           <span class="quote-count">${s.quotes_count || s.quote_count || 0}</span>
         </button>` : ''}
         <button class="post-stat post-boost-btn ${s.reblogged ? 'boosted' : ''}" data-post-id="${s.id}" title="${s.reblogged ? 'Undo Boost' : 'Boost'}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 13px;"></iconify-icon>
           <span class="boost-count">${s.reblogs_count || 0}</span>
         </button>
         ` : `
         <button class="post-stat post-boost-btn ${s.reblogged ? 'boosted' : ''}" data-post-id="${s.id}" title="Boost or Quote">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          <iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 13px;"></iconify-icon>
           <span class="boost-count">${(s.reblogs_count || 0) + (s.quotes_count || s.quote_count || 0)}</span>
         </button>
         <div class="boost-dropdown" id="boost-menu-${s.id}">
           ${(!s.quote_approval || s.quote_approval.current_user !== 'denied') && s.visibility !== 'private' && s.visibility !== 'direct' ? `
           <button class="boost-dropdown-item" data-action="quote" data-post-id="${s.id}" data-acct="${escapeHTML(s.account.acct)}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg>
+            <iconify-icon icon="garden:quote-fill-12" style="font-size: 16px;"></iconify-icon>
             <span>Quote</span>
             <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || s.quote_count || 0}</span>
           </button>` : ''}
           <button class="boost-dropdown-item" data-action="boost" data-post-id="${s.id}" data-is-boosted="${s.reblogged ? 'true' : 'false'}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+            <iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 16px;"></iconify-icon>
             <span>${s.reblogged ? 'Undo Boost' : 'Boost'}</span>
             <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
           </button>
@@ -485,11 +481,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
         `}
       </span>
       <button class="post-stat post-fav-btn ${s.favourited ? 'favourited' : ''}" data-post-id="${s.id}" data-favourited="${s.favourited ? 'true' : 'false'}" title="${s.favourited ? 'Unfavorite' : 'Favorite'}">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.favourited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" style="color:var(--fav)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <iconify-icon icon="ph:star-bold" style="font-size: 13px;"></iconify-icon>
         <span class="post-fav-count">${s.favourites_count || 0}</span>
       </button>
       <button class="post-stat post-bookmark-btn ${s.bookmarked ? 'bookmarked' : ''}" data-post-id="${s.id}" data-bookmarked="${s.bookmarked ? 'true' : 'false'}" title="${s.bookmarked ? 'Remove bookmark' : 'Bookmark'}">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="${s.bookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        <iconify-icon icon="ph:bookmark-simple-bold" style="font-size: 13px;"></iconify-icon>
       </button>
 
       <div style="margin-left:auto;display:flex;align-items:center;gap:2px;">
@@ -497,7 +493,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
 
         <div style="position:relative;display:inline-flex;">
           <button class="post-stat post-more-btn" data-post-id="${s.id}" title="More options" onclick="event.stopPropagation(); window.toggleFooterMoreMenu('${s.id}', this)" aria-haspopup="true" style="position:relative; margin-right: -8px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            <iconify-icon icon="ph:dots-three-bold" style="font-size: 13px; opacity:0.6;"></iconify-icon>
             ${showTranslate ? '<span class="translate-indicator"><span>T</span></span>' : ''}
           </button>
           <div class="boost-dropdown footer-more-dropdown" id="footer-more-menu-${s.id}" style="right:-2px; left:auto; top:auto; bottom:100%; margin-bottom:8px; min-width:210px; transform-origin: bottom right;">
@@ -506,13 +502,13 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
             </div>
 
             <button class="boost-dropdown-item" onclick="event.stopPropagation(); window.open('${escapeHTML(s.url || '')}', '_blank', 'noopener'); document.querySelectorAll('.footer-more-dropdown').forEach(m => m.classList.remove('show'));">
-               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+               <iconify-icon icon="ph:link-bold" style="font-size: 14px; opacity:0.6;"></iconify-icon>
                <span>View Original Post</span>
             </button>
 
             ${showTranslate ? `
             <button class="boost-dropdown-item post-translate-btn" onclick="event.preventDefault(); event.stopPropagation(); window.translatePost(this, '${s.id}', '${escapeHTML(postLang || '')}', '${escapeHTML(s.url || '')}'); document.querySelectorAll('.footer-more-dropdown').forEach(m => m.classList.remove('show'));" data-original-label="Translate">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="m14 18h6"/></svg>
+              <iconify-icon icon="ph:translate-bold" style="font-size: 14px; opacity:0.6;"></iconify-icon>
               <span class="post-translate-btn-text">Translate</span>
             </button>
             ` : ''}
@@ -520,15 +516,15 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
             ${isOwnPost ? `
               <div class="boost-dropdown-separator"></div>
               <button class="boost-dropdown-item" data-action="edit" data-post-id="${s.id}">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                <iconify-icon icon="ph:pencil-simple-bold" style="font-size: 14px; opacity:0.6;"></iconify-icon>
                 <span>Edit Post</span>
               </button>
               <button class="boost-dropdown-item boost-dropdown-item--danger" data-action="delete" data-post-id="${s.id}">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                <iconify-icon icon="ph:trash-bold" style="font-size: 14px; opacity:0.6;"></iconify-icon>
                 <span>Delete Post</span>
               </button>
               <button class="boost-dropdown-item boost-dropdown-item--redraft" data-action="delete-redraft" data-post-id="${s.id}">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <iconify-icon icon="ph:pencil-line-bold" style="font-size: 14px; opacity:0.6;"></iconify-icon>
                 <span>Delete &amp; Redraft</span>
               </button>
             ` : ''}
@@ -557,13 +553,13 @@ function getVisibilityIcon(visibility, langName, forMenu = false) {
   };
   switch (visibility) {
     case 'public':
-      return wrap('Public', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`);
+      return wrap('Public', `<iconify-icon icon="ph:globe-bold" class="post-vis-icon" style="font-size: 11px;"></iconify-icon>`);
     case 'unlisted':
-      return wrap('Unlisted', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg>`);
+      return wrap('Quiet public', `<iconify-icon icon="ph:moon-bold" class="post-vis-icon" style="font-size: 11px;"></iconify-icon>`);
     case 'private':
-      return wrap('Followers only', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`);
+      return wrap('Followers', `<iconify-icon icon="ph:lock-bold" class="post-vis-icon" style="font-size: 11px;"></iconify-icon>`);
     case 'direct':
-      return wrap('Direct', `<svg class="post-vis-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>`);
+      return wrap('Private mention', `<iconify-icon icon="ph:at-bold" class="post-vis-icon" style="font-size: 11px;"></iconify-icon>`);
     default:
       return '';
   }
@@ -593,7 +589,7 @@ export function renderPost(status, opts = {}) {
   const isHashtagPost = tagList.length > 0;
   const hashtagBanner = (isHashtagPost && !boostBy) ? `
     <div class="post-hashtag-banner">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+      <iconify-icon icon="ph:hash-bold" style="font-size: 11px;"></iconify-icon>
       via
       <div class="post-hashtag-banner-tags">${tagList.map(t =>
     `<button type="button" class="hashtag post-hashtag-banner-tag" onclick="event.preventDefault(); event.stopPropagation(); window.handleHashtagClick(this)">#${escapeHTML(t)}</button>`
@@ -604,11 +600,11 @@ export function renderPost(status, opts = {}) {
   const boostLabelHTML = boostBy ? `
     <div class="boost-divider">
       <div class="boost-text">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 14px;"></iconify-icon>
         <span class="post-display-name" data-profile-id="${boostBy.id}" data-profile-server="${profileServer}">${renderCustomEmojis(boostBy.display_name || boostBy.username, boostBy.emojis)}</span> <span style="opacity:0.8;text-transform:uppercase;font-size:11px;font-weight:500;">boosted</span>
       </div>
       <div class="boost-divider-line"></div>
-      <svg class="boost-divider-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+      <iconify-icon icon="ph:caret-down-bold" class="boost-divider-arrow" style="font-size: 14px;"></iconify-icon>
     </div>` : '';
 
   /* ── Context class ── */
@@ -634,7 +630,7 @@ export function renderPost(status, opts = {}) {
             <span class="post-acct">@${escapeHTML(s.account.acct)}</span>
             <div style="margin-left:auto; display:flex; align-items:baseline; gap:5px; flex-shrink:0; min-width:0;">
               ${s.edited_at ? `<span class="post-edited" title="Edited: ${new Date(s.edited_at).toLocaleString()}">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px; opacity:0.6;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>edited
+                <iconify-icon icon="ph:pencil-simple-bold" style="font-size: 10px; margin-right:2px; opacity:0.6;"></iconify-icon>edited
               </span>` : ''}
               <span class="post-time" title="${new Date(s.created_at).toLocaleString()}">${relativeTime(s.created_at)}</span>
             </div>
@@ -674,7 +670,7 @@ export function renderThreadPost(status, variant) {
   const boostLabelHTML = boostBy ? `
     <div class="boost-divider">
       <div class="boost-text">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+        <iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 14px;"></iconify-icon>
         <span class="post-display-name" data-profile-id="${boostBy.id}" data-profile-server="${profileServer}">${renderCustomEmojis(boostBy.display_name || boostBy.username, boostBy.emojis)}</span> <span style="opacity:0.8;text-transform:uppercase;font-size:11px;font-weight:500;">boosted</span>
       </div>
       <div class="boost-divider-line"></div>
@@ -707,7 +703,7 @@ export function renderThreadPost(status, variant) {
               <span class="post-acct">@${escapeHTML(s.account.acct)}</span>
               <div style="margin-left:auto; display:flex; align-items:baseline; gap:5px; flex-shrink:0; min-width:0;">
                 ${s.edited_at ? `<span class="post-edited" title="Edited: ${new Date(s.edited_at).toLocaleString()}">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px; opacity:0.6;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>edited
+                  <iconify-icon icon="ph:pencil-simple-bold" style="font-size: 10px; margin-right:2px; opacity:0.6;"></iconify-icon>edited
                 </span>` : ''}
                 <span class="post-time" title="${new Date(s.created_at).toLocaleString()}">${relativeTime(s.created_at)}</span>
               </div>
@@ -750,7 +746,7 @@ export function renderPoll(poll) {
         <div class="poll-option">
           <div class="poll-bar" style="width:${pct}%"></div>
           <span class="poll-option-text">
-            ${isOwnVote ? '<span class="poll-own-vote-icon" title="You voted for this">✓</span> ' : ''}
+            ${isOwnVote ? '<span class="poll-own-vote-icon" title="You voted for this"><iconify-icon icon="ph:check-bold" style="font-size: 14px;"></iconify-icon></span> ' : ''}
             ${renderCustomEmojis(opt.title, poll.emojis)}
           </span>
           <span class="poll-pct">${pct}%</span>
@@ -845,7 +841,7 @@ window.expandMedia = function expandMedia(mediaItem) {
       // Build controls via DOM to preserve vid's event listeners
       const overlayPlay = document.createElement('div');
       overlayPlay.className = 'vid-overlay-play';
-      overlayPlay.innerHTML = '<div class="vid-overlay-btn"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg></div>';
+      overlayPlay.innerHTML = '<div class="vid-overlay-btn"><iconify-icon icon="ph:play-fill" style="font-size: 24px;"></iconify-icon></div>';
       overlayPlay.onclick = (e) => { e.stopPropagation(); window.vpTogglePlay(wrap); };
       wrap.appendChild(overlayPlay);
 
@@ -854,14 +850,14 @@ window.expandMedia = function expandMedia(mediaItem) {
       controls.onclick = (e) => e.stopPropagation();
       controls.innerHTML = `
         <button class="vid-btn" onclick="vpTogglePlay(this.closest('.video-player-wrap'))">
-          <svg class="vp-icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg>
-          <svg class="vp-icon-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+          <iconify-icon icon="ph:play-fill" class="vp-icon-play" style="font-size: 18px;"></iconify-icon>
+          <iconify-icon icon="ph:pause-fill" class="vp-icon-pause" style="font-size: 18px;"></iconify-icon>
         </button>
         <div class="vid-progress" onclick="vpSeek(event,this.closest('.video-player-wrap'))"><div class="vid-progress-fill"></div></div>
         <span class="vid-time">0:00</span>
         <button class="vid-btn" onclick="vpToggleMute(this.closest('.video-player-wrap'))">
-          <svg class="vp-icon-sound" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-          <svg class="vp-icon-mute" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <iconify-icon icon="ph:speaker-high-fill" class="vp-icon-sound" style="font-size: 18px;"></iconify-icon>
+          <iconify-icon icon="ph:speaker-slash-fill" class="vp-icon-mute" style="font-size: 18px;"></iconify-icon>
         </button>`;
       wrap.appendChild(controls);
 
@@ -1034,7 +1030,7 @@ window.expandMedia = function expandMedia(mediaItem) {
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'lightbox-close';
-  closeBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+  closeBtn.innerHTML = '<iconify-icon icon="ph:x-bold" style="font-size: 20px;"></iconify-icon>';
   overlay.appendChild(closeBtn);
 
   // ── Lightbox action bar (reply / boost / fav / open post) ──
@@ -1076,7 +1072,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     replyBtn.title = 'Reply';
     replyBtn.dataset.postId = postId;
     replyBtn.dataset.accountAcct = acct;
-    replyBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg><span class="post-reply-count">${replyCount}</span>`;
+    replyBtn.innerHTML = `<iconify-icon icon="ph:arrow-bend-up-left-bold" style="font-size: 15px;"></iconify-icon><span class="post-reply-count">${replyCount}</span>`;
     replyBtn.onclick = (e) => {
       e.stopPropagation();
       if (window.handleReply) window.handleReply(postId, acct);
@@ -1093,7 +1089,7 @@ window.expandMedia = function expandMedia(mediaItem) {
         quoteBtn.title = 'Quote';
         quoteBtn.dataset.postId = postId;
         quoteBtn.dataset.acct = acct;
-        quoteBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg><span class="quote-count">${quoteCount}</span>`;
+        quoteBtn.innerHTML = `<iconify-icon icon="garden:quote-fill-12" style="font-size: 15px;"></iconify-icon><span class="quote-count">${quoteCount}</span>`;
         quoteBtn.onclick = (e) => {
           e.stopPropagation();
           if (window.handleQuoteInit) window.handleQuoteInit(postId, acct);
@@ -1107,7 +1103,7 @@ window.expandMedia = function expandMedia(mediaItem) {
       lbBoostBtn.className = 'lightbox-action-btn lb-boost post-stat post-boost-btn' + (isBoosted ? ' boosted' : '');
       lbBoostBtn.title = isBoosted ? 'Undo Boost' : 'Boost';
       lbBoostBtn.dataset.postId = postId;
-      lbBoostBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span class="boost-count">${boostCount}</span>`;
+      lbBoostBtn.innerHTML = `<iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 15px;"></iconify-icon><span class="boost-count">${boostCount}</span>`;
       lbBoostBtn.onclick = (e) => {
         e.stopPropagation();
         const currentIsBoosted = lbBoostBtn.classList.contains('boosted');
@@ -1124,7 +1120,7 @@ window.expandMedia = function expandMedia(mediaItem) {
       boostBtn.className = 'lightbox-action-btn lb-boost post-stat post-boost-btn' + (isBoosted ? ' boosted' : '');
       boostBtn.title = 'Boost or Quote';
       boostBtn.dataset.postId = postId;
-      boostBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--boost)"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span class="boost-count">${boostCount}</span>`;
+      boostBtn.innerHTML = `<iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 15px;"></iconify-icon><span class="boost-count">${boostCount}</span>`;
 
       const boostDropdown = document.createElement('div');
       boostDropdown.className = 'lightbox-boost-dropdown boost-dropdown';
@@ -1134,7 +1130,7 @@ window.expandMedia = function expandMedia(mediaItem) {
       boostItem.dataset.action = 'boost';
       boostItem.dataset.postId = postId;
       boostItem.dataset.isBoosted = isBoosted ? 'true' : 'false';
-      boostItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><span class="lb-boost-label">${isBoosted ? 'Undo Boost' : 'Boost'}</span><span class="dropdown-stat-count">${_standalone ? _standalone.dataset.reblogsCount : getCount(postBoostBtn, '.boost-count')}</span>`;
+      boostItem.innerHTML = `<iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 14px;"></iconify-icon><span class="lb-boost-label">${isBoosted ? 'Undo Boost' : 'Boost'}</span><span class="dropdown-stat-count">${_standalone ? _standalone.dataset.reblogsCount : getCount(postBoostBtn, '.boost-count')}</span>`;
       boostItem.onclick = (e) => {
         e.stopPropagation();
         boostDropdown.classList.remove('show');
@@ -1147,7 +1143,7 @@ window.expandMedia = function expandMedia(mediaItem) {
         const quoteItem = document.createElement('button');
         quoteItem.className = 'lightbox-boost-item boost-dropdown-item';
         quoteItem.dataset.action = 'quote';
-        quoteItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/><path d="M17 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1 0 2.5 0 2.5-2 4.5l-.5.5z"/></svg><span>Quote</span><span class="dropdown-stat-count">${_standalone ? _standalone.dataset.quotesCount : getCount(postBoostBtn, '.quote-count')}</span>`;
+        quoteItem.innerHTML = `<iconify-icon icon="garden:quote-fill-12" style="font-size: 14px;"></iconify-icon><span>Quote</span><span class="dropdown-stat-count">${_standalone ? _standalone.dataset.quotesCount : getCount(postBoostBtn, '.quote-count')}</span>`;
         quoteItem.onclick = (e) => {
           e.stopPropagation();
           boostDropdown.classList.remove('show');
@@ -1171,7 +1167,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     lbFavBtn.title = isFavourited ? 'Unfavorite' : 'Favorite';
     lbFavBtn.dataset.postId = postId;
     lbFavBtn.dataset.favourited = isFavourited ? 'true' : 'false';
-    lbFavBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="${isFavourited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" style="color:var(--fav)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg><span class="post-fav-count">${favCount}</span>`;
+    lbFavBtn.innerHTML = `<iconify-icon icon="ph:star-bold" style="font-size: 15px;"></iconify-icon><span class="post-fav-count">${favCount}</span>`;
     lbFavBtn.onclick = (e) => {
       e.stopPropagation();
       window.handleFavoriteToggle(lbFavBtn);
@@ -1187,7 +1183,7 @@ window.expandMedia = function expandMedia(mediaItem) {
       const openBtn = document.createElement('button');
       openBtn.className = 'lightbox-action-btn lightbox-action-open';
       openBtn.title = 'Open post';
-      openBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
+      openBtn.innerHTML = `<iconify-icon icon="ph:link-bold" style="font-size: 14px;"></iconify-icon>`;
       openBtn.onclick = (e) => { e.stopPropagation(); close(); if (window.openThreadDrawer) window.openThreadDrawer(postId); };
       actionBar.appendChild(openBtn);
     }

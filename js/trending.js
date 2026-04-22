@@ -226,10 +226,7 @@ export async function loadTrendingPeople(append = false) {
       const botBadge = acct.bot
         ? `<span class="profile-badges">
             <span class="profile-badge profile-badge-bot" title="Bot">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2a2 2 0 0 1 2 2v2h4a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4V4a2 2 0 0 1 2-2z"/>
-                <path d="M9 13v.01"/><path d="M15 13v.01"/><path d="M10 17h4"/>
-              </svg> 
+              <iconify-icon icon="ph:robot-bold" style="font-size: 12px;"></iconify-icon> 
               Bot
             </span>
           </span>`
@@ -345,7 +342,7 @@ export async function loadTrendingNews(append = false) {
       const provider = link.provider_name || link.author_name || (link.url ? new URL(link.url).hostname.replace('www.', '') : '');
       const thumb = link.image
         ? `<div class="trending-link-thumb"><img src="${escapeHTML(link.image)}" alt="" loading="lazy" /></div>`
-        : `<div class="trending-link-thumb"><div class="trending-link-thumb-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/></svg></div></div>`;
+        : `<div class="trending-link-thumb"><div class="trending-link-thumb-placeholder"><iconify-icon icon="ph:newspaper-bold" style="font-size: 20px;"></iconify-icon></div></div>`;
 
       return `
         <a class="trending-link-card" href="${escapeHTML(link.url)}" target="_blank" rel="noopener noreferrer">
@@ -531,11 +528,11 @@ export async function loadTrendingTab() {
   updateTabLabel('explore');
   window.updateSidebarNav?.();
 
-  if (activeSubtab === 'posts' && !state.trendingPostsLoaded) loadTrendingPosts();
-  else if (activeSubtab === 'hashtags' && !state.trendingHashtagsLoaded) loadTrendingHashtags();
-  else if (activeSubtab === 'people' && !state.trendingPeopleLoaded) loadTrendingPeople();
-  else if (activeSubtab === 'news' && !state.trendingNewsLoaded) loadTrendingNews();
-  else if (activeSubtab === 'following' && !state.trendingFollowingLoaded) loadTrendingFollowing();
+  if (activeSubtab === 'posts' && !state.trendingPostsLoaded) await loadTrendingPosts();
+  else if (activeSubtab === 'hashtags' && !state.trendingHashtagsLoaded) await loadTrendingHashtags();
+  else if (activeSubtab === 'people' && !state.trendingPeopleLoaded) await loadTrendingPeople();
+  else if (activeSubtab === 'news' && !state.trendingNewsLoaded) await loadTrendingNews();
+  else if (activeSubtab === 'following' && !state.trendingFollowingLoaded) await loadTrendingFollowing();
 
   // Re-attach infinite scroll observer for the newly active panel if it has a load-more button
   import('./feed.js').then(({ checkInfiniteScroll }) => checkInfiniteScroll());
