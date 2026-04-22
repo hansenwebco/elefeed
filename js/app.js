@@ -1676,6 +1676,18 @@ if (_confirmInteractionsToggle) {
   });
 }
 
+// Giphy Integration toggle
+const _giphyToggle = $('settings-giphy-toggle');
+if (_giphyToggle) {
+  _giphyToggle.checked = state.giphyEnabled;
+  _giphyToggle.addEventListener('change', () => {
+    state.giphyEnabled = _giphyToggle.checked;
+    store.set('pref_giphy_enabled', state.giphyEnabled ? 'true' : 'false');
+    import('./giphy.js').then(m => m.updateGiphyVisibility());
+    import('./ui.js').then(m => m.showToast(state.giphyEnabled ? 'Giphy integration enabled' : 'Giphy integration disabled'));
+  });
+}
+
 // Sidebar Navigation
 function updateSidebarNav() {
   const nav = $('sidebar-nav');

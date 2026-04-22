@@ -193,6 +193,7 @@
   <link rel="stylesheet" href="css/search.css" />
   <link rel="stylesheet" href="css/hashtags.css" />
   <link rel="stylesheet" href="css/filters.css" />
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 </head>
 
 <body>
@@ -410,7 +411,11 @@
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </button>
+            <button class="compose-tool-btn" id="compose-giphy-btn-sidebar" title="Add GIF">
+              <iconify-icon icon="fluent:gif-24-filled" style="font-size: 24px;"></iconify-icon>
+            </button>
             <input type="file" id="compose-media-input-sidebar" accept="image/*,video/*" multiple style="display:none;" />
+
           </div>
           <div class="compose-toolbar-right" style="display:flex; gap:8px; align-items:center; margin-left:auto;">
             <button class="compose-post-btn" id="compose-post-btn-sidebar">Post</button>
@@ -1018,7 +1023,11 @@
                   <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
               </button>
+              <button class="compose-tool-btn" id="compose-giphy-btn" title="Add GIF">
+                <iconify-icon icon="fluent:gif-24-filled" style="font-size: 26px;"></iconify-icon>
+              </button>
               <input type="file" id="compose-media-input" accept="image/*,video/*" multiple style="display:none;" />
+
             </div>
             <div class="compose-toolbar-right" style="display:flex; gap:8px; align-items:center; margin-left:auto;">
               <button class="compose-post-btn" id="compose-post-btn">Post</button>
@@ -1266,6 +1275,20 @@
   <div class="hashtag-suggestions" id="hashtag-suggestions"></div>
   <div class="emoji-suggestions" id="emoji-suggestions"></div>
 
+  <!-- GIPHY Picker -->
+  <div class="giphy-picker" id="giphy-picker">
+    <div class="giphy-picker-header">
+      <input type="text" id="giphy-search" class="giphy-search-input" placeholder="Search GIPHY..." autocomplete="off">
+    </div>
+    <div class="giphy-picker-body" id="giphy-picker-body">
+      <!-- GIFs populated here -->
+    </div>
+    <div class="giphy-attribution">
+      Powered by <img src="https://giphy.com/static/img/poweredby.png" alt="GIPHY">
+    </div>
+  </div>
+
+
   <!-- Settings Drawer -->
   <div class="settings-backdrop" id="settings-backdrop"></div>
   <div class="settings-drawer" id="settings-drawer">
@@ -1459,6 +1482,18 @@
               </div>
               <label class="settings-toggle" style="flex-shrink:0;" title="Show menu under post box">
                 <input type="checkbox" id="settings-desktop-menu-toggle" />
+                <span class="settings-toggle-track"></span>
+              </label>
+            </div>
+            
+            <!-- Giphy Integration -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Giphy integration</span>
+                <span style="font-size:11px; color:var(--text-muted);">Show the GIPHY search button in the post composer.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Enable Giphy integration">
+                <input type="checkbox" id="settings-giphy-toggle" checked />
                 <span class="settings-toggle-track"></span>
               </label>
             </div>
@@ -2041,6 +2076,8 @@
       document.body.classList.add('app-ready');
     }, 2500);
   </script>
+  <script type="module" src="js/giphy.js"></script>
 </body>
+
 
 </html>
