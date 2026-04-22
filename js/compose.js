@@ -35,7 +35,7 @@ const EXTRA_ICONS = {
    ALT-TEXT MODAL
    ══════════════════════════════════════════════════════════════════════ */
 
-function openAltModal(url, index, suffix, currentDesc) {
+export function openAltModal(url, index, suffix, currentDesc) {
   composeState.activeAltIndex = index;
   composeState.activeAltSuffix = suffix;
   $('alt-modal-img').src = url;
