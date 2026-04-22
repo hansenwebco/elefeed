@@ -35,6 +35,17 @@ export function initGiphy() {
       picker.style.display = 'none';
     }
   });
+
+  updateGiphyVisibility();
+}
+
+export function updateGiphyVisibility() {
+  const btn = $('compose-giphy-btn');
+  const sidebarBtn = $('compose-giphy-btn-sidebar');
+  const display = state.giphyEnabled ? 'flex' : 'none';
+  
+  if (btn) btn.style.display = display;
+  if (sidebarBtn) sidebarBtn.style.display = display;
 }
 
 async function openGiphyPicker(suffix) {

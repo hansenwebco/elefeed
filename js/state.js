@@ -100,6 +100,7 @@ export const state = {
   preferredLanguage: store.get('pref_feed_lang') || 'all',
   sidebarExpanded: store.get('pref_sidebar_expanded') !== 'false' && window.innerHeight >= 800,
   bookmarksActive: false,
+  giphyEnabled: store.get('pref_giphy_enabled') !== 'false',
   
   /* Filters */
   filters: [],
