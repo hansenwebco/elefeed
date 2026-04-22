@@ -750,13 +750,13 @@ export async function handleNotifyToggle(btn) {
   const willNotify = !isNotifying;
 
   btn.disabled = true;
-  const svg = btn.querySelector('svg');
-
+  const icon = btn.querySelector('svg, iconify-icon');
+  
   btn.dataset.notifying = willNotify ? 'true' : 'false';
   btn.classList.toggle('notifying', willNotify);
   btn.title = willNotify ? 'Stop post notifications' : 'Get notified about posts';
-  if (svg) {
-    svg.setAttribute('icon', willNotify ? 'ph:bell-fill' : 'ph:bell-bold');
+  if (icon) {
+    icon.setAttribute('icon', willNotify ? 'ph:bell-fill' : 'ph:bell-bold');
   }
 
   btn.classList.add('ringing');
@@ -1004,7 +1004,7 @@ export async function handleFavoriteToggle(btn) {
   const isFavourited = btn.dataset.favourited === 'true';
   const willBeFavourited = !isFavourited;
   const originalFavourited = isFavourited;
-  const svg = btn.querySelector('svg');
+  const icon = btn.querySelector('svg, iconify-icon');
   const countSpan = btn.querySelector('.post-fav-count');
   const originalCount = countSpan ? parseInt(countSpan.textContent) || 0 : 0;
 
@@ -1054,13 +1054,17 @@ export async function handleFavoriteToggle(btn) {
   btn.dataset.favourited = willBeFavourited ? 'true' : 'false';
   btn.classList.toggle('favourited', willBeFavourited);
   btn.title = willBeFavourited ? 'Unfavorite' : 'Favorite';
-  if (svg) {
-    svg.setAttribute('fill', 'currentColor');
-    if (!willBeFavourited) {
-      setTimeout(() => {
-        btn.classList.add('unfavorite-fade');
-        setTimeout(() => { svg.setAttribute('fill', 'none'); btn.classList.remove('unfavorite-fade'); }, 300);
-      }, 500);
+  if (icon) {
+    if (icon.tagName.toLowerCase() === 'iconify-icon') {
+      icon.setAttribute('icon', willBeFavourited ? 'ph:star-fill' : 'ph:star-bold');
+    } else {
+      icon.setAttribute('fill', 'currentColor');
+      if (!willBeFavourited) {
+        setTimeout(() => {
+          btn.classList.add('unfavorite-fade');
+          setTimeout(() => { icon.setAttribute('fill', 'none'); btn.classList.remove('unfavorite-fade'); }, 300);
+        }, 500);
+      }
     }
   }
   if (countSpan) countSpan.textContent = willBeFavourited ? originalCount + 1 : Math.max(0, originalCount - 1);
@@ -1095,14 +1099,20 @@ export async function handleBookmarkToggle(btn) {
   const postId = btn.dataset.postId;
   const isBookmarked = btn.dataset.bookmarked === 'true';
   const willBeBookmarked = !isBookmarked;
-  const svg = btn.querySelector('svg');
+  const icon = btn.querySelector('svg, iconify-icon');
 
   btn.disabled = true;
 
   btn.dataset.bookmarked = willBeBookmarked ? 'true' : 'false';
   btn.classList.toggle('bookmarked', willBeBookmarked);
   btn.title = willBeBookmarked ? 'Remove bookmark' : 'Bookmark';
-  if (svg) svg.setAttribute('fill', willBeBookmarked ? 'currentColor' : 'none');
+  if (icon) {
+    if (icon.tagName.toLowerCase() === 'iconify-icon') {
+      icon.setAttribute('icon', willBeBookmarked ? 'ph:bookmark-simple-fill' : 'ph:bookmark-simple-bold');
+    } else {
+      icon.setAttribute('fill', willBeBookmarked ? 'currentColor' : 'none');
+    }
+  }
   if (willBeBookmarked) { btn.classList.add('bookmarking'); setTimeout(() => btn.classList.remove('bookmarking'), 400); }
 
   try {
@@ -1120,7 +1130,13 @@ export async function handleBookmarkToggle(btn) {
     btn.dataset.bookmarked = isBookmarked ? 'true' : 'false';
     btn.classList.toggle('bookmarked', isBookmarked);
     btn.title = isBookmarked ? 'Remove bookmark' : 'Bookmark';
-    if (svg) svg.setAttribute('fill', isBookmarked ? 'currentColor' : 'none');
+    if (icon) {
+      if (icon.tagName.toLowerCase() === 'iconify-icon') {
+        icon.setAttribute('icon', isBookmarked ? 'ph:bookmark-simple-fill' : 'ph:bookmark-simple-bold');
+      } else {
+        icon.setAttribute('fill', isBookmarked ? 'currentColor' : 'none');
+      }
+    }
     showToast('Failed to bookmark: ' + err.message);
   } finally {
     btn.disabled = false;
