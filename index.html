@@ -417,7 +417,7 @@
           </div>
         </div>
       </div>
-      
+
       <nav class="sidebar-nav" id="sidebar-nav" style="display:none;"></nav>
 
       <div class="sidebar-footer">
@@ -850,7 +850,7 @@
       </main>
     </div>
     <!-- end main-wrapper -->
-    
+
     <aside class="right-sidebar" id="right-sidebar" style="display:none;">
       <nav class="sidebar-nav" id="sidebar-nav"></nav>
     </aside>
@@ -1102,6 +1102,15 @@
           Posts
         </button>
       </div>
+      <div class="search-drawer-options">
+        <label class="search-option-toggle">
+          <div class="settings-toggle">
+            <input type="checkbox" id="search-following-only" />
+            <span class="settings-toggle-track"></span>
+          </div>
+          <span class="search-option-label">Only from people I follow</span>
+        </label>
+      </div>
     </div>
     <div class="search-drawer-body">
       <div id="search-results"></div>
@@ -1176,14 +1185,19 @@
     </div>
     <div class="manage-hashtag-drawer-inner" id="manage-filters-body">
       <div style="padding:16px; border-bottom:1px solid var(--border);">
-         <p style="font-size:12px; color:var(--text-muted); margin:0;">Server-side filters allow you to hide or warn content based on keywords across all your Mastodon apps.</p>
+        <p style="font-size:12px; color:var(--text-muted); margin:0;">Server-side filters allow you to hide or warn content based on keywords across all your Mastodon apps.</p>
       </div>
       <div id="filters-list-container" style="padding:16px;">
-        <div class="thread-status"><div class="spinner"></div></div>
+        <div class="thread-status">
+          <div class="spinner"></div>
+        </div>
       </div>
       <div style="padding:16px; border-top:1px solid var(--border); margin-top:auto;">
         <button class="hashtag-follow-btn-standalone" id="add-filter-btn" style="width:100%; justify-content:center; gap:8px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
           Create New Filter
         </button>
       </div>
@@ -1436,7 +1450,7 @@
                 <span class="settings-toggle-track"></span>
               </label>
             </div>
-            
+
             <!-- Desktop Post Menu -->
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <div style="display:flex; flex-direction:column; gap:2px;">
@@ -1653,120 +1667,120 @@
 
           <div id="settings-web-push-options" style="display:flex; flex-direction:column; gap:16px; margin-top:16px;">
 
-          <!-- Background notifications toggle -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Background notifications</span>
-              <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Receive alerts even when Elefeed isn't open.<br>Requires the app to be installed (Add to Home Screen on iOS).</span>
-            </div>
-            <label class="settings-toggle" style="flex-shrink:0;" title="Enable background notifications">
-              <input type="checkbox" id="settings-bg-notif-toggle" />
-              <span class="settings-toggle-track"></span>
-            </label>
-          </div>
-
-          <!-- Poll interval -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Check interval</span>
-              <span style="font-size:11px; color:var(--text-muted);">How often to check for new notifications in the background.</span>
-            </div>
-            <select id="settings-notif-interval" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); cursor:pointer; outline:none; min-width:90px;">
-              <option value="30000">30 sec</option>
-              <option value="60000">1 min</option>
-              <option value="120000">2 min</option>
-              <option value="300000">5 min</option>
-              <option value="600000" selected>10 min</option>
-              <option value="900000">15 min</option>
-              <option value="1800000">30 min</option>
-            </select>
-          </div>
-
-          <!-- Alert types -->
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <span style="font-size:12px; color:var(--text); font-weight:500;">Alert types</span>
-            <span style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Choose which events trigger a background push notification.</span>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px;">
-              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                <input type="checkbox" id="settings-alert-mention" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Mentions
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                <input type="checkbox" id="settings-alert-follow" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follows
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                <input type="checkbox" id="settings-alert-reblog" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Boosts
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                <input type="checkbox" id="settings-alert-favourite" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Favorites
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                <input type="checkbox" id="settings-alert-follow-request" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follow requests
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                <input type="checkbox" id="settings-alert-poll" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Polls ended
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                <input type="checkbox" id="settings-alert-status" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Posts (followed)
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                <input type="checkbox" id="settings-alert-update" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Edits
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Debug Panel (developer only - shown via JS) -->
-    <div id="settings-debug-section" style="display:none; padding:16px; border-top:1px solid var(--border);">
-      <button id="settings-debug-toggle" style="width:100%; border:none; background:none; padding:0; margin:0; display:flex; align-items:center; justify-content:space-between; cursor:pointer; outline:none;" aria-expanded="false" aria-controls="settings-debug-content">
-        <h4 style="font-size:11px; text-transform:uppercase; color:#f59e0b; letter-spacing:0.08em; font-family:var(--font-mono); display:flex; align-items:center; gap:6px; margin:0;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          Developer Debug
-        </h4>
-        <svg class="debug-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-dim); transition:transform 0.2s;">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
-
-      <div id="settings-debug-content" style="display:none; flex-direction:column; gap:10px; margin-top:16px;">
-        <!-- Feature Flags -->
-        <div>
-          <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.08em; font-family:var(--font-mono);">Feature Flags</h5>
-          <div style="display:flex; flex-direction:column; gap:8px;">
+            <!-- Background notifications toggle -->
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">From Following digest</span>
-                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a ranked feed of top posts from people you follow in Explore.</span>
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Background notifications</span>
+                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Receive alerts even when Elefeed isn't open.<br>Requires the app to be installed (Add to Home Screen on iOS).</span>
               </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Enable From Following digest">
-                <input type="checkbox" id="debug-following-feed-toggle" />
+              <label class="settings-toggle" style="flex-shrink:0;" title="Enable background notifications">
+                <input type="checkbox" id="settings-bg-notif-toggle" />
                 <span class="settings-toggle-track"></span>
               </label>
             </div>
-          </div>
-        </div>
 
-        <!-- Notification Testing -->
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin:0 0 0 0; letter-spacing:0.08em; font-family:var(--font-mono);">Notification Testing</h5>
-          <div id="debug-sub-status" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:10px; line-height:1.6; word-break:break-all;">
-            Click "Check Status" to inspect subscription…
-          </div>
-          <div style="display:flex; flex-wrap:wrap; gap:8px;">
-            <button id="debug-check-sub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔍 Check Status</button>
-            <button id="debug-register-push-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔄 Re-register Push</button>
-            <button id="debug-force-register-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid #f59e0b44; border-radius:6px; color:#f59e0b; font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">⚡ Force Re-register</button>
-            <button id="debug-test-notif-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔔 Test Notification</button>
-            <button id="debug-unsub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:var(--danger); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🗑 Unsubscribe</button>
+            <!-- Poll interval -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Check interval</span>
+                <span style="font-size:11px; color:var(--text-muted);">How often to check for new notifications in the background.</span>
+              </div>
+              <select id="settings-notif-interval" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); cursor:pointer; outline:none; min-width:90px;">
+                <option value="30000">30 sec</option>
+                <option value="60000">1 min</option>
+                <option value="120000">2 min</option>
+                <option value="300000">5 min</option>
+                <option value="600000" selected>10 min</option>
+                <option value="900000">15 min</option>
+                <option value="1800000">30 min</option>
+              </select>
+            </div>
+
+            <!-- Alert types -->
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <span style="font-size:12px; color:var(--text); font-weight:500;">Alert types</span>
+              <span style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Choose which events trigger a background push notification.</span>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                  <input type="checkbox" id="settings-alert-mention" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Mentions
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                  <input type="checkbox" id="settings-alert-follow" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follows
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                  <input type="checkbox" id="settings-alert-reblog" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Boosts
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                  <input type="checkbox" id="settings-alert-favourite" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Favorites
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                  <input type="checkbox" id="settings-alert-follow-request" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follow requests
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                  <input type="checkbox" id="settings-alert-poll" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Polls ended
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                  <input type="checkbox" id="settings-alert-status" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Posts (followed)
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                  <input type="checkbox" id="settings-alert-update" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Edits
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- Debug Panel (developer only - shown via JS) -->
+      <div id="settings-debug-section" style="display:none; padding:16px; border-top:1px solid var(--border);">
+        <button id="settings-debug-toggle" style="width:100%; border:none; background:none; padding:0; margin:0; display:flex; align-items:center; justify-content:space-between; cursor:pointer; outline:none;" aria-expanded="false" aria-controls="settings-debug-content">
+          <h4 style="font-size:11px; text-transform:uppercase; color:#f59e0b; letter-spacing:0.08em; font-family:var(--font-mono); display:flex; align-items:center; gap:6px; margin:0;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            Developer Debug
+          </h4>
+          <svg class="debug-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-dim); transition:transform 0.2s;">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <div id="settings-debug-content" style="display:none; flex-direction:column; gap:10px; margin-top:16px;">
+          <!-- Feature Flags -->
+          <div>
+            <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.08em; font-family:var(--font-mono);">Feature Flags</h5>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">From Following digest</span>
+                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a ranked feed of top posts from people you follow in Explore.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Enable From Following digest">
+                  <input type="checkbox" id="debug-following-feed-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notification Testing -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin:0 0 0 0; letter-spacing:0.08em; font-family:var(--font-mono);">Notification Testing</h5>
+            <div id="debug-sub-status" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:10px; line-height:1.6; word-break:break-all;">
+              Click "Check Status" to inspect subscription…
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <button id="debug-check-sub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔍 Check Status</button>
+              <button id="debug-register-push-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔄 Re-register Push</button>
+              <button id="debug-force-register-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid #f59e0b44; border-radius:6px; color:#f59e0b; font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">⚡ Force Re-register</button>
+              <button id="debug-test-notif-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔔 Test Notification</button>
+              <button id="debug-unsub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:var(--danger); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🗑 Unsubscribe</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
