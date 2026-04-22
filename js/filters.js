@@ -127,10 +127,10 @@ function renderFiltersList() {
         </div>
         <div style="display:flex; gap:4px; flex-shrink:0;">
           <button class="icon-btn filter-edit-btn" title="Edit Filter" onclick="window.handleEditFilter('${filter.id}')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <iconify-icon icon="ph:pencil-simple-bold" style="font-size: 14px;"></iconify-icon>
           </button>
           <button class="icon-btn filter-delete-btn" title="Delete Filter" style="color:var(--danger);" onclick="window.handleDeleteFilter('${filter.id}')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            <iconify-icon icon="ph:trash-bold" style="font-size: 14px;"></iconify-icon>
           </button>
         </div>
       </div>
@@ -346,12 +346,12 @@ function renderFilterKeywords(container, filter) {
       <div class="filter-keyword-pill" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:12px; display:flex; align-items:center; gap:6px;">
         <span>${escapeHTML(kw.keyword)}</span>
         <button class="filter-kw-remove" style="background:none; border:none; color:var(--text-dim); cursor:pointer; padding:2px; display:flex; align-items:center;" onclick="window.handleRemoveKeyword('${kw.id}', '${filter.id}')">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <iconify-icon icon="ph:x-bold" style="font-size: 10px;"></iconify-icon>
         </button>
       </div>
     `).join('')}
     <button class="filter-keyword-add-pill" style="background:none; border:1px dashed var(--border); border-radius:6px; padding:4px 8px; font-size:12px; color:var(--accent); cursor:pointer; display:flex; align-items:center; gap:4px;" onclick="window.handleAddKeywordPrompt('${filter.id}')">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      <iconify-icon icon="ph:plus-bold" style="font-size: 10px;"></iconify-icon>
       Add Keyword
     </button>
   `;

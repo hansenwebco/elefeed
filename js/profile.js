@@ -132,7 +132,7 @@ function renderMediaItem(status) {
       data-can-quote="${(!s.quote_approval || s.quote_approval.current_user !== 'denied') && s.visibility !== 'private' && s.visibility !== 'direct' ? 'true' : 'false'}"
       onclick="expandMedia(this)">
       <img src="${thumb}" alt="" loading="lazy"/>
-      ${isVideo ? '<div class="profile-media-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg></div>' : ''}
+      ${isVideo ? '<div class="profile-media-play"><iconify-icon icon="ph:play-fill" style="font-size: 18px;"></iconify-icon></div>' : ''}
     </div>`;
   }).join('');
 }
@@ -340,13 +340,13 @@ export function openProfileDrawer(accountId, server) {
           data-account-id="${accountId}" data-notifying="${isNotifying ? 'true' : 'false'}"
           title="${isNotifying ? 'Stop post notifications' : 'Get notified about posts'}"
           style="${isFollowing ? '' : 'display: none;'}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="${isNotifying ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>`
+          <iconify-icon icon="ph:bell-bold" style="font-size: 15px;"></iconify-icon></button>`
       : '';
 
     const moreMenu = !isSelf
       ? `<div class="profile-more-menu-wrapper">
           <button class="profile-more-menu-btn" data-account-id="${accountId}" title="More options">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            <iconify-icon icon="ph:dots-three-bold" style="font-size: 18px;"></iconify-icon>
           </button>
           <div class="profile-more-menu" data-account-id="${accountId}">
             <button class="profile-mute-btn ${isMuted ? 'muted' : ''}"
@@ -370,7 +370,7 @@ export function openProfileDrawer(accountId, server) {
 
     const movedBanner = account.moved ? `
       <div class="profile-moved-banner">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        <iconify-icon icon="ph:paper-plane-tilt-bold" style="font-size: 20px;"></iconify-icon>
         <div>
           <div class="moved-title">This account has moved</div>
           <div class="moved-text">Its new profile is <strong>@${escapeHTML(account.moved.acct)}</strong></div>
@@ -407,7 +407,7 @@ export function openProfileDrawer(accountId, server) {
       pinnedHtml = `
         <div class="pinned-section">
           <div class="pinned-header"><div class="pinned-header-label">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/></svg>
+            <iconify-icon icon="ph:push-pin-bold" style="font-size: 12px;"></iconify-icon>
             pinned
           </div></div>
           <div class="pinned-single">${renderPost(pinned[0], { context: 'account' })}</div>
@@ -421,16 +421,16 @@ export function openProfileDrawer(accountId, server) {
         <div class="pinned-section">
           <div class="pinned-header">
             <div class="pinned-header-label">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/></svg>
+              <iconify-icon icon="ph:push-pin-bold" style="font-size: 12px;"></iconify-icon>
               pinned
             </div>
             <div class="pinned-header-nav">
               <button class="pinned-nav prev" aria-label="Previous pinned post">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                <iconify-icon icon="ph:caret-left-bold" style="font-size: 10px;"></iconify-icon>
               </button>
               <span class="pinned-counter">1 / ${pinned.length}</span>
               <button class="pinned-nav next" aria-label="Next pinned post">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                <iconify-icon icon="ph:caret-right-bold" style="font-size: 10px;"></iconify-icon>
               </button>
             </div>
           </div>
@@ -459,8 +459,8 @@ export function openProfileDrawer(accountId, server) {
             <div class="profile-display-name">
               ${renderCustomEmojis(account.display_name || account.username, account.emojis)}
               ${(account.bot || account.locked) ? `<span class="profile-badges">
-                ${account.bot ? `<span class="profile-badge profile-badge-bot" title="Bot"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2v2h4a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4V4a2 2 0 0 1 2-2z"/><path d="M9 13v.01"/><path d="M15 13v.01"/><path d="M10 17h4"/></svg> Bot</span>` : ''}
-                ${account.locked ? `<span class="profile-badge profile-badge-locked" title="Locked (requires approval to follow)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>` : ''}
+                ${account.bot ? `<span class="profile-badge profile-badge-bot" title="Bot"><iconify-icon icon="ph:robot-bold" style="font-size: 12px;"></iconify-icon> Bot</span>` : ''}
+                ${account.locked ? `<span class="profile-badge profile-badge-locked" title="Locked (requires approval to follow)"><iconify-icon icon="ph:lock-bold" style="font-size: 12px;"></iconify-icon></span>` : ''}
               </span>` : ''}
             </div>
             <div class="profile-acct">@${escapeHTML(account.acct)}</div>
@@ -479,16 +479,16 @@ export function openProfileDrawer(accountId, server) {
       return `<div class="profile-field ${isVerified ? 'verified' : ''}">
                 <span class="profile-field-name">${escapeHTML(f.name)}</span>
                 <div class="profile-field-value">${sanitizeHTML(f.value)}</div>
-                ${isVerified ? '<svg class="verified-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' : ''}
+                ${isVerified ? '<iconify-icon icon="ph:check-circle-fill" class="verified-icon" style="font-size: 12px;"></iconify-icon>' : ''}
               </div>`;
     }).join('')}
           </div>` : ''}
         <div class="profile-joined">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <iconify-icon icon="ph:calendar-blank-bold" style="font-size: 12px;"></iconify-icon>
           Joined ${new Date(account.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
         <a class="profile-open-link" href="${escapeHTML(account.url)}" target="_blank" rel="noopener">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          <iconify-icon icon="ph:link-bold" style="font-size: 11px;"></iconify-icon>
           View on ${account.url ? new URL(account.url).hostname : srv}
         </a>
       </div>
@@ -755,7 +755,9 @@ export async function handleNotifyToggle(btn) {
   btn.dataset.notifying = willNotify ? 'true' : 'false';
   btn.classList.toggle('notifying', willNotify);
   btn.title = willNotify ? 'Stop post notifications' : 'Get notified about posts';
-  if (svg) svg.setAttribute('fill', willNotify ? 'currentColor' : 'none');
+  if (svg) {
+    svg.setAttribute('icon', willNotify ? 'ph:bell-fill' : 'ph:bell-bold');
+  }
 
   btn.classList.add('ringing');
   setTimeout(() => btn.classList.remove('ringing'), 600);
@@ -775,14 +777,18 @@ export async function handleNotifyToggle(btn) {
     btn.dataset.notifying = nowNotifying ? 'true' : 'false';
     btn.classList.toggle('notifying', nowNotifying);
     btn.title = nowNotifying ? 'Stop post notifications' : 'Get notified about posts';
-    if (svg) svg.setAttribute('fill', nowNotifying ? 'currentColor' : 'none');
+    if (svg) {
+      svg.setAttribute('icon', nowNotifying ? 'ph:bell-fill' : 'ph:bell-bold');
+    }
 
     showToast(nowNotifying ? 'Notifications on for this user' : 'Notifications off for this user');
   } catch (err) {
     btn.dataset.notifying = isNotifying ? 'true' : 'false';
     btn.classList.toggle('notifying', isNotifying);
     btn.title = isNotifying ? 'Stop post notifications' : 'Get notified about posts';
-    if (svg) svg.setAttribute('fill', isNotifying ? 'currentColor' : 'none');
+    if (svg) {
+      svg.setAttribute('icon', isNotifying ? 'ph:bell-fill' : 'ph:bell-bold');
+    }
     showToast('Failed: ' + err.message);
   } finally {
     btn.disabled = false;

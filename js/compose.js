@@ -14,21 +14,21 @@ import { loadFeedTab } from './feed.js';
 import { updateCurrentThread } from './thread.js';
 import { openEmojiPicker, closeEmojiPicker, initEmojiPicker, initEmojiAutocomplete } from './emoji.js';
 
-const ICON_REPLY = '<polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" />';
-const ICON_QUOTE = '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v3c0 1.25.75 2 2 2h3c0 4-2 6-3 6l1 3z" fill="currentColor" stroke="none"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v3c0 1.25.75 2 2 2h3c0 4-2 6-3 6l1 3z" fill="currentColor" stroke="none"></path>';
+const ICON_REPLY = '<iconify-icon icon="ph:arrow-bend-up-left-bold" style="font-size: 14px;"></iconify-icon>';
+const ICON_QUOTE = '<iconify-icon icon="garden:quote-fill-12" style="font-size: 14px;"></iconify-icon>';
 
 const VIS_ICONS = {
-  'public': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
-  'unlisted': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`,
-  'private': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
-  'direct': `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`
+  'public': '<iconify-icon icon="ph:globe-bold" style="font-size: 14px;"></iconify-icon>',
+  'unlisted': '<iconify-icon icon="ph:moon-bold" style="font-size: 14px;"></iconify-icon>',
+  'private': '<iconify-icon icon="ph:lock-bold" style="font-size: 14px;"></iconify-icon>',
+  'direct': '<iconify-icon icon="ph:at-bold" style="font-size: 14px;"></iconify-icon>'
 };
 
 const EXTRA_ICONS = {
-  'quote_followers': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
-  'quote_nobody': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`,
-  'lang': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`,
-  'sensitive': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
+  'quote_followers': '<iconify-icon icon="ph:users-bold" style="font-size: 12px;"></iconify-icon>',
+  'quote_nobody': '<iconify-icon icon="ph:prohibit-bold" style="font-size: 12px;"></iconify-icon>',
+  'lang': '<iconify-icon icon="ph:globe-bold" style="font-size: 12px;"></iconify-icon>',
+  'sensitive': '<iconify-icon icon="ph:warning-bold" style="font-size: 12px;"></iconify-icon>'
 };
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -158,7 +158,7 @@ export function resetReplyState() {
       visBtn.title = "";
       visBtn.style.opacity = '1';
 
-      const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
+      const visLabels = { 'public': 'Public', 'unlisted': 'Quiet public', 'private': 'Followers', 'direct': 'Private mention' };
       const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
 
       const icon = $('compose-visibility-icon' + suffix);
@@ -226,7 +226,7 @@ export function refreshComposeDefaults() {
     visBtn.dataset.lang = defaultLang;
     visBtn.dataset.sensitive = defaultSensitive;
 
-    const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
+    const visLabels = { 'public': 'Public', 'unlisted': 'Quiet public', 'private': 'Followers', 'direct': 'Private mention' };
     const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
 
     const icon = $('compose-visibility-icon' + suffix);
@@ -261,17 +261,33 @@ window.openVisibilityModal = function (suffix) {
   composeState.activeVisibilitySuffix = suffix;
   const visBtn = $('compose-visibility-btn' + suffix);
   if (visBtn) {
-    $('modal-visibility-select').value = visBtn.dataset.visibility || 'public';
+    const currentVis = visBtn.dataset.visibility || 'public';
+    $('modal-visibility-select').value = currentVis;
     $('modal-quote-select').value = visBtn.dataset.quote || 'public';
     $('modal-lang-select').value = visBtn.dataset.lang || 'browser';
     $('modal-sensitive-toggle').checked = visBtn.dataset.sensitive === 'true';
+
+    // Update custom UI
+    window.selectVisibilityOption(currentVis, true);
   }
   window.handleModalVisibilityChange(); // init disabled state
-  $('visibility-modal').style.display = 'flex';
+
+  // Open as a drawer
+  $('visibility-backdrop').classList.add('open');
+  $('visibility-modal').classList.add('open');
+};
+
+window.selectVisibilityOption = function (val, skipChangeHandler) {
+  $('modal-visibility-select').value = val;
+  document.querySelectorAll('.visibility-option-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.value === val);
+  });
+  if (!skipChangeHandler) window.handleModalVisibilityChange();
 };
 
 window.closeVisibilityModal = function () {
-  $('visibility-modal').style.display = 'none';
+  $('visibility-backdrop').classList.remove('open');
+  $('visibility-modal').classList.remove('open');
   composeState.activeVisibilitySuffix = '';
 };
 
@@ -288,7 +304,7 @@ window.saveVisibilityModal = function () {
     visBtn.dataset.lang = lang;
     visBtn.dataset.sensitive = sensitive ? 'true' : 'false';
 
-    const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
+    const visLabels = { 'public': 'Public', 'unlisted': 'Quiet public', 'private': 'Followers', 'direct': 'Private mention' };
     const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
     const iconNode = $('compose-visibility-icon' + suffix);
     const textNode = $('compose-visibility-text' + suffix);
@@ -323,6 +339,9 @@ window.handleModalVisibilityChange = function () {
     quote.disabled = true;
   } else {
     quote.disabled = false;
+    // Reset to user's preferred default when switching back to a visibility that allows quoting
+    const defaultQuote = store.get('pref_post_quote') || 'public';
+    quote.value = defaultQuote;
   }
 };
 
@@ -490,7 +509,7 @@ window.handleQuoteInit = async function (postId, acct, triggerEl) {
                   <span class="sp-card-title" style="font-size:12px;">Sensitive content</span>
                   <span class="sp-card-sub" style="font-size:10px;">Click to show</span>
                 </div>
-                <svg class="sp-icon sp-icon-eye" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <iconify-icon class="sp-icon sp-icon-eye" icon="ph:eye-bold" style="font-size: 10px;"></iconify-icon>
                 <span class="sp-revealed-label" style="font-size:10px;">hide</span>
               </button>` : '';
 
@@ -681,7 +700,7 @@ window.handleEditInit = async function (postId) {
       const vis = statusResponse.visibility || 'public';
       visBtn.dataset.visibility = vis;
 
-      const visLabels = { 'public': 'Public', 'unlisted': 'Unlisted', 'private': 'Followers', 'direct': 'Direct' };
+      const visLabels = { 'public': 'Public', 'unlisted': 'Quiet public', 'private': 'Followers', 'direct': 'Private mention' };
       const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
 
       const lang = statusResponse.language || 'browser';
@@ -763,7 +782,7 @@ window.handleEditInit = async function (postId) {
 
         const removeBtn = document.createElement('button');
         removeBtn.className = 'compose-media-remove';
-        removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        removeBtn.innerHTML = '<iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>';
         removeBtn.onclick = () => {
           const index = composeState[mediaUrlsKey].indexOf(m.url);
           if (index > -1) {
@@ -830,11 +849,7 @@ function showConfirmDialog({ title, message, confirmLabel, confirmClass = '' }) 
 
     dialog.innerHTML = `
       <div class="confirm-dialog-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
+        <iconify-icon icon="ph:warning-circle-bold" style="font-size: 24px;"></iconify-icon>
       </div>
       <div class="confirm-dialog-body">
         <div class="confirm-dialog-title">${title}</div>
@@ -1051,7 +1066,7 @@ window.handleDeleteRedraftInit = async function (postId, triggerEl) {
 
       const removeBtn = document.createElement('button');
       removeBtn.className = 'compose-media-remove';
-      removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      removeBtn.innerHTML = '<iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>';
       removeBtn.onclick = () => {
         const idx = composeState[mediaUrlsKey].indexOf(url);
         if (idx > -1) {
@@ -1609,7 +1624,7 @@ function wireMediaUpload(suffix) {
 
       const removeBtn = document.createElement('button');
       removeBtn.className = 'compose-media-remove';
-      removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      removeBtn.innerHTML = '<iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>';
       removeBtn.onclick = () => {
         const index = composeState[mediaUrlsKey].indexOf(url);
         if (index > -1) {

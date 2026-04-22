@@ -140,7 +140,8 @@
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-.sidebar-nav-item svg {
+.sidebar-nav-item svg,
+.sidebar-nav-item iconify-icon {
   color: var(--accent);
   opacity: 0.5;
   transition: all var(--trans);
@@ -171,12 +172,14 @@
   to { transform: scale(1); opacity: 1; }
 }
 
-.sidebar-nav-item:hover svg {
+.sidebar-nav-item:hover svg,
+.sidebar-nav-item:hover iconify-icon {
   opacity: 1;
   transform: translateY(-1px);
 }
 
-.sidebar-nav-item.active svg {
+.sidebar-nav-item.active svg,
+.sidebar-nav-item.active iconify-icon {
   opacity: 1;
 }
 
@@ -190,7 +193,8 @@
   border-color: color-mix(in srgb, var(--danger) 20%, transparent);
 }
 
-.sidebar-nav-item.danger svg {
+.sidebar-nav-item.danger svg,
+.sidebar-nav-item.danger iconify-icon {
   color: var(--danger);
 }
 
@@ -275,13 +279,15 @@
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-.sidebar-more-dropdown .sidebar-nav-item svg {
+.sidebar-more-dropdown .sidebar-nav-item svg,
+.sidebar-more-dropdown .sidebar-nav-item iconify-icon {
   color: var(--accent);
   opacity: 0.5;
   width: 18px;
 }
 
-.sidebar-more-dropdown .sidebar-nav-item:hover svg {
+.sidebar-more-dropdown .sidebar-nav-item:hover svg,
+.sidebar-more-dropdown .sidebar-nav-item:hover iconify-icon {
   color: var(--accent);
   opacity: 1;
 }

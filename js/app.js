@@ -1593,6 +1593,7 @@ function applyZenMode() {
     btn?.classList.remove('profile-dropdown-zen-active');
     if (toggle) toggle.checked = false;
   }
+  updateSidebarNav();
 }
 
 $('profile-zen-btn')?.addEventListener('click', () => {
@@ -1701,20 +1702,20 @@ function updateSidebarNav() {
   nav.style.display = 'flex';
 
   const primaryItems = [
-    { action: 'home', label: 'Home', icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>', active: state.activeTab === 'feed' && state.feedFilter === 'all' },
-    { action: 'following', label: 'Followed Profiles', icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />', active: state.activeTab === 'feed' && state.feedFilter === 'following' },
-    { action: 'followed-hashtags', label: 'Followed Hashtags', icon: '<line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line>', active: state.activeTab === 'feed' && state.feedFilter === 'hashtags' },
-    { action: 'trending', label: 'Trending', icon: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline>', active: state.activeTab === 'explore' && state.exploreSubtab === 'posts' },
-    { action: 'notifications', label: 'Notifications', icon: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>', active: state.notifDrawerOpen },
-    { action: 'search', label: 'Search', icon: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' }
+    { action: 'home', label: 'Home', icon: 'ph:house-bold', active: state.activeTab === 'feed' && state.feedFilter === 'all' },
+    { action: 'following', label: 'Followed Profiles', icon: 'ph:users-bold', active: state.activeTab === 'feed' && state.feedFilter === 'following' },
+    { action: 'followed-hashtags', label: 'Followed Hashtags', icon: 'ph:hash-bold', active: state.activeTab === 'feed' && state.feedFilter === 'hashtags' },
+    { action: 'trending', label: 'Trending', icon: 'ph:chart-line-up-bold', active: state.activeTab === 'explore' && state.exploreSubtab === 'posts' },
+    { action: 'notifications', label: 'Notifications', icon: 'ph:bell-bold', active: state.notifDrawerOpen },
+    { action: 'search', label: 'Search', icon: 'ph:magnifying-glass-bold' }
   ];
 
   const secondaryItems = [
-    { action: 'local', label: 'Local Feed', icon: '<path d="M1.5 8.5a13 13 0 0 1 21 0" /><path d="M5 12a10 10 0 0 1 14 0" /><path d="M8.5 15.5a7 7 0 0 1 7 0" /><circle cx="12" cy="19" r="1" fill="currentColor" />', active: state.activeTab === 'explore' && state.exploreSubtab === 'live' },
-    { action: 'federated', label: 'Federated Feed', icon: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>', active: state.activeTab === 'explore' && state.exploreSubtab === 'federated' },
-    { action: 'bookmarks', label: 'Bookmarks', icon: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>', active: state.bookmarksActive },
-    { action: 'hashtags', label: 'Manage Hashtags', icon: '<line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line>' },
-    { action: 'zen', label: 'Zen Mode', icon: '<circle cx="12" cy="12" r="3"></circle><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5 4.5 4.5 0 1 1 12 16.5"></path>' }
+    { action: 'local', label: 'Local Feed', icon: 'ph:broadcast-bold', active: state.activeTab === 'explore' && state.exploreSubtab === 'live' },
+    { action: 'federated', label: 'Federated Feed', icon: 'ph:globe-bold', active: state.activeTab === 'explore' && state.exploreSubtab === 'federated' },
+    { action: 'bookmarks', label: 'Bookmarks', icon: 'ph:bookmark-simple-bold', active: state.bookmarksActive },
+    { action: 'hashtags', label: 'Manage Hashtags', icon: 'ph:hash-bold' },
+    { action: 'zen', label: 'Zen Mode', icon: 'ri:flower-line', active: state.zenMode }
   ];
 
   const renderItem = (item) => {
@@ -1726,7 +1727,7 @@ function updateSidebarNav() {
 
     return `
       <button class="sidebar-nav-item${item.active ? ' active' : ''}" data-action="${item.action}">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
+        <iconify-icon icon="${item.icon}" style="font-size: 18px;"></iconify-icon>
         <span>${item.label}</span>
         ${badgeHtml}
       </button>
@@ -1782,7 +1783,7 @@ function updateSidebarNav() {
       html += `
         <div class="sidebar-more-wrapper">
           <button class="sidebar-nav-more-btn" id="sidebar-more-btn" title="More Actions" onclick="event.stopPropagation(); window.toggleSidebarMoreMenu(this)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            <iconify-icon icon="ph:dots-three-bold" style="font-size: 18px;"></iconify-icon>
           </button>
           <div class="sidebar-more-dropdown" id="sidebar-more-menu">
             ${overflowingSecondary.map(renderItem).join('')}
@@ -1870,7 +1871,7 @@ $('sidebar-nav')?.addEventListener('click', e => {
   } else if (action === 'zen') {
     state.zenMode = !state.zenMode;
     store.set('zen_mode', state.zenMode);
-    if (window.applyZenMode) applyZenMode();
+    applyZenMode();
     import('./ui.js').then(m => m.showToast(state.zenMode ? 'Zen Mode enabled' : 'Zen Mode disabled'));
     return;
   }
