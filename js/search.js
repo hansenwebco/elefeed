@@ -22,6 +22,7 @@ import { fetchRelationships } from './feed.js';
 let _debounceTimer = null;
 let _currentQuery = '';
 let _activeFilter = 'all'; // 'all' | 'accounts' | 'hashtags' | 'statuses'
+let _followingOnly = false;
 let _abortCtrl = null;
 
 // Pagination
@@ -85,7 +86,8 @@ async function performSearch(query, filter) {
   showLoading();
 
   const typeParam = filter === 'all' ? '' : `&type=${filter}`;
-  const url = `/api/v2/search?q=${encodeURIComponent(query)}&limit=${STATUS_PAGE}&resolve=true${typeParam}`;
+  const followingParam = _followingOnly ? '&following=true' : '';
+  const url = `/api/v2/search?q=${encodeURIComponent(query)}&limit=${STATUS_PAGE}&resolve=true&exclude_unreviewed=true${typeParam}${followingParam}`;
 
   try {
     const data = await apiGet(url, state.token, state.server, _abortCtrl.signal);
@@ -129,7 +131,8 @@ async function loadMoreResults(query, filter) {
       </div>`;
 
   const searchType = filter === 'all' ? 'statuses' : filter;
-  const url = `/api/v2/search?q=${encodeURIComponent(query)}&limit=${STATUS_PAGE}&offset=${_offset}&resolve=true&type=${searchType}`;
+  const followingParam = _followingOnly ? '&following=true' : '';
+  const url = `/api/v2/search?q=${encodeURIComponent(query)}&limit=${STATUS_PAGE}&offset=${_offset}&resolve=true&type=${searchType}&exclude_unreviewed=true${followingParam}`;
 
   try {
     const ctrl = new AbortController();
@@ -147,8 +150,8 @@ async function loadMoreResults(query, filter) {
       });
     }
 
-    _offset += newItems.length;
-    _hasMoreResults = newItems.length === STATUS_PAGE;
+    _offset += data[searchType === 'all' ? 'statuses' : searchType]?.length || 0;
+    _hasMoreResults = (data[searchType === 'all' ? 'statuses' : searchType]?.length || 0) === STATUS_PAGE;
 
     if (newItems.length > 0) {
       await fetchRelationships(newItems);
@@ -241,13 +244,13 @@ function renderResults(data, query, filter) {
 
   const { accounts = [], hashtags = [] } = data;
   let statuses = data.statuses || [];
-  
+
   const preferredLang = state.preferredLanguage || 'all';
   statuses = statuses.filter(s => {
     const postLang = (s.reblog || s).language || s.language;
     return matchesLanguage(postLang, preferredLang);
   });
-  
+
   const hasAny = accounts.length || statuses.length || hashtags.length;
 
   if (!hasAny) {
@@ -506,7 +509,7 @@ function buildStatusPreviewHTML(s) {
 
 function renderStatus(status) {
   const s = status.reblog || status;
-  
+
   // ── Filter Support ──
   const filterResults = status.filtered || [];
   let isFiltered = filterResults.length > 0;
@@ -660,6 +663,15 @@ export function initSearch() {
       if (_currentQuery) performSearch(_currentQuery, _activeFilter);
     });
   });
+
+  // Following toggle
+  const followingToggle = document.getElementById('search-following-only');
+  if (followingToggle) {
+    followingToggle.addEventListener('change', () => {
+      _followingOnly = followingToggle.checked;
+      if (_currentQuery) performSearch(_currentQuery, _activeFilter);
+    });
+  }
 
   // Delegation for search results interactions
   results.addEventListener('click', e => {
