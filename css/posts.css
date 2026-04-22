@@ -579,9 +579,11 @@
   align-items: center;
   justify-content: center;
   vertical-align: middle;
+  position: relative;
+  top: -1px;
   font-size: 13px;
-  line-height: 1;
-  margin: 2px 2px;
+  line-height: 1.2;
+  margin: 1px 2px;
   text-decoration: none;
   transition: all var(--trans);
   cursor: pointer;
