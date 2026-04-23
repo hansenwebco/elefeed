@@ -1222,6 +1222,11 @@
   color: var(--boost, #6e9ef5);
 }
 
+.lightbox-action-btn.boosted {
+  background: color-mix(in srgb, var(--boost, #6e9ef5) 12%, transparent);
+  border-color: color-mix(in srgb, var(--boost, #6e9ef5) 25%, transparent);
+}
+
 .lightbox-action-btn.lb-boost:hover svg,
 .lightbox-action-btn.boosted svg,
 .lightbox-action-btn.lb-boost:hover iconify-icon,
@@ -1252,6 +1257,8 @@
 
 .lightbox-action-btn.favourited {
   color: var(--fav, #f4b942);
+  background: color-mix(in srgb, var(--fav, #f4b942) 12%, transparent);
+  border-color: color-mix(in srgb, var(--fav, #f4b942) 25%, transparent);
 }
 
 .lightbox-action-btn.favourited svg,
@@ -1750,6 +1757,11 @@ body.hide-cards-enabled .post-card {
   color: var(--boost);
 }
 
+.post-boost-btn.boosted {
+  background: color-mix(in srgb, var(--boost) 8%, transparent);
+  border-color: color-mix(in srgb, var(--boost) 20%, transparent);
+}
+
 .post-boost-btn:hover svg,
 .post-boost-btn.boosted svg,
 .post-boost-btn:hover iconify-icon,
@@ -1889,6 +1901,8 @@ body.hide-cards-enabled .post-card {
 
 .post-fav-btn.favourited {
   color: var(--fav);
+  background: color-mix(in srgb, var(--fav) 8%, transparent);
+  border-color: color-mix(in srgb, var(--fav) 20%, transparent);
 }
 
 .post-fav-btn.favourited svg,
@@ -1944,6 +1958,8 @@ body.hide-cards-enabled .post-card {
 
 .post-bookmark-btn.bookmarked {
   color: var(--accent2);
+  background: color-mix(in srgb, var(--accent2) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent2) 20%, transparent);
 }
 
 /* ─── Translation Shimmer ─── */
