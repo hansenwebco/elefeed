@@ -1,6 +1,5 @@
 import { $, state, store } from './state.js';
 import { apiGet, apiPost } from './api.js';
-import { showToast } from './ui.js';
 
 let _activeStartTime = null;
 let _saveInterval = null;
@@ -51,7 +50,14 @@ export async function pullUsageData() {
           const remoteStats = JSON.parse(jsonStr);
           const localStatsRaw = store.get('usage_stats');
           let localStats = {};
-          try { localStats = JSON.parse(localStatsRaw) || {}; } catch (e) { }
+          try { 
+            localStats = JSON.parse(localStatsRaw) || {}; 
+          } catch (e) { 
+            localStats = {}; 
+          }
+
+          // Filter out any garbage from the parse
+          if (typeof remoteStats !== 'object' || remoteStats === null) return;
 
           // Merge: server wins for past days, but we keep today's local progress
           const merged = { ...remoteStats, ...localStats };
