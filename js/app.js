@@ -282,20 +282,115 @@ async function initApp(server, token, demo = false) {
 
   // Populate language dropdowns at startup
   const langMap = {
-    'ar': 'Arabic', 'bg': 'Bulgarian', 'bn': 'Bengali', 'ca': 'Catalan',
-    'cs': 'Czech', 'da': 'Danish', 'de': 'German', 'el': 'Greek',
-    'en': 'English', 'eo': 'Esperanto', 'es': 'Spanish', 'et': 'Estonian',
-    'eu': 'Basque', 'fa': 'Persian', 'fi': 'Finnish', 'fr': 'French',
-    'ga': 'Irish', 'gl': 'Galician', 'he': 'Hebrew', 'hi': 'Hindi',
-    'hr': 'Croatian', 'hu': 'Hungarian', 'id': 'Indonesian', 'is': 'Icelandic',
-    'it': 'Italian', 'ja': 'Japanese', 'ko': 'Korean', 'lt': 'Lithuanian',
-    'lv': 'Latvian', 'mk': 'Macedonian', 'ml': 'Malayalam', 'mr': 'Marathi',
-    'ms': 'Malay', 'nl': 'Dutch', 'no': 'Norwegian', 'pa': 'Punjabi',
-    'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian',
-    'sk': 'Slovak', 'sl': 'Slovenian', 'sq': 'Albanian', 'sr': 'Serbian',
-    'sv': 'Swedish', 'ta': 'Tamil', 'te': 'Telugu', 'th': 'Thai',
-    'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 'vi': 'Vietnamese',
-    'zh': 'Chinese'
+    'ar': 'Arabic (اللغة العربية)',
+    'as': 'Assamese (অসমীয়া)',
+    'ast': 'Asturian (Asturianu)',
+    'az': 'Azerbaijani (azərbaycan dili)',
+    'be': 'Belarusian (беларуская мова)',
+    'bg': 'Bulgarian (български език)',
+    'bn': 'Bangla (বাংলা)',
+    'bo': 'Tibetan (བོད་ཡིག)',
+    'br': 'Breton (brezhoneg)',
+    'bs': 'Bosnian (bosanski jezik)',
+    'ca': 'Catalan (Català)',
+    'ckb': 'Central Kurdish (سۆرانی)',
+    'cs': 'Czech (čeština)',
+    'cy': 'Welsh (Cymraeg)',
+    'da': 'Danish (dansk)',
+    'de': 'German (Deutsch)',
+    'dv': 'Divehi (ދިވެހި)',
+    'dz': 'Dzongkha (རྫོང་ཁ)',
+    'el': 'Greek (Ελληνικά)',
+    'en': 'English (English)',
+    'eo': 'Esperanto (Esperanto)',
+    'es': 'Spanish (Español)',
+    'et': 'Estonian (eesti)',
+    'eu': 'Basque (euskara)',
+    'fa': 'Persian (فارسی)',
+    'fi': 'Finnish (suomi)',
+    'fo': 'Faroese (føroyskt)',
+    'fr': 'French (Français)',
+    'fy': 'Western Frisian (Frysk)',
+    'ga': 'Irish (Gaeilge)',
+    'gd': 'Scottish Gaelic (Gàidhlig)',
+    'gl': 'Galician (galego)',
+    'gu': 'Gujarati (ગુજરાતી)',
+    'gv': 'Manx (Gaelg)',
+    'he': 'Hebrew (עברית)',
+    'hi': 'Hindi (हिन्दी)',
+    'hr': 'Croatian (Hrvatski)',
+    'ht': 'Haitian Creole (Kreyòl ayisyen)',
+    'hu': 'Hungarian (magyar)',
+    'hy': 'Armenian (Հայերեն)',
+    'id': 'Indonesian (Bahasa Indonesia)',
+    'is': 'Icelandic (Íslenska)',
+    'it': 'Italian (Italiano)',
+    'ja': 'Japanese (日本語)',
+    'jv': 'Javanese (basa Jawa)',
+    'ka': 'Georgian (ქართული)',
+    'kk': 'Kazakh (қазақ тілі)',
+    'km': 'Khmer (ខេមរភាសា)',
+    'kn': 'Kannada (ಕನ್ನಡ)',
+    'ko': 'Korean (한국어)',
+    'ku': 'Kurdish (Kurmancî)',
+    'ky': 'Kyrgyz (Кыргызча)',
+    'la': 'Latin (latine)',
+    'lb': 'Luxembourgish (Lëtzebuergesch)',
+    'lo': 'Lao (ລາວ)',
+    'lt': 'Lithuanian (lietuvių kalba)',
+    'lv': 'Latvian (Latviski)',
+    'mi': 'Māori (te reo Māori)',
+    'mk': 'Macedonian (македонски јазик)',
+    'ml': 'Malayalam (മലയാളം)',
+    'mn': 'Mongolian (Монгол хэл)',
+    'mr': 'Marathi (मराठी)',
+    'ms': 'Malay (Bahasa Melayu)',
+    'mt': 'Maltese (Malti)',
+    'my': 'Burmese',
+    'ne': 'Nepali (नेपाली)',
+    'nl': 'Dutch (Nederlands)',
+    'nn': 'Norwegian Nynorsk (Norsk Nynorsk)',
+    'no': 'Norwegian (Norsk)',
+    'oc': 'Occitan (occitan)',
+    'or': 'Odia (ଓଡ଼ିଆ)',
+    'pa': 'Punjabi (ਪੰਜਾਬੀ)',
+    'pl': 'Polish (Polski)',
+    'ps': 'Pashto (پښتو)',
+    'pt': 'Portuguese (Português)',
+    'ro': 'Romanian (Română)',
+    'ru': 'Russian (Русский)',
+    'rw': 'Kinyarwanda (Ikinyarwanda)',
+    'sc': 'Sardinian (sardu)',
+    'sd': 'Sindhi (सिन्धी)',
+    'se': 'Northern Sami (Davvisámegiella)',
+    'si': 'Sinhala (සිංහල)',
+    'sk': 'Slovak (slovenčina)',
+    'sl': 'Slovenian (slovenščina)',
+    'so': 'Somali (Soomaaliga)',
+    'sq': 'Albanian (Shqip)',
+    'sr': 'Serbian (српски језик)',
+    'sv': 'Swedish (Svenska)',
+    'sw': 'Swahili (Kiswahili)',
+    'ta': 'Tamil (தமிழ்)',
+    'te': 'Telugu (తెలుగు)',
+    'tg': 'Tajik (тоҷикӣ)',
+    'th': 'Thai (ไทย)',
+    'ti': 'Tigrinya (ትግርኛ)',
+    'tk': 'Turkmen (Türkmen)',
+    'tl': 'Filipino (Tagalog)',
+    'to': 'Tongan (faka Tonga)',
+    'tr': 'Turkish (Türkçe)',
+    'tt': 'Tatar (татар теле)',
+    'ug': 'Uyghur (ئۇيغۇرچە)',
+    'uk': 'Ukrainian (Українська)',
+    'ur': 'Urdu (اردو)',
+    'uz': 'Uzbek (Ўзбек)',
+    'vi': 'Vietnamese (Tiếng Việt)',
+    'yo': 'Yoruba (Yorùbá)',
+    'zh-CN': 'Chinese, China (简体中文)',
+    'zh-HK': 'Chinese, Hong Kong (繁體中文（香港）)',
+    'zh-TW': 'Chinese, Taiwan (繁體中文（臺灣）)',
+    'zh-YUE': 'Cantonese (廣東話)'
   };
 
   const populateLangDropdown = (selectEl, includeAll = true, includeBrowser = false) => {
@@ -311,12 +406,13 @@ async function initApp(server, token, demo = false) {
     if (includeBrowser) {
       const opt = document.createElement('option');
       opt.value = 'browser';
-      opt.textContent = '🌐 Browser default';
+      opt.textContent = 'Browser default';
       selectEl.appendChild(opt);
     }
 
     const allLangs = new Set([...Object.keys(langMap), ...(state.instanceLanguages || [])]);
     Array.from(allLangs)
+      .filter(code => code && code.trim())
       .sort((a, b) => {
         const nameA = langMap[a] || a.toUpperCase();
         const nameB = langMap[b] || b.toUpperCase();
@@ -343,6 +439,13 @@ async function initApp(server, token, demo = false) {
     postLangSel.value = store.get('pref_post_lang') || 'browser';
     populateLangDropdown(postLangSel, false, true);
     postLangSel.value = store.get('pref_post_lang') || 'browser';
+  }
+
+  const translateLangSel = $('settings-translate-lang');
+  if (translateLangSel) {
+    translateLangSel.value = store.get('pref_translate_lang') || 'browser';
+    populateLangDropdown(translateLangSel, false, true);
+    translateLangSel.value = store.get('pref_translate_lang') || 'browser';
   }
 
   const modalLangSel = $('modal-lang-select');
@@ -806,7 +909,7 @@ let tabSwitchTimeout = null;
 
 function switchToTab(tab) {
   const tabChanged = tab !== state.activeTab;
-  
+
   if (tabChanged) {
     closeAllTabDropdowns();
     document.querySelectorAll('.tab-btn').forEach(b => {
@@ -1739,21 +1842,21 @@ function updateSidebarNav() {
   const container = $('compose-sidebar');
   const composeBody = container?.querySelector('.compose-sidebar-body');
   const bottomFooter = container?.querySelector('.sidebar-footer');
-  
+
   // Measure available room with more conservative buffers
   const sidebarHeight = container?.clientHeight || window.innerHeight;
   // Header "Feeds" + Primary Items + Extra Padding
-  const navTopHeight = 40 + (primaryItems.length * 36); 
+  const navTopHeight = 40 + (primaryItems.length * 36);
   const fixedHeight = (composeBody?.clientHeight || 300) + (bottomFooter?.clientHeight || 40) + navTopHeight + 80;
   let remainingHeight = sidebarHeight - fixedHeight;
 
   // Render top group
   let html = `<div class="sidebar-nav-header">Feeds</div>`;
   html += primaryItems.map(renderItem).join('');
-  
+
   // Render explore group
   const totalSecondaryHeight = secondaryItems.length * 36 + 30; // 30 for Explore header
-  
+
   if (remainingHeight >= totalSecondaryHeight) {
     // Everything fits comfortably
     html += `<div class="sidebar-nav-header" style="margin-top:10px;">Explore</div>`;
@@ -1761,7 +1864,7 @@ function updateSidebarNav() {
   } else {
     // Need to split into list + dots menu
     remainingHeight -= 50; // Reserve space for the dots button and its margin
-    
+
     let headerShown = false;
     const overflowingSecondary = [];
 
@@ -1770,9 +1873,9 @@ function updateSidebarNav() {
       const needed = headerShown ? 36 : (36 + 26);
       if (remainingHeight >= needed) {
         if (!headerShown) {
-           html += `<div class="sidebar-nav-header" style="margin-top:10px;">Explore</div>`;
-           remainingHeight -= 26;
-           headerShown = true;
+          html += `<div class="sidebar-nav-header" style="margin-top:10px;">Explore</div>`;
+          remainingHeight -= 26;
+          headerShown = true;
         }
         html += renderItem(item);
         remainingHeight -= 36;
@@ -1798,7 +1901,7 @@ function updateSidebarNav() {
   nav.innerHTML = html;
 }
 
-window.toggleSidebarMoreMenu = function(btn) {
+window.toggleSidebarMoreMenu = function (btn) {
   const menu = document.getElementById('sidebar-more-menu');
   if (menu) {
     document.querySelectorAll('.boost-dropdown, .footer-more-dropdown').forEach(m => m.classList.remove('show'));
@@ -1826,7 +1929,7 @@ $('sidebar-nav')?.addEventListener('click', e => {
   if (!item) return;
 
   const action = item.dataset.action;
-  
+
   // Close the menu if an item was clicked
   document.querySelectorAll('.sidebar-more-dropdown').forEach(m => m.classList.remove('show'));
 
@@ -2067,7 +2170,7 @@ $('logout-btn').addEventListener('click', () => {
   stopPolling();
   stopCountPolling();
   stopSwPolling();
-  
+
   state.notifUnreadCount = 0;
   updateTitleBar();
 });
