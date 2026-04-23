@@ -358,8 +358,8 @@
 }
 
 .toast-notif-icon-mention { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.toast-notif-icon-reblog { background: linear-gradient(135deg, #10b981, #059669); }
-.toast-notif-icon-favourite { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.toast-notif-icon-reblog { background: linear-gradient(135deg, var(--boost), color-mix(in srgb, var(--boost) 80%, black)); }
+.toast-notif-icon-favourite { background: linear-gradient(135deg, var(--fav), color-mix(in srgb, var(--fav) 80%, black)); }
 .toast-notif-icon-follow, .toast-notif-icon-follow_request { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 .toast-notif-icon-poll { background: linear-gradient(135deg, #6366f1, #4f46e5); }
 .toast-notif-icon-update { background: linear-gradient(135deg, #06b6d4, #0891b2); }

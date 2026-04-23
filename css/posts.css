@@ -1219,12 +1219,12 @@
 /* Boost - accent color on hover / active, matching the feed */
 .lightbox-action-btn.lb-boost:hover,
 .lightbox-action-btn.boosted {
-  color: var(--boost, #6e9ef5);
+  color: var(--boost);
 }
 
 .lightbox-action-btn.boosted {
-  background: color-mix(in srgb, var(--boost, #6e9ef5) 12%, transparent);
-  border-color: color-mix(in srgb, var(--boost, #6e9ef5) 25%, transparent);
+  background: color-mix(in srgb, var(--boost) 12%, transparent);
+  border-color: color-mix(in srgb, var(--boost) 25%, transparent);
 }
 
 .lightbox-action-btn.lb-boost:hover svg,
@@ -1236,7 +1236,7 @@
 
 /* Favourite - star animations matching the feed */
 .lightbox-action-btn.lb-fav:hover {
-  color: var(--fav, #f4b942);
+  color: var(--fav);
 }
 
 .lightbox-action-btn.lb-fav:hover svg,
@@ -1256,9 +1256,9 @@
 }
 
 .lightbox-action-btn.favourited {
-  color: var(--fav, #f4b942);
-  background: color-mix(in srgb, var(--fav, #f4b942) 12%, transparent);
-  border-color: color-mix(in srgb, var(--fav, #f4b942) 25%, transparent);
+  color: var(--fav);
+  background: color-mix(in srgb, var(--fav) 12%, transparent);
+  border-color: color-mix(in srgb, var(--fav) 25%, transparent);
 }
 
 .lightbox-action-btn.favourited svg,

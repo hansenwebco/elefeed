@@ -340,7 +340,7 @@
 .profile-back-analytics-btn {
   display: none;
   position: absolute;
-  top: 12px;
+  top: 11px;
   left: 12px;
   z-index: 100;
   background: var(--surface2);
@@ -352,42 +352,28 @@
   color: var(--text-muted);
   cursor: pointer;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   white-space: nowrap;
   transition: all var(--trans);
+  height: 30px;
 }
 
 .profile-drawer[data-from-analytics] .profile-back-analytics-btn {
   display: flex;
 }
 
+.profile-drawer[data-from-analytics] .thread-drawer-header {
+  padding-left: 105px;
+}
+
 .profile-back-analytics-btn:hover {
   border-color: var(--border2);
   color: var(--text);
+  background: var(--surface);
 }
 
-.profile-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 100;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--trans);
-}
 
-.profile-close:hover {
-  border-color: var(--border2);
-  color: var(--text);
-}
 
 .profile-loading {
   display: flex;
@@ -1807,12 +1793,12 @@ body.manage-inline-active .manage-inline-panel {
 }
 
 .notif-icon.type-reblog {
-  background: rgba(78, 205, 196, 0.15);
+  background: color-mix(in srgb, var(--boost) 15%, transparent);
   color: var(--boost);
 }
 
 .notif-icon.type-favourite {
-  background: rgba(255, 217, 61, 0.15);
+  background: color-mix(in srgb, var(--fav) 15%, transparent);
   color: var(--fav);
 }
 

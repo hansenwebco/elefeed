@@ -717,13 +717,17 @@
     <!-- Profile Drawer -->
     <div class="profile-backdrop" id="profile-backdrop"></div>
     <aside class="profile-drawer" id="profile-drawer" aria-hidden="true">
-      <button class="profile-back-analytics-btn" id="profile-back-analytics" aria-label="Back to insights">
-        <iconify-icon icon="ph:caret-left-bold" style="font-size: 14px;"></iconify-icon>
-        Back to list
-      </button>
-      <button class="profile-close" id="profile-close" aria-label="Close profile">
-        <iconify-icon icon="ph:x-bold" style="font-size: 16px;"></iconify-icon>
-      </button>
+      <div class="thread-drawer-header">
+        <button class="profile-back-analytics-btn" id="profile-back-analytics" aria-label="Back to insights">
+          <iconify-icon icon="ph:caret-left-bold" style="font-size: 14px;"></iconify-icon>
+          Back to list
+        </button>
+        <span class="thread-drawer-title" id="profile-drawer-title">Profile</span>
+        <div id="profile-drawer-extra" style="margin-left:auto; margin-right: 32px; display:flex; align-items:center;"></div>
+        <button class="thread-close-btn" id="profile-close" aria-label="Close profile">
+          <iconify-icon icon="ph:x-bold" style="font-size: 16px;"></iconify-icon>
+        </button>
+      </div>
       <div class="profile-drawer-inner">
         <div id="profile-content">
           <div class="profile-loading">

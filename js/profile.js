@@ -269,6 +269,11 @@ export function openProfileDrawer(accountId, server) {
   }
 
   content.innerHTML = '<div class="profile-loading"><div class="spinner"></div></div>';
+  const titleEl = $('profile-drawer-title');
+  const extraEl = $('profile-drawer-extra');
+  if (titleEl) titleEl.textContent = 'Profile';
+  if (extraEl) extraEl.innerHTML = '';
+
   drawer.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
   backdrop.classList.add('open');
@@ -298,6 +303,9 @@ export function openProfileDrawer(accountId, server) {
     apiGet(`/api/v1/accounts/relationships?id[]=${accountId}`, state.token, srv).catch(() => []),
     apiGet(`/api/v1/accounts/${accountId}/statuses?pinned=true`, state.token, srv).catch(() => []),
   ]).then(async ([account, statuses, relationships, pinnedStatuses]) => {
+    const titleEl = $('profile-drawer-title');
+    if (titleEl) titleEl.textContent = account.display_name || account.username;
+    
     const relationship = relationships && relationships.length ? relationships[0] : null;
     const isFollowing = relationship && relationship.following;
     
@@ -655,10 +663,12 @@ export function openBookmarksDrawer() {
   apiGet('/api/v1/bookmarks?limit=40', state.token)
     .then(bookmarks => {
       if (!bookmarks.length) {
+        const titleEl = $('profile-drawer-title');
+        const extraEl = $('profile-drawer-extra');
+        if (titleEl) titleEl.textContent = 'Bookmarks';
+        if (extraEl) extraEl.innerHTML = '';
+
         content.innerHTML = `
-          <div class="thread-drawer-header">
-            <span class="thread-drawer-title">Bookmarks</span>
-          </div>
           <div style="padding:40px 20px;text-align:center;">
             <p style="color:var(--text-muted);font-size:13px;">No bookmarks yet. Bookmark posts to save them here.</p>
           </div>`;
@@ -671,12 +681,15 @@ export function openBookmarksDrawer() {
         return matchesLanguage(postLang, preferredLang);
       });
       const postsHtml = display.map(s => renderPost(s, { context: 'account' })).join('');
-      content.innerHTML = `
-        <div class="thread-drawer-header">
-          <span class="thread-drawer-title">Bookmarks</span>
-          <span style="margin-left:auto;color:var(--text-dim);font-size:11px;font-family:var(--font-mono);opacity:0.8;">${display.length} post${display.length !== 1 ? 's' : ''}</span>
-        </div>
-        <div>${postsHtml}</div>`;
+      
+      const titleEl = $('profile-drawer-title');
+      const extraEl = $('profile-drawer-extra');
+      if (titleEl) titleEl.textContent = 'Bookmarks';
+      if (extraEl) {
+        extraEl.innerHTML = `<span style="color:var(--text-dim);font-size:11px;font-family:var(--font-mono);opacity:0.8;">${display.length} post${display.length !== 1 ? 's' : ''}</span>`;
+      }
+
+      content.innerHTML = `<div>${postsHtml}</div>`;
     })
     .catch(err => {
       content.innerHTML = `<div style="padding:40px 20px;text-align:center;">
