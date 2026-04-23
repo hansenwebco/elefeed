@@ -80,14 +80,14 @@ export function startTracking() {
   _activeStartTime = Date.now();
 
   // Pull latest from server immediately when enabled
-  _pullFromNote().then(() => renderUsageUI());
+  pullUsageData().then(() => renderUsageUI());
 
   window.addEventListener('visibilitychange', handleVisibilityChange);
   window.addEventListener('blur', stopTimer);
   window.addEventListener('focus', startTimer);
 
-  // Sync every 5 minutes to server
-  _saveInterval = setInterval(syncUsage, 5 * 60 * 1000);
+  // Sync every 1 minute to server
+  _saveInterval = setInterval(syncUsage, 60 * 1000);
 
   // Update the UI display every 5 seconds so it feels "live"
   _uiInterval = setInterval(renderUsageUI, 5 * 1000);
