@@ -1295,28 +1295,6 @@
               </div>
               <select id="settings-translate-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
                 <option value="browser">Browser Default</option>
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="zh">Chinese</option>
-                <option value="ja">Japanese</option>
-                <option value="ko">Korean</option>
-                <option value="ru">Russian</option>
-                <option value="pt">Portuguese</option>
-                <option value="it">Italian</option>
-                <option value="ar">Arabic</option>
-                <option value="hi">Hindi</option>
-                <option value="nl">Dutch</option>
-                <option value="pl">Polish</option>
-                <option value="tr">Turkish</option>
-                <option value="id">Indonesian</option>
-                <option value="th">Thai</option>
-                <option value="vi">Vietnamese</option>
-                <option value="sv">Swedish</option>
-                <option value="fi">Finnish</option>
-                <option value="da">Danish</option>
-                <option value="no">Norwegian</option>
               </select>
             </div>
 
@@ -1378,16 +1356,26 @@
             </div>
 
             <!-- Default Who can quote -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div style="display:flex; flex-direction:column; gap:6px;">
               <div style="display:flex; flex-direction:column; gap:2px;">
                 <span style="font-size:13px; color:var(--text); font-weight:500;">Default who can quote</span>
                 <span style="font-size:11px; color:var(--text-muted);">Initial quote permission for new posts.</span>
               </div>
-              <select id="settings-post-quote" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
-                <option value="public">💬 Anyone</option>
-                <option value="followers">👥 Followers only</option>
-                <option value="nobody">🚫 Just me</option>
-              </select>
+              <div class="theme-selector" id="settings-post-quote-group">
+                <button class="theme-segment-btn" data-value="public">
+                  <iconify-icon icon="ph:globe-bold" style="font-size: 14px;"></iconify-icon>
+                  Anyone
+                </button>
+                <button class="theme-segment-btn" data-value="followers">
+                  <iconify-icon icon="ph:users-bold" style="font-size: 14px;"></iconify-icon>
+                  Followers
+                </button>
+                <button class="theme-segment-btn" data-value="nobody">
+                  <iconify-icon icon="ph:prohibit-bold" style="font-size: 14px;"></iconify-icon>
+                  Just me
+                </button>
+              </div>
+              <input type="hidden" id="settings-post-quote" value="public">
             </div>
 
             <!-- Default Language -->
@@ -1398,13 +1386,6 @@
               </div>
               <select id="settings-post-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
                 <option value="browser">Browser default</option>
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="ja">Japanese</option>
-                <option value="ko">Korean</option>
-                <option value="zh">Chinese</option>
               </select>
             </div>
 
@@ -1693,11 +1674,21 @@
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div style="display:flex; flex-direction:column; gap:8px;">
             <label style="font-size:12px; font-weight:500; color:var(--text);">Who can quote this post?</label>
-            <select id="modal-quote-select" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:13px; outline:none;" onchange="window.handleModalVisibilityChange()">
-              <option value="public">🌐 Anyone can quote</option>
-              <option value="followers">🔒 Followers only can quote</option>
-              <option value="nobody">🚫 No one can quote</option>
-            </select>
+            <div class="theme-selector" id="quote-options-list">
+              <button class="theme-segment-btn" data-value="public" onclick="window.selectQuoteOption('public')">
+                <iconify-icon icon="ph:globe-bold" style="font-size: 14px;"></iconify-icon>
+                Anyone
+              </button>
+              <button class="theme-segment-btn" data-value="followers" onclick="window.selectQuoteOption('followers')">
+                <iconify-icon icon="ph:users-bold" style="font-size: 14px;"></iconify-icon>
+                Followers
+              </button>
+              <button class="theme-segment-btn" data-value="nobody" onclick="window.selectQuoteOption('nobody')">
+                <iconify-icon icon="ph:prohibit-bold" style="font-size: 14px;"></iconify-icon>
+                No one
+              </button>
+            </div>
+            <input type="hidden" id="modal-quote-select" value="public">
           </div>
 
           <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-top:4px;">
