@@ -213,8 +213,8 @@ export function renderUsageUI() {
     ms += (Date.now() - _activeStartTime);
   }
 
-  // Don't show if less than 1 minute (less noise)
-  if (ms < 60000) {
+  // Don't show if less than 1 second (prevents flash on empty state but gives immediate feedback)
+  if (ms < 1000) {
     container.style.display = 'none';
     return;
   }
