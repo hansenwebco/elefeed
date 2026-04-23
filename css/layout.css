@@ -737,3 +737,9 @@ body.zen-mode .compose-toolbar {
 .profile-dropdown-zen-active {
   color: var(--accent) !important;
 }
+/* --- Utilities --- */
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
