@@ -78,6 +78,27 @@ export async function apiPut(path, body, token, server) {
 }
 
 /**
+ * Generic PATCH request.
+ */
+export async function apiPatch(path, body, token, server) {
+  const base = server || state.server;
+  const res = await fetch(`https://${base}${path}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token || state.token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail = '';
+    try { const j = await res.json(); detail = j.error || ''; } catch { }
+    throw new Error(`API error ${res.status}${detail ? ': ' + detail : ` (${res.statusText})`}`);
+  }
+  return res.json();
+}
+
+/**
  * Generic DELETE request.
  */
 export async function apiDelete(path, token, server) {

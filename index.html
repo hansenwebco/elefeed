@@ -1402,14 +1402,25 @@
             </div>
           </div>
 
+          <!-- Usage Tracking -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:color-mix(in srgb, #f59e0b 3%, var(--bg)); border:1px solid var(--border); border-left:3px solid #f59e0b; border-radius:8px;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">Usage tracking <span style="color:#f59e0b; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-left:4px;">(Experimental)</span></span>
+              <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Track how much time you spend in the app today. Data is stored privately in your account note.</span>
+            </div>
+            <label class="settings-toggle" style="flex-shrink:0;" title="Enable usage tracking">
+              <input type="checkbox" id="settings-usage-tracking-toggle" />
+              <span class="settings-toggle-track"></span>
+            </label>
+          </div>
+
         </div>
       </div>
 
       <!-- Notifications -->
-      <div style="padding:16px;">
+      <div style="padding:16px; border-bottom:1px solid var(--border);">
         <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Notifications</h4>
         <div style="display:flex; flex-direction:column; gap:16px;">
-
           <!-- In-app notification previews toggle -->
           <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
             <div style="display:flex; flex-direction:column; gap:2px;">
@@ -1421,11 +1432,10 @@
               <span class="settings-toggle-track"></span>
             </label>
           </div>
-
-          <!-- OS Background Notifications → grouped -->
-          <div id="settings-web-push-section" style="display:flex; flex-direction:column; gap:16px; margin-top:4px;">
+          <!-- Background notifications toggle -->
+          <div style="display:flex; flex-direction:column; gap:16px; margin-top:4px;">
             <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Push Notifications (OS)</span>
-
+            
             <!-- Permission row -->
             <div style="display:flex; flex-direction:column; gap:6px;">
               <span style="font-size:12px; color:var(--text-muted);" id="settings-notif-perm-status">Checking…</span>
@@ -1434,85 +1444,85 @@
                 Enable Notifications
               </button>
             </div>
-          </div>
 
-          <!-- Android Alarm Permission (Hidden by default, shown by JS if AndroidBridge exists) -->
-          <div id="settings-android-alarm-section" style="display:none; flex-direction:column; gap:6px; padding:12px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-top:16px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Android Alarm Permission</span>
-              <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">The setting allows Android to check messages more often but can affect battery life.</span>
-            </div>
-            <button id="settings-android-alarm-btn" style="align-self:flex-start; padding:7px 14px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:12px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
-              <iconify-icon icon="ph:clock-bold" style="font-size: 13px;"></iconify-icon>
-              Request Alarm Permission
-            </button>
-          </div>
-
-          <div id="settings-web-push-options" style="display:flex; flex-direction:column; gap:16px; margin-top:16px;">
-
-            <!-- Background notifications toggle -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <!-- Android Alarm Permission (Hidden by default, shown by JS if AndroidBridge exists) -->
+            <div id="settings-android-alarm-section" style="display:none; flex-direction:column; gap:6px; padding:12px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-top:8px;">
               <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Background notifications</span>
-                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Receive alerts even when Elefeed isn't open.<br>Requires the app to be installed (Add to Home Screen on iOS).</span>
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Android Alarm Permission</span>
+                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">The setting allows Android to check messages more often but can affect battery life.</span>
               </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Enable background notifications">
-                <input type="checkbox" id="settings-bg-notif-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
+              <button id="settings-android-alarm-btn" style="align-self:flex-start; padding:7px 14px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:12px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
+                <iconify-icon icon="ph:clock-bold" style="font-size: 13px;"></iconify-icon>
+                Request Alarm Permission
+              </button>
             </div>
 
-            <!-- Poll interval -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Check interval</span>
-                <span style="font-size:11px; color:var(--text-muted);">How often to check for new notifications in the background.</span>
+            <div id="settings-web-push-options" style="display:flex; flex-direction:column; gap:16px; margin-top:8px;">
+              <!-- Background notifications toggle -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Background notifications</span>
+                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Receive alerts even when Elefeed isn't open.<br>Requires the app to be installed (Add to Home Screen on iOS).</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Enable background notifications">
+                  <input type="checkbox" id="settings-bg-notif-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
               </div>
-              <select id="settings-notif-interval" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); cursor:pointer; outline:none; min-width:90px;">
-                <option value="30000">30 sec</option>
-                <option value="60000">1 min</option>
-                <option value="120000">2 min</option>
-                <option value="300000">5 min</option>
-                <option value="600000" selected>10 min</option>
-                <option value="900000">15 min</option>
-                <option value="1800000">30 min</option>
-              </select>
-            </div>
 
-            <!-- Alert types -->
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <span style="font-size:12px; color:var(--text); font-weight:500;">Alert types</span>
-              <span style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Choose which events trigger a background push notification.</span>
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px;">
-                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="settings-alert-mention" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Mentions
-                </label>
-                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="settings-alert-follow" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follows
-                </label>
-                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="settings-alert-reblog" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Boosts
-                </label>
-                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="settings-alert-favourite" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Favorites
-                </label>
-                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="settings-alert-follow-request" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follow requests
-                </label>
-                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="settings-alert-poll" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Polls ended
-                </label>
-                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="settings-alert-status" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Posts (followed)
-                </label>
-                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                  <input type="checkbox" id="settings-alert-update" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Edits
-                </label>
+              <!-- Poll interval -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Check interval</span>
+                  <span style="font-size:11px; color:var(--text-muted);">How often to check for new notifications in the background.</span>
+                </div>
+                <select id="settings-notif-interval" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); cursor:pointer; outline:none; min-width:90px;">
+                  <option value="30000">30 sec</option>
+                  <option value="60000">1 min</option>
+                  <option value="120000">2 min</option>
+                  <option value="300000">5 min</option>
+                  <option value="600000" selected>10 min</option>
+                  <option value="900000">15 min</option>
+                  <option value="1800000">30 min</option>
+                </select>
+              </div>
+
+              <!-- Alert types -->
+              <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+                <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Alert types</span>
+                <span style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Choose which events trigger a background push notification.</span>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px;">
+                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                    <input type="checkbox" id="settings-alert-mention" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Mentions
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                    <input type="checkbox" id="settings-alert-follow" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follows
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                    <input type="checkbox" id="settings-alert-reblog" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Boosts
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                    <input type="checkbox" id="settings-alert-favourite" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Favorites
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                    <input type="checkbox" id="settings-alert-follow-request" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follow requests
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                    <input type="checkbox" id="settings-alert-poll" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Polls ended
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                    <input type="checkbox" id="settings-alert-status" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Posts (followed)
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                    <input type="checkbox" id="settings-alert-update" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Edits
+                  </label>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
 
       <!-- Debug Panel (developer only - shown via JS) -->
       <div id="settings-debug-section" style="display:none; padding:16px; border-top:1px solid var(--border);">

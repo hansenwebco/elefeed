@@ -44,6 +44,8 @@ import { openPostAnalyticsDrawer, closePostAnalyticsDrawer, appendMoreAnalyticsU
 import { startCountPolling, stopCountPolling, applyCountsFromStatus } from './counts.js';
 import { initTitleBar, updateTitleBar } from './titlebar.js';
 import { openFiltersDrawer, closeFiltersDrawer, initFiltersUI, loadFilters } from './filters.js';
+import { initUsageTracking, startTracking, stopTracking, renderUsageUI } from './usage.js';
+
 
 // Expose drawer openers needed by render.js and ui.js toasts
 window.openThreadDrawer = openThreadDrawer;
@@ -541,7 +543,9 @@ async function initApp(server, token, demo = false) {
 
   // Initialize UI components
   initFiltersUI();
+  initUsageTracking();
 }
+
 
 /* ══════════════════════════════════════════════════════════════════════
    OAUTH CALLBACK
@@ -1108,9 +1112,16 @@ const doRefresh = async () => {
         await loadExploreTab();
       }
     }
+
+    // Ensure usage tracker reappears on refresh
+    try {
+      const { resetUsageDismissal } = await import('./usage.js');
+      resetUsageDismissal(false);
+    } catch (e) { }
   } finally {
     if (refreshBtn) refreshBtn.classList.remove('refresh-btn-spinning');
   }
+
   showToast('Refreshing…');
 };
 $('refresh-btn').addEventListener('click', doRefresh);
@@ -1204,6 +1215,11 @@ if (settingsMenuBtn) {
     const hideCardsToggle = $('settings-hide-cards-toggle');
     if (hideCardsToggle) {
       hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
+    }
+
+    const usageTrackingToggle = $('settings-usage-tracking-toggle');
+    if (usageTrackingToggle) {
+      usageTrackingToggle.checked = store.get('pref_usage_tracking') === 'true';
     }
 
     const zenModeToggle = $('settings-zen-mode-toggle');
@@ -1463,6 +1479,22 @@ if (_inAppNotifToggle) {
   _inAppNotifToggle.checked = store.get('pref_in_app_notifs') !== 'false';
   _inAppNotifToggle.addEventListener('change', () => {
     store.set('pref_in_app_notifs', _inAppNotifToggle.checked ? 'true' : 'false');
+  });
+}
+
+// Usage tracking
+const _usageTrackingToggle = $('settings-usage-tracking-toggle');
+if (_usageTrackingToggle) {
+  _usageTrackingToggle.addEventListener('change', () => {
+    const enabled = _usageTrackingToggle.checked;
+    store.set('pref_usage_tracking', enabled ? 'true' : 'false');
+    if (enabled) {
+      startTracking();
+      showToast('Usage tracking enabled');
+    } else {
+      stopTracking();
+      showToast('Usage tracking disabled');
+    }
   });
 }
 
