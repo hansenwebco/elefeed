@@ -304,7 +304,7 @@ export function openProfileDrawer(accountId, server) {
     apiGet(`/api/v1/accounts/${accountId}/statuses?pinned=true`, state.token, srv).catch(() => []),
   ]).then(async ([account, statuses, relationships, pinnedStatuses]) => {
     const titleEl = $('profile-drawer-title');
-    if (titleEl) titleEl.textContent = account.display_name || account.username;
+    if (titleEl) titleEl.innerHTML = renderCustomEmojis(account.display_name || account.username, account.emojis);
     
     const relationship = relationships && relationships.length ? relationships[0] : null;
     const isFollowing = relationship && relationship.following;
