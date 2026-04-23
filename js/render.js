@@ -473,7 +473,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
             <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.quotes_count || s.quote_count || 0}</span>
           </button>` : ''}
           <button class="boost-dropdown-item" data-action="boost" data-post-id="${s.id}" data-is-boosted="${s.reblogged ? 'true' : 'false'}">
-            <iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 16px;"></iconify-icon>
+            <iconify-icon icon="${s.reblogged ? 'ph:arrows-clockwise-fill' : 'ph:arrows-clockwise-bold'}" style="font-size: 16px;"></iconify-icon>
             <span>${s.reblogged ? 'Undo Boost' : 'Boost'}</span>
             <span class="dropdown-stat-count" style="margin-left:auto;color:var(--text-muted);font-size:12.5px;font-family:var(--font-mono);">${s.reblogs_count || 0}</span>
           </button>
@@ -481,11 +481,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
         `}
       </span>
       <button class="post-stat post-fav-btn ${s.favourited ? 'favourited' : ''}" data-post-id="${s.id}" data-favourited="${s.favourited ? 'true' : 'false'}" title="${s.favourited ? 'Unfavorite' : 'Favorite'}">
-        <iconify-icon icon="ph:star-bold" style="font-size: 13px;"></iconify-icon>
+        <iconify-icon icon="${s.favourited ? 'ph:star-fill' : 'ph:star-bold'}" style="font-size: 13px;"></iconify-icon>
         <span class="post-fav-count">${s.favourites_count || 0}</span>
       </button>
       <button class="post-stat post-bookmark-btn ${s.bookmarked ? 'bookmarked' : ''}" data-post-id="${s.id}" data-bookmarked="${s.bookmarked ? 'true' : 'false'}" title="${s.bookmarked ? 'Remove bookmark' : 'Bookmark'}">
-        <iconify-icon icon="ph:bookmark-simple-bold" style="font-size: 13px;"></iconify-icon>
+        <iconify-icon icon="${s.bookmarked ? 'ph:bookmark-simple-fill' : 'ph:bookmark-simple-bold'}" style="font-size: 13px;"></iconify-icon>
       </button>
 
       <div style="margin-left:auto;display:flex;align-items:center;gap:2px;">
@@ -1103,7 +1103,7 @@ window.expandMedia = function expandMedia(mediaItem) {
       lbBoostBtn.className = 'lightbox-action-btn lb-boost post-stat post-boost-btn' + (isBoosted ? ' boosted' : '');
       lbBoostBtn.title = isBoosted ? 'Undo Boost' : 'Boost';
       lbBoostBtn.dataset.postId = postId;
-      lbBoostBtn.innerHTML = `<iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 15px;"></iconify-icon><span class="boost-count">${boostCount}</span>`;
+      lbBoostBtn.innerHTML = `<iconify-icon icon="${isBoosted ? 'ph:arrows-clockwise-fill' : 'ph:arrows-clockwise-bold'}" style="font-size: 15px;"></iconify-icon><span class="boost-count">${boostCount}</span>`;
       lbBoostBtn.onclick = (e) => {
         e.stopPropagation();
         const currentIsBoosted = lbBoostBtn.classList.contains('boosted');
@@ -1120,7 +1120,7 @@ window.expandMedia = function expandMedia(mediaItem) {
       boostBtn.className = 'lightbox-action-btn lb-boost post-stat post-boost-btn' + (isBoosted ? ' boosted' : '');
       boostBtn.title = 'Boost or Quote';
       boostBtn.dataset.postId = postId;
-      boostBtn.innerHTML = `<iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 15px;"></iconify-icon><span class="boost-count">${boostCount}</span>`;
+      boostBtn.innerHTML = `<iconify-icon icon="${isBoosted ? 'ph:arrows-clockwise-fill' : 'ph:arrows-clockwise-bold'}" style="font-size: 15px;"></iconify-icon><span class="boost-count">${boostCount}</span>`;
 
       const boostDropdown = document.createElement('div');
       boostDropdown.className = 'lightbox-boost-dropdown boost-dropdown';
@@ -1130,7 +1130,7 @@ window.expandMedia = function expandMedia(mediaItem) {
       boostItem.dataset.action = 'boost';
       boostItem.dataset.postId = postId;
       boostItem.dataset.isBoosted = isBoosted ? 'true' : 'false';
-      boostItem.innerHTML = `<iconify-icon icon="ph:arrows-clockwise-bold" style="font-size: 14px;"></iconify-icon><span class="lb-boost-label">${isBoosted ? 'Undo Boost' : 'Boost'}</span><span class="dropdown-stat-count">${_standalone ? _standalone.dataset.reblogsCount : getCount(postBoostBtn, '.boost-count')}</span>`;
+      boostItem.innerHTML = `<iconify-icon icon="${isBoosted ? 'ph:arrows-clockwise-fill' : 'ph:arrows-clockwise-bold'}" style="font-size: 14px;"></iconify-icon><span class="lb-boost-label">${isBoosted ? 'Undo Boost' : 'Boost'}</span><span class="dropdown-stat-count">${_standalone ? _standalone.dataset.reblogsCount : getCount(postBoostBtn, '.boost-count')}</span>`;
       boostItem.onclick = (e) => {
         e.stopPropagation();
         boostDropdown.classList.remove('show');
@@ -1167,7 +1167,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     lbFavBtn.title = isFavourited ? 'Unfavorite' : 'Favorite';
     lbFavBtn.dataset.postId = postId;
     lbFavBtn.dataset.favourited = isFavourited ? 'true' : 'false';
-    lbFavBtn.innerHTML = `<iconify-icon icon="ph:star-bold" style="font-size: 15px;"></iconify-icon><span class="post-fav-count">${favCount}</span>`;
+    lbFavBtn.innerHTML = `<iconify-icon icon="${isFavourited ? 'ph:star-fill' : 'ph:star-bold'}" style="font-size: 15px;"></iconify-icon><span class="post-fav-count">${favCount}</span>`;
     lbFavBtn.onclick = (e) => {
       e.stopPropagation();
       window.handleFavoriteToggle(lbFavBtn);

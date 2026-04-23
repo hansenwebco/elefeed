@@ -617,6 +617,10 @@ window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
       btnEl.classList.add('unboosting');
       setTimeout(() => btnEl.classList.remove('unboosting'), 500);
     }
+    const icon = btnEl.querySelector('iconify-icon');
+    if (icon) {
+      icon.setAttribute('icon', willBeBoosted ? 'ph:arrows-clockwise-fill' : 'ph:arrows-clockwise-bold');
+    }
     if (btnEl.dataset.isBoosted) btnEl.dataset.isBoosted = willBeBoosted ? 'true' : 'false';
     if (btnEl.dataset.reblogged) btnEl.dataset.reblogged = willBeBoosted ? 'true' : 'false';
     if (countSpan) countSpan.textContent = willBeBoosted ? originalCount + 1 : Math.max(0, originalCount - 1);
