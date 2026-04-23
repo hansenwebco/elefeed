@@ -1409,10 +1409,22 @@ function refreshNotifSettingsUI() {
   permBtn.textContent = perm === 'granted' ? 'Permission granted' : 'Enable Notifications';
   permBtn.disabled = perm === 'granted' || perm === 'denied' || perm === 'unsupported';
 
+  // Show web push options only if permission is granted
+  const pushOptions = $('settings-web-push-options');
+  if (pushOptions) {
+    pushOptions.style.display = perm === 'granted' ? 'flex' : 'none';
+  }
+
   if (bgToggle) {
     const bgEnabled = store.get('pref_bg_notifications') !== 'false';
     bgToggle.checked = bgEnabled;
-    bgToggle.disabled = perm !== 'granted';
+    
+    // Hide sub-options if background notifications are disabled
+    const showSubOptions = bgEnabled;
+    const intervalRow = $('settings-notif-interval-row');
+    const alertsRow = $('settings-notif-alerts-row');
+    if (intervalRow) intervalRow.style.display = showSubOptions ? 'flex' : 'none';
+    if (alertsRow) alertsRow.style.display = showSubOptions ? 'flex' : 'none';
   }
 
   if (intervalSel) {
@@ -1435,6 +1447,14 @@ function refreshNotifSettingsUI() {
   const acct = state.account?.acct || '';
   const server = state.server || '';
   const isDev = acct === 'TheStoneDonkey' && server === 'beige.party';
+
+  // Hide push notification section on mobile devices (Android/iOS)
+  const pushSection = $('settings-push-notifs-section');
+  const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || typeof window.AndroidBridge !== 'undefined';
+  if (pushSection) {
+    pushSection.style.display = isMobileDevice ? 'none' : 'flex';
+  }
+
   if (debugSection) debugSection.style.display = isDev ? '' : 'none';
 
   // Sync the feature flag toggle state
@@ -1522,6 +1542,7 @@ if (_bgToggle) {
   _bgToggle.addEventListener('change', () => {
     store.set('pref_bg_notifications', _bgToggle.checked ? 'true' : 'false');
     updateSwConfig();
+    refreshNotifSettingsUI();
     showToast(_bgToggle.checked ? 'Background notifications on' : 'Background notifications off');
   });
 }
@@ -1531,6 +1552,20 @@ if (_intervalSel) {
     store.set('pref_bg_poll_interval', _intervalSel.value);
     updateSwConfig();
     showToast('Poll interval updated');
+  });
+}
+
+// Alert types collapsible toggle
+const _alertToggle = $('settings-alert-types-toggle');
+const _alertContent = $('settings-alert-types-content');
+if (_alertToggle && _alertContent) {
+  _alertToggle.addEventListener('click', () => {
+    const isExpanded = _alertContent.style.display === 'flex';
+    _alertContent.style.display = isExpanded ? 'none' : 'flex';
+    const chevron = $('alert-types-chevron');
+    if (chevron) {
+      chevron.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
   });
 }
 

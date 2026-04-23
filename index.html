@@ -1433,36 +1433,41 @@
             </label>
           </div>
           <!-- Background notifications toggle -->
-          <div style="display:flex; flex-direction:column; gap:16px; margin-top:4px;" class="hide-on-mobile">
+          <div id="settings-push-notifs-section" style="display:flex; flex-direction:column; gap:16px; margin-top:4px;">
             <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Push Notifications (OS)</span>
             
             <!-- Permission row -->
-            <div style="display:flex; flex-direction:column; gap:6px;">
-              <span style="font-size:12px; color:var(--text-muted);" id="settings-notif-perm-status">Checking…</span>
-              <button id="settings-notif-perm-btn" style="align-self:flex-start; padding:7px 14px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:12px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
-                <iconify-icon icon="ph:bell-bold" style="font-size: 13px;"></iconify-icon>
-                Enable Notifications
-              </button>
-            </div>
-
-            <!-- Android Alarm Permission (Hidden by default, shown by JS if AndroidBridge exists) -->
-            <div id="settings-android-alarm-section" style="display:none; flex-direction:column; gap:6px; padding:12px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; margin-top:8px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Android Alarm Permission</span>
-                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">The setting allows Android to check messages more often but can affect battery life.</span>
+            <div style="display:flex; flex-direction:column; gap:8px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Status</span>
+                  <span style="font-size:11px; color:var(--text-muted);" id="settings-notif-perm-status">Checking…</span>
+                </div>
+                <button id="settings-notif-perm-btn" style="padding:7px 14px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:12px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
+                  <iconify-icon icon="ph:bell-bold" style="font-size: 13px;"></iconify-icon>
+                  Enable
+                </button>
               </div>
-              <button id="settings-android-alarm-btn" style="align-self:flex-start; padding:7px 14px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:12px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
-                <iconify-icon icon="ph:clock-bold" style="font-size: 13px;"></iconify-icon>
-                Request Alarm Permission
-              </button>
+
+              <!-- Android Alarm Permission (Hidden by default, shown by JS if AndroidBridge exists) -->
+              <div id="settings-android-alarm-section" style="display:none; flex-direction:column; gap:6px; padding:10px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; margin-top:4px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:12px; color:var(--text); font-weight:500;">Android Alarm Permission</span>
+                  <span style="font-size:10px; color:var(--text-muted); line-height:1.4;">Allows more frequent background checks.</span>
+                </div>
+                <button id="settings-android-alarm-btn" style="align-self:flex-start; padding:6px 12px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:11px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
+                  <iconify-icon icon="ph:clock-bold" style="font-size: 12px;"></iconify-icon>
+                  Request Permission
+                </button>
+              </div>
             </div>
 
-            <div id="settings-web-push-options" style="display:flex; flex-direction:column; gap:16px; margin-top:8px;">
+            <div id="settings-web-push-options" style="display:flex; flex-direction:column; gap:12px;">
               <!-- Background notifications toggle -->
               <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
                 <div style="display:flex; flex-direction:column; gap:2px;">
                   <span style="font-size:13px; color:var(--text); font-weight:500;">Background notifications</span>
-                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Receive alerts even when Elefeed isn't open.<br>Requires the app to be installed (Add to Home Screen on iOS).</span>
+                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Receive alerts even when Elefeed isn't open.</span>
                 </div>
                 <label class="settings-toggle" style="flex-shrink:0;" title="Enable background notifications">
                   <input type="checkbox" id="settings-bg-notif-toggle" />
@@ -1471,10 +1476,10 @@
               </div>
 
               <!-- Poll interval -->
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+              <div id="settings-notif-interval-row" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
                 <div style="display:flex; flex-direction:column; gap:2px;">
                   <span style="font-size:13px; color:var(--text); font-weight:500;">Check interval</span>
-                  <span style="font-size:11px; color:var(--text-muted);">How often to check for new notifications in the background.</span>
+                  <span style="font-size:11px; color:var(--text-muted);">How often to check for updates.</span>
                 </div>
                 <select id="settings-notif-interval" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); cursor:pointer; outline:none; min-width:90px;">
                   <option value="30000">30 sec</option>
@@ -1487,35 +1492,43 @@
                 </select>
               </div>
 
-              <!-- Alert types -->
-              <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-                <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Alert types</span>
-                <span style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Choose which events trigger a background push notification.</span>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px;">
-                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                    <input type="checkbox" id="settings-alert-mention" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Mentions
-                  </label>
-                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                    <input type="checkbox" id="settings-alert-follow" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follows
-                  </label>
-                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                    <input type="checkbox" id="settings-alert-reblog" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Boosts
-                  </label>
-                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                    <input type="checkbox" id="settings-alert-favourite" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Favorites
-                  </label>
-                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                    <input type="checkbox" id="settings-alert-follow-request" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follow requests
-                  </label>
-                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                    <input type="checkbox" id="settings-alert-poll" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Polls ended
-                  </label>
-                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                    <input type="checkbox" id="settings-alert-status" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Posts (followed)
-                  </label>
-                  <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                    <input type="checkbox" id="settings-alert-update" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Edits
-                  </label>
+              <!-- Alert types (Collapsible) -->
+              <div id="settings-notif-alerts-row" style="display:flex; flex-direction:column; background:var(--bg); border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+                <button id="settings-alert-types-toggle" style="width:100%; border:none; background:none; padding:12px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; outline:none; text-align:left;">
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font-size:13px; color:var(--text); font-weight:500;">Alert types</span>
+                    <span style="font-size:11px; color:var(--text-muted);">Configure push triggers</span>
+                  </div>
+                  <iconify-icon icon="ph:caret-down-bold" id="alert-types-chevron" style="font-size: 14px; color:var(--text-dim); transition:transform 0.2s;"></iconify-icon>
+                </button>
+                
+                <div id="settings-alert-types-content" style="display:none; flex-direction:column; gap:10px; padding:0 12px 12px;">
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; padding-top:4px; border-top:1px solid var(--border-subtle);">
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                      <input type="checkbox" id="settings-alert-mention" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Mentions
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                      <input type="checkbox" id="settings-alert-follow" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follows
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                      <input type="checkbox" id="settings-alert-reblog" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Boosts
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                      <input type="checkbox" id="settings-alert-favourite" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Favorites
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                      <input type="checkbox" id="settings-alert-follow-request" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follow requests
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                      <input type="checkbox" id="settings-alert-poll" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Polls ended
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                      <input type="checkbox" id="settings-alert-status" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Posts
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                      <input type="checkbox" id="settings-alert-update" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Edits
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

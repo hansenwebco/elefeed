@@ -40,15 +40,15 @@ export async function pullUsageData() {
           const remoteStats = JSON.parse(jsonStr);
           const localStatsRaw = store.get('usage_stats');
           let localStats = {};
-          try { localStats = JSON.parse(localStatsRaw) || {}; } catch (e) {}
+          try { localStats = JSON.parse(localStatsRaw) || {}; } catch (e) { }
 
           // Merge: server wins for past days, but we keep today's local progress
           const merged = { ...remoteStats, ...localStats };
           const today = new Date().toISOString().split('T')[0];
           if (remoteStats[today] && localStats[today]) {
-             merged[today] = Math.max(remoteStats[today], localStats[today]);
+            merged[today] = Math.max(remoteStats[today], localStats[today]);
           }
-          
+
           store.set('usage_stats', JSON.stringify(merged));
           renderUsageUI();
         } catch (e) {
@@ -77,10 +77,10 @@ export function startTracking() {
 
   // Sync every 5 minutes to server
   _saveInterval = setInterval(syncUsage, 5 * 60 * 1000);
-  
+
   // Update the UI display every 5 seconds so it feels "live"
   _uiInterval = setInterval(renderUsageUI, 5 * 1000);
-  
+
   renderUsageUI();
 }
 
@@ -143,7 +143,7 @@ function updateLocalUsage(ms) {
  */
 export async function syncUsage() {
   if (state.demoMode || !state.account || !state.token) return;
-  
+
   // If currently active, add the current session's time before syncing
   let msToSync = 0;
   if (_activeStartTime) {
@@ -163,7 +163,7 @@ export async function syncUsage() {
     const keys = Object.keys(statsData).sort().reverse();
     const prunedStats = {};
     keys.slice(0, 7).forEach(k => prunedStats[k] = statsData[k]);
-    
+
     const jsonStr = JSON.stringify(prunedStats);
     const usageBlock = `${MARKER_START}${jsonStr}${MARKER_END}`;
 
@@ -210,7 +210,7 @@ export function renderUsageUI() {
   const statsRaw = store.get('usage_stats');
   let stats = {};
   try { stats = JSON.parse(statsRaw) || {}; } catch (e) { stats = {}; }
-  
+
   let ms = stats[today] || 0;
   if (_activeStartTime) {
     ms += (Date.now() - _activeStartTime);
@@ -232,13 +232,14 @@ export function renderUsageUI() {
   timeStr += `${remainingMins}m`;
 
   container.innerHTML = `
-    <div class="post-content">
+    <div class="usage-note-content">
+      <iconify-icon icon="ph:clock-bold" class="usage-note-icon"></iconify-icon>
       <div class="usage-note-text">
-        Logged in today for: ${timeStr}
+        You've been using Elefeed for ${timeStr} today.
       </div>
     </div>
     <button class="usage-note-close" aria-label="Dismiss" onclick="import('./js/usage.js').then(m => m.resetUsageDismissal(true)); this.closest('.usage-note-banner').remove();">
-      <iconify-icon icon="ph:x-bold" style="font-size: 10px;"></iconify-icon>
+      <iconify-icon icon="ph:x-bold"></iconify-icon>
     </button>
   `;
 }

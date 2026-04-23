@@ -289,6 +289,10 @@ function renderFilteredPosts(displayPosts) {
   const html = displayPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
   const loadMoreBtn = maxId ? '<button class="load-more-btn" data-feed="feed">Load More</button>' : '';
   container.innerHTML = html + loadMoreBtn;
+  
+  // Re-render usage banner if enabled
+  import('./usage.js').then(m => m.renderUsageUI());
+
   setTimeout(checkInfiniteScroll, 100);
 }
 
