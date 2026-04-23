@@ -280,6 +280,76 @@ async function initApp(server, token, demo = false) {
     updatePublicFeedFlags();
   });
 
+  // Populate language dropdowns at startup
+  const langMap = {
+    'ar': 'Arabic', 'bg': 'Bulgarian', 'bn': 'Bengali', 'ca': 'Catalan',
+    'cs': 'Czech', 'da': 'Danish', 'de': 'German', 'el': 'Greek',
+    'en': 'English', 'eo': 'Esperanto', 'es': 'Spanish', 'et': 'Estonian',
+    'eu': 'Basque', 'fa': 'Persian', 'fi': 'Finnish', 'fr': 'French',
+    'ga': 'Irish', 'gl': 'Galician', 'he': 'Hebrew', 'hi': 'Hindi',
+    'hr': 'Croatian', 'hu': 'Hungarian', 'id': 'Indonesian', 'is': 'Icelandic',
+    'it': 'Italian', 'ja': 'Japanese', 'ko': 'Korean', 'lt': 'Lithuanian',
+    'lv': 'Latvian', 'mk': 'Macedonian', 'ml': 'Malayalam', 'mr': 'Marathi',
+    'ms': 'Malay', 'nl': 'Dutch', 'no': 'Norwegian', 'pa': 'Punjabi',
+    'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian',
+    'sk': 'Slovak', 'sl': 'Slovenian', 'sq': 'Albanian', 'sr': 'Serbian',
+    'sv': 'Swedish', 'ta': 'Tamil', 'te': 'Telugu', 'th': 'Thai',
+    'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 'vi': 'Vietnamese',
+    'zh': 'Chinese'
+  };
+
+  const populateLangDropdown = (selectEl, includeAll = true, includeBrowser = false) => {
+    if (!selectEl) return;
+    const current = selectEl.value;
+    selectEl.innerHTML = '';
+    if (includeAll) {
+      const opt = document.createElement('option');
+      opt.value = 'all';
+      opt.textContent = 'Show All';
+      selectEl.appendChild(opt);
+    }
+    if (includeBrowser) {
+      const opt = document.createElement('option');
+      opt.value = 'browser';
+      opt.textContent = '🌐 Browser default';
+      selectEl.appendChild(opt);
+    }
+
+    const allLangs = new Set([...Object.keys(langMap), ...(state.instanceLanguages || [])]);
+    Array.from(allLangs)
+      .sort((a, b) => {
+        const nameA = langMap[a] || a.toUpperCase();
+        const nameB = langMap[b] || b.toUpperCase();
+        return nameA.localeCompare(nameB);
+      })
+      .forEach(code => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = langMap[code] || code.toUpperCase();
+        selectEl.appendChild(opt);
+      });
+    selectEl.value = current;
+  };
+
+  const feedLangSel = $('settings-feed-lang');
+  if (feedLangSel) {
+    feedLangSel.value = store.get('pref_feed_lang') || 'all';
+    populateLangDropdown(feedLangSel, true, false);
+    feedLangSel.value = store.get('pref_feed_lang') || 'all';
+  }
+
+  const postLangSel = $('settings-post-lang');
+  if (postLangSel) {
+    postLangSel.value = store.get('pref_post_lang') || 'browser';
+    populateLangDropdown(postLangSel, false, true);
+    postLangSel.value = store.get('pref_post_lang') || 'browser';
+  }
+
+  const modalLangSel = $('modal-lang-select');
+  if (modalLangSel) {
+    populateLangDropdown(modalLangSel, false, true);
+  }
+
   // Update footer server info display
   document.querySelectorAll('.footer-account-name').forEach(el => {
     const parent = el.parentElement;
@@ -1073,85 +1143,17 @@ if (settingsMenuBtn) {
       translateLangSel.value = store.get('pref_translate_lang') || 'browser';
     }
 
-    const langMap = {
-      'ar': 'Arabic', 'bg': 'Bulgarian', 'bn': 'Bengali', 'ca': 'Catalan',
-      'cs': 'Czech', 'da': 'Danish', 'de': 'German', 'el': 'Greek',
-      'en': 'English', 'eo': 'Esperanto', 'es': 'Spanish', 'et': 'Estonian',
-      'eu': 'Basque', 'fa': 'Persian', 'fi': 'Finnish', 'fr': 'French',
-      'ga': 'Irish', 'gl': 'Galician', 'he': 'Hebrew', 'hi': 'Hindi',
-      'hr': 'Croatian', 'hu': 'Hungarian', 'id': 'Indonesian', 'is': 'Icelandic',
-      'it': 'Italian', 'ja': 'Japanese', 'ko': 'Korean', 'lt': 'Lithuanian',
-      'lv': 'Latvian', 'mk': 'Macedonian', 'ml': 'Malayalam', 'mr': 'Marathi',
-      'ms': 'Malay', 'nl': 'Dutch', 'no': 'Norwegian', 'pa': 'Punjabi',
-      'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian',
-      'sk': 'Slovak', 'sl': 'Slovenian', 'sq': 'Albanian', 'sr': 'Serbian',
-      'sv': 'Swedish', 'ta': 'Tamil', 'te': 'Telugu', 'th': 'Thai',
-      'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu', 'vi': 'Vietnamese',
-      'zh': 'Chinese'
-    };
-
-    const populateLangDropdown = (selectEl, includeAll = true, includeBrowser = false) => {
-      if (!selectEl) return;
-      const current = selectEl.value;
-      selectEl.innerHTML = '';
-      if (includeAll) {
-        const opt = document.createElement('option');
-        opt.value = 'all';
-        opt.textContent = 'Show All';
-        selectEl.appendChild(opt);
-      }
-      if (includeBrowser) {
-        const opt = document.createElement('option');
-        opt.value = 'browser';
-        opt.textContent = '🌐 Browser default';
-        selectEl.appendChild(opt);
-      }
-
-      const allLangs = new Set([...Object.keys(langMap), ...(state.instanceLanguages || [])]);
-      Array.from(allLangs)
-        .sort((a, b) => {
-          const nameA = langMap[a] || a.toUpperCase();
-          const nameB = langMap[b] || b.toUpperCase();
-          return nameA.localeCompare(nameB);
-        })
-        .forEach(code => {
-          const opt = document.createElement('option');
-          opt.value = code;
-          opt.textContent = langMap[code] || code.toUpperCase();
-          selectEl.appendChild(opt);
-        });
-      selectEl.value = current;
-    };
-
-    const feedLangSel = $('settings-feed-lang');
-    if (feedLangSel) {
-      feedLangSel.value = store.get('pref_feed_lang') || 'all';
-      populateLangDropdown(feedLangSel, true, false);
-      feedLangSel.value = store.get('pref_feed_lang') || 'all';
-    }
-
-    const postLangSel = $('settings-post-lang');
-    if (postLangSel) {
-      postLangSel.value = store.get('pref_post_lang') || 'browser';
-      populateLangDropdown(postLangSel, false, true);
-      postLangSel.value = store.get('pref_post_lang') || 'browser';
-    }
-
-    // Also update the modal dropdown while we are at it
-    const modalLangSel = $('modal-lang-select');
-    if (modalLangSel) {
-      populateLangDropdown(modalLangSel, false, true);
-    }
-
     // Posting Defaults
     const postVisSel = $('settings-post-visibility');
     if (postVisSel) {
       postVisSel.value = store.get('pref_post_visibility') || 'public';
     }
+    const currentQuote = store.get('pref_post_quote') || 'public';
     const postQuoteSel = $('settings-post-quote');
-    if (postQuoteSel) {
-      postQuoteSel.value = store.get('pref_post_quote') || 'public';
-    }
+    if (postQuoteSel) postQuoteSel.value = currentQuote;
+    document.querySelectorAll('#settings-post-quote-group .theme-segment-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.value === currentQuote);
+    });
     const alwaysSensitiveToggle = $('settings-always-sensitive-toggle');
     if (alwaysSensitiveToggle) {
       alwaysSensitiveToggle.checked = store.get('pref_always_sensitive') === 'true';
@@ -1927,11 +1929,17 @@ const _postQuoteSel = $('settings-post-quote');
 const updatePostQuoteEnabled = () => {
   if (!_postVisSel || !_postQuoteSel) return;
   const vis = _postVisSel.value;
+  const quoteGroup = $('settings-post-quote-group');
   if (vis === 'private' || vis === 'direct') {
     _postQuoteSel.value = 'nobody';
-    _postQuoteSel.disabled = true;
+    if (quoteGroup) {
+      quoteGroup.classList.add('disabled');
+      quoteGroup.querySelectorAll('.theme-segment-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === 'nobody');
+      });
+    }
   } else {
-    _postQuoteSel.disabled = false;
+    if (quoteGroup) quoteGroup.classList.remove('disabled');
   }
 };
 
@@ -1946,10 +1954,20 @@ if (_postVisSel) {
 }
 
 if (_postQuoteSel) {
-  _postQuoteSel.addEventListener('change', () => {
-    store.set('pref_post_quote', _postQuoteSel.value);
-    showToast.success('Default quote permission updated');
-    refreshComposeDefaults();
+  document.querySelectorAll('#settings-post-quote-group .theme-segment-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const quoteGroup = $('settings-post-quote-group');
+      if (quoteGroup && quoteGroup.classList.contains('disabled')) return;
+
+      const val = e.currentTarget.dataset.value;
+      _postQuoteSel.value = val;
+      document.querySelectorAll('#settings-post-quote-group .theme-segment-btn').forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+
+      store.set('pref_post_quote', val);
+      showToast.success('Default quote permission updated');
+      refreshComposeDefaults();
+    });
   });
 }
 

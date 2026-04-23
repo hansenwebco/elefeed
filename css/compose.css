@@ -1219,6 +1219,11 @@
   gap: 4px;
   margin: 4px -8px;
 }
+.visibility-options-list.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}
 
 .visibility-option-item {
   display: flex;

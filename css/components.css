@@ -581,6 +581,11 @@
   width: 100%;
   border: 1px solid var(--border);
 }
+.theme-selector.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}
 
 .theme-segment-btn {
   flex: 1;
