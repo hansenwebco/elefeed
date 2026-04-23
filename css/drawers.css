@@ -1807,12 +1807,12 @@ body.manage-inline-active .manage-inline-panel {
 }
 
 .notif-icon.type-reblog {
-  background: rgba(78, 205, 196, 0.15);
+  background: color-mix(in srgb, var(--boost) 15%, transparent);
   color: var(--boost);
 }
 
 .notif-icon.type-favourite {
-  background: rgba(255, 217, 61, 0.15);
+  background: color-mix(in srgb, var(--fav) 15%, transparent);
   color: var(--fav);
 }
 
