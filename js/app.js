@@ -1409,6 +1409,13 @@ function refreshNotifSettingsUI() {
   permBtn.textContent = perm === 'granted' ? 'Permission granted' : 'Enable Notifications';
   permBtn.disabled = perm === 'granted' || perm === 'denied' || perm === 'unsupported';
 
+  // Hide push notification settings on mobile devices (where OS handles them)
+  const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent) || !!window.AndroidBridge;
+  const pushSection = $('settings-push-notifs-section');
+  if (pushSection) {
+    pushSection.style.display = isMobile ? 'none' : 'flex';
+  }
+
   // Show web push options only if permission is granted
   const pushOptions = $('settings-web-push-options');
   if (pushOptions) {
@@ -1447,13 +1454,6 @@ function refreshNotifSettingsUI() {
   const acct = state.account?.acct || '';
   const server = state.server || '';
   const isDev = acct === 'TheStoneDonkey' && server === 'beige.party';
-
-  // Hide push notification section on mobile devices (Android/iOS)
-  const pushSection = $('settings-push-notifs-section');
-  const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || typeof window.AndroidBridge !== 'undefined';
-  if (pushSection) {
-    pushSection.style.display = isMobileDevice ? 'none' : 'flex';
-  }
 
   if (debugSection) debugSection.style.display = isDev ? '' : 'none';
 
@@ -1548,12 +1548,25 @@ if (_bgToggle) {
 }
 
 if (_intervalSel) {
+  _intervalSel.value = store.get('pref_bg_poll_interval') || '600000';
   _intervalSel.addEventListener('change', () => {
     store.set('pref_bg_poll_interval', _intervalSel.value);
     updateSwConfig();
-    showToast('Poll interval updated');
+    showToast('Check interval updated');
   });
 }
+
+// Alert type checkboxes
+['mention', 'follow', 'reblog', 'favourite', 'follow-request', 'poll', 'status', 'update'].forEach(type => {
+  const cb = $(`settings-alert-${type}`);
+  if (cb) {
+    cb.checked = store.get(`pref_alert_${type}`) !== 'false';
+    cb.addEventListener('change', () => {
+      store.set(`pref_alert_${type}`, cb.checked);
+      updateSwConfig();
+    });
+  }
+});
 
 // Alert types collapsible toggle
 const _alertToggle = $('settings-alert-types-toggle');
