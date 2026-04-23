@@ -68,6 +68,9 @@ export function startTracking() {
   if (_activeStartTime) return;
   _activeStartTime = Date.now();
 
+  // Pull latest from server immediately when enabled
+  _pullFromNote().then(() => renderUsageUI());
+
   window.addEventListener('visibilitychange', handleVisibilityChange);
   window.addEventListener('blur', stopTimer);
   window.addEventListener('focus', startTimer);
