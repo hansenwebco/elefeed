@@ -11,6 +11,17 @@ const MARKER_END = '--- ELEFEED USAGE END ---';
 let _isDismissed = false; // Local flag to allow reappearance on refresh
 
 /**
+ * Returns the current date as a YYYY-MM-DD string in the user's local timezone.
+ */
+function getLocalDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Initializes usage tracking if enabled in settings.
  */
 export async function initUsageTracking() {
@@ -44,7 +55,7 @@ export async function pullUsageData() {
 
           // Merge: server wins for past days, but we keep today's local progress
           const merged = { ...remoteStats, ...localStats };
-          const today = new Date().toISOString().split('T')[0];
+          const today = getLocalDateString();
           if (remoteStats[today] && localStats[today]) {
             merged[today] = Math.max(remoteStats[today], localStats[today]);
           }
@@ -127,7 +138,7 @@ function handleVisibilityChange() {
  */
 function updateLocalUsage(ms) {
   if (ms <= 0) return;
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   const statsRaw = store.get('usage_stats');
   let stats = {};
   try { stats = JSON.parse(statsRaw) || {}; } catch (e) { stats = {}; }
@@ -206,7 +217,7 @@ export function renderUsageUI() {
     feedCont.prepend(container);
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   const statsRaw = store.get('usage_stats');
   let stats = {};
   try { stats = JSON.parse(statsRaw) || {}; } catch (e) { stats = {}; }
