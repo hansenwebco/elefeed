@@ -50,10 +50,10 @@ export async function pullUsageData() {
           const remoteStats = JSON.parse(jsonStr);
           const localStatsRaw = store.get('usage_stats');
           let localStats = {};
-          try { 
-            localStats = JSON.parse(localStatsRaw) || {}; 
-          } catch (e) { 
-            localStats = {}; 
+          try {
+            localStats = JSON.parse(localStatsRaw) || {};
+          } catch (e) {
+            localStats = {};
           }
 
           // Filter out any garbage from the parse
@@ -95,8 +95,8 @@ export function startTracking() {
   // Sync every 1 minute to server
   _saveInterval = setInterval(syncUsage, 60 * 1000);
 
-  // Update the UI display every 5 seconds so it feels "live"
-  _uiInterval = setInterval(renderUsageUI, 5 * 1000);
+  // Update the UI display every 55 seconds (since sync is every 1 min)
+  _uiInterval = setInterval(renderUsageUI, 55 * 1000);
 
   renderUsageUI();
 }
@@ -252,7 +252,7 @@ export function renderUsageUI() {
     <div class="usage-note-content">
       <iconify-icon icon="ph:clock-bold" class="usage-note-icon"></iconify-icon>
       <div class="usage-note-text">
-        You've been using Elefeed for ${timeStr} today.
+        Used Elefeed for ${timeStr} today.
       </div>
     </div>
     <button class="usage-note-close" aria-label="Dismiss" onclick="import('./js/usage.js').then(m => m.resetUsageDismissal(true)); this.closest('.usage-note-banner').remove();">
