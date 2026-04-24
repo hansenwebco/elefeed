@@ -8,6 +8,8 @@ let _uiInterval = null;
 const MARKER_START = '--- ELEFEED USAGE START ---';
 const MARKER_END = '--- ELEFEED USAGE END ---';
 let _isDismissed = false; // Local flag to allow reappearance on refresh
+let _lastSyncTime = null;
+let _isSyncing = false;
 
 /**
  * Returns the current date as a YYYY-MM-DD string in the user's local timezone.
@@ -26,8 +28,8 @@ function getLocalDateString() {
 export async function initUsageTracking() {
   const enabled = store.get('pref_usage_tracking') === 'true';
   if (enabled) {
+    // startTracking will call pullUsageData() internally
     startTracking();
-    await pullUsageData();
   }
 }
 
@@ -35,11 +37,15 @@ export async function initUsageTracking() {
  * Pulls usage data from the server and merges it with local data.
  */
 export async function pullUsageData() {
-  if (state.demoMode || !state.account || !state.token) return;
+  if (state.demoMode || !state.account || !state.token || _isSyncing) return;
 
   try {
+    _isSyncing = true;
+    renderUsageUI(); // Show syncing state
+
     const rels = await apiGet(`/api/v1/accounts/relationships?id[]=${state.account.id}`);
-    const currentNote = (rels && rels[0]) ? (rels[0].note || '') : '';
+    const rel = rels && rels.find(r => String(r.id) === String(state.account.id));
+    const currentNote = rel ? (rel.note || '') : '';
 
     if (currentNote.includes(MARKER_START)) {
       const startIdx = currentNote.indexOf(MARKER_START);
@@ -48,35 +54,43 @@ export async function pullUsageData() {
         const jsonStr = currentNote.substring(startIdx + MARKER_START.length, endIdx);
         try {
           const remoteStats = JSON.parse(jsonStr);
-          const localStatsRaw = store.get('usage_stats');
-          let localStats = {};
-          try {
-            localStats = JSON.parse(localStatsRaw) || {};
-          } catch (e) {
-            localStats = {};
+          if (typeof remoteStats === 'object' && remoteStats !== null) {
+            mergeRemoteStats(remoteStats);
           }
-
-          // Filter out any garbage from the parse
-          if (typeof remoteStats !== 'object' || remoteStats === null) return;
-
-          // Merge: for every date, the higher value wins to prevent regressions
-          const merged = { ...remoteStats, ...localStats };
-          Object.keys(remoteStats).forEach(date => {
-            if (localStats[date]) {
-              merged[date] = Math.max(remoteStats[date], localStats[date]);
-            }
-          });
-
-          store.set('usage_stats', JSON.stringify(merged));
-          renderUsageUI();
         } catch (e) {
           console.error('[Usage] Failed to parse remote stats:', e);
         }
       }
     }
+    _lastSyncTime = Date.now();
   } catch (err) {
     console.error('[Usage] Pull failed:', err);
+  } finally {
+    _isSyncing = false;
+    renderUsageUI();
   }
+}
+
+/**
+ * Merges remote stats into local storage, keeping the maximum value for each date.
+ */
+function mergeRemoteStats(remoteStats) {
+  const localStatsRaw = store.get('usage_stats');
+  let localStats = {};
+  try {
+    localStats = JSON.parse(localStatsRaw) || {};
+  } catch (e) {
+    localStats = {};
+  }
+
+  const merged = { ...remoteStats, ...localStats };
+  Object.keys(remoteStats).forEach(date => {
+    if (localStats[date]) {
+      merged[date] = Math.max(remoteStats[date], localStats[date]);
+    }
+  });
+
+  store.set('usage_stats', JSON.stringify(merged));
 }
 
 /**
@@ -162,7 +176,7 @@ function updateLocalUsage(ms) {
  * Uses the private relationship note on the user's own account.
  */
 export async function syncUsage() {
-  if (state.demoMode || !state.account || !state.token) return;
+  if (state.demoMode || !state.account || !state.token || _isSyncing) return;
 
   // 1. Accumulate current session slice into local storage
   if (_activeStartTime) {
@@ -172,9 +186,13 @@ export async function syncUsage() {
   }
 
   try {
+    _isSyncing = true;
+    renderUsageUI();
+
     // 2. Fetch remote note to merge before pushing
     const rels = await apiGet(`/api/v1/accounts/relationships?id[]=${state.account.id}`);
-    const currentNote = (rels && rels[0]) ? (rels[0].note || '') : '';
+    const rel = rels && rels.find(r => String(r.id) === String(state.account.id));
+    const currentNote = rel ? (rel.note || '') : '';
 
     let statsData = {};
     const localStatsRaw = store.get('usage_stats');
@@ -189,13 +207,10 @@ export async function syncUsage() {
         try {
           const remoteStats = JSON.parse(jsonStr);
           if (typeof remoteStats === 'object' && remoteStats !== null) {
-            // Merge: Max wins for all dates to prevent one device overwriting another
-            Object.keys(remoteStats).forEach(date => {
-              statsData[date] = Math.max(statsData[date] || 0, remoteStats[date]);
-            });
-            // Save merged back to local storage
-            store.set('usage_stats', JSON.stringify(statsData));
-            renderUsageUI();
+            mergeRemoteStats(remoteStats);
+            // Refresh our local copy after merge
+            const mergedRaw = store.get('usage_stats');
+            try { statsData = JSON.parse(mergedRaw) || statsData; } catch (e) {}
           }
         } catch (e) {
           console.error('[Usage] Failed to parse remote stats during sync:', e);
@@ -221,8 +236,13 @@ export async function syncUsage() {
     }
 
     await apiPost(`/api/v1/accounts/${state.account.id}/note`, { comment: newNote });
+    _lastSyncTime = Date.now();
   } catch (err) {
     console.error('[Usage] Sync failed:', err);
+    import('./ui.js').then(m => m.showToast('Usage sync failed. Check connection.', 'error'));
+  } finally {
+    _isSyncing = false;
+    renderUsageUI();
   }
 }
 
@@ -256,7 +276,7 @@ export function renderUsageUI() {
     ms += (Date.now() - _activeStartTime);
   }
 
-  // Don't show if less than 1 second (prevents flash on empty state but gives immediate feedback)
+  // Don't show if less than 1 second
   if (ms < 1000) {
     container.style.display = 'none';
     return;
