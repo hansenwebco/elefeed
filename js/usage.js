@@ -4,7 +4,7 @@ import { apiGet, apiPost } from './api.js';
 let _activeStartTime = null;
 let _saveInterval = null;
 let _uiInterval = null;
-let _sessionMsAccumulator = 0; // Tracks milliseconds between focus/blur to prevent data loss
+
 const MARKER_START = '--- ELEFEED USAGE START ---';
 const MARKER_END = '--- ELEFEED USAGE END ---';
 let _isDismissed = false; // Local flag to allow reappearance on refresh
@@ -59,12 +59,13 @@ export async function pullUsageData() {
           // Filter out any garbage from the parse
           if (typeof remoteStats !== 'object' || remoteStats === null) return;
 
-          // Merge: server wins for past days, but we keep today's local progress
+          // Merge: for every date, the higher value wins to prevent regressions
           const merged = { ...remoteStats, ...localStats };
-          const today = getLocalDateString();
-          if (remoteStats[today] && localStats[today]) {
-            merged[today] = Math.max(remoteStats[today], localStats[today]);
-          }
+          Object.keys(remoteStats).forEach(date => {
+            if (localStats[date]) {
+              merged[date] = Math.max(remoteStats[date], localStats[date]);
+            }
+          });
 
           store.set('usage_stats', JSON.stringify(merged));
           renderUsageUI();
@@ -133,6 +134,8 @@ function stopTimer() {
 function handleVisibilityChange() {
   if (document.visibilityState === 'visible') {
     startTimer();
+    // Pull latest data when coming back to the app to ensure times match other devices
+    pullUsageData();
   } else {
     stopTimer();
     syncUsage();
@@ -161,38 +164,58 @@ function updateLocalUsage(ms) {
 export async function syncUsage() {
   if (state.demoMode || !state.account || !state.token) return;
 
-  // If currently active, add the current session's time before syncing
-  let msToSync = 0;
+  // 1. Accumulate current session slice into local storage
   if (_activeStartTime) {
-    msToSync = Date.now() - _activeStartTime;
+    const msToSync = Date.now() - _activeStartTime;
     updateLocalUsage(msToSync);
     _activeStartTime = Date.now(); // Reset start for next slice
   }
 
-  const statsRaw = store.get('usage_stats');
-  if (!statsRaw) return;
-
   try {
+    // 2. Fetch remote note to merge before pushing
     const rels = await apiGet(`/api/v1/accounts/relationships?id[]=${state.account.id}`);
     const currentNote = (rels && rels[0]) ? (rels[0].note || '') : '';
 
-    const statsData = JSON.parse(statsRaw);
-    const keys = Object.keys(statsData).sort().reverse();
-    const prunedStats = {};
-    keys.slice(0, 7).forEach(k => prunedStats[k] = statsData[k]);
+    let statsData = {};
+    const localStatsRaw = store.get('usage_stats');
+    try { statsData = JSON.parse(localStatsRaw) || {}; } catch (e) { statsData = {}; }
 
-    const jsonStr = JSON.stringify(prunedStats);
-    const usageBlock = `${MARKER_START}${jsonStr}${MARKER_END}`;
-
-    let newNote = '';
+    // 3. Extract and merge remote data
     if (currentNote.includes(MARKER_START)) {
       const startIdx = currentNote.indexOf(MARKER_START);
       const endIdx = currentNote.indexOf(MARKER_END);
       if (endIdx !== -1) {
-        newNote = currentNote.substring(0, startIdx) + usageBlock + currentNote.substring(endIdx + MARKER_END.length);
-      } else {
-        newNote = currentNote.trim() + '\n' + usageBlock;
+        const jsonStr = currentNote.substring(startIdx + MARKER_START.length, endIdx);
+        try {
+          const remoteStats = JSON.parse(jsonStr);
+          if (typeof remoteStats === 'object' && remoteStats !== null) {
+            // Merge: Max wins for all dates to prevent one device overwriting another
+            Object.keys(remoteStats).forEach(date => {
+              statsData[date] = Math.max(statsData[date] || 0, remoteStats[date]);
+            });
+            // Save merged back to local storage
+            store.set('usage_stats', JSON.stringify(statsData));
+            renderUsageUI();
+          }
+        } catch (e) {
+          console.error('[Usage] Failed to parse remote stats during sync:', e);
+        }
       }
+    }
+
+    // 4. Prune and prepare for server storage (keep last 7 days)
+    const keys = Object.keys(statsData).sort().reverse();
+    const prunedStats = {};
+    keys.slice(0, 7).forEach(k => prunedStats[k] = statsData[k]);
+
+    const usageBlock = `${MARKER_START}${JSON.stringify(prunedStats)}${MARKER_END}`;
+
+    // 5. Construct new note and push
+    let newNote = '';
+    if (currentNote.includes(MARKER_START)) {
+      const startIdx = currentNote.indexOf(MARKER_START);
+      const endIdx = currentNote.indexOf(MARKER_END);
+      newNote = currentNote.substring(0, startIdx) + usageBlock + currentNote.substring(endIdx + MARKER_END.length);
     } else {
       newNote = (currentNote.trim() + '\n' + usageBlock).trim();
     }
