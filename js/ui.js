@@ -143,10 +143,7 @@ export function showNotificationToast(notif) {
 
   let preview = '';
   if (notif.status && notif.status.content) {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = notif.status.content;
-    preview = (tempDiv.textContent || tempDiv.innerText || '').substring(0, 100);
-    if (preview.length >= 100) preview = preview.trim() + '…';
+    preview = sanitizeHTML(notif.status.content, { mentions: notif.status.mentions, emojis: notif.status.emojis, server: state.server });
   }
 
   const item = document.createElement('div');
@@ -182,7 +179,7 @@ export function showNotificationToast(notif) {
         <div class="toast-notif-name">${escapeHTML(displayName)}</div>
         <div class="toast-notif-action">${escapeHTML(label)}</div>
       </div>
-      ${preview ? `<div class="toast-notif-preview">${escapeHTML(preview)}</div>` : ''}
+      ${preview ? `<div class="toast-notif-preview">${preview}</div>` : ''}
     </div>
     <button class="toast-close" aria-label="Dismiss">
       <iconify-icon icon="ph:x-bold" style="font-size: 12px;"></iconify-icon>

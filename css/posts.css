@@ -561,6 +561,9 @@
 
 .post-content .hashtag,
 .post-tags .hashtag,
+.notif-preview .hashtag,
+.notif-follow-bio .hashtag,
+.toast-notif-preview .hashtag,
 .post-tags-toggle,
 .post-tags-less-toggle {
   color: var(--hashtag-color);
@@ -570,6 +573,9 @@
 
 .hashtag-pills-enabled .post-content .hashtag,
 .hashtag-pills-enabled .post-tags .hashtag,
+.hashtag-pills-enabled .notif-preview .hashtag,
+.hashtag-pills-enabled .notif-follow-bio .hashtag,
+.hashtag-pills-enabled .toast-notif-preview .hashtag,
 .hashtag-pills-enabled .post-tags-toggle,
 .hashtag-pills-enabled .post-tags-less-toggle {
   background: var(--surface2);
@@ -595,6 +601,9 @@
 /* Specific display logic for pills */
 .hashtag-pills-enabled .post-content .hashtag,
 .hashtag-pills-enabled .post-tags .hashtag,
+.hashtag-pills-enabled .notif-preview .hashtag,
+.hashtag-pills-enabled .notif-follow-bio .hashtag,
+.hashtag-pills-enabled .toast-notif-preview .hashtag,
 .hashtag-pills-enabled .post-tags-toggle {
   display: inline-flex;
 }
@@ -605,6 +614,9 @@
 
 .hashtag-pills-enabled .post-content .hashtag:hover,
 .hashtag-pills-enabled .post-tags .hashtag:hover,
+.hashtag-pills-enabled .notif-preview .hashtag:hover,
+.hashtag-pills-enabled .notif-follow-bio .hashtag:hover,
+.hashtag-pills-enabled .toast-notif-preview .hashtag:hover,
 .hashtag-pills-enabled .post-tags-toggle:hover,
 .hashtag-pills-enabled .post-tags-less-toggle:hover {
   background: var(--surface);

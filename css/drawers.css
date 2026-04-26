@@ -1945,6 +1945,24 @@ body.manage-inline-active .manage-inline-panel {
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.notif-follow-bio a {
+  color: var(--accent2);
+  text-decoration: none;
+}
+
+.notif-follow-bio a:hover {
+  text-decoration: underline;
+}
+
+.notif-follow-bio .mention {
+  color: var(--following-color);
+}
+
+.notif-follow-bio .hashtag {
+  color: var(--hashtag-color);
 }
 
 .notif-follow-bio p {
