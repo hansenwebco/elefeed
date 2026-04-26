@@ -506,6 +506,11 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
                <span>View Original Post</span>
             </button>
 
+            <button class="boost-dropdown-item" data-action="mute-conversation" data-post-id="${s.id}" data-muted="${s.muted ? 'true' : 'false'}">
+               <iconify-icon icon="${s.muted ? 'ph:speaker-high-bold' : 'ph:speaker-slash-bold'}" style="font-size: 14px; opacity:0.6;"></iconify-icon>
+               <span>${s.muted ? 'Unmute Conversation' : 'Mute Conversation'}</span>
+            </button>
+
             ${showTranslate ? `
             <button class="boost-dropdown-item post-translate-btn" onclick="event.preventDefault(); event.stopPropagation(); window.translatePost(this, '${s.id}', '${escapeHTML(postLang || '')}', '${escapeHTML(s.url || '')}'); document.querySelectorAll('.footer-more-dropdown').forEach(m => m.classList.remove('show'));" data-original-label="Translate">
               <iconify-icon icon="ph:translate-bold" style="font-size: 14px; opacity:0.6;"></iconify-icon>

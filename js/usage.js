@@ -298,9 +298,6 @@ export function renderUsageUI() {
         Used Elefeed for ${timeStr} today.
       </div>
     </div>
-    <button class="usage-note-close" aria-label="Dismiss" onclick="import('./js/usage.js').then(m => m.resetUsageDismissal(true)); this.closest('.usage-note-banner').remove();">
-      <iconify-icon icon="ph:x-bold"></iconify-icon>
-    </button>
   `;
 }
 
