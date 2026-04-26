@@ -1948,20 +1948,24 @@ body.manage-inline-active .manage-inline-panel {
   overflow-wrap: anywhere;
 }
 
-.notif-follow-bio a {
+.notif-follow-bio a,
+.notif-preview a {
   color: var(--accent2);
   text-decoration: none;
 }
 
-.notif-follow-bio a:hover {
+.notif-follow-bio a:hover,
+.notif-preview a:hover {
   text-decoration: underline;
 }
 
-.notif-follow-bio .mention {
+.notif-follow-bio .mention,
+.notif-preview .mention {
   color: var(--following-color);
 }
 
-.notif-follow-bio .hashtag {
+.notif-follow-bio .hashtag,
+.notif-preview .hashtag {
   color: var(--hashtag-color);
 }
 
