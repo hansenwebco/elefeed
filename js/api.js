@@ -238,3 +238,11 @@ export async function exchangeCode(server, clientId, clientSecret, code) {
   if (!data.access_token) throw new Error('Server did not return an access token.');
   return data;
 }
+
+export async function muteConversation(id) {
+  return apiPost(`/api/v1/statuses/${id}/mute`);
+}
+
+export async function unmuteConversation(id) {
+  return apiPost(`/api/v1/statuses/${id}/unmute`);
+}

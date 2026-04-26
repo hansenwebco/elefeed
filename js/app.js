@@ -2501,6 +2501,8 @@ document.addEventListener('click', e => {
       window.handleDeleteInit(boostItem.dataset.postId, boostItem);
     } else if (boostItem.dataset.action === 'delete-redraft') {
       window.handleDeleteRedraftInit(boostItem.dataset.postId, boostItem);
+    } else if (boostItem.dataset.action === 'mute-conversation') {
+      window.handleMuteConversationToggle(boostItem.dataset.postId, boostItem.dataset.muted === 'true', boostItem);
     }
     return;
   }

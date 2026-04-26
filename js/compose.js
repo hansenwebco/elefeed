@@ -603,6 +603,46 @@ window.handleQuoteInit = async function (postId, acct, triggerEl) {
   else placeCursorAtEnd(textarea);
 };
 
+window.handleMuteConversationToggle = async function (postId, isMuted, triggerEl) {
+  if (!state.token) { showToast('Please sign in to mute conversations.'); return; }
+  const willBeMuted = !isMuted;
+
+  // Optimistic UI update
+  if (triggerEl) {
+    const originalMuted = isMuted;
+    const originalIcon = triggerEl.querySelector('iconify-icon')?.getAttribute('icon');
+    const originalText = triggerEl.querySelector('span')?.textContent;
+
+    const setUIState = (muted) => {
+      triggerEl.dataset.muted = muted ? 'true' : 'false';
+      const icon = triggerEl.querySelector('iconify-icon');
+      if (icon) icon.setAttribute('icon', muted ? 'ph:speaker-high-bold' : 'ph:speaker-slash-bold');
+      const span = triggerEl.querySelector('span');
+      if (span) span.textContent = muted ? 'Unmute Conversation' : 'Mute Conversation';
+    };
+
+    setUIState(willBeMuted);
+
+    try {
+      const endpoint = willBeMuted
+        ? `/api/v1/statuses/${postId}/mute`
+        : `/api/v1/statuses/${postId}/unmute`;
+
+      const res = await fetch(`https://${state.server}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${state.token}` },
+      });
+      if (!res.ok) throw new Error('Failed to update mute state');
+      
+      showToast(willBeMuted ? 'Conversation muted' : 'Conversation unmuted');
+    } catch (err) {
+      // Rollback
+      setUIState(originalMuted);
+      showToast('Error: ' + err.message);
+    }
+  }
+};
+
 window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
   document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
   if (!state.token) { showToast('Please sign in to boost posts.'); return; }
