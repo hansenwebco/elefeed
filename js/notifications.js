@@ -6,7 +6,7 @@
 
 import { $, store, state } from './state.js';
 import { apiGet } from './api.js';
-import { escapeHTML, relativeTime, updateURLParam, formatCount, sanitizeHTML, renderCustomEmojis } from './utils.js';
+import { escapeHTML, relativeTime, updateURLParam, formatCount, sanitizeHTML, renderCustomEmojis, processContent } from './utils.js';
 import { openProfileDrawer } from './profile.js';
 import { openThreadDrawer } from './thread.js';
 import { renderFollowingBadge } from './render.js';
@@ -517,6 +517,7 @@ function _wireEvents(container) {
   container.querySelectorAll('[data-notif-profile]:not(.wired)').forEach(el => {
     el.classList.add('wired');
     el.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return;
       e.stopPropagation();
       const id = el.dataset.notifProfile;
       const srv = el.dataset.notifServer || state.server;
@@ -527,6 +528,7 @@ function _wireEvents(container) {
   container.querySelectorAll('[data-notif-status]:not(.wired)').forEach(el => {
     el.classList.add('wired');
     el.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return;
       e.stopPropagation();
       const id = el.dataset.notifStatus;
       closeNotifDrawer();
@@ -570,10 +572,7 @@ function renderNotifItem(n) {
     if (isFiltered && filterAction === 'warn') {
       preview = `<div class="notif-preview-filtered" style="font-size:11px; opacity:0.6; font-style:italic;">Filtered: ${escapeHTML(filterTitle || 'Custom Filter')}</div>`;
     } else {
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = s.content;
-      const text = (tempDiv.textContent || tempDiv.innerText || '').substring(0, 200);
-      if (text) preview = `<div class="notif-preview" data-notif-status="${s.id}">${escapeHTML(text)}</div>`;
+      preview = `<div class="notif-preview" data-notif-status="${s.id}">${processContent(sanitizeHTML(s.content, { mentions: s.mentions, emojis: s.emojis, server: state.server }))}</div>`;
     }
   }
 
@@ -583,7 +582,7 @@ function renderNotifItem(n) {
   let followProfile = '';
   if ((n.type === 'follow' || n.type === 'follow_request') && account) {
     const headerUrl = account.header_static || account.header;
-    const bio = account.note ? sanitizeHTML(account.note, { emojis: account.emojis }) : '';
+    const bio = account.note ? processContent(sanitizeHTML(account.note, { emojis: account.emojis, server: state.server })) : '';
     const followers = formatCount(account.followers_count || 0);
     const following = formatCount(account.following_count || 0);
     const statuses = formatCount(account.statuses_count || 0);
