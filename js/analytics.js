@@ -194,7 +194,7 @@ function renderAnalyticsUserRow(account, relationship) {
     let btnClass = 'analytics-follow-btn profile-follow-btn';
 
     if (isFollowing) {
-      btnText = 'Following';
+      btnText = followedBy ? 'Mutual' : 'Following';
       btnClass += ' following';
     } else if (isRequested) {
       btnText = 'Requested';
@@ -213,9 +213,7 @@ function renderAnalyticsUserRow(account, relationship) {
       title="${btnText}">${btnText}</button>`;
   }
 
-  const followsYouBadge = followedBy
-    ? `<span class="analytics-follows-you">Follows you</span>`
-    : '';
+  const followsYouBadge = '';
 
   const lockIcon = isLocked
     ? `<iconify-icon icon="ph:lock-bold" class="analytics-lock-icon" style="font-size: 10px; margin-left: 4px;" title="Locked account"></iconify-icon>`
@@ -236,9 +234,12 @@ function renderAnalyticsUserRow(account, relationship) {
         data-profile-id="${account.id}"
         data-profile-server="${profileServer}"
         style="cursor:pointer;">
-        ${renderCustomEmojis(account.display_name || account.username, account.emojis)}${lockIcon}
+        <span class="analytics-name-text">${renderCustomEmojis(account.display_name || account.username, account.emojis)}</span>${lockIcon}
       </div>
-      <div class="analytics-user-acct">@${escapeHTML(account.acct)}${followsYouBadge}</div>
+      <div class="analytics-user-acct">
+        <span class="analytics-acct-text">@${escapeHTML(account.acct)}</span>
+        ${followsYouBadge}
+      </div>
     </div>
     ${followBtnHTML}
   </div>`;

@@ -2332,7 +2332,6 @@ function wrapDrawerClose(fn) {
 
 $('profile-close').addEventListener('click', wrapDrawerClose(closeProfileDrawer));
 $('profile-backdrop').addEventListener('click', wrapDrawerClose(closeProfileDrawer));
-$('profile-back-analytics')?.addEventListener('click', wrapDrawerClose(closeProfileDrawer));
 
 $('thread-close-btn').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
 $('thread-backdrop').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
@@ -2398,11 +2397,6 @@ document.addEventListener('click', e => {
     e.preventDefault();
     closeComposeDrawer();
     const profileDrawer = $('profile-drawer');
-    if ($('post-analytics-drawer')?.classList.contains('open')) {
-      profileDrawer.dataset.fromAnalytics = 'true';
-    } else {
-      delete profileDrawer.dataset.fromAnalytics;
-    }
     openProfileDrawer(trigger.dataset.profileId, trigger.dataset.profileServer);
     return;
   }
