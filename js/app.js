@@ -45,6 +45,8 @@ import { startCountPolling, stopCountPolling, applyCountsFromStatus } from './co
 import { initTitleBar, updateTitleBar } from './titlebar.js';
 import { openFiltersDrawer, closeFiltersDrawer, initFiltersUI, loadFilters } from './filters.js';
 import { initUsageTracking, startTracking, stopTracking, renderUsageUI } from './usage.js';
+import { initSettingsSync, handleSyncToggle, triggerPush, clearAccountSettings } from './settingsSync.js';
+import { getAccountNote, extractBlock } from './sync.js';
 
 
 // Expose drawer openers needed by render.js and ui.js toasts
@@ -57,6 +59,17 @@ window.activeFeedKey = activeFeedKey;
 window.openFiltersDrawer = openFiltersDrawer;
 window.closeFiltersDrawer = closeFiltersDrawer;
 window.openBookmarksDrawer = openBookmarksDrawer;
+
+// Expose apply functions for real-time cloud sync
+window.applyTheme = applyTheme;
+window.applyPalette = applyPalette;
+window.applyFont = applyFont;
+window.applyFontSize = applyFontSize;
+window.applyZenMode = applyZenMode;
+window.updateSidebarNav = updateSidebarNav;
+window.refreshNotifSettingsUI = refreshNotifSettingsUI;
+window.refreshComposeDefaults = refreshComposeDefaults;
+window.loadFeedTab = loadFeedTab;
 
 // Drawer state tracking for history
 function isAnyDrawerOpen() {
@@ -544,6 +557,7 @@ async function initApp(server, token, demo = false) {
   // Initialize UI components
   initFiltersUI();
   initUsageTracking();
+  initSettingsSync();
 }
 
 
@@ -1222,6 +1236,11 @@ if (settingsMenuBtn) {
       usageTrackingToggle.checked = store.get('pref_usage_tracking') === 'true';
     }
 
+    const settingsSyncToggle = $('settings-sync-toggle');
+    if (settingsSyncToggle) {
+      settingsSyncToggle.checked = store.get('pref_sync_settings') === 'true';
+    }
+
     const zenModeToggle = $('settings-zen-mode-toggle');
     if (zenModeToggle) {
       zenModeToggle.checked = state.zenMode;
@@ -1304,7 +1323,10 @@ $('settings-backdrop')?.addEventListener('click', () => {
 });
 
 function applyTheme(t) {
-  if (t) store.set('theme', t);
+  if (t) {
+    store.set('theme', t);
+    triggerPush();
+  }
   const mode = store.get('theme') || 'system';
   const palette = store.get('pref_palette') || 'classic';
 
@@ -1326,6 +1348,7 @@ function applyTheme(t) {
 
 function applyPalette(p) {
   store.set('pref_palette', p);
+  triggerPush();
   applyTheme();
 }
 
@@ -1353,6 +1376,7 @@ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e 
 
 function applyFont(f) {
   store.set('pref_font_family', f);
+  triggerPush();
   const fontMap = {
     'sans': "'DM Sans', system-ui, -apple-system, sans-serif",
     'outfit': "'Outfit', sans-serif",
@@ -1374,6 +1398,7 @@ $('settings-font-family')?.addEventListener('change', (e) => {
 
 function applyFontSize(s) {
   store.set('pref_font_size', s);
+  triggerPush();
   document.documentElement.style.setProperty('--app-font-size', s);
   const valDisp = $('settings-font-size-value');
   if (valDisp) valDisp.textContent = s;
@@ -1487,6 +1512,7 @@ const _followingFeedToggle = $('debug-following-feed-toggle');
 if (_followingFeedToggle) {
   _followingFeedToggle.addEventListener('change', () => {
     store.set('pref_following_feed', _followingFeedToggle.checked ? 'true' : 'false');
+    triggerPush();
     applyFollowingFeedFlag();
     showToast(_followingFeedToggle.checked ? '"From Following" tab enabled' : '"From Following" tab hidden');
   });
@@ -1499,6 +1525,7 @@ if (_inAppNotifToggle) {
   _inAppNotifToggle.checked = store.get('pref_in_app_notifs') !== 'false';
   _inAppNotifToggle.addEventListener('change', () => {
     store.set('pref_in_app_notifs', _inAppNotifToggle.checked ? 'true' : 'false');
+    triggerPush();
   });
 }
 
@@ -1515,6 +1542,14 @@ if (_usageTrackingToggle) {
       stopTracking();
       showToast('Usage tracking disabled');
     }
+  });
+}
+
+// Settings sync
+const _settingsSyncToggle = $('settings-sync-toggle');
+if (_settingsSyncToggle) {
+  _settingsSyncToggle.addEventListener('change', () => {
+    handleSyncToggle(_settingsSyncToggle.checked);
   });
 }
 
@@ -1541,6 +1576,7 @@ if (_permBtn) {
 if (_bgToggle) {
   _bgToggle.addEventListener('change', () => {
     store.set('pref_bg_notifications', _bgToggle.checked ? 'true' : 'false');
+    triggerPush();
     updateSwConfig();
     refreshNotifSettingsUI();
     showToast(_bgToggle.checked ? 'Background notifications on' : 'Background notifications off');
@@ -1551,6 +1587,7 @@ if (_intervalSel) {
   _intervalSel.value = store.get('pref_bg_poll_interval') || '600000';
   _intervalSel.addEventListener('change', () => {
     store.set('pref_bg_poll_interval', _intervalSel.value);
+    triggerPush();
     updateSwConfig();
     showToast('Check interval updated');
   });
@@ -1563,6 +1600,7 @@ if (_intervalSel) {
     cb.checked = store.get(`pref_alert_${type}`) !== 'false';
     cb.addEventListener('change', () => {
       store.set(`pref_alert_${type}`, cb.checked);
+      triggerPush();
       updateSwConfig();
     });
   }
@@ -1590,6 +1628,7 @@ for (const type of _alertTypes) {
   if (!el) continue;
   el.addEventListener('change', () => {
     store.set('pref_alert_' + type, el.checked ? 'true' : 'false');
+    triggerPush();
     // Force push re-registration so Mastodon receives the updated alert list
     store.del('push_endpoint_' + state.server);
     updateSwConfig();
@@ -1740,6 +1779,7 @@ document.querySelectorAll('#settings-newpost-style-group .theme-segment-btn').fo
   btn.addEventListener('click', () => {
     const value = btn.dataset.value;
     store.set('pref_newpost_style', value);
+    triggerPush();
     document.querySelectorAll('#settings-newpost-style-group .theme-segment-btn').forEach(b => b.classList.toggle('active', b === btn));
     // Re-apply to current feed; reset dismissed flag so pill can show immediately
     if (value === 'pill') {
@@ -1757,6 +1797,7 @@ const _hashtagPillsToggle = $('settings-hashtag-pills-toggle');
 if (_hashtagPillsToggle) {
   _hashtagPillsToggle.addEventListener('change', () => {
     store.set('pref_hashtag_pills', _hashtagPillsToggle.checked ? 'true' : 'false');
+    triggerPush();
     if (_hashtagPillsToggle.checked) {
       document.body.classList.add('hashtag-pills-enabled');
     } else {
@@ -1784,6 +1825,7 @@ function applyZenMode() {
 $('profile-zen-btn')?.addEventListener('click', () => {
   state.zenMode = !state.zenMode;
   store.set('zen_mode', state.zenMode);
+  triggerPush();
   applyZenMode();
   showToast(state.zenMode ? 'Zen Mode enabled' : 'Zen Mode disabled');
   $('profile-dropdown')?.classList.remove('show');
@@ -1794,6 +1836,7 @@ if (_zenModeToggle) {
   _zenModeToggle.addEventListener('change', () => {
     state.zenMode = _zenModeToggle.checked;
     store.set('zen_mode', state.zenMode);
+    triggerPush();
     applyZenMode();
     showToast(state.zenMode ? 'Zen Mode enabled' : 'Zen Mode disabled');
   });
@@ -1808,6 +1851,7 @@ const _hideCardsToggle = $('settings-hide-cards-toggle');
 if (_hideCardsToggle) {
   _hideCardsToggle.addEventListener('change', () => {
     store.set('pref_hide_cards', _hideCardsToggle.checked ? 'true' : 'false');
+    triggerPush();
     if (_hideCardsToggle.checked) {
       document.body.classList.add('hide-cards-enabled');
     } else {
@@ -1821,6 +1865,7 @@ const _countPollingToggle = $('settings-count-polling-toggle');
 if (_countPollingToggle) {
   _countPollingToggle.addEventListener('change', () => {
     store.set('pref_count_polling', _countPollingToggle.checked ? 'true' : 'false');
+    triggerPush();
     if (_countPollingToggle.checked) {
       if (window.startCountPolling) startCountPolling();
     } else {
@@ -1834,6 +1879,7 @@ const _autoOpenSensitiveToggle = $('settings-auto-open-sensitive-toggle');
 if (_autoOpenSensitiveToggle) {
   _autoOpenSensitiveToggle.addEventListener('change', () => {
     store.set('pref_auto_open_sensitive', _autoOpenSensitiveToggle.checked ? 'true' : 'false');
+    triggerPush();
   });
 }
 
@@ -1842,6 +1888,7 @@ const _separateBoostQuoteToggle = $('settings-separate-boost-quote-toggle');
 if (_separateBoostQuoteToggle) {
   _separateBoostQuoteToggle.addEventListener('change', () => {
     store.set('pref_combine_boost_quote', _separateBoostQuoteToggle.checked ? 'true' : 'false');
+    triggerPush();
     import('./ui.js').then(m => m.showToast(_separateBoostQuoteToggle.checked ? 'Boost and Quote combined' : 'Boost and Quote separated'));
     import('./feed.js').then(m => m.loadFeedTab(false));
   });
@@ -1852,6 +1899,7 @@ const _hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
 if (_hideSensitiveMediaToggle) {
   _hideSensitiveMediaToggle.addEventListener('change', () => {
     store.set('pref_hide_sensitive_media', _hideSensitiveMediaToggle.checked ? 'false' : 'true');
+    triggerPush();
   });
 }
 
@@ -1859,6 +1907,7 @@ const _confirmInteractionsToggle = $('settings-confirm-interactions-toggle');
 if (_confirmInteractionsToggle) {
   _confirmInteractionsToggle.addEventListener('change', () => {
     store.set('pref_confirm_interactions', _confirmInteractionsToggle.checked ? 'true' : 'false');
+    triggerPush();
   });
 }
 
@@ -1869,6 +1918,7 @@ if (_giphyToggle) {
   _giphyToggle.addEventListener('change', () => {
     state.giphyEnabled = _giphyToggle.checked;
     store.set('pref_giphy_enabled', state.giphyEnabled ? 'true' : 'false');
+    triggerPush();
     import('./giphy.js').then(m => m.updateGiphyVisibility());
     import('./ui.js').then(m => m.showToast(state.giphyEnabled ? 'Giphy integration enabled' : 'Giphy integration disabled'));
   });
@@ -2078,6 +2128,7 @@ if (_desktopMenuToggle) {
   _desktopMenuToggle.addEventListener('change', () => {
     state.desktopMenu = _desktopMenuToggle.checked;
     store.set('pref_desktop_menu', state.desktopMenu ? 'true' : 'false');
+    triggerPush();
     updateSidebarNav();
     showToast(state.desktopMenu ? 'Sidebar navigation enabled' : 'Sidebar navigation disabled');
   });
@@ -2165,6 +2216,7 @@ const _postLangSel = $('settings-post-lang');
 if (_postLangSel) {
   _postLangSel.addEventListener('change', () => {
     store.set('pref_post_lang', _postLangSel.value);
+    triggerPush();
     showToast.success('Default posting language updated');
     refreshComposeDefaults();
   });
@@ -2174,10 +2226,46 @@ const _alwaysSensitiveToggle = $('settings-always-sensitive-toggle');
 if (_alwaysSensitiveToggle) {
   _alwaysSensitiveToggle.addEventListener('change', () => {
     store.set('pref_always_sensitive', _alwaysSensitiveToggle.checked ? 'true' : 'false');
+    triggerPush();
     showToast.success(_alwaysSensitiveToggle.checked ? 'Always mark media as sensitive' : 'Media sensitivity reset to default');
     refreshComposeDefaults();
   });
 }
+
+// Debug: Clear Account Settings
+$('debug-clear-sync')?.addEventListener('click', () => {
+  clearAccountSettings();
+});
+
+// Debug: View Raw Account Note
+$('debug-view-note')?.addEventListener('click', async () => {
+  try {
+    const note = await getAccountNote();
+    if (!note) {
+      alert('Note is empty');
+      return;
+    }
+
+    const usage = extractBlock(note, '--- ELEFEED USAGE START ---', '--- ELEFEED USAGE END ---');
+    const settings = extractBlock(note, '--- ELEFEED SETTINGS START ---', '--- ELEFEED SETTINGS END ---');
+
+    let displayStr = '';
+    
+    if (usage) {
+      displayStr += '--- USAGE DATA ---\n' + JSON.stringify(usage, null, 2) + '\n\n';
+    }
+    if (settings) {
+      displayStr += '--- SETTINGS DATA ---\n' + JSON.stringify(settings, null, 2) + '\n\n';
+    }
+
+    if (!displayStr) displayStr = 'No Elefeed data blocks found in note.';
+
+    console.log('[Debug] Account Note Content:', { raw: note, usage, settings });
+    alert(displayStr);
+  } catch (err) {
+    alert('Failed to fetch note: ' + err.message);
+  }
+});
 
 // Android Alarm Permission handling
 if (typeof window.AndroidBridge !== 'undefined') {
@@ -2208,6 +2296,8 @@ $('logout-btn').addEventListener('click', () => {
   store.del('token');
   store.del('server');
   store.del('token_scopes');
+  store.del('pref_sync_onboarding_dismissed');
+  sessionStorage.removeItem('notified_sync_available');
   stopFederatedStream(); // close any active SSE connection
   state.server = null;
   state.token = null;
