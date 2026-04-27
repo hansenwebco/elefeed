@@ -892,7 +892,7 @@
       </div>
       <div class="search-input-wrap">
         <span class="search-input-icon">
-        <iconify-icon icon="ph:magnifying-glass-bold" style="font-size: 15px;"></iconify-icon>
+          <iconify-icon icon="ph:magnifying-glass-bold" style="font-size: 15px;"></iconify-icon>
         </span>
         <input type="search" id="search-input" class="" placeholder="Search profiles, hashtags, posts…" autocomplete="off" autocapitalize="off" spellcheck="false" />
         <button id="search-clear" aria-label="Clear search">
@@ -1254,7 +1254,7 @@
                 <span class="settings-toggle-track"></span>
               </label>
             </div>
-            
+
             <!-- Giphy Integration -->
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <div style="display:flex; flex-direction:column; gap:2px;">
@@ -1399,15 +1399,28 @@
           </div>
 
           <!-- Usage Tracking -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:color-mix(in srgb, #f59e0b 3%, var(--bg)); border:1px solid var(--border); border-left:3px solid #f59e0b; border-radius:8px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Usage tracking <span style="color:#f59e0b; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-left:4px;">(Experimental)</span></span>
-              <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Track how much time you spend in the app today. Data is stored privately in your account note.</span>
+          <div style="display:flex; flex-direction:column; gap:12px; padding:12px; background:color-mix(in srgb, #f59e0b 3%, var(--bg)); border:1px solid var(--border); border-left:3px solid #f59e0b; border-radius:8px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Usage tracking <span style="color:#f59e0b; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-left:4px;">(Experimental)</span></span>
+                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Track how much time you spend in the app today. Data is stored privately in your account note.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Enable usage tracking">
+                <input type="checkbox" id="settings-usage-tracking-toggle" />
+                <span class="settings-toggle-track"></span>
+              </label>
             </div>
-            <label class="settings-toggle" style="flex-shrink:0;" title="Enable usage tracking">
-              <input type="checkbox" id="settings-usage-tracking-toggle" />
-              <span class="settings-toggle-track"></span>
-            </label>
+            <div style="height:1px; background:var(--border); margin:4px 0;"></div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Sync settings <span style="color:var(--accent); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-left:4px;">(Experimental)</span></span>
+                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Keep your theme, fonts, and preferences in sync across all your devices using your account note.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Sync settings across devices">
+                <input type="checkbox" id="settings-sync-toggle" />
+                <span class="settings-toggle-track"></span>
+              </label>
+            </div>
           </div>
 
         </div>
@@ -1431,7 +1444,7 @@
           <!-- Background notifications toggle -->
           <div id="settings-push-notifs-section" style="display:flex; flex-direction:column; gap:16px; margin-top:4px;">
             <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Push Notifications (OS)</span>
-            
+
             <!-- Permission row -->
             <div style="display:flex; flex-direction:column; gap:8px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
               <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
@@ -1497,7 +1510,7 @@
                   </div>
                   <iconify-icon icon="ph:caret-down-bold" id="alert-types-chevron" style="font-size: 14px; color:var(--text-dim); transition:transform 0.2s;"></iconify-icon>
                 </button>
-                
+
                 <div id="settings-alert-types-content" style="display:none; flex-direction:column; gap:10px; padding:0 12px 12px;">
                   <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; padding-top:4px; border-top:1px solid var(--border-subtle);">
                     <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
@@ -1544,6 +1557,19 @@
         </button>
 
         <div id="settings-debug-content" style="display:none; flex-direction:column; gap:10px; margin-top:16px;">
+          <!-- Account Sync Debug -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <span style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em;">Sync Management</span>
+            <button id="debug-view-note" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:12px; font-family:var(--font-mono); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <iconify-icon icon="ph:eye-bold"></iconify-icon>
+              View Stored Account Note
+            </button>
+            <button id="debug-clear-sync" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:#ff6b6b; font-size:12px; font-family:var(--font-mono); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <iconify-icon icon="ph:trash-bold"></iconify-icon>
+              Delete Account Settings
+            </button>
+          </div>
+
           <!-- Feature Flags -->
           <div>
             <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.08em; font-family:var(--font-mono);">Feature Flags</h5>
@@ -1630,7 +1656,7 @@
       <div style="display:flex; flex-direction:column; gap:16px;">
         <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.08em; font-family:var(--font-mono); margin:0;">Post Visibility</h4>
         <p style="font-size:13px; color:var(--text-muted); line-height:1.6; margin:0;">Control who can see and interact with this post. You can also set defaults in Posting Settings.</p>
-        
+
         <div class="visibility-options-list" id="visibility-options-list">
           <div class="visibility-option-item" data-value="public" onclick="window.selectVisibilityOption('public')">
             <div class="visibility-option-icon">
@@ -1689,7 +1715,7 @@
 
       <div style="display:flex; flex-direction:column; gap:16px;">
         <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.08em; font-family:var(--font-mono); margin:0;">Interaction Settings</h4>
-        
+
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div style="display:flex; flex-direction:column; gap:8px;">
             <label style="font-size:12px; font-weight:500; color:var(--text);">Who can quote this post?</label>
@@ -1787,6 +1813,21 @@
       </div>
       <div style="padding:16px; border-top:1px solid var(--border); display:flex; justify-content:center;">
         <button onclick="document.getElementById('about-modal').style.display='none'" style="padding:8px 24px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); cursor:pointer;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync Conflict Modal -->
+  <div id="sync-conflict-modal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9500; backdrop-filter:blur(10px);">
+    <div class="modal-content" style="background:var(--surface); padding:32px; border-radius:24px; border:1px solid var(--border); width:90%; max-width:440px; text-align:center; box-shadow:0 24px 64px rgba(0,0,0,0.6);">
+      <div style="color:var(--accent); margin-bottom:20px;"><iconify-icon icon="ph:cloud-arrow-down-bold" style="font-size: 48px;"></iconify-icon></div>
+      <h3 style="font-family:var(--font-display); font-size:22px; color:var(--text); margin-bottom:12px;">Sync Settings Found</h3>
+      <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:8px;">We found existing settings saved on your account.</p>
+      <div id="sync-conflict-server-info" style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); margin-bottom:24px; background:var(--bg); padding:8px; border-radius:8px;">Saved on: --</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button id="sync-conflict-use-server" style="width:100%; padding:14px; border-radius:12px; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; font-size:14px;">Use Stored Settings</button>
+        <button id="sync-conflict-use-local" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-weight:600; cursor:pointer; font-size:14px;">Upload This Device's Settings</button>
+        <button id="sync-conflict-cancel" style="width:100%; padding:12px; background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer;">Configure Later in Settings</button>
       </div>
     </div>
   </div>

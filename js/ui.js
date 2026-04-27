@@ -379,6 +379,7 @@ export function showConfirm(msg, title = 'Are you sure?', previewHTML = '') {
 
   const titleEl = document.getElementById('confirm-modal-title');
   const msgEl = document.getElementById('confirm-modal-msg');
+  const iconEl = document.querySelector('#confirm-modal-icon iconify-icon');
   const previewEl = document.getElementById('confirm-modal-preview');
   const cancelBtn = document.getElementById('confirm-modal-cancel');
   const confirmBtn = document.getElementById('confirm-modal-confirm');
@@ -386,6 +387,15 @@ export function showConfirm(msg, title = 'Are you sure?', previewHTML = '') {
 
   titleEl.textContent = title;
   msgEl.textContent = msg;
+
+  if (iconEl) {
+    if (previewHTML && previewHTML.startsWith('ph:')) {
+      iconEl.setAttribute('icon', previewHTML);
+      previewHTML = ''; // Hide from preview area
+    } else {
+      iconEl.setAttribute('icon', 'ph:warning-circle-bold'); // Reset to default
+    }
+  }
 
   if (previewEl) {
     if (previewHTML) {
