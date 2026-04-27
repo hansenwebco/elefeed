@@ -368,6 +368,7 @@ state.server = server;
     state.activeAccountId = acctId;
     store.set('token', token);
     store.set('server', server);
+    syncAccountsToAndroid();
   }
 
   // Initialize UI components
@@ -477,6 +478,9 @@ export async function removeAccount(accountId) {
     // If we're on the mobile/sidebar menu, we might need to refresh it
     if (window.updateSidebarNav) window.updateSidebarNav();
   }
+
+  // Sync updated account list to Android
+  syncAccountsToAndroid();
 }
 
 
@@ -505,6 +509,29 @@ function saveMastodonToken(token, server) {
     window.AndroidBridge.saveToken(token);
   } else {
     // console.log("Android bridge not available");
+  }
+}
+
+function syncAccountsToAndroid() {
+  if (window.AndroidBridge && typeof window.AndroidBridge.postMessage === 'function') {
+    const storedAccounts = getStoredAccounts();
+    const accounts = storedAccounts.map(a => ({
+      id: a.accountData?.id || a.id,
+      server: a.server,
+      token: a.token,
+      username: a.accountData?.username || (typeof a.id === 'string' ? a.id.split('@')[0] : '')
+    }));
+
+    // Find numeric ID for the active account
+    const activeAccount = storedAccounts.find(a => a.id === state.activeAccountId);
+    const activeId = activeAccount ? (activeAccount.accountData?.id || state.activeAccountId) : state.activeAccountId;
+
+    window.AndroidBridge.postMessage(JSON.stringify({
+      type: 'saveAccounts',
+      activeAccountId: activeId,
+      accounts: accounts
+    }));
+    console.log('[Elefeed] Sent saveAccounts message to AndroidBridge.');
   }
 }
 
