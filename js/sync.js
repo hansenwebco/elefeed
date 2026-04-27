@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state, getSyncAccountId, getStoredAccounts } from './state.js';
 import { apiGet, apiPost } from './api.js';
 
 /**
@@ -6,11 +6,19 @@ import { apiGet, apiPost } from './api.js';
  * Low-level utility for reading and writing data blocks within the Mastodon account note.
  */
 
+function getSyncCredentials() {
+  const accounts = getStoredAccounts();
+  const syncId = getSyncAccountId();
+  const target = accounts.find(a => a.id === syncId) || accounts.find(a => a.id === state.activeAccountId) || accounts[0];
+  return target;
+}
+
 export async function getAccountNote() {
-  if (!state.account || !state.token) return '';
+  const creds = getSyncCredentials();
+  if (!creds) return '';
   try {
-    const rels = await apiGet(`/api/v1/accounts/relationships?id[]=${state.account.id}`);
-    const rel = rels && rels.find(r => String(r.id) === String(state.account.id));
+    const rels = await apiGet(`/api/v1/accounts/relationships?id[]=${creds.accountData.id}`, creds.token, creds.server);
+    const rel = rels && rels.find(r => String(r.id) === String(creds.accountData.id));
     return rel ? (rel.note || '') : '';
   } catch (err) {
     console.error('[Sync] Failed to fetch account note:', err);
@@ -55,6 +63,7 @@ export function removeBlockFromNote(note, startMarker, endMarker) {
 }
 
 export async function saveAccountNote(note) {
-  if (!state.account || !state.token) return;
-  return apiPost(`/api/v1/accounts/${state.account.id}/note`, { comment: note });
+  const creds = getSyncCredentials();
+  if (!creds) return;
+  return apiPost(`/api/v1/accounts/${creds.accountData.id}/note`, { comment: note }, creds.token, creds.server);
 }

@@ -217,11 +217,14 @@ export async function clearAccountSettings() {
 }
 
 export async function handleSyncToggle(enabled) {
+  const syncRow = $('settings-sync-account-row');
   if (!enabled) {
     store.set('pref_sync_settings', 'false');
+    if (syncRow) syncRow.style.display = 'none';
     showToast('Settings sync disabled');
     return;
   }
+  if (syncRow) syncRow.style.display = 'flex';
   const note = await getAccountNote();
   const remoteData = extractBlock(note, MARKER_START, MARKER_END);
   if (remoteData) {

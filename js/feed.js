@@ -666,13 +666,20 @@ let notifPollInterval = null;
 let _pollNotifications = null;
 
 /** Provide the notifications poll fn to avoid circular import. */
-export function registerNotifPoller(fn) { _pollNotifications = fn; }
+let _pollBackgroundAccounts = null;
+export function registerNotifPoller(fn, bgFn) { 
+  _pollNotifications = fn; 
+  _pollBackgroundAccounts = bgFn;
+}
 
 export function startPolling() {
   if (pollInterval) clearInterval(pollInterval);
   pollInterval = setInterval(pollForNewPosts, 20_000);
   if (!notifPollInterval && _pollNotifications) {
-    notifPollInterval = setInterval(_pollNotifications, 30_000);
+    notifPollInterval = setInterval(async () => {
+      await _pollNotifications();
+      if (_pollBackgroundAccounts) await _pollBackgroundAccounts();
+    }, 30_000);
   }
 }
 
