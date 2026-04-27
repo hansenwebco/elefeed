@@ -45,6 +45,9 @@ export const state = {
   clientId: null,
   clientSecret: null,
   account: null,
+  accounts: [], // Array of { id, server, token, accountData, unreadCount }
+  activeAccountId: null,
+  syncAccountId: null,
   serverVersion: null,
   maxTootChars: 500,
 
@@ -130,3 +133,40 @@ export const composeState = {
 
 export const $ = id => document.getElementById(id);
 export const qs = sel => document.querySelector(sel);
+
+/* ── Account Helpers ────────────────────────────────────────────────── */
+
+/** Loads accounts from localStorage. */
+export function getStoredAccounts() {
+  try {
+    const data = store.get('accounts');
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Saves accounts to localStorage. */
+export function saveStoredAccounts(accounts) {
+  store.set('accounts', JSON.stringify(accounts));
+}
+
+/** Returns the active account ID. */
+export function getActiveAccountId() {
+  return store.get('active_account_id');
+}
+
+/** Sets the active account ID. */
+export function setActiveAccountId(id) {
+  store.set('active_account_id', id);
+}
+
+/** Returns the sync host account ID. */
+export function getSyncAccountId() {
+  return store.get('sync_account_id');
+}
+
+/** Sets the sync host account ID. */
+export function setSyncAccountId(id) {
+  store.set('sync_account_id', id);
+}

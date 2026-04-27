@@ -4,7 +4,7 @@
  * Also manages the Service Worker bridge for background notifications.
  */
 
-import { $, store, state } from './state.js';
+import { $, store, state, getStoredAccounts, saveStoredAccounts } from './state.js';
 import { apiGet } from './api.js';
 import { escapeHTML, relativeTime, updateURLParam, formatCount, sanitizeHTML, renderCustomEmojis, processContent } from './utils.js';
 import { openProfileDrawer } from './profile.js';
@@ -325,15 +325,27 @@ export function updateNotifBadge() {
   const badge = $('notif-badge');
   const clearBtn = $('notif-clear-all');
   if (!badge) return;
-  if (state.notifUnreadCount > 0) {
-    badge.textContent = state.notifUnreadCount > 99 ? '99+' : String(state.notifUnreadCount);
+
+  const activeUnread = state.notifUnreadCount || 0;
+  const totalUnread = getTotalUnreadCount();
+
+  if (activeUnread > 0) {
+    badge.textContent = activeUnread > 99 ? '99+' : String(activeUnread);
     badge.classList.add('visible');
-    if (clearBtn) clearBtn.classList.add('has-unread');
   } else {
     badge.classList.remove('visible');
     badge.textContent = '';
-    if (clearBtn) clearBtn.classList.remove('has-unread');
   }
+
+  if (activeUnread > 0 && clearBtn) {
+    clearBtn.classList.add('has-unread');
+  } else if (clearBtn) {
+    clearBtn.classList.remove('has-unread');
+  }
+
+  // Add unread dot to avatar button if background accounts have new items
+  const backgroundUnread = totalUnread - activeUnread;
+  $('avatar-btn')?.classList.toggle('has-unread', backgroundUnread > 0);
   
   // Also update sidebar if available
   window.updateSidebarNav?.();
@@ -379,6 +391,15 @@ function markAllRead() {
   swSyncSeen();
 
   state.notifUnreadCount = 0;
+
+  // Update account registry
+  const accounts = getStoredAccounts();
+  const current = accounts.find(a => a.id === state.activeAccountId);
+  if (current) {
+    current.unreadCount = 0;
+    saveStoredAccounts(accounts);
+  }
+
   updateNotifBadge();
 
   // Visually remove all unread highlights
@@ -695,6 +716,14 @@ export async function pollNotifications() {
       state.notifUnreadCount = 0;
     }
 
+    // Save unread count to the account registry for the switcher UI
+    const accounts = getStoredAccounts();
+    const current = accounts.find(a => a.id === state.activeAccountId);
+    if (current) {
+      current.unreadCount = state.notifUnreadCount;
+      saveStoredAccounts(accounts);
+    }
+
     updateNotifBadge();
     if (state.notifDrawerOpen) renderNotifications();
 
@@ -758,6 +787,59 @@ export async function pollNotifications() {
   } catch (err) {
     console.warn('Notification poll failed:', err.message);
   }
+}
+
+/**
+ * Polls background accounts for notification counts only.
+ */
+export async function pollBackgroundAccounts() {
+  const accounts = getStoredAccounts();
+  const backgroundAccounts = accounts.filter(a => a.id !== state.activeAccountId);
+  if (backgroundAccounts.length === 0) return;
+
+  let changed = false;
+
+  for (const acct of backgroundAccounts) {
+    try {
+      // We only need the newest ID to compare with lastSeenNotifId
+      // Or just check markers/notifications with limit=1
+      const lastSeenId = store.get('lastSeenNotifId_' + acct.server) || '0';
+      
+      // Fetch newest notification
+      const notifs = await apiGet('/api/v1/notifications?limit=1', acct.token, acct.server);
+      if (notifs && notifs.length > 0) {
+        const newestId = notifs[0].id;
+        if (BigInt(newestId) > BigInt(lastSeenId)) {
+          // For background accounts, we don't have the full count easily without fetching more,
+          // but we can at least show a "1" or "+" badge. 
+          // For now, let's just mark it as 1 to indicate "new stuff".
+          // Better: fetch with since_id to get exact count if we care.
+          const sinceParams = new URLSearchParams({ since_id: lastSeenId, limit: '40' });
+          const newOnes = await apiGet(`/api/v1/notifications?${sinceParams.toString()}`, acct.token, acct.server);
+          if (acct.unreadCount !== newOnes.length) {
+            acct.unreadCount = newOnes.length;
+            changed = true;
+          }
+        } else if (acct.unreadCount !== 0) {
+          acct.unreadCount = 0;
+          changed = true;
+        }
+      }
+    } catch (e) {
+      console.debug(`[Elefeed] Background poll failed for ${acct.id}:`, e.message);
+    }
+  }
+
+  if (changed) {
+    saveStoredAccounts(accounts);
+    updateNotifBadge(); // This now needs to handle the global state
+  }
+}
+
+/** Returns total unread count across all accounts. */
+export function getTotalUnreadCount() {
+  const accounts = getStoredAccounts();
+  return accounts.reduce((sum, a) => sum + (a.unreadCount || 0), 0);
 }
 
 /* ── Init (called once from app.js) ───────────────────────────────── */

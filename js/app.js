@@ -4,12 +4,17 @@
  * the OAuth flow, and bootstraps the app.
  */
 
-import { $, state, store, REDIRECT_URI, SCOPES, urlParams } from './state.js';
+import {
+  $, state, store, REDIRECT_URI, SCOPES, urlParams,
+  getStoredAccounts, saveStoredAccounts, getActiveAccountId, setActiveAccountId,
+  getSyncAccountId, setSyncAccountId
+} from './state.js';
 import { delay, updateURLParam, escapeHTML, renderCustomEmojis, formatNum } from './utils.js';
 import { apiGet, registerApp, exchangeCode } from './api.js';
 import {
   showScreen, showToast, showLoginError, clearLoginError,
   updateTabLabel, closeAllTabDropdowns, initVersion, openAboutModal,
+  showConfirm,
 } from './ui.js';
 import { renderPost } from './render.js';
 import {
@@ -36,7 +41,7 @@ import {
   openNotifDrawer, closeNotifDrawer, pollNotifications,
   initNotifications, startSwPolling, stopSwPolling,
   requestNotifPermission, getNotifPermission, updateSwConfig,
-  showLatestNotifToast,
+  showLatestNotifToast, pollBackgroundAccounts,
 } from './notifications.js';
 import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply, updateCharCount, updateSidebarCharCount, resetReplyState, refreshComposeDefaults } from './compose.js';
 import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
@@ -59,6 +64,8 @@ window.activeFeedKey = activeFeedKey;
 window.openFiltersDrawer = openFiltersDrawer;
 window.closeFiltersDrawer = closeFiltersDrawer;
 window.openBookmarksDrawer = openBookmarksDrawer;
+window.switchAccount = switchAccount;
+window.removeAccount = removeAccount;
 
 // Expose apply functions for real-time cloud sync
 window.applyTheme = applyTheme;
@@ -201,12 +208,22 @@ const loadExploreTab = loadTrendingTab;
    ══════════════════════════════════════════════════════════════════════ */
 
 async function initApp(server, token, demo = false) {
-  state.server = server;
+  
+  // Stop all active polling/streams before switching context
+  if (typeof stopPolling === 'function') stopPolling();
+  if (typeof stopCountPolling === 'function') stopCountPolling();
+  if (typeof stopSwPolling === 'function') stopSwPolling();
+  if (typeof stopFederatedStream === 'function') stopFederatedStream();
+state.server = server;
   state.token = token;
   state.demoMode = demo;
   showScreen('app-screen');
+  $('login-back-btn').style.display = 'none'; // Hide if we're in the app
   initVersion();
   initTitleBar();
+
+  // Reset feeds to prevent data leakage from previous sessions/accounts
+  if (typeof resetFeeds === 'function') resetFeeds();
 
   if (demo) {
     $('demo-notice').style.display = 'block';
@@ -274,241 +291,91 @@ async function initApp(server, token, demo = false) {
     console.warn('Could not load instance info:', instanceV1Res.reason);
   }
 
-  // Probe public timelines - some servers intentionally disable local or federated timelines.
+  // Probe public timelines
   state.localSupported = true;
   state.federatedSupported = true;
 
-  Promise.all([
-    fetch(`https://${server}/api/v1/timelines/public?local=true&limit=1`, { headers: { 'Authorization': `Bearer ${token}` } }),
-    fetch(`https://${server}/api/v1/timelines/public?limit=1`, { headers: { 'Authorization': `Bearer ${token}` } })
-  ]).then(async ([localRes, fedRes]) => {
+  try {
+    const [localRes, fedRes] = await Promise.all([
+      fetch(`https://${server}/api/v1/timelines/public?local=true&limit=1`, { headers: { 'Authorization': `Bearer ${token}` } }),
+      fetch(`https://${server}/api/v1/timelines/public?limit=1`, { headers: { 'Authorization': `Bearer ${token}` } })
+    ]);
     if (!localRes.ok) state.localSupported = false;
     else { const localData = await localRes.json(); state.localSupported = Array.isArray(localData) && localData.length > 0; }
-
     if (!fedRes.ok) state.federatedSupported = false;
     else { const fedData = await fedRes.json(); state.federatedSupported = Array.isArray(fedData) && fedData.length > 0; }
-
     updatePublicFeedFlags();
-  }).catch(() => {
+  } catch (e) {
     state.localSupported = false;
     state.federatedSupported = false;
     updatePublicFeedFlags();
-  });
+  }
 
-  // Populate language dropdowns at startup
-  const langMap = {
-    'ar': 'Arabic (اللغة العربية)',
-    'as': 'Assamese (অসমীয়া)',
-    'ast': 'Asturian (Asturianu)',
-    'az': 'Azerbaijani (azərbaycan dili)',
-    'be': 'Belarusian (беларуская мова)',
-    'bg': 'Bulgarian (български език)',
-    'bn': 'Bangla (বাংলা)',
-    'bo': 'Tibetan (བོད་ཡིག)',
-    'br': 'Breton (brezhoneg)',
-    'bs': 'Bosnian (bosanski jezik)',
-    'ca': 'Catalan (Català)',
-    'ckb': 'Central Kurdish (سۆرانی)',
-    'cs': 'Czech (čeština)',
-    'cy': 'Welsh (Cymraeg)',
-    'da': 'Danish (dansk)',
-    'de': 'German (Deutsch)',
-    'dv': 'Divehi (ދިވެހި)',
-    'dz': 'Dzongkha (རྫོང་ཁ)',
-    'el': 'Greek (Ελληνικά)',
-    'en': 'English (English)',
-    'eo': 'Esperanto (Esperanto)',
-    'es': 'Spanish (Español)',
-    'et': 'Estonian (eesti)',
-    'eu': 'Basque (euskara)',
-    'fa': 'Persian (فارسی)',
-    'fi': 'Finnish (suomi)',
-    'fo': 'Faroese (føroyskt)',
-    'fr': 'French (Français)',
-    'fy': 'Western Frisian (Frysk)',
-    'ga': 'Irish (Gaeilge)',
-    'gd': 'Scottish Gaelic (Gàidhlig)',
-    'gl': 'Galician (galego)',
-    'gu': 'Gujarati (ગુજરાતી)',
-    'gv': 'Manx (Gaelg)',
-    'he': 'Hebrew (עברית)',
-    'hi': 'Hindi (हिन्दी)',
-    'hr': 'Croatian (Hrvatski)',
-    'ht': 'Haitian Creole (Kreyòl ayisyen)',
-    'hu': 'Hungarian (magyar)',
-    'hy': 'Armenian (Հայերեն)',
-    'id': 'Indonesian (Bahasa Indonesia)',
-    'is': 'Icelandic (Íslenska)',
-    'it': 'Italian (Italiano)',
-    'ja': 'Japanese (日本語)',
-    'jv': 'Javanese (basa Jawa)',
-    'ka': 'Georgian (ქართული)',
-    'kk': 'Kazakh (қазақ тілі)',
-    'km': 'Khmer (ខេមរភាសា)',
-    'kn': 'Kannada (ಕನ್ನಡ)',
-    'ko': 'Korean (한국어)',
-    'ku': 'Kurdish (Kurmancî)',
-    'ky': 'Kyrgyz (Кыргызча)',
-    'la': 'Latin (latine)',
-    'lb': 'Luxembourgish (Lëtzebuergesch)',
-    'lo': 'Lao (ລາວ)',
-    'lt': 'Lithuanian (lietuvių kalba)',
-    'lv': 'Latvian (Latviski)',
-    'mi': 'Māori (te reo Māori)',
-    'mk': 'Macedonian (македонски јазик)',
-    'ml': 'Malayalam (മലയാളം)',
-    'mn': 'Mongolian (Монгол хэл)',
-    'mr': 'Marathi (मराठी)',
-    'ms': 'Malay (Bahasa Melayu)',
-    'mt': 'Maltese (Malti)',
-    'my': 'Burmese',
-    'ne': 'Nepali (नेपाली)',
-    'nl': 'Dutch (Nederlands)',
-    'nn': 'Norwegian Nynorsk (Norsk Nynorsk)',
-    'no': 'Norwegian (Norsk)',
-    'oc': 'Occitan (occitan)',
-    'or': 'Odia (ଓଡ଼ିଆ)',
-    'pa': 'Punjabi (ਪੰਜਾਬੀ)',
-    'pl': 'Polish (Polski)',
-    'ps': 'Pashto (پښتو)',
-    'pt': 'Portuguese (Português)',
-    'ro': 'Romanian (Română)',
-    'ru': 'Russian (Русский)',
-    'rw': 'Kinyarwanda (Ikinyarwanda)',
-    'sc': 'Sardinian (sardu)',
-    'sd': 'Sindhi (सिन्धी)',
-    'se': 'Northern Sami (Davvisámegiella)',
-    'si': 'Sinhala (සිංහල)',
-    'sk': 'Slovak (slovenčina)',
-    'sl': 'Slovenian (slovenščina)',
-    'so': 'Somali (Soomaaliga)',
-    'sq': 'Albanian (Shqip)',
-    'sr': 'Serbian (српски језик)',
-    'sv': 'Swedish (Svenska)',
-    'sw': 'Swahili (Kiswahili)',
-    'ta': 'Tamil (தமிழ்)',
-    'te': 'Telugu (తెలుగు)',
-    'tg': 'Tajik (тоҷикӣ)',
-    'th': 'Thai (ไทย)',
-    'ti': 'Tigrinya (ትግርኛ)',
-    'tk': 'Turkmen (Türkmen)',
-    'tl': 'Filipino (Tagalog)',
-    'to': 'Tongan (faka Tonga)',
-    'tr': 'Turkish (Türkçe)',
-    'tt': 'Tatar (татар теле)',
-    'ug': 'Uyghur (ئۇيغۇرچە)',
-    'uk': 'Ukrainian (Українська)',
-    'ur': 'Urdu (اردو)',
-    'uz': 'Uzbek (Ўзбек)',
-    'vi': 'Vietnamese (Tiếng Việt)',
-    'yo': 'Yoruba (Yorùbá)',
-    'zh-CN': 'Chinese, China (简体中文)',
-    'zh-HK': 'Chinese, Hong Kong (繁體中文（香港）)',
-    'zh-TW': 'Chinese, Taiwan (繁體中文（臺灣）)',
-    'zh-YUE': 'Cantonese (廣東話)'
-  };
-
+  // Language setup
+  const langMap = { 'ar': 'Arabic (اللغة العربية)', 'en': 'English (English)', 'es': 'Spanish (Español)', 'fr': 'French (Français)', 'ja': 'Japanese (日本語)', 'zh-CN': 'Chinese, China (简体中文)' };
   const populateLangDropdown = (selectEl, includeAll = true, includeBrowser = false) => {
     if (!selectEl) return;
     const current = selectEl.value;
     selectEl.innerHTML = '';
-    if (includeAll) {
-      const opt = document.createElement('option');
-      opt.value = 'all';
-      opt.textContent = 'Show All';
-      selectEl.appendChild(opt);
-    }
-    if (includeBrowser) {
-      const opt = document.createElement('option');
-      opt.value = 'browser';
-      opt.textContent = 'Browser default';
-      selectEl.appendChild(opt);
-    }
-
+    if (includeAll) { const opt = document.createElement('option'); opt.value = 'all'; opt.textContent = 'Show All'; selectEl.appendChild(opt); }
+    if (includeBrowser) { const opt = document.createElement('option'); opt.value = 'browser'; opt.textContent = 'Browser default'; selectEl.appendChild(opt); }
     const allLangs = new Set([...Object.keys(langMap), ...(state.instanceLanguages || [])]);
-    Array.from(allLangs)
-      .filter(code => code && code.trim())
-      .sort((a, b) => {
-        const nameA = langMap[a] || a.toUpperCase();
-        const nameB = langMap[b] || b.toUpperCase();
-        return nameA.localeCompare(nameB);
-      })
-      .forEach(code => {
-        const opt = document.createElement('option');
-        opt.value = code;
-        opt.textContent = langMap[code] || code.toUpperCase();
-        selectEl.appendChild(opt);
-      });
+    Array.from(allLangs).sort().forEach(code => {
+      const opt = document.createElement('option');
+      opt.value = code;
+      opt.textContent = langMap[code] || code.toUpperCase();
+      selectEl.appendChild(opt);
+    });
     selectEl.value = current;
   };
 
-  const feedLangSel = $('settings-feed-lang');
-  if (feedLangSel) {
-    feedLangSel.value = store.get('pref_feed_lang') || 'all';
-    populateLangDropdown(feedLangSel, true, false);
-    feedLangSel.value = store.get('pref_feed_lang') || 'all';
-  }
+  ['settings-feed-lang', 'settings-post-lang', 'settings-translate-lang', 'modal-lang-select'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) populateLangDropdown(el, id === 'settings-feed-lang', id !== 'settings-feed-lang');
+  });
 
-  const postLangSel = $('settings-post-lang');
-  if (postLangSel) {
-    postLangSel.value = store.get('pref_post_lang') || 'browser';
-    populateLangDropdown(postLangSel, false, true);
-    postLangSel.value = store.get('pref_post_lang') || 'browser';
-  }
-
-  const translateLangSel = $('settings-translate-lang');
-  if (translateLangSel) {
-    translateLangSel.value = store.get('pref_translate_lang') || 'browser';
-    populateLangDropdown(translateLangSel, false, true);
-    translateLangSel.value = store.get('pref_translate_lang') || 'browser';
-  }
-
-  const modalLangSel = $('modal-lang-select');
-  if (modalLangSel) {
-    populateLangDropdown(modalLangSel, false, true);
-  }
-
-  // Update footer server info display
+  // Update footer
   document.querySelectorAll('.footer-account-name').forEach(el => {
-    const parent = el.parentElement;
     if (state.account) {
       el.innerHTML = `@${state.account.username}<span style="opacity:0.6;">@${server}</span>`;
-      parent.style.display = 'flex';
-
-      const vSpan = parent.querySelector('.footer-server-version');
-      if (vSpan && state.serverVersion) {
-        vSpan.textContent = `(${state.serverVersion})`;
-      }
+      el.parentElement.style.display = 'flex';
+    } else { el.parentElement.style.display = 'none'; }
+  });
+  document.querySelectorAll('.footer-server-version').forEach(el => {
+    if (state.serverVersion) {
+      el.title = `Server Version: ${state.serverVersion}`;
+      el.style.display = 'inline-block';
     } else {
-      parent.style.display = 'none';
+      el.style.display = 'none';
     }
   });
 
-  // Initial UI state setup from URL params
-  document.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.tab === state.activeTab);
-    b.setAttribute('aria-selected', b.dataset.tab === state.activeTab);
-  });
-  document.querySelectorAll('.tab-panel').forEach(p => {
-    p.classList.toggle('active', p.id === `panel-${state.activeTab}`);
-  });
-
-  if (state.feedFilter !== 'all') {
-    document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(i => {
-      i.classList.toggle('active', i.dataset.filter === state.feedFilter);
-    });
-  }
-  $('hashtag-filter-bar').style.display = (state.feedFilter === 'hashtags') ? '' : 'none';
-
-  if (state.exploreSubtab !== 'posts') {
-    document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach(i => {
-      i.classList.toggle('active', i.dataset.subtab === state.exploreSubtab);
-    });
-    document.querySelectorAll('.trending-subpanel').forEach(p => {
-      p.classList.toggle('active', p.id === `trending-subpanel-${state.exploreSubtab}`);
-    });
+  // Ensure this account is in our registry and set as ACTIVE before loading feeds
+  if (state.account && !demo) {
+    const accounts = getStoredAccounts();
+    const acctId = `${state.account.username}@${server}`;
+    let existing = accounts.find(a => a.id === acctId);
+    if (existing) {
+      existing.token = token;
+      existing.server = server;
+      existing.accountData = state.account;
+    } else {
+      accounts.push({ id: acctId, server, token, accountData: state.account, unreadCount: 0 });
+    }
+    saveStoredAccounts(accounts);
+    setActiveAccountId(acctId);
+    state.accounts = accounts;
+    state.activeAccountId = acctId;
+    store.set('token', token);
+    store.set('server', server);
   }
 
+  // Initialize UI components
+  initFiltersUI();
+  initUsageTracking();
+  initSettingsSync();
+
+  // Load Feeds
   updateTabLabel('feed');
   updateTabLabel('explore');
   updateSidebarNav();
@@ -528,36 +395,88 @@ async function initApp(server, token, demo = false) {
   startPolling();
   startCountPolling();
   pollNotifications();
-
-  // Start background Service Worker polling
   startSwPolling();
 
-  // Restore drawer states if query params are present
-  const threadId = urlParams.get('thread');
-  if (threadId) {
-    setTimeout(() => openThreadDrawer(threadId), 300);
-  }
-  const profileId = urlParams.get('profile');
-  if (profileId) {
-    setTimeout(() => openProfileDrawer(profileId, state.server), 300);
-  }
-  const bookmarks = urlParams.get('bookmarks');
-  if (bookmarks) {
-    setTimeout(() => openBookmarksDrawer(), 300);
-  }
-  const notifications = urlParams.get('notifications');
-  if (notifications) {
-    setTimeout(() => openNotifDrawer(), 300);
-  }
-  const manageFilters = urlParams.get('manage_filters');
-  if (manageFilters) {
-    setTimeout(() => openFiltersDrawer(), 300);
-  }
+  // Restore drawer states
+  const threadId = urlParams.get('thread'); if (threadId) setTimeout(() => openThreadDrawer(threadId), 300);
+  const profileId = urlParams.get('profile'); if (profileId) setTimeout(() => openProfileDrawer(profileId, state.server), 300);
+  const bookmarks = urlParams.get('bookmarks'); if (bookmarks) setTimeout(() => openBookmarksDrawer(), 300);
+  const notifications = urlParams.get('notifications'); if (notifications) setTimeout(() => openNotifDrawer(), 300);
+}
 
-  // Initialize UI components
-  initFiltersUI();
-  initUsageTracking();
-  initSettingsSync();
+
+
+/** Switches to a different account. */
+export async function switchAccount(accountId) {
+  const accounts = getStoredAccounts();
+  const target = accounts.find(a => a.id === accountId);
+  if (!target) return;
+
+  // Stop polling for current account
+  stopPolling();
+  stopCountPolling();
+  stopSwPolling();
+  stopFederatedStream();
+
+  // Switch active state
+  setActiveAccountId(accountId);
+  state.activeAccountId = accountId;
+
+  // Reset feeds to prevent data leakage
+  resetFeeds();
+
+  // Re-init app with new credentials
+  await initApp(target.server, target.token);
+}
+
+function resetFeeds() {
+  state.homeFeed = null;
+  state.homeMaxId = null;
+  state.followingFeed = null;
+  state.hashtagFeed = null;
+  state.hashtagMaxId = null;
+  state.localFeed = null;
+  state.localMaxId = null;
+  state.federatedFeed = null;
+  state.federatedMaxId = null;
+  state.followedHashtags = [];
+  state.notifications = [];
+  state.notifByType = {};
+  state.notifMaxId = {};
+  state.pendingPosts = { feed: [] };
+  state.trendingPostsLoaded = false;
+  state.trendingHashtagsLoaded = false;
+  state.trendingPeopleLoaded = false;
+  state.trendingNewsLoaded = false;
+  state.trendingFollowingLoaded = false;
+  state.lastSeenNotifId = null;
+  state._lastFiredNotifId = null;
+}
+
+/** Removes an account from the registry. */
+export async function removeAccount(accountId) {
+  let accounts = getStoredAccounts();
+  accounts = accounts.filter(a => a.id !== accountId);
+  saveStoredAccounts(accounts);
+  state.accounts = accounts;
+
+  if (state.activeAccountId === accountId) {
+    if (accounts.length > 0) {
+      await switchAccount(accounts[0].id);
+    } else {
+      // Last account removed - log out
+      store.del('token');
+      store.del('server');
+      store.del('active_account_id');
+      store.del('token_scopes');
+      store.del('pref_sync_onboarding_dismissed');
+      sessionStorage.removeItem('notified_sync_available');
+      location.reload();
+    }
+  } else {
+    // If we're on the mobile/sidebar menu, we might need to refresh it
+    if (window.updateSidebarNav) window.updateSidebarNav();
+  }
 }
 
 
@@ -627,9 +546,7 @@ async function handleCallback(code) {
       store.set('oauth_done_scopes', SCOPES);
       window.close();
     } else {
-      store.set('token', tokenData.access_token);
-      store.set('server', server);
-      store.set('token_scopes', SCOPES);
+      // Note: initApp will handle adding to registry and setting activeId
       await initApp(server, tokenData.access_token);
     }
   } catch (err) {
@@ -718,12 +635,9 @@ $('login-btn').addEventListener('click', async () => {
         store.del('oauth_done_scopes');
         try { popup.close(); } catch { }
 
-        store.set('token', token);
-        store.set('server', srv);
-        store.set('token_scopes', scopes || SCOPES);
-
         $('login-btn').textContent = 'Log in with Mastodon →';
         $('login-btn').disabled = false;
+        // Note: initApp will handle adding to registry and setting activeId
         await initApp(srv, token);
         return;
       }
@@ -747,6 +661,10 @@ $('login-btn').addEventListener('click', async () => {
     showLoginError(err.message);
     console.error('[Elefeed] Login error:', err);
   }
+});
+
+$('login-back-btn')?.addEventListener('click', () => {
+  showScreen('app-screen');
 });
 
 /* Server Autocomplete Logic */
@@ -1151,13 +1069,63 @@ if (fedDismissBtn) {
 }
 
 /* Avatar menu */
+function renderAccountSwitcher() {
+  const container = $('profile-account-list');
+  if (!container) return;
+
+  const accounts = getStoredAccounts();
+  container.innerHTML = accounts.map(acct => {
+    const isActive = acct.id === state.activeAccountId;
+    const displayName = acct.accountData.display_name || acct.accountData.username;
+    const avatarUrl = acct.accountData.avatar_static || acct.accountData.avatar;
+    
+    return `
+      <div class="account-switcher-item ${isActive ? 'active' : ''}" onclick="window.switchAccount('${acct.id}')">
+        <img class="account-switcher-avatar" src="${escapeHTML(avatarUrl)}" alt="" onerror="this.src=window._AVATAR_PLACEHOLDER" />
+        <div class="account-switcher-info">
+          <div class="account-switcher-name">${escapeHTML(displayName)}</div>
+          <div class="account-switcher-handle">@${escapeHTML(acct.id)}</div>
+        </div>
+        ${acct.unreadCount > 0 ? `<div class="account-switcher-badge">${acct.unreadCount}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+window.handleRemoveAccount = async (id) => {
+  const isSyncHost = id === getSyncAccountId();
+  let msg = `This will log you out of @${id} on this device.`;
+  if (isSyncHost) {
+    msg += "\n\n⚠️ This is your current Settings Sync account. Removing it will disable cross-device sync.";
+  }
+
+  const confirmed = await showConfirm(msg, 'Remove account?', 'ph:sign-out-bold');
+  if (confirmed) {
+    if (isSyncHost) {
+      setSyncAccountId(null);
+      store.set('pref_sync_settings', 'false');
+    }
+    await removeAccount(id);
+    renderAccountSwitcher();
+  }
+};
+
 $('avatar-btn').addEventListener('click', (e) => {
   e.stopPropagation();
   closeAllTabDropdowns();
   document.querySelectorAll('.boost-dropdown').forEach(m => {
     if (m.id !== 'profile-dropdown') m.classList.remove('show');
   });
+  
+  renderAccountSwitcher();
   $('profile-dropdown').classList.toggle('show');
+});
+
+$('add-account-btn')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  $('profile-dropdown').classList.remove('show');
+  showScreen('login-screen');
+  clearLoginError();
 });
 
 $('profile-view-btn').addEventListener('click', () => {
@@ -1241,6 +1209,18 @@ if (settingsMenuBtn) {
       settingsSyncToggle.checked = store.get('pref_sync_settings') === 'true';
     }
 
+    // Populate Sync Account Select
+    const syncSel = $('settings-sync-account-select');
+    const syncRow = $('settings-sync-account-row');
+    if (syncSel && syncRow) {
+      const isSyncEnabled = store.get('pref_sync_settings') === 'true';
+      syncRow.style.display = isSyncEnabled ? 'flex' : 'none';
+      
+      const accounts = getStoredAccounts();
+      const syncId = getSyncAccountId() || state.activeAccountId;
+      syncSel.innerHTML = accounts.map(a => `<option value="${a.id}" ${a.id === syncId ? 'selected' : ''}>@${a.id}</option>`).join('');
+    }
+
     const zenModeToggle = $('settings-zen-mode-toggle');
     if (zenModeToggle) {
       zenModeToggle.checked = state.zenMode;
@@ -1320,6 +1300,14 @@ if (settingsModalClose) {
 $('settings-backdrop')?.addEventListener('click', () => {
   $('settings-backdrop').classList.remove('open');
   $('settings-drawer').classList.remove('open');
+});
+
+$('settings-sync-account-select')?.addEventListener('change', (e) => {
+  const newId = e.target.value;
+  setSyncAccountId(newId);
+  showToast(`Sync host changed to @${newId}`, 'success');
+  // Re-init sync with the new account
+  import('./settingsSync.js').then(m => m.initSettingsSync());
 });
 
 function applyTheme(t) {
@@ -2293,56 +2281,14 @@ if (typeof window.AndroidBridge !== 'undefined') {
 
 /* Logout */
 $('logout-btn').addEventListener('click', () => {
-  store.del('token');
-  store.del('server');
-  store.del('token_scopes');
-  store.del('pref_sync_onboarding_dismissed');
-  sessionStorage.removeItem('notified_sync_available');
-  stopFederatedStream(); // close any active SSE connection
-  state.server = null;
-  state.token = null;
-  state.account = null;
-  state.homeFeed = null;
-  state.followingFeed = null;
-  state.hashtagFeed = null;
-  state.localFeed = null;
-  state.federatedFeed = null;
-  state.followedHashtags = null;
-  state.activeTab = 'feed';
-  state.feedFilter = 'all';
-  state.pendingPosts = {};
-  state.trendingPostsLoaded = false;
-  state.trendingHashtagsLoaded = false;
-  state.trendingPeopleLoaded = false;
-  state.trendingNewsLoaded = false;
-  $('demo-notice').style.display = 'none';
-  $('feed-posts').innerHTML = '';
-  $('trending-posts-list').innerHTML = '';
-  $('trending-hashtags-list').innerHTML = '';
-  $('trending-people-list').innerHTML = '';
-  $('trending-news-list').innerHTML = '';
-
-  // Reset feed filter dropdown
-  document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach((b, i) => b.classList.toggle('active', i === 0));
-  $('hashtag-filter-bar').style.display = 'none';
-
-  // Reset explore dropdown
-  document.querySelectorAll('#tab-dropdown-explore .tab-dropdown-item').forEach((b, i) => b.classList.toggle('active', i === 0));
-
-  // Reset tabs
-  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
-  document.querySelectorAll('.tab-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
-  updateTabLabel('feed');
-  updateTabLabel('explore');
-
-  showScreen('login-screen');
-  showToast('Signed out.');
-  stopPolling();
-  stopCountPolling();
-  stopSwPolling();
-
-  state.notifUnreadCount = 0;
-  updateTitleBar();
+  if (state.activeAccountId) {
+    window.handleRemoveAccount(state.activeAccountId);
+  } else {
+    // Fallback for cases where no account is active
+    store.del('token');
+    store.del('server');
+    location.reload();
+  }
 });
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2922,7 +2868,7 @@ window.addEventListener('online', () => $('offline-bar').classList.remove('visib
 async function boot() {
 
   // Wire up component init functions
-  registerNotifPoller(pollNotifications);
+  registerNotifPoller(pollNotifications, pollBackgroundAccounts);
   initCompose();
   initNotifications();
   initSearch();
@@ -2987,21 +2933,34 @@ async function boot() {
     return;
   }
 
-  // Check for stored session
-  const token = store.get('token');
-  const server = store.get('server');
-  const tokenScopes = store.get('token_scopes');
+  // Load account registry
+  let accounts = getStoredAccounts();
+  let activeId = getActiveAccountId();
 
-  if (token && server) {
-    if (tokenScopes === SCOPES) {
-      await initApp(server, token);
-      return;
-    }
-    store.del('token');
-    store.del('server');
-    store.del('token_scopes');
+  // Migration: If no accounts but legacy token exists, migrate it
+  const legacyToken = store.get('token');
+  const legacyServer = store.get('server');
+  if (accounts.length === 0 && legacyToken && legacyServer) {
+    console.log('[Elefeed] Migrating legacy account to registry...');
+    // We don't have accountData yet, initApp will fetch it and save to registry
+    await initApp(legacyServer, legacyToken);
+    return;
   }
 
+  if (accounts.length > 0) {
+    state.accounts = accounts;
+    let target = accounts.find(a => a.id === activeId) || accounts[0];
+    state.activeAccountId = target.id;
+    setActiveAccountId(target.id);
+    await initApp(target.server, target.token);
+    return;
+  }
+
+  if (accounts.length === 0) {
+    $('login-back-btn').style.display = 'none';
+  } else {
+    $('login-back-btn').style.display = 'block';
+  }
   showScreen('login-screen');
 }
 

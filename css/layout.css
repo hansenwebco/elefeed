@@ -505,7 +505,6 @@
   height: 32px;
   border-radius: 50%;
   border: 2px solid var(--border);
-  overflow: hidden;
   cursor: pointer;
   transition: border-color var(--trans);
   background: var(--surface2);
@@ -520,6 +519,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 50%;
 }
 
 /* ─── Tab Bar ─── */
