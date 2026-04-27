@@ -1087,21 +1087,24 @@ function renderAccountSwitcher() {
           <div class="account-switcher-handle">@${escapeHTML(acct.id)}</div>
         </div>
         ${acct.unreadCount > 0 ? `<div class="account-switcher-badge">${acct.unreadCount}</div>` : ''}
-        <button class="account-switcher-remove" title="Remove account" onclick="event.stopPropagation(); window.handleRemoveAccount('${acct.id}')">
-          <iconify-icon icon="ph:trash-bold" style="font-size: 14px;"></iconify-icon>
-        </button>
       </div>
     `;
   }).join('');
 }
 
 window.handleRemoveAccount = async (id) => {
-  const confirmed = await showConfirm(
-    `This will log you out of @${id} on this device.`,
-    'Remove account?',
-    'ph:sign-out-bold'
-  );
+  const isSyncHost = id === getSyncAccountId();
+  let msg = `This will log you out of @${id} on this device.`;
+  if (isSyncHost) {
+    msg += "\n\n⚠️ This is your current Settings Sync account. Removing it will disable cross-device sync.";
+  }
+
+  const confirmed = await showConfirm(msg, 'Remove account?', 'ph:sign-out-bold');
   if (confirmed) {
+    if (isSyncHost) {
+      setSyncAccountId(null);
+      store.set('pref_sync_settings', 'false');
+    }
     await removeAccount(id);
     renderAccountSwitcher();
   }
