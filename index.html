@@ -1398,28 +1398,41 @@
             </div>
           </div>
 
-          <!-- Usage Tracking -->
-          <div style="display:flex; flex-direction:column; gap:12px; padding:12px; background:color-mix(in srgb, #f59e0b 3%, var(--bg)); border:1px solid var(--border); border-left:3px solid #f59e0b; border-radius:8px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Usage tracking <span style="color:#f59e0b; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-left:4px;">(Experimental)</span></span>
-                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Track how much time you spend in the app today. Data is stored privately in your account note.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Enable usage tracking">
-                <input type="checkbox" id="settings-usage-tracking-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
+          <!-- Privacy & Sync (Experimental) -->
+          <div style="display:flex; flex-direction:column; gap:16px; padding:16px; background:var(--surface2); border:1px solid var(--border); border-radius:12px;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <h4 style="font-size:11px; text-transform:uppercase; color:var(--accent); letter-spacing:0.08em; font-family:var(--font-mono); margin:0;">Privacy & Sync <span style="font-size:9px; opacity:0.7;">(Experimental)</span></h4>
+              <p style="font-size:11px; color:var(--text-muted); line-height:1.5; margin:0;">
+                Elefeed uses your Mastodon account's private <b>Relationship Note</b> to store data. This is a secure, personal field that is only visible to you and this application - your followers and the public cannot see it.
+              </p>
             </div>
-            <div style="height:1px; background:var(--border); margin:4px 0;"></div>
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Sync settings <span style="color:var(--accent); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-left:4px;">(Experimental)</span></span>
-                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Keep your theme, fonts, and preferences in sync across all your devices using your account note.</span>
+
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <!-- Usage Tracking -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Daily Usage Timer</span>
+                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Track and sync your time spent in the app today.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;">
+                  <input type="checkbox" id="settings-usage-tracking-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
               </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Sync settings across devices">
-                <input type="checkbox" id="settings-sync-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
+
+              <div style="height:1px; background:var(--border-subtle);"></div>
+
+              <!-- Settings Sync -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Settings Sync</span>
+                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Sync your theme, fonts, and preferences across devices.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;">
+                  <input type="checkbox" id="settings-sync-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
             </div>
           </div>
 
