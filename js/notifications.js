@@ -664,7 +664,13 @@ export async function pollNotifications() {
   // Restore from storage if needed
   if (!state.lastSeenNotifId) {
     const key = 'lastSeenNotifId_' + state.activeAccountId;
-    state.lastSeenNotifId = store.get(key) || null;
+    const oldKey = 'lastSeenNotifId_' + state.server;
+    state.lastSeenNotifId = store.get(key) || store.get(oldKey) || null;
+    
+    // Migrate old key if found
+    if (state.lastSeenNotifId && !store.get(key)) {
+      store.set(key, state.lastSeenNotifId);
+    }
   }
 
   // First-run sync: Check server markers if we have no local seen record
@@ -816,13 +822,24 @@ export async function pollBackgroundAccounts() {
   for (const acct of backgroundAccounts) {
     try {
       // We only need the newest ID to compare with lastSeenNotifId
-      // Or just check markers/notifications with limit=1
-      const lastSeenId = store.get('lastSeenNotifId_' + acct.id) || '0';
+      const lastSeenId = store.get('lastSeenNotifId_' + acct.id) || null;
       
       // Fetch newest notification
       const notifs = await apiGet('/api/v1/notifications?limit=1', acct.token, acct.server);
       if (notifs && notifs.length > 0) {
         const newestId = notifs[0].id;
+
+        // If we've never seen this account before, seed it with the latest ID
+        // so we don't show a giant badge of old notifications.
+        if (lastSeenId === null) {
+          store.set('lastSeenNotifId_' + acct.id, newestId);
+          if (acct.unreadCount !== 0) {
+            acct.unreadCount = 0;
+            changed = true;
+          }
+          continue;
+        }
+
         if (BigInt(newestId) > BigInt(lastSeenId)) {
           // For background accounts, we don't have the full count easily without fetching more,
           // but we can at least show a "1" or "+" badge. 
