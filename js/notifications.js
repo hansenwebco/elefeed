@@ -386,7 +386,8 @@ function markAllRead() {
 
   const newestId = allNotifs[0].id;
   state.lastSeenNotifId = newestId;
-  store.set('lastSeenNotifId_' + state.server, newestId);
+  const key = 'lastSeenNotifId_' + state.activeAccountId;
+  store.set(key, newestId);
   dismissNotifMarker();
   swSyncSeen();
 
@@ -645,6 +646,11 @@ function renderNotifItem(n) {
 
 let triedMarkers = false;
 
+export function resetNotifMarkers() {
+  triedMarkers = false;
+  state.notifUnreadCount = 0;
+}
+
 /**
  * Poll for new notifications.
  * Handles the "fresh install" case logically:
@@ -657,7 +663,8 @@ export async function pollNotifications() {
 
   // Restore from storage if needed
   if (!state.lastSeenNotifId) {
-    state.lastSeenNotifId = store.get('lastSeenNotifId_' + state.server) || null;
+    const key = 'lastSeenNotifId_' + state.activeAccountId;
+    state.lastSeenNotifId = store.get(key) || null;
   }
 
   // First-run sync: Check server markers if we have no local seen record
@@ -668,7 +675,8 @@ export async function pollNotifications() {
       const markerId = markers?.notifications?.last_read_id;
       if (markerId) {
         state.lastSeenNotifId = markerId;
-        store.set('lastSeenNotifId_' + state.server, markerId);
+        const key = 'lastSeenNotifId_' + state.activeAccountId;
+        store.set(key, markerId);
       }
     } catch (e) {
       console.debug('[Elefeed] Marker sync failed:', e.message);
@@ -706,7 +714,8 @@ export async function pollNotifications() {
         const markerId = markers?.notifications?.last_read_id;
         if (markerId && (!state.lastSeenNotifId || BigInt(markerId) > BigInt(state.lastSeenNotifId))) {
           state.lastSeenNotifId = markerId;
-          store.set('lastSeenNotifId_' + state.server, markerId);
+          const key = 'lastSeenNotifId_' + state.activeAccountId;
+          store.set(key, markerId);
         }
       } catch (e) { console.debug('[Elefeed] Marker sync failed:', e.message); }
 
@@ -726,6 +735,11 @@ export async function pollNotifications() {
 
     updateNotifBadge();
     if (state.notifDrawerOpen) renderNotifications();
+    
+    // Refresh account switcher if it's currently open
+    if ($('profile-dropdown')?.classList.contains('show')) {
+      window.renderAccountSwitcher?.();
+    }
 
     // ── Foreground alert ──────────────────────────────────────────────
     // Fire an OS notification when new items arrive while the app is open
@@ -803,7 +817,7 @@ export async function pollBackgroundAccounts() {
     try {
       // We only need the newest ID to compare with lastSeenNotifId
       // Or just check markers/notifications with limit=1
-      const lastSeenId = store.get('lastSeenNotifId_' + acct.server) || '0';
+      const lastSeenId = store.get('lastSeenNotifId_' + acct.id) || '0';
       
       // Fetch newest notification
       const notifs = await apiGet('/api/v1/notifications?limit=1', acct.token, acct.server);
@@ -832,7 +846,12 @@ export async function pollBackgroundAccounts() {
 
   if (changed) {
     saveStoredAccounts(accounts);
-    updateNotifBadge(); // This now needs to handle the global state
+    updateNotifBadge();
+    
+    // Refresh account switcher if it's currently open
+    if ($('profile-dropdown')?.classList.contains('show')) {
+      window.renderAccountSwitcher?.();
+    }
   }
 }
 
