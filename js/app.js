@@ -401,6 +401,23 @@ state.server = server;
   await pollBackgroundAccounts();
   startSwPolling();
 
+  // Android Alarm Permission Onboarding
+  if (window.AndroidBridge && !store.get('pref_android_alarm_seen')) {
+    setTimeout(async () => {
+      const confirmed = await showConfirm(
+        'Elefeed can check for notifications more frequently in the background, but this may increase battery usage.',
+        'Enable Android Alarms?',
+        'ph:clock-bold'
+      );
+      store.set('pref_android_alarm_seen', 'true');
+      if (confirmed) {
+        window.AndroidBridge.postMessage(JSON.stringify({
+          type: "requestAlarmPermission"
+        }));
+      }
+    }, 2000);
+  }
+
   // Restore drawer states
   const threadId = urlParams.get('thread'); if (threadId) setTimeout(() => openThreadDrawer(threadId), 300);
   const profileId = urlParams.get('profile'); if (profileId) setTimeout(() => openProfileDrawer(profileId, state.server), 300);
@@ -2308,6 +2325,7 @@ if (alarmBtn) {
       window.AndroidBridge.postMessage(JSON.stringify({
         type: "requestAlarmPermission"
       }));
+      store.set('pref_android_alarm_seen', 'true');
     }
   });
 }
