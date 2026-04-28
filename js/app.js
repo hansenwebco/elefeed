@@ -209,13 +209,13 @@ const loadExploreTab = loadTrendingTab;
    ══════════════════════════════════════════════════════════════════════ */
 
 async function initApp(server, token, demo = false) {
-  
+
   // Stop all active polling/streams before switching context
   if (typeof stopPolling === 'function') stopPolling();
   if (typeof stopCountPolling === 'function') stopCountPolling();
   if (typeof stopSwPolling === 'function') stopSwPolling();
   if (typeof stopFederatedStream === 'function') stopFederatedStream();
-state.server = server;
+  state.server = server;
   state.token = token;
   state.demoMode = demo;
   showScreen('app-screen');
@@ -400,23 +400,6 @@ state.server = server;
   await pollNotifications();
   await pollBackgroundAccounts();
   startSwPolling();
-
-  // Android Alarm Permission Onboarding
-  if (window.AndroidBridge && !store.get('pref_android_alarm_seen')) {
-    setTimeout(async () => {
-      const confirmed = await showConfirm(
-        'Elefeed can check for notifications more frequently in the background, but this may increase battery usage.',
-        'Enable Android Alarms?',
-        'ph:clock-bold'
-      );
-      store.set('pref_android_alarm_seen', 'true');
-      if (confirmed) {
-        window.AndroidBridge.postMessage(JSON.stringify({
-          type: "requestAlarmPermission"
-        }));
-      }
-    }, 2000);
-  }
 
   // Restore drawer states
   const threadId = urlParams.get('thread'); if (threadId) setTimeout(() => openThreadDrawer(threadId), 300);
@@ -1126,7 +1109,7 @@ function renderAccountSwitcher() {
     const isActive = acct.id === state.activeAccountId;
     const displayName = acct.accountData.display_name || acct.accountData.username;
     const avatarUrl = acct.accountData.avatar_static || acct.accountData.avatar;
-    
+
     return `
       <div class="account-switcher-item ${isActive ? 'active' : ''}" onclick="window.switchAccount('${acct.id}')">
         <img class="account-switcher-avatar" src="${escapeHTML(avatarUrl)}" alt="" onerror="this.src=window._AVATAR_PLACEHOLDER" />
@@ -1164,7 +1147,7 @@ $('avatar-btn').addEventListener('click', (e) => {
   document.querySelectorAll('.boost-dropdown').forEach(m => {
     if (m.id !== 'profile-dropdown') m.classList.remove('show');
   });
-  
+
   renderAccountSwitcher();
   $('profile-dropdown').classList.toggle('show');
 });
@@ -1263,7 +1246,7 @@ if (settingsMenuBtn) {
     if (syncSel && syncRow) {
       const isSyncEnabled = store.get('pref_sync_settings') === 'true';
       syncRow.style.display = isSyncEnabled ? 'flex' : 'none';
-      
+
       const accounts = getStoredAccounts();
       const syncId = getSyncAccountId() || state.activeAccountId;
       syncSel.innerHTML = accounts.map(a => `<option value="${a.id}" ${a.id === syncId ? 'selected' : ''}>@${a.id}</option>`).join('');
@@ -1500,7 +1483,7 @@ function refreshNotifSettingsUI() {
   if (bgToggle) {
     const bgEnabled = store.get('pref_bg_notifications') !== 'false';
     bgToggle.checked = bgEnabled;
-    
+
     // Hide sub-options if background notifications are disabled
     const showSubOptions = bgEnabled;
     const intervalRow = $('settings-notif-interval-row');
@@ -2300,7 +2283,7 @@ $('debug-view-note')?.addEventListener('click', async () => {
     const settings = extractBlock(note, '--- ELEFEED SETTINGS START ---', '--- ELEFEED SETTINGS END ---');
 
     let displayStr = '';
-    
+
     if (usage) {
       displayStr += '--- USAGE DATA ---\n' + JSON.stringify(usage, null, 2) + '\n\n';
     }
