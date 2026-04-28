@@ -376,6 +376,7 @@ state.server = server;
   initFiltersUI();
   initUsageTracking();
   initSettingsSync();
+  refreshNotifSettingsUI();
 
   // Load Feeds
   updateTabLabel('feed');
@@ -399,6 +400,23 @@ state.server = server;
   await pollNotifications();
   await pollBackgroundAccounts();
   startSwPolling();
+
+  // Android Alarm Permission Onboarding
+  if (window.AndroidBridge && !store.get('pref_android_alarm_seen')) {
+    setTimeout(async () => {
+      const confirmed = await showConfirm(
+        'Elefeed can check for notifications more frequently in the background, but this may increase battery usage.',
+        'Enable Android Alarms?',
+        'ph:clock-bold'
+      );
+      store.set('pref_android_alarm_seen', 'true');
+      if (confirmed) {
+        window.AndroidBridge.postMessage(JSON.stringify({
+          type: "requestAlarmPermission"
+        }));
+      }
+    }, 2000);
+  }
 
   // Restore drawer states
   const threadId = urlParams.get('thread'); if (threadId) setTimeout(() => openThreadDrawer(threadId), 300);
@@ -1453,16 +1471,30 @@ function refreshNotifSettingsUI() {
   permBtn.disabled = perm === 'granted' || perm === 'denied' || perm === 'unsupported';
 
   // Hide push notification settings on mobile devices (where OS handles them)
-  const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent) || !!window.AndroidBridge;
+  const isAndroidBridge = !!window.AndroidBridge;
+  const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent) || isAndroidBridge;
   const pushSection = $('settings-push-notifs-section');
   if (pushSection) {
-    pushSection.style.display = isMobile ? 'none' : 'flex';
+    // Show the push section on desktop OR on Android app (where we need the alarm permission setting)
+    pushSection.style.display = (isMobile && !isAndroidBridge) ? 'none' : 'flex';
   }
 
   // Show web push options only if permission is granted
   const pushOptions = $('settings-web-push-options');
   if (pushOptions) {
-    pushOptions.style.display = perm === 'granted' ? 'flex' : 'none';
+    // Hide standard web push options on Android app, since it uses the bridge/alarm instead
+    pushOptions.style.display = (perm === 'granted' && !isAndroidBridge) ? 'flex' : 'none';
+  }
+
+  // Show Android-specific alarm section
+  const alarmSection = $('settings-android-alarm-section');
+  const webPermRow = $('settings-web-notif-perm-row');
+  if (alarmSection) {
+    alarmSection.style.display = isAndroidBridge ? 'flex' : 'none';
+  }
+  if (webPermRow) {
+    // Hide the web permission row on the Android app to avoid confusion
+    webPermRow.style.display = isAndroidBridge ? 'none' : 'flex';
   }
 
   if (bgToggle) {
@@ -2286,27 +2318,16 @@ $('debug-view-note')?.addEventListener('click', async () => {
 });
 
 // Android Alarm Permission handling
-if (typeof window.AndroidBridge !== 'undefined') {
-  // Show Android-specific setting
-  const alarmSection = $('settings-android-alarm-section');
-  if (alarmSection) alarmSection.style.display = 'flex';
-
-  // Hide Web Push settings (they don't work reliably in WebView)
-  const webPushSection = $('settings-web-push-section');
-  if (webPushSection) webPushSection.style.display = 'none';
-
-  // Hide standard background notification options
-  const webPushOptions = $('settings-web-push-options');
-  if (webPushOptions) webPushOptions.style.display = 'none';
-
-  const alarmBtn = $('settings-android-alarm-btn');
-  if (alarmBtn) {
-    alarmBtn.addEventListener('click', () => {
+const alarmBtn = $('settings-android-alarm-btn');
+if (alarmBtn) {
+  alarmBtn.addEventListener('click', () => {
+    if (window.AndroidBridge) {
       window.AndroidBridge.postMessage(JSON.stringify({
         type: "requestAlarmPermission"
       }));
-    });
-  }
+      store.set('pref_android_alarm_seen', 'true');
+    }
+  });
 }
 
 /* Logout */
