@@ -41,7 +41,7 @@ import {
   openNotifDrawer, closeNotifDrawer, pollNotifications,
   initNotifications, startSwPolling, stopSwPolling,
   requestNotifPermission, getNotifPermission, updateSwConfig,
-  showLatestNotifToast, pollBackgroundAccounts,
+  showLatestNotifToast, pollBackgroundAccounts, resetNotifMarkers,
 } from './notifications.js';
 import { initCompose, openComposeDrawer, closeComposeDrawer, handleReply, updateCharCount, updateSidebarCharCount, resetReplyState, refreshComposeDefaults } from './compose.js';
 import { openSearchDrawer, closeSearchDrawer, initSearch } from './search.js';
@@ -66,6 +66,7 @@ window.closeFiltersDrawer = closeFiltersDrawer;
 window.openBookmarksDrawer = openBookmarksDrawer;
 window.switchAccount = switchAccount;
 window.removeAccount = removeAccount;
+window.renderAccountSwitcher = renderAccountSwitcher;
 
 // Expose apply functions for real-time cloud sync
 window.applyTheme = applyTheme;
@@ -395,7 +396,8 @@ state.server = server;
 
   startPolling();
   startCountPolling();
-  pollNotifications();
+  await pollNotifications();
+  await pollBackgroundAccounts();
   startSwPolling();
 
   // Restore drawer states
@@ -452,6 +454,7 @@ function resetFeeds() {
   state.trendingFollowingLoaded = false;
   state.lastSeenNotifId = null;
   state._lastFiredNotifId = null;
+  resetNotifMarkers();
 }
 
 /** Removes an account from the registry. */
