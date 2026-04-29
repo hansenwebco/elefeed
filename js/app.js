@@ -2779,7 +2779,8 @@ async function _showHoverCard(accountId, server, triggerRect) {
           data-account-id="${escapeHTML(accountId)}"
           data-following="${isFollowing ? 'true' : 'false'}"
           ${isBlocked || isMuted ? 'disabled' : ''}>
-          ${escapeHTML(followBtnText)}
+          <iconify-icon icon="${isFollowing ? 'ph:user-check-bold' : 'ph:user-plus-bold'}" style="font-size: 13px; margin-right: 4px; vertical-align: -2px;"></iconify-icon>
+          <span>${escapeHTML(followBtnText)}</span>
         </button>
       </div>
       <div class="hover-card-name">${displayName}</div>
