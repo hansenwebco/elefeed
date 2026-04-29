@@ -210,7 +210,9 @@ function renderAnalyticsUserRow(account, relationship) {
     followBtnHTML = `<button class="${btnClass}"
       data-account-id="${account.id}"
       data-following="${isFollowing ? 'true' : 'false'}"
-      title="${btnText}">${btnText}</button>`;
+      title="${btnText}">
+      <iconify-icon icon="${isFollowing ? 'ph:user-check-bold' : 'ph:user-plus-bold'}" style="font-size: 13px; margin-right: 4px; vertical-align: -2px;"></iconify-icon>
+      <span>${btnText}</span></button>`;
   }
 
   const followsYouBadge = '';

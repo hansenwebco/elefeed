@@ -348,7 +348,7 @@ export function openProfileDrawer(accountId, server) {
           data-account-id="${accountId}" data-notifying="${isNotifying ? 'true' : 'false'}"
           title="${isNotifying ? 'Stop post notifications' : 'Get notified about posts'}"
           style="${isFollowing ? '' : 'display: none;'}">
-          <iconify-icon icon="ph:bell-bold" style="font-size: 15px;"></iconify-icon></button>`
+          <iconify-icon icon="${isNotifying ? 'ph:bell-fill' : 'ph:bell-bold'}" style="font-size: 15px;"></iconify-icon></button>`
       : '';
 
     const moreMenu = !isSelf
@@ -374,7 +374,8 @@ export function openProfileDrawer(accountId, server) {
       : `<button class="profile-follow-btn ${isFollowing ? 'following' : ''} ${isBlocked ? 'blocked' : ''} ${isMuted ? 'muted' : ''}" ${isBlocked || isMuted ? 'disabled' : ''}
           data-account-id="${accountId}" data-following="${isFollowing ? 'true' : 'false'}"
           title="${isBlocked ? 'User blocked' : isMuted ? 'User muted' : isFollowing ? 'Unfollow' : 'Follow'}">
-          ${isBlocked ? 'Blocked' : isMuted ? 'Muted' : isFollowing ? 'Following' : 'Follow'}</button>`;
+          <iconify-icon icon="${isFollowing ? 'ph:user-check-bold' : 'ph:user-plus-bold'}" style="font-size: 14px; margin-right: 4px; vertical-align: -2px;"></iconify-icon>
+          <span>${isBlocked ? 'Blocked' : isMuted ? 'Muted' : isFollowing ? 'Following' : 'Follow'}</span></button>`;
 
     const movedBanner = account.moved ? `
       <div class="profile-moved-banner">
@@ -739,15 +740,32 @@ export async function handleFollowToggle(btn) {
     btn.dataset.following = nowFollowing ? 'true' : 'false';
     btn.classList.toggle('following', nowFollowing);
     btn.classList.toggle('requested', !nowFollowing && !!nowRequested);
-    btn.textContent = nowFollowing ? 'Following' : (nowRequested ? 'Requested' : 'Follow');
+    
+    const icon = btn.querySelector('iconify-icon');
+    const label = btn.querySelector('span');
+    if (icon) icon.setAttribute('icon', nowFollowing ? 'ph:user-check-bold' : 'ph:user-plus-bold');
+    if (label) label.textContent = nowFollowing ? 'Following' : (nowRequested ? 'Requested' : 'Follow');
 
     const notifyBtn = btn.closest('.profile-action-group')?.querySelector('.profile-notify-btn');
-    if (notifyBtn) notifyBtn.style.display = nowFollowing ? '' : 'none';
+    if (notifyBtn) {
+      const wasHidden = notifyBtn.style.display === 'none';
+      notifyBtn.style.display = nowFollowing ? '' : 'none';
+      if (wasHidden && nowFollowing) {
+        notifyBtn.classList.add('pop-in');
+        setTimeout(() => notifyBtn.classList.remove('pop-in'), 500);
+        
+        // Also trigger a small ring after the pop
+        setTimeout(() => {
+          notifyBtn.classList.add('ringing');
+          setTimeout(() => notifyBtn.classList.remove('ringing'), 600);
+        }, 300);
+      }
+    }
 
     // Update the follow/mutual label in the banner
     renderProfileBannerFollowLabel(relationship);
 
-    showToast(nowFollowing ? 'Now following' : 'Unfollowed');
+    showToast(nowFollowing ? 'Now following' : (nowRequested ? 'Follow requested' : 'Unfollowed'));
   } catch (err) {
     btn.textContent = originalText;
     showToast('Action failed: ' + err.message);
@@ -768,9 +786,9 @@ export async function handleNotifyToggle(btn) {
   btn.dataset.notifying = willNotify ? 'true' : 'false';
   btn.classList.toggle('notifying', willNotify);
   btn.title = willNotify ? 'Stop post notifications' : 'Get notified about posts';
-  if (icon) {
-    icon.setAttribute('icon', willNotify ? 'ph:bell-fill' : 'ph:bell-bold');
-  }
+  
+  // Replace innerHTML to ensure the iconify-icon is fresh and updates immediately
+  btn.innerHTML = `<iconify-icon icon="${willNotify ? 'ph:bell-fill' : 'ph:bell-bold'}" style="font-size: 15px;"></iconify-icon>`;
 
   btn.classList.add('ringing');
   setTimeout(() => btn.classList.remove('ringing'), 600);
@@ -790,18 +808,14 @@ export async function handleNotifyToggle(btn) {
     btn.dataset.notifying = nowNotifying ? 'true' : 'false';
     btn.classList.toggle('notifying', nowNotifying);
     btn.title = nowNotifying ? 'Stop post notifications' : 'Get notified about posts';
-    if (svg) {
-      svg.setAttribute('icon', nowNotifying ? 'ph:bell-fill' : 'ph:bell-bold');
-    }
+    btn.innerHTML = `<iconify-icon icon="${nowNotifying ? 'ph:bell-fill' : 'ph:bell-bold'}" style="font-size: 15px;"></iconify-icon>`;
 
     showToast(nowNotifying ? 'Notifications on for this user' : 'Notifications off for this user');
   } catch (err) {
     btn.dataset.notifying = isNotifying ? 'true' : 'false';
     btn.classList.toggle('notifying', isNotifying);
     btn.title = isNotifying ? 'Stop post notifications' : 'Get notified about posts';
-    if (svg) {
-      svg.setAttribute('icon', isNotifying ? 'ph:bell-fill' : 'ph:bell-bold');
-    }
+    btn.innerHTML = `<iconify-icon icon="${isNotifying ? 'ph:bell-fill' : 'ph:bell-bold'}" style="font-size: 15px;"></iconify-icon>`;
     showToast('Failed: ' + err.message);
   } finally {
     btn.disabled = false;

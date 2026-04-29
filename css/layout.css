@@ -228,9 +228,9 @@
   position: absolute;
   bottom: calc(100% + 8px);
   left: -10px;
-  backdrop-filter: blur(16px) saturate(1.8);
-  -webkit-backdrop-filter: blur(16px) saturate(1.8);
-  background: rgba(var(--bg-rgb), 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(var(--bg-rgb), 0.97);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 6px 0;

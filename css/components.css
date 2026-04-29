@@ -1144,7 +1144,7 @@
 
 .account-switcher-name {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;

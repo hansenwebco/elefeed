@@ -1816,15 +1816,23 @@ body.hide-cards-enabled .post-card {
   position: absolute;
   bottom: calc(100% + 4px);
   left: 0;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 98%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 0;
+  border-radius: 12px;
+  padding: 6px;
   display: none;
   flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   z-index: 200;
   min-width: 160px;
+  animation: dropdownAppear 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes dropdownAppear {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .boost-dropdown.show {
@@ -1833,9 +1841,9 @@ body.hide-cards-enabled .post-card {
 
 /* Footer-specific more dropdown polish */
 .footer-more-dropdown {
-  backdrop-filter: blur(16px) saturate(1.8);
-  -webkit-backdrop-filter: blur(16px) saturate(1.8);
-  background: rgba(var(--bg-rgb), 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(var(--bg-rgb), 0.97);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 6px 0;
@@ -1878,17 +1886,18 @@ body.hide-cards-enabled .post-card {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 14px;
+  padding: 8px 12px;
+  border-radius: 8px;
   color: var(--text);
   font-family: var(--font-body);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   background: none;
   border: none;
   width: 100%;
   text-align: left;
-  transition: background var(--trans);
+  transition: all var(--trans);
 }
 
 .boost-dropdown-item:hover {
