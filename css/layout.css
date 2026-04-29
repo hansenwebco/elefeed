@@ -150,14 +150,14 @@
 
 .sidebar-notif-badge {
   margin-left: -6px;
-  width: 18px;
-  height: 18px;
-  border-radius: 9px;
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
   background: var(--danger);
   color: #fff;
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
