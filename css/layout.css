@@ -155,13 +155,12 @@
   border-radius: 9px;
   background: var(--danger);
   color: #fff;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 1px; /* Optical centering fix for mono baseline */
   pointer-events: none;
   animation: badgePop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   flex-shrink: 0;

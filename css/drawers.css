@@ -1506,18 +1506,18 @@ body.manage-inline-active .manage-inline-panel {
 
 .notif-badge {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 16px;
-  height: 16px;
+  top: 1px;
+  right: 1px;
+  min-width: 17px;
+  height: 17px;
   padding: 0 4px;
   border-radius: 99px;
   background: var(--danger);
   color: #fff;
   font-size: 10px;
   font-weight: 600;
-  font-family: var(--font-mono);
-  line-height: 16px;
+  font-family: var(--font-body);
+  line-height: 17px;
   text-align: center;
   pointer-events: none;
   opacity: 0;
