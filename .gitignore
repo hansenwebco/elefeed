@@ -6,3 +6,8 @@ tests/.testenv
 tests/.testenv.local
 tests/test-results.json
 tests/coverage/
+
+# Build and Node
+dist/
+node_modules/
+.DS_Store

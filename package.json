@@ -1,0 +1,12 @@
+{
+  "name": "elefeed",
+  "version": "1.0.0",
+  "description": "A tidy Mastodon client",
+  "private": true,
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0"
+  }
+}
