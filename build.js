@@ -6,7 +6,7 @@ const { minify } = require('html-minifier-terser');
 async function build() {
     const distDir = path.join(__dirname, 'dist');
     const buildId = Date.now().toString().slice(-8); // Short unique ID
-    
+
     // 1. Clean/Create dist directory
     if (fs.existsSync(distDir)) {
         fs.rmSync(distDir, { recursive: true });
@@ -33,7 +33,7 @@ async function build() {
     const originalHtml = fs.readFileSync('index.html', 'utf8');
     const cssMatch = originalHtml.match(/href="(css\/.*?\.css)"/g);
     const cssFiles = cssMatch ? cssMatch.map(m => m.match(/href="(css\/.*?\.css)"/)[1]) : ['css/base.css'];
-    
+
     const tempCssEntry = path.join(__dirname, 'temp_bundle.css');
     const cssContent = cssFiles.map(f => `@import "${f}";`).join('\n');
     fs.writeFileSync(tempCssEntry, cssContent);
@@ -59,7 +59,11 @@ async function build() {
         'og-image.png',
         'sw.js',
         'images',
-        'templates'
+        'templates',
+        'privacy.html',
+        'csam-2026-03-22.html',
+        'csam.html',
+        'CNAME'
     ];
 
     for (const asset of assets) {
@@ -80,13 +84,13 @@ async function build() {
     // Remove multiple CSS links and replace with one
     const cssRegex = /<link rel="stylesheet" href="css\/.*?" \/>/g;
     html = html.replace(cssRegex, '');
-    html = html.replace('<!-- ═══════════════════ STYLESHEETS ═══════════════════ -->', 
+    html = html.replace('<!-- ═══════════════════ STYLESHEETS ═══════════════════ -->',
         `<!-- ═══════════════════ STYLESHEETS ═══════════════════ -->\n  <link rel="stylesheet" href="css/${cssFile}" />`);
 
     // Remove the module script tags and replace with bundle
     const scriptRegex = /<script type="module" src="js\/.*?"(><\/script>)?/g;
     html = html.replace(scriptRegex, '');
-    html = html.replace('<!-- Application entry point -->', 
+    html = html.replace('<!-- Application entry point -->',
         `<!-- Application entry point -->\n  <script type="module" src="js/${jsFile}"></script>`);
 
     // Actual minification
