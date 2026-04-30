@@ -77,36 +77,66 @@ async function build() {
         }
     }
 
-    // 5. Post-process and Minify index.html
-    console.log('Optimizing and Minifying index.html...');
-    let html = originalHtml;
+    // 5. Post-process and Minify HTML files
+    console.log('Optimizing and Minifying HTML files...');
+    const htmlFiles = [
+        { path: 'index.html', hasJs: true },
+        { path: 'privacy.html', hasJs: false },
+        { path: 'csam-2026-03-22.html', hasJs: false },
+        { path: 'csam.html', hasJs: false }
+    ];
 
-    // Remove multiple CSS links and replace with one
-    const cssRegex = /<link rel="stylesheet" href="css\/.*?" \/>/g;
-    html = html.replace(cssRegex, '');
-    html = html.replace('<!-- ═══════════════════ STYLESHEETS ═══════════════════ -->',
-        `<!-- ═══════════════════ STYLESHEETS ═══════════════════ -->\n  <link rel="stylesheet" href="css/${cssFile}" />`);
+    for (const file of htmlFiles) {
+        if (!fs.existsSync(file.path)) continue;
+        
+        console.log(`  Processing ${file.path}...`);
+        let html = fs.readFileSync(file.path, 'utf8');
 
-    // Remove the module script tags and replace with bundle
-    const scriptRegex = /<script type="module" src="js\/.*?"(><\/script>)?/g;
-    html = html.replace(scriptRegex, '');
-    html = html.replace('<!-- Application entry point -->',
-        `<!-- Application entry point -->\n  <script type="module" src="js/${jsFile}"></script>`);
+        // Remove multiple CSS links and replace with one
+        const cssRegex = /<link rel="stylesheet" href="css\/.*?" \/>/g;
+        html = html.replace(cssRegex, '');
+        
+        const cssLink = `<link rel="stylesheet" href="css/${cssFile}" />`;
+        if (html.includes('<!-- ═══════════════════ STYLESHEETS ═══════════════════ -->')) {
+            html = html.replace('<!-- ═══════════════════ STYLESHEETS ═══════════════════ -->', 
+                `<!-- ═══════════════════ STYLESHEETS ═══════════════════ -->\n  ${cssLink}`);
+        } else {
+            // Insert before the first <style> tag or before </head>
+            if (html.includes('<style>')) {
+                html = html.replace('<style>', `${cssLink}\n    <style>`);
+            } else {
+                html = html.replace('</head>', `    ${cssLink}\n</head>`);
+            }
+        }
 
-    // Actual minification
-    const minifiedHtml = await minify(html, {
-        removeAttributeQuotes: false,
-        collapseWhitespace: true,
-        removeComments: true,
-        minifyJS: true,
-        minifyCSS: true,
-        processConditionalComments: true,
-        removeEmptyAttributes: true,
-        removeRedundantAttributes: true,
-        trimCustomFragments: true
-    });
+        // Remove the module script tags and replace with bundle if needed
+        if (file.hasJs) {
+            const scriptRegex = /<script type="module" src="js\/.*?"(><\/script>)?/g;
+            html = html.replace(scriptRegex, '');
+            const jsLink = `<script type="module" src="js/${jsFile}"></script>`;
+            if (html.includes('<!-- Application entry point -->')) {
+                html = html.replace('<!-- Application entry point -->', 
+                    `<!-- Application entry point -->\n  ${jsLink}`);
+            } else {
+                html = html.replace('</body>', `  ${jsLink}\n</body>`);
+            }
+        }
 
-    fs.writeFileSync(path.join(distDir, 'index.html'), minifiedHtml);
+        // Actual minification
+        const minifiedHtml = await minify(html, {
+            removeAttributeQuotes: false,
+            collapseWhitespace: true,
+            removeComments: true,
+            minifyJS: true,
+            minifyCSS: true,
+            processConditionalComments: true,
+            removeEmptyAttributes: true,
+            removeRedundantAttributes: true,
+            trimCustomFragments: true
+        });
+
+        fs.writeFileSync(path.join(distDir, file.path), minifiedHtml);
+    }
 
     console.log('Build complete! Output in /dist');
 }
