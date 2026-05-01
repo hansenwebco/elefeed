@@ -42,6 +42,7 @@ export const urlParams = new URLSearchParams(window.location.search);
 export const state = {
   server: null,
   token: null,
+  forceLogin: false,
   clientId: null,
   clientSecret: null,
   account: null,
