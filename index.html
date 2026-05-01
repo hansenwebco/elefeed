@@ -241,7 +241,7 @@
         <div class="login-footer-links">
           <span class="sidebar-footer-brand" style="font-family:inherit;font-size:inherit;color:inherit;">Elefeed</span>
           <span class="login-footer-dot">&middot;</span>
-          <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
+          <a href="#" onclick="event.preventDefault(); window.openPrivacyModal()">Privacy Policy</a>
         </div>
       </footer>
     </div>
@@ -408,7 +408,7 @@
           <iconify-icon icon="ph:info-bold" class="footer-server-version" style="display:none; cursor:help; font-size:12px; opacity:0.6;"></iconify-icon>
         </div>
         <div class="sidebar-footer-links">
-          <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
+          <a href="#" onclick="event.preventDefault(); window.openPrivacyModal()">Privacy Policy</a>
           <a href="https://github.com/hansenwebco/elefeed/issues" target="_blank" rel="noopener">Report Bug</a>
           <a href="https://github.com/hansenwebco/elefeed" target="_blank" rel="noopener">Source Code</a>
         </div>
@@ -881,7 +881,7 @@
           <iconify-icon icon="ph:info-bold" class="footer-server-version" style="display:none; cursor:help; font-size:12px; opacity:0.6;"></iconify-icon>
         </div>
         <div class="sidebar-footer-links">
-          <a href="#" onclick="event.preventDefault(); document.getElementById('privacy-modal').style.display='flex'">Privacy Policy</a>
+          <a href="#" onclick="event.preventDefault(); window.openPrivacyModal()">Privacy Policy</a>
           <a href="https://github.com/hansenwebco/elefeed/issues" target="_blank" rel="noopener">Report Bug</a>
           <a href="https://github.com/hansenwebco/elefeed" target="_blank" rel="noopener">Source Code</a>
         </div>
@@ -1654,25 +1654,16 @@
           <iconify-icon icon="ph:x-bold" style="font-size: 20px;"></iconify-icon>
         </button>
       </div>
-      <div style="padding:24px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
-        <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">This Privacy Policy outlines the data processing practices of Elefeed ("the Application").</p>
-
-        <div>
-          <h2 style="font-size:16px; color:var(--accent2); margin-top:28px; margin-bottom:12px; font-family:var(--font-mono); font-weight:500;">1. Information Collection and Processing</h2>
-          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">The Application does not collect, process, transmit, or retain any personally identifiable information, usage metrics, diagnostic data, or activity logs on external network infrastructure or proprietary servers.</p>
-        </div>
-
-        <div>
-          <h2 style="font-size:16px; color:var(--accent2); margin-top:28px; margin-bottom:12px; font-family:var(--font-mono); font-weight:500;">2. Third-Party Analytics and Tracking</h2>
-          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">The Application strictly prohibits the use of third-party analytics services, external tracking mechanisms, embedded scripts, or tracking cookies. Continuous or aggregated user behavior monitoring is not performed.</p>
-        </div>
-
-        <div>
-          <h2 style="font-size:16px; color:var(--accent2); margin-top:28px; margin-bottom:12px; font-family:var(--font-mono); font-weight:500;">3. Local Data Storage and Authentication</h2>
-          <p style="color:var(--text-muted); font-size:15px; line-height:1.6; margin:0;">All operational data required for the Application's functionality, including but not limited to authentication credentials (such as OAuth access tokens) and user-defined application preferences, are maintained exclusively within the Local Storage API of the user's web browser environment. Such data is utilized solely for the purpose of authenticating and securely interacting directly with the user's designated Mastodon instance. No application data leaves the client device to interact with servers affiliated with the Application developers.</p>
+      <div class="privacy-content-container" style="padding:24px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; justify-content:center; padding:40px;">
+          <div style="width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
         </div>
       </div>
-      <div style="padding:16px; border-top:1px solid var(--border); display:flex; justify-content:center; flex-shrink: 0;">
+      <div style="padding:16px; border-top:1px solid var(--border); display:flex; justify-content:center; flex-shrink: 0; gap: 16px; align-items: center; flex-wrap: wrap;">
+        <a href="csam-2026-03-22.html" style="color: var(--text-dim); text-decoration: none; font-size: 13px; font-family: var(--font-body); display: flex; align-items: center; gap: 6px;">
+          <iconify-icon icon="ph:shield-check-bold" style="font-size: 14px;"></iconify-icon>
+          Child Safety Standards
+        </a>
         <button onclick="document.getElementById('privacy-modal').style.display='none'" style="padding:10px 20px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:var(--font-body); font-size:14px; cursor:pointer; transition:all var(--trans);" onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text)'">Close</button>
       </div>
     </div>

@@ -356,6 +356,42 @@ export function closeAboutModal() {
   $('about-modal').style.display = 'none';
 }
 
+/** Opens the privacy modal and lazily loads content from privacy.html if needed. */
+export async function openPrivacyModal() {
+  const modal = $('privacy-modal');
+  const container = modal.querySelector('.privacy-content-container');
+  
+  modal.style.display = 'flex';
+
+  if (container && !container.dataset.loaded) {
+    try {
+      // Show loading spinner
+      container.innerHTML = '<div style="display:flex; justify-content:center; padding:40px;"><div style="width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite;"></div></div>';
+      
+      const res = await fetch('privacy.html');
+      if (!res.ok) throw new Error('Failed to load privacy policy');
+      
+      const html = await res.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const content = doc.querySelector('.content');
+      
+      if (content) {
+        container.innerHTML = content.innerHTML;
+        container.dataset.loaded = 'true';
+      } else {
+        throw new Error('Content not found in privacy.html');
+      }
+    } catch (err) {
+      console.error('[Elefeed] Privacy load error:', err);
+      container.innerHTML = `<div style="color:var(--text-muted); padding:20px; text-align:center; font-family:var(--font-body); font-size:14px;">
+        <p>Could not load privacy policy content automatically.</p>
+        <a href="privacy.html" target="_blank" style="color:var(--accent); text-decoration:none; font-weight:500;">View on separate page →</a>
+      </div>`;
+    }
+  }
+}
+
 /** Set version strings from state.js into the DOM */
 export function initVersion() {
   const v = `v${CLIENT_VERSION}`;
