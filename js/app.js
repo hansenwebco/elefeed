@@ -618,12 +618,17 @@ $('login-btn').addEventListener('click', async () => {
     store.set('pending_client_id', app.client_id);
     store.set('pending_client_secret', app.client_secret);
 
-    const authUrl = `https://${server}/oauth/authorize?` + new URLSearchParams({
+    const authParams = {
       client_id: app.client_id,
       redirect_uri: REDIRECT_URI,
       response_type: 'code',
       scope: SCOPES,
-    });
+    };
+    if (state.forceLogin) {
+      authParams.force_login = 'true';
+    }
+
+    const authUrl = `https://${server}/oauth/authorize?` + new URLSearchParams(authParams);
 
     // On mobile, window.open() either gets blocked or opens in a separate browser
     // process (Android WebView → Chrome Custom Tab, iOS → SFSafariViewController)
@@ -1155,6 +1160,7 @@ $('avatar-btn').addEventListener('click', (e) => {
 $('add-account-btn')?.addEventListener('click', (e) => {
   e.stopPropagation();
   $('profile-dropdown').classList.remove('show');
+  state.forceLogin = true;
   showScreen('login-screen');
   clearLoginError();
 });

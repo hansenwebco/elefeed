@@ -24,6 +24,50 @@ function renderProfileBannerFollowLabel(relationship) {
   }
 }
 
+/**
+ * Updates a follow button's UI state based on relationship data.
+ * Preserves icons and handles spans correctly.
+ */
+export function updateFollowButtonUI(btn, relationship) {
+  if (!btn || !relationship) return;
+
+  const isFollowing = !!relationship.following;
+  const isRequested = !!relationship.requested;
+  const isBlocked = !!relationship.blocking;
+  const isMuted = !!relationship.muting;
+
+  btn.dataset.following = isFollowing ? 'true' : 'false';
+  btn.classList.toggle('following', isFollowing);
+  btn.classList.toggle('requested', !isFollowing && isRequested);
+  btn.classList.toggle('blocked', isBlocked);
+  btn.classList.toggle('muted', isMuted);
+  btn.disabled = isBlocked || isMuted;
+
+  const icon = btn.querySelector('iconify-icon');
+  const label = btn.querySelector('span');
+
+  if (icon) {
+    icon.setAttribute('icon', isFollowing ? 'ph:user-check-bold' : 'ph:user-plus-bold');
+  }
+
+  const labelText = isBlocked ? 'Blocked' : isMuted ? 'Muted' : isFollowing ? 'Following' : (isRequested ? 'Requested' : 'Follow');
+  if (label) {
+    label.textContent = labelText;
+  } else {
+    // Fallback if no span, but try to preserve icon if it exists
+    if (icon) {
+      btn.innerHTML = '';
+      btn.appendChild(icon);
+      const textNode = document.createTextNode(' ' + labelText);
+      btn.appendChild(textNode);
+    } else {
+      btn.textContent = labelText;
+    }
+  }
+
+  btn.title = isBlocked ? 'User blocked' : isMuted ? 'User muted' : isFollowing ? 'Unfollow' : 'Follow';
+}
+
 // Toggle profile more menu visibility
 export function toggleProfileMoreMenu(btn) {
   const accountId = btn.dataset.accountId;
@@ -714,12 +758,15 @@ export async function handleFollowToggle(btn) {
 
     const confirmed = await showConfirm(`Are you sure you want to unfollow this user?`, `Confirm Unfollow`, previewHTML);
     if (!confirmed) {
-      btn.disabled = false;
       return;
     }
   }
 
-  btn.textContent = '...';
+  const label = btn.querySelector('span');
+  const originalHTML = btn.innerHTML;
+  if (label) label.textContent = '...';
+  else btn.textContent = '...';
+  btn.disabled = true;
 
   try {
     const endpoint = isFollowing
@@ -734,17 +781,12 @@ export async function handleFollowToggle(btn) {
     if (!res.ok) throw new Error('Failed to update relationship');
 
     const relationship = await res.json();
+    
+    // Use helper to update UI consistently
+    updateFollowButtonUI(btn, relationship);
+
     const nowFollowing = relationship.following;
     const nowRequested = relationship.requested;
-
-    btn.dataset.following = nowFollowing ? 'true' : 'false';
-    btn.classList.toggle('following', nowFollowing);
-    btn.classList.toggle('requested', !nowFollowing && !!nowRequested);
-    
-    const icon = btn.querySelector('iconify-icon');
-    const label = btn.querySelector('span');
-    if (icon) icon.setAttribute('icon', nowFollowing ? 'ph:user-check-bold' : 'ph:user-plus-bold');
-    if (label) label.textContent = nowFollowing ? 'Following' : (nowRequested ? 'Requested' : 'Follow');
 
     const notifyBtn = btn.closest('.profile-action-group')?.querySelector('.profile-notify-btn');
     if (notifyBtn) {
@@ -767,7 +809,7 @@ export async function handleFollowToggle(btn) {
 
     showToast(nowFollowing ? 'Now following' : (nowRequested ? 'Follow requested' : 'Unfollowed'));
   } catch (err) {
-    btn.textContent = originalText;
+    btn.innerHTML = originalHTML;
     showToast('Action failed: ' + err.message);
   } finally {
     btn.disabled = false;
@@ -842,6 +884,7 @@ export async function handleBlockToggle(btn) {
     }
   }
 
+  const originalText = btn.textContent;
   btn.textContent = '...';
 
   try {
@@ -884,11 +927,7 @@ export async function handleBlockToggle(btn) {
     // Update the follow button
     const followBtn = document.querySelector(`.profile-follow-btn[data-account-id="${accountId}"]`);
     if (followBtn) {
-      followBtn.classList.toggle('blocked', nowBlocked);
-      followBtn.classList.remove('muted');
-      followBtn.disabled = nowBlocked;
-      followBtn.textContent = nowBlocked ? 'Blocked' : followBtn.dataset.following === 'true' ? 'Following' : 'Follow';
-      followBtn.title = nowBlocked ? 'User blocked' : followBtn.dataset.following === 'true' ? 'Unfollow' : 'Follow';
+      updateFollowButtonUI(followBtn, relationship);
     }
 
     showToast(nowBlocked ? 'User blocked' : 'User unblocked');
@@ -920,6 +959,7 @@ export async function handleMuteToggle(btn) {
     }
   }
 
+  const originalText = btn.textContent;
   btn.textContent = '...';
 
   try {
@@ -962,11 +1002,7 @@ export async function handleMuteToggle(btn) {
     // Update the follow button
     const followBtn = document.querySelector(`.profile-follow-btn[data-account-id="${accountId}"]`);
     if (followBtn) {
-      followBtn.classList.toggle('muted', nowMuted);
-      followBtn.classList.remove('blocked');
-      followBtn.disabled = nowMuted;
-      followBtn.textContent = nowMuted ? 'Muted' : followBtn.dataset.following === 'true' ? 'Following' : 'Follow';
-      followBtn.title = nowMuted ? 'User muted' : followBtn.dataset.following === 'true' ? 'Unfollow' : 'Follow';
+      updateFollowButtonUI(followBtn, relationship);
     }
 
     showToast(nowMuted ? 'User muted' : 'User unmuted');
