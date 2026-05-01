@@ -13,7 +13,7 @@ import { delay, updateURLParam, escapeHTML, renderCustomEmojis, formatNum } from
 import { apiGet, registerApp, exchangeCode } from './api.js';
 import {
   showScreen, showToast, showLoginError, clearLoginError,
-  updateTabLabel, closeAllTabDropdowns, initVersion, openAboutModal,
+  updateTabLabel, closeAllTabDropdowns, initVersion, openAboutModal, openPrivacyModal,
   showConfirm,
 } from './ui.js';
 import { renderPost } from './render.js';
@@ -77,6 +77,7 @@ window.applyZenMode = applyZenMode;
 window.updateSidebarNav = updateSidebarNav;
 window.refreshNotifSettingsUI = refreshNotifSettingsUI;
 window.refreshComposeDefaults = refreshComposeDefaults;
+window.openPrivacyModal = openPrivacyModal;
 window.loadFeedTab = loadFeedTab;
 
 // Drawer state tracking for history
