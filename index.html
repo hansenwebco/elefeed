@@ -328,6 +328,23 @@
     </div>
   </div>
 
+  <!-- ═════════════════ SWITCHING OVERLAY ═════════════════ -->
+  <div id="switch-overlay" class="switch-overlay">
+    <div class="switch-overlay-content">
+      <div class="switch-overlay-avatar-wrap">
+        <img id="switch-overlay-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%236b6b6b'/%3E%3Ccircle cx='20' cy='16' r='8' fill='%23c0c0c0'/%3E%3Cellipse cx='20' cy='40' rx='14' ry='10' fill='%23c0c0c0'/%3E%3C/svg%3E" alt="" />
+      </div>
+      <div class="switch-overlay-info">
+        <div class="switch-overlay-title">Switching to</div>
+        <div class="switch-overlay-name" id="switch-overlay-name">Account Name</div>
+        <div class="switch-overlay-server" id="switch-overlay-server">server.tld</div>
+      </div>
+      <div class="switch-overlay-progress-bar">
+        <div class="switch-overlay-progress-inner"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ═════════════════ APP SCREEN ═════════════════ -->
   <div id="app-screen" class="screen">
     <!-- Compose Sidebar -->
@@ -443,13 +460,8 @@
               <div class="avatar-btn" id="avatar-btn" title="Profile options">
                 <img id="user-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%236b6b6b'/%3E%3Ccircle cx='20' cy='16' r='8' fill='%23c0c0c0'/%3E%3Cellipse cx='20' cy='40' rx='14' ry='10' fill='%23c0c0c0'/%3E%3C/svg%3E" alt="" />
               </div>
-              <div class="boost-dropdown" id="profile-dropdown" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:220px; transform-origin: top right;">
+              <div class="boost-dropdown" id="profile-dropdown" style="right:0; left:auto; top:100%; bottom:auto; margin-top:8px; min-width:300px; transform-origin: top right;">
                 <div id="profile-account-list" class="account-switcher-list"></div>
-                <div class="boost-dropdown-separator"></div>
-                <button class="boost-dropdown-item" id="add-account-btn">
-                  <iconify-icon icon="ph:user-plus-bold" style="font-size: 16px;"></iconify-icon>
-                  <span>Add another account</span>
-                </button>
                 <div class="boost-dropdown-separator"></div>
                 <button class="boost-dropdown-item" id="profile-view-btn">
                   <iconify-icon icon="ph:user-bold" style="font-size: 16px;"></iconify-icon>
