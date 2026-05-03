@@ -24,6 +24,33 @@ export function showScreen(id) {
   $(id).classList.add('active');
 }
 
+/** Show the account switching overlay with target account info. */
+export function showSwitchingOverlay(targetAccount) {
+  const overlay = $('switch-overlay');
+  if (!overlay) return;
+
+  const nameEl = $('switch-overlay-name');
+  const serverEl = $('switch-overlay-server');
+  const avatarEl = $('switch-overlay-avatar');
+
+  if (targetAccount && targetAccount.accountData) {
+    const data = targetAccount.accountData;
+    if (nameEl) nameEl.textContent = data.display_name || data.username;
+    if (serverEl) serverEl.textContent = targetAccount.server;
+    if (avatarEl) {
+      avatarEl.src = data.avatar_static || data.avatar;
+    }
+  }
+
+  overlay.classList.add('active');
+}
+
+/** Hide the account switching overlay. */
+export function hideSwitchingOverlay() {
+  const overlay = $('switch-overlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
 /* ── Toast ──────────────────────────────────────────────────────────── */
 
 /** Ensure the toast region container exists */

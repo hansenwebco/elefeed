@@ -14,7 +14,7 @@ import { apiGet, registerApp, exchangeCode } from './api.js';
 import {
   showScreen, showToast, showLoginError, clearLoginError,
   updateTabLabel, closeAllTabDropdowns, initVersion, openAboutModal, openPrivacyModal,
-  showConfirm,
+  showConfirm, showSwitchingOverlay, hideSwitchingOverlay
 } from './ui.js';
 import { renderPost } from './render.js';
 import {
@@ -417,6 +417,13 @@ export async function switchAccount(accountId) {
   const target = accounts.find(a => a.id === accountId);
   if (!target) return;
 
+  // Optimistic UI: Close menu and show switching overlay immediately
+  closeAllTabDropdowns();
+  const profileDropdown = $('profile-dropdown');
+  if (profileDropdown) profileDropdown.classList.remove('show');
+  
+  showSwitchingOverlay(target);
+
   // Stop polling for current account
   stopPolling();
   stopCountPolling();
@@ -431,7 +438,12 @@ export async function switchAccount(accountId) {
   resetFeeds();
 
   // Re-init app with new credentials
-  await initApp(target.server, target.token);
+  try {
+    await initApp(target.server, target.token);
+  } finally {
+    // Small delay to ensure smooth exit
+    setTimeout(hideSwitchingOverlay, 400);
+  }
 }
 
 function resetFeeds() {
