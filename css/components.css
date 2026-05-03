@@ -1088,110 +1088,126 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* ─── Account Switcher ─── */
+/* ─── Account Switcher (Horizontal Strip) ─── */
 .account-switcher-list {
+  padding: 8px 12px;
+}
+
+.account-switcher-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+@media (max-width: 600px) {
+  .account-switcher-strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .account-switcher-strip::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.account-pill {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 4px;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  min-width: 50px;
+  max-width: 60px;
 }
 
-.account-switcher-item {
+.account-pill:active {
+  transform: scale(0.95);
+}
+
+.account-pill-avatar-wrap {
+  position: relative;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background var(--trans);
-  position: relative;
+  justify-content: center;
 }
 
-.account-switcher-item:hover {
-  background: var(--surface2);
-}
-
-.account-switcher-item.active {
-  background: rgba(var(--accent-rgb, 155, 127, 255), 0.1);
-}
-
-.account-switcher-item.active::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  background: var(--accent);
-  border-radius: 0 2px 2px 0;
-}
-
-.account-switcher-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--surface2);
+.account-pill-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   object-fit: cover;
-  flex-shrink: 0;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  background: var(--surface2);
 }
 
-.account-switcher-info {
-  flex: 1;
-  min-width: 0;
+.account-pill.active .account-pill-avatar {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
-.account-switcher-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.account-switcher-handle {
-  font-size: 11px;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: 0.8;
-}
-
-.account-switcher-badge {
+.account-pill-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
   background: var(--danger);
   color: #fff;
-  font-size: 10px;
-  font-weight: 800;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
   min-width: 16px;
   height: 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  pointer-events: none;
+  z-index: 2;
 }
 
-.account-switcher-remove {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.account-pill-handle {
+  font-size: 10px;
+  font-family: var(--font-body);
   color: var(--text-dim);
-  border-radius: 4px;
-  transition: all var(--trans);
-  opacity: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  text-align: center;
+  opacity: 0.7;
 }
 
-.account-switcher-item:hover .account-switcher-remove {
+.account-pill.active .account-pill-handle {
+  color: var(--accent);
+  font-weight: 600;
   opacity: 1;
 }
 
-.account-switcher-remove:hover {
-  background: rgba(255, 107, 107, 0.15);
-  color: var(--danger);
+.account-pill--add .account-pill-avatar-wrap {
+  border-radius: 50%;
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px dashed var(--border);
+  width: 38px;
+  height: 38px;
+  transition: all 0.2s ease;
+}
+
+.account-pill--add:hover .account-pill-avatar-wrap {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.account-pill--add iconify-icon {
+  font-size: 16px;
 }
 
 /* Avatar button unread dot (for background accounts) */

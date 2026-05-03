@@ -1111,22 +1111,48 @@ function renderAccountSwitcher() {
   if (!container) return;
 
   const accounts = getStoredAccounts();
-  container.innerHTML = accounts.map(acct => {
-    const isActive = acct.id === state.activeAccountId;
-    const displayName = acct.accountData.display_name || acct.accountData.username;
-    const avatarUrl = acct.accountData.avatar_static || acct.accountData.avatar;
+  
+  container.innerHTML = `
+    <div class="account-switcher-strip">
+      ${accounts.map(acct => {
+        const isActive = acct.id === state.activeAccountId;
+        const displayName = acct.accountData.display_name || acct.accountData.username;
+        const avatarUrl = acct.accountData.avatar_static || acct.accountData.avatar;
+        const handle = acct.id.split('@')[0];
+        
+        // Use live state count for the active account to ensure it's never stale
+        const unreadCount = isActive ? (state.notifUnreadCount || 0) : (acct.unreadCount || 0);
 
-    return `
-      <div class="account-switcher-item ${isActive ? 'active' : ''}" onclick="window.switchAccount('${acct.id}')">
-        <img class="account-switcher-avatar" src="${escapeHTML(avatarUrl)}" alt="" onerror="this.src=window._AVATAR_PLACEHOLDER" />
-        <div class="account-switcher-info">
-          <div class="account-switcher-name">${escapeHTML(displayName)}</div>
-          <div class="account-switcher-handle">@${escapeHTML(acct.id)}</div>
+        return `
+          <div class="account-pill ${isActive ? 'active' : ''}" 
+               onclick="window.switchAccount('${acct.id}')" 
+               title="${escapeHTML(displayName)} (@${escapeHTML(acct.id)})">
+            <div class="account-pill-avatar-wrap">
+              <img class="account-pill-avatar" src="${escapeHTML(avatarUrl)}" alt="" onerror="this.src=window._AVATAR_PLACEHOLDER" />
+              ${unreadCount > 0 ? `<div class="account-pill-badge">${unreadCount > 99 ? '99+' : unreadCount}</div>` : ''}
+            </div>
+            <span class="account-pill-handle">${escapeHTML(handle)}</span>
+          </div>
+        `;
+      }).join('')}
+      
+      <div class="account-pill account-pill--add" id="add-account-pill" title="Add another account">
+        <div class="account-pill-avatar-wrap">
+          <iconify-icon icon="ph:plus-bold"></iconify-icon>
         </div>
-        ${acct.unreadCount > 0 ? `<div class="account-switcher-badge">${acct.unreadCount}</div>` : ''}
+        <span class="account-pill-handle">Add</span>
       </div>
-    `;
-  }).join('');
+    </div>
+  `;
+
+  // Bind the add account click
+  $('add-account-pill')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    $('profile-dropdown').classList.remove('show');
+    state.forceLogin = true;
+    showScreen('login-screen');
+    clearLoginError();
+  });
 }
 
 window.handleRemoveAccount = async (id) => {

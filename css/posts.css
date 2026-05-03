@@ -1886,11 +1886,11 @@ body.hide-cards-enabled .post-card {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 8px;
   color: var(--text);
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--app-font-size, 13.5px);
   font-weight: 400;
   cursor: pointer;
   background: none;
@@ -1898,6 +1898,13 @@ body.hide-cards-enabled .post-card {
   width: 100%;
   text-align: left;
   transition: all var(--trans);
+}
+
+@media (max-width: 600px) {
+  .boost-dropdown-item {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
 }
 
 .boost-dropdown-item:hover {
