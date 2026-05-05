@@ -332,6 +332,80 @@
   cursor: not-allowed;
 }
 
+/* ────────────────────────────────────────────────
+   SETTINGS RADIO BUTTONS
+   ──────────────────────────────────────────────── */
+.settings-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-radio-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: background var(--trans);
+}
+
+.settings-radio-item:hover {
+  background: var(--surface2);
+}
+
+.settings-radio-input {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  margin: 0;
+  display: grid;
+  place-content: center;
+  transition: border-color 0.2s, background 0.2s;
+  flex-shrink: 0;
+  background: var(--bg);
+}
+
+.settings-radio-input::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.settings-radio-input:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.settings-radio-input:checked::before {
+  transform: scale(1);
+}
+
+.settings-radio-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.settings-radio-title {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.settings-radio-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 
 .profile-drawer-inner {
   flex: 1;

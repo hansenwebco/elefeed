@@ -509,9 +509,13 @@ function renderStatus(status) {
   const server = escapeHTML(state.server || '');
   const previewHTML = buildStatusPreviewHTML(s);
 
-  let hideSensitiveMedia = true;
-  try { hideSensitiveMedia = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
-  const startBlurred = s.sensitive && hideSensitiveMedia;
+  let mediaWarningMode = 'sensitive';
+  try {
+    mediaWarningMode = localStorage.getItem('pref_media_warning_mode') || (localStorage.getItem('pref_hide_sensitive_media') === 'true' ? 'sensitive' : 'none');
+  } catch { }
+
+  const startBlurred = (mediaWarningMode === 'all') || (s.sensitive && mediaWarningMode === 'sensitive');
+  const isSubtle = (mediaWarningMode === 'all' && !s.sensitive);
 
   let autoOpenSensitive = false;
   try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
@@ -522,10 +526,10 @@ function renderStatus(status) {
       ${s.media_attachments.slice(0, 2).map(m => `
         <img src="${escapeHTML(m.preview_url || m.url)}" alt="" class="search-status-thumb${startBlurred ? ' media-sensitive-blur' : ''}" loading="lazy" />
       `).join('')}
-      ${s.sensitive ? `
+      ${(startBlurred || s.sensitive) ? `
         <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); window.toggleSensitiveMedia(this)" aria-label="Toggle sensitive media" style="border-radius: 8px;">
-           <div class="sp-card" style="padding: 6px 12px; border-radius: 8px;">
-             <span class="sp-card-title" style="font-size:11px;">Sensitive</span>
+           <div class="sp-card${isSubtle ? ' sp-subtle' : ''}" style="padding: 6px 12px; border-radius: 8px;">
+             <span class="sp-card-title" style="font-size:11px;">${s.sensitive ? 'Sensitive' : 'Media hidden'}</span>
            </div>
            <span class="sp-revealed-label" style="font-size:10px;">hide</span>
         </button>
