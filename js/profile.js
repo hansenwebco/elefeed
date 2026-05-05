@@ -28,10 +28,11 @@ function renderProfileBannerFollowLabel(relationship) {
  * Updates a follow button's UI state based on relationship data.
  * Preserves icons and handles spans correctly.
  */
-export function updateFollowButtonUI(btn, relationship) {
+export function updateFollowButtonUI(btn, relationship, isLocked = false) {
   if (!btn || !relationship) return;
 
   const isFollowing = !!relationship.following;
+  const followedBy = !!relationship.followed_by;
   const isRequested = !!relationship.requested;
   const isBlocked = !!relationship.blocking;
   const isMuted = !!relationship.muting;
@@ -46,11 +47,31 @@ export function updateFollowButtonUI(btn, relationship) {
   const icon = btn.querySelector('iconify-icon');
   const label = btn.querySelector('span');
 
-  if (icon) {
-    icon.setAttribute('icon', isFollowing ? 'ph:user-check-bold' : 'ph:user-plus-bold');
+  let labelText = 'Follow';
+  let iconName = isLocked ? 'ph:lock-key-bold' : 'ph:user-plus-bold';
+
+  if (isBlocked) {
+    labelText = 'Blocked';
+  } else if (isMuted) {
+    labelText = 'Muted';
+  } else if (isFollowing) {
+    labelText = followedBy ? 'Mutual' : 'Following';
+    iconName = followedBy ? 'ph:handshake-bold' : 'ph:user-check-bold';
+  } else if (isRequested) {
+    labelText = 'Requested';
+    iconName = 'ph:hourglass-bold';
+  } else if (followedBy) {
+    labelText = isLocked ? 'Request Back' : 'Follow Back';
+    if (isLocked) iconName = 'ph:lock-key-bold';
+  } else if (isLocked) {
+    labelText = 'Request';
+    iconName = 'ph:lock-key-bold';
   }
 
-  const labelText = isBlocked ? 'Blocked' : isMuted ? 'Muted' : isFollowing ? 'Following' : (isRequested ? 'Requested' : 'Follow');
+  if (icon) {
+    icon.setAttribute('icon', iconName);
+  }
+
   if (label) {
     label.textContent = labelText;
   } else {
@@ -58,8 +79,9 @@ export function updateFollowButtonUI(btn, relationship) {
     if (icon) {
       btn.innerHTML = '';
       btn.appendChild(icon);
-      const textNode = document.createTextNode(' ' + labelText);
-      btn.appendChild(textNode);
+      const s = document.createElement('span');
+      s.textContent = labelText;
+      btn.appendChild(s);
     } else {
       btn.textContent = labelText;
     }
@@ -413,13 +435,16 @@ export function openProfileDrawer(accountId, server) {
         </div>`
       : '';
 
+    const isLocked = !!account.locked;
+    const isRequested = relationship && relationship.requested;
+
     const followButton = isSelf
       ? `<a class="profile-edit-btn" href="https://${srv}/settings/profile" target="_blank" rel="noopener">Edit Profile</a>`
-      : `<button class="profile-follow-btn ${isFollowing ? 'following' : ''} ${isBlocked ? 'blocked' : ''} ${isMuted ? 'muted' : ''}" ${isBlocked || isMuted ? 'disabled' : ''}
-          data-account-id="${accountId}" data-following="${isFollowing ? 'true' : 'false'}"
-          title="${isBlocked ? 'User blocked' : isMuted ? 'User muted' : isFollowing ? 'Unfollow' : 'Follow'}">
-          <iconify-icon icon="${isFollowing ? 'ph:user-check-bold' : 'ph:user-plus-bold'}" style="font-size: 14px; margin-right: 4px; vertical-align: -2px;"></iconify-icon>
-          <span>${isBlocked ? 'Blocked' : isMuted ? 'Muted' : isFollowing ? 'Following' : 'Follow'}</span></button>`;
+      : `<button class="profile-follow-btn ${isFollowing ? 'following' : ''} ${isRequested ? 'requested' : ''} ${isBlocked ? 'blocked' : ''} ${isMuted ? 'muted' : ''}" ${isBlocked || isMuted ? 'disabled' : ''}
+          data-account-id="${accountId}" data-following="${isFollowing ? 'true' : 'false'}" data-locked="${isLocked}"
+          title="${isBlocked ? 'User blocked' : isMuted ? 'User muted' : isFollowing ? 'Unfollow' : (isLocked ? 'Send follow request' : 'Follow')}">
+          <iconify-icon icon="${isFollowing ? 'ph:user-check-bold' : (isRequested ? 'ph:hourglass-bold' : (isLocked ? 'ph:lock-key-bold' : 'ph:user-plus-bold'))}" style="font-size: 14px; margin-right: 4px; vertical-align: -2px;"></iconify-icon>
+          <span>${isBlocked ? 'Blocked' : isMuted ? 'Muted' : isFollowing ? 'Following' : (isRequested ? 'Requested' : (isLocked ? 'Request' : 'Follow'))}</span></button>`;
 
     const movedBanner = account.moved ? `
       <div class="profile-moved-banner">
@@ -783,7 +808,7 @@ export async function handleFollowToggle(btn) {
     const relationship = await res.json();
     
     // Use helper to update UI consistently
-    updateFollowButtonUI(btn, relationship);
+    updateFollowButtonUI(btn, relationship, btn.dataset.locked === 'true');
 
     const nowFollowing = relationship.following;
     const nowRequested = relationship.requested;
@@ -927,7 +952,7 @@ export async function handleBlockToggle(btn) {
     // Update the follow button
     const followBtn = document.querySelector(`.profile-follow-btn[data-account-id="${accountId}"]`);
     if (followBtn) {
-      updateFollowButtonUI(followBtn, relationship);
+      updateFollowButtonUI(followBtn, relationship, followBtn.dataset.locked === 'true');
     }
 
     showToast(nowBlocked ? 'User blocked' : 'User unblocked');
@@ -1002,7 +1027,7 @@ export async function handleMuteToggle(btn) {
     // Update the follow button
     const followBtn = document.querySelector(`.profile-follow-btn[data-account-id="${accountId}"]`);
     if (followBtn) {
-      updateFollowButtonUI(followBtn, relationship);
+      updateFollowButtonUI(followBtn, relationship, followBtn.dataset.locked === 'true');
     }
 
     showToast(nowMuted ? 'User muted' : 'User unmuted');
@@ -1260,8 +1285,8 @@ async function openUserListDrawer(accountId, server, type = 'following') {
     const displayName = renderCustomEmojis(account.display_name || account.username, account.emojis);
     
     let followBtnClass = `profile-follow-btn ${isFollowingAccount ? 'following' : ''}`;
-    let followBtnText = isFollowingAccount ? 'Following' : 'Follow';
-    let followBtnIcon = isFollowingAccount ? 'ph:user-check-bold' : 'ph:user-plus-bold';
+    let followBtnText = isFollowingAccount ? 'Following' : (account.locked ? 'Request' : 'Follow');
+    let followBtnIcon = isFollowingAccount ? 'ph:user-check-bold' : (account.locked ? 'ph:lock-key-bold' : 'ph:user-plus-bold');
 
     if (isRequested) {
       followBtnText = 'Requested';
@@ -1271,7 +1296,8 @@ async function openUserListDrawer(accountId, server, type = 'following') {
       followBtnText = 'Mutual';
       followBtnIcon = 'ph:handshake-bold';
     } else if (!isFollowingAccount && followedBy) {
-      followBtnText = 'Follow Back';
+      followBtnText = account.locked ? 'Request Back' : 'Follow Back';
+      if (account.locked) followBtnIcon = 'ph:lock-key-bold';
     }
 
     return `
