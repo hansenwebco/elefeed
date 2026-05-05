@@ -1322,10 +1322,16 @@ if (settingsMenuBtn) {
       desktopMenuToggle.checked = state.desktopMenu;
     }
 
-    const hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
-    if (hideSensitiveMediaToggle) {
-      hideSensitiveMediaToggle.checked = store.get('pref_hide_sensitive_media') === 'false'; // default: off (blur)
+    let mediaWarningMode = store.get('pref_media_warning_mode');
+    if (!mediaWarningMode) {
+      const hideSensitive = store.get('pref_hide_sensitive_media');
+      // Migration: if hide_sensitive was 'false', it means "Show all media" (none)
+      // Otherwise, default to 'sensitive'
+      mediaWarningMode = (hideSensitive === 'false') ? 'none' : 'sensitive';
+      store.set('pref_media_warning_mode', mediaWarningMode);
     }
+    const radio = document.querySelector(`#settings-media-warning-group input[value="${mediaWarningMode}"]`);
+    if (radio) radio.checked = true;
 
     const confirmInteractionsToggle = $('settings-confirm-interactions-toggle');
     if (confirmInteractionsToggle) {
@@ -1972,14 +1978,21 @@ if (_separateBoostQuoteToggle) {
   });
 }
 
-// Show sensitive media
-const _hideSensitiveMediaToggle = $('settings-hide-sensitive-media-toggle');
-if (_hideSensitiveMediaToggle) {
-  _hideSensitiveMediaToggle.addEventListener('change', () => {
-    store.set('pref_hide_sensitive_media', _hideSensitiveMediaToggle.checked ? 'false' : 'true');
+// Media warning mode
+document.querySelectorAll('#settings-media-warning-group input').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const value = radio.value;
+    store.set('pref_media_warning_mode', value);
+    store.set('pref_hide_sensitive_media', value === 'none' ? 'false' : 'true');
     triggerPush();
+    
+    let msg = 'Media warning: ';
+    if (value === 'all') msg += 'Warn all';
+    else if (value === 'sensitive') msg += 'Sensitive only';
+    else msg += 'None';
+    import('./ui.js').then(m => m.showToast(msg));
   });
-}
+});
 
 const _confirmInteractionsToggle = $('settings-confirm-interactions-toggle');
 if (_confirmInteractionsToggle) {

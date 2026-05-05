@@ -86,19 +86,31 @@ export function renderAnalyticsMenu(s) {
  * Returns { contentHTML, footerHTML }
  */
 function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost = false, context = 'home') {
-  let hideSensitiveMedia = true;
-  try { hideSensitiveMedia = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
+  let mediaWarningMode = 'sensitive';
+  try {
+    mediaWarningMode = localStorage.getItem('pref_media_warning_mode') || (localStorage.getItem('pref_hide_sensitive_media') === 'false' ? 'none' : 'sensitive');
+  } catch { }
 
   /* ── Media ── */
   let mediaHTML = '';
   if (s.media_attachments && s.media_attachments.length > 0) {
     const count = Math.min(s.media_attachments.length, 4);
     const sensitive = s.sensitive;
-    const startBlurred = sensitive && hideSensitiveMedia;
-    const pill = sensitive ? `
+
+    let startBlurred = false;
+    let isSubtle = false;
+    if (mediaWarningMode === 'all') {
+      startBlurred = true;
+      isSubtle = !sensitive;
+    } else if (mediaWarningMode === 'sensitive') {
+      startBlurred = sensitive;
+      isSubtle = false;
+    }
+
+    const pill = (startBlurred || sensitive) ? `
       <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
-        <div class="sp-card">
-          <span class="sp-card-title">Sensitive content</span>
+        <div class="sp-card${isSubtle ? ' sp-subtle' : ''}">
+          <span class="sp-card-title">${sensitive ? 'Sensitive content' : 'Media hidden'}</span>
           <span class="sp-card-sub">Click to show</span>
         </div>
         <iconify-icon icon="ph:eye-bold" class="sp-icon sp-icon-eye" style="font-size: 13px;"></iconify-icon>
@@ -206,13 +218,19 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
       const purl = m.preview_url || m.url;
       if (purl) {
         const qSensitive = qStatus.sensitive;
-        const startBlurred = qSensitive && hideSensitiveMedia;
-        const blurClass = startBlurred ? ' media-sensitive-blur' : '';
+        let qStartBlurred = false;
+        let qIsSubtle = false;
+        if (mediaWarningMode === 'all') {
+          qStartBlurred = true;
+          qIsSubtle = !qSensitive;
+        } else if (mediaWarningMode === 'sensitive') {
+          qStartBlurred = qSensitive;
+        }
 
-        const qPill = qSensitive ? `
-            <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); window.toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
-              <div class="sp-card" style="padding:8px 12px; border-radius:10px;">
-                <span class="sp-card-title" style="font-size:12px;">Sensitive content</span>
+        const qPill = (qStartBlurred || qSensitive) ? `
+            <button class="sensitive-pill${qStartBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); window.toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
+              <div class="sp-card${qIsSubtle ? ' sp-subtle' : ''}" style="padding:8px 12px; border-radius:10px;">
+                <span class="sp-card-title" style="font-size:12px;">${qSensitive ? 'Sensitive content' : 'Media hidden'}</span>
                 <span class="sp-card-sub" style="font-size:10px;">Click to show</span>
               </div>
               <iconify-icon icon="ph:eye-bold" class="sp-icon sp-icon-eye" style="font-size: 10px;"></iconify-icon>
@@ -220,7 +238,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
             </button>` : '';
 
         qMediaHTML = `<div class="post-media" style="margin-top:8px; border-radius:6px; overflow:hidden; position:relative; background:var(--bg); border:1px solid var(--border); line-height:0;">
-            <img src="${purl}" class="${blurClass}" style="width:100%; height:auto; max-height:300px; object-fit:contain; display:block;" loading="lazy">
+            <img src="${purl}" class="${qStartBlurred ? ' media-sensitive-blur' : ''}" style="width:100%; height:auto; max-height:300px; object-fit:contain; display:block;" loading="lazy">
             ${m.type === 'video' || m.type === 'gifv' ? '<div style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.6); color:#fff; font-size:9px; font-weight:700; padding:2px 5px; border-radius:3px; letter-spacing:0.5px;">VIDEO</div>' : ''}
             ${qPill}
           </div>`;
@@ -286,9 +304,10 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
     // Sensitive link cards with media are rendered as <div> (not <a>) so the
     // browser can never auto-navigate. Navigation is handled via window.open.
     let sensitiveCardLocked = false;
-    if (cardSensitive && cardMediaHTML) {
-      const cardPill = `<button class="sensitive-pill" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
-        <div class="sp-card"><span class="sp-card-title">Sensitive content</span><span class="sp-card-sub">Click to show</span></div>
+    if ((cardSensitive || (mediaWarningMode === 'all' && cardMediaHTML)) && cardMediaHTML) {
+      const isSubtle = !s.sensitive;
+      const cardPill = `<button class="sensitive-pill${cardSensitive || (mediaWarningMode === 'all' && !s.sensitive) ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
+        <div class="sp-card${isSubtle ? ' sp-subtle' : ''}"><span class="sp-card-title">${s.sensitive ? 'Sensitive content' : 'Media hidden'}</span><span class="sp-card-sub">Click to show</span></div>
         <iconify-icon icon="ph:eye-bold" class="sp-icon sp-icon-eye" style="font-size: 13px;"></iconify-icon>
         <span class="sp-revealed-label">hide</span>
       </button>`;

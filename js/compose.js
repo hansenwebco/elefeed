@@ -529,16 +529,25 @@ window.handleQuoteInit = async function (postId, acct, triggerEl) {
         const m = status.media_attachments[0];
         const purl = m.preview_url || m.url;
         if (purl) {
-          let hideSensitive = true;
-          try { hideSensitive = localStorage.getItem('pref_hide_sensitive_media') !== 'false'; } catch { }
-          const isSensitive = status.sensitive;
-          const startBlurred = isSensitive && hideSensitive;
-          const blurClass = startBlurred ? ' media-sensitive-blur' : '';
+          let mediaWarningMode = 'sensitive';
+          try {
+            mediaWarningMode = localStorage.getItem('pref_media_warning_mode') || (localStorage.getItem('pref_hide_sensitive_media') === 'false' ? 'none' : 'sensitive');
+          } catch { }
 
-          const qPill = isSensitive ? `
+          const isSensitive = status.sensitive;
+          let startBlurred = false;
+          let isSubtle = false;
+          if (mediaWarningMode === 'all') {
+            startBlurred = true;
+            isSubtle = !isSensitive;
+          } else if (mediaWarningMode === 'sensitive') {
+            startBlurred = isSensitive;
+          }
+
+          const qPill = (startBlurred || isSensitive) ? `
               <button class="sensitive-pill${startBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); window.toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
-                <div class="sp-card" style="padding:8px 12px; border-radius:10px;">
-                  <span class="sp-card-title" style="font-size:12px;">Sensitive content</span>
+                <div class="sp-card${isSubtle ? ' sp-subtle' : ''}" style="padding:8px 12px; border-radius:10px;">
+                  <span class="sp-card-title" style="font-size:12px;">${isSensitive ? 'Sensitive content' : 'Media hidden'}</span>
                   <span class="sp-card-sub" style="font-size:10px;">Click to show</span>
                 </div>
                 <iconify-icon class="sp-icon sp-icon-eye" icon="ph:eye-bold" style="font-size: 10px;"></iconify-icon>
@@ -546,7 +555,7 @@ window.handleQuoteInit = async function (postId, acct, triggerEl) {
               </button>` : '';
 
           mediaHtml = `<div class="post-media" style="margin-top:6px; border-radius:4px; overflow:hidden; position:relative; background:var(--bg); border:1px solid var(--border); line-height:0;">
-              <img src="${purl}" class="${blurClass}" style="width:100%; height:auto; max-height:300px; object-fit:contain; display:block;">
+              <img src="${purl}" class="${startBlurred ? ' media-sensitive-blur' : ''}" style="width:100%; height:auto; max-height:300px; object-fit:contain; display:block;">
               ${m.type === 'video' || m.type === 'gifv' ? '<div style="position:absolute; bottom:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:9px; font-weight:700; padding:2px 4px; border-radius:3px;">VIDEO</div>' : ''}
               ${qPill}
             </div>`;

@@ -1350,19 +1350,35 @@
             </div>
           </div>
 
-          <!-- Sensitive content - grouped with a subtle inset -->
+          <!-- Privacy & Sensitivity -->
           <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Sensitive Content</span>
-            <!-- Show sensitive media -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Show sensitive media</span>
-                <span style="font-size:11px; color:var(--text-muted);">Display sensitive images and videos without blurring them.</span>
+            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Privacy & Sensitivity</span>
+            <!-- Media warning mode -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono); margin-bottom: 2px;">Media blurring</span>
+              <div class="settings-radio-group" id="settings-media-warning-group">
+                <label class="settings-radio-item">
+                  <input type="radio" name="media-warning" value="all" class="settings-radio-input">
+                  <div class="settings-radio-label">
+                    <span class="settings-radio-title">Warn before showing all media</span>
+                    <span class="settings-radio-desc">Subtle overlay covers all images and videos.</span>
+                  </div>
+                </label>
+                <label class="settings-radio-item">
+                  <input type="radio" name="media-warning" value="sensitive" class="settings-radio-input">
+                  <div class="settings-radio-label">
+                    <span class="settings-radio-title">Warn only for sensitive media</span>
+                    <span class="settings-radio-desc">Overlay only on content marked sensitive by author.</span>
+                  </div>
+                </label>
+                <label class="settings-radio-item">
+                  <input type="radio" name="media-warning" value="none" class="settings-radio-input">
+                  <div class="settings-radio-label">
+                    <span class="settings-radio-title">Show all media without warnings</span>
+                    <span class="settings-radio-desc">Display all images and videos immediately.</span>
+                  </div>
+                </label>
               </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Show sensitive media without blurring">
-                <input type="checkbox" id="settings-hide-sensitive-media-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
             </div>
             <!-- Auto-open sensitive content -->
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">

@@ -907,6 +907,17 @@
   font-family: var(--font-ui, var(--font));
 }
 
+.sp-card.sp-subtle {
+  background: rgba(10, 10, 12, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sp-card.sp-subtle .sp-card-title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* Icons hidden in card state; only used in revealed pill state */
 .sensitive-pill .sp-icon {
   display: none;
