@@ -9,7 +9,7 @@ import {
   getStoredAccounts, saveStoredAccounts, getActiveAccountId, setActiveAccountId,
   getSyncAccountId, setSyncAccountId
 } from './state.js';
-import { delay, updateURLParam, escapeHTML, renderCustomEmojis, formatNum } from './utils.js';
+import { delay, updateURLParam, escapeHTML, renderCustomEmojis, formatNum, getLanguageLabel } from './utils.js';
 import { apiGet, registerApp, exchangeCode } from './api.js';
 import {
   showScreen, showToast, showLoginError, clearLoginError,
@@ -314,18 +314,22 @@ async function initApp(server, token, demo = false) {
   }
 
   // Language setup
-  const langMap = { 'ar': 'Arabic (اللغة العربية)', 'en': 'English (English)', 'es': 'Spanish (Español)', 'fr': 'French (Français)', 'ja': 'Japanese (日本語)', 'zh-CN': 'Chinese, China (简体中文)' };
   const populateLangDropdown = (selectEl, includeAll = true, includeBrowser = false) => {
     if (!selectEl) return;
     const current = selectEl.value;
     selectEl.innerHTML = '';
     if (includeAll) { const opt = document.createElement('option'); opt.value = 'all'; opt.textContent = 'Show All'; selectEl.appendChild(opt); }
     if (includeBrowser) { const opt = document.createElement('option'); opt.value = 'browser'; opt.textContent = 'Browser default'; selectEl.appendChild(opt); }
-    const allLangs = new Set([...Object.keys(langMap), ...(state.instanceLanguages || [])]);
+    
+    // Official Mastodon supports a wide range of ISO 639-1 and 639-3 codes (~180+).
+    // We include the full list here to match official parity.
+    const defaultCodes = "en,aa,ab,ae,af,ak,am,an,ar,as,av,ay,az,ba,be,bg,bh,bi,bm,bn,bo,br,bs,ca,ce,ch,co,cr,cs,cu,cv,cy,da,de,dv,dz,ee,el,eo,es,et,eu,fa,ff,fi,fj,fo,fr,fy,ga,gd,gl,gu,gv,ha,he,hi,ho,hr,ht,hu,hy,hz,ia,id,ie,ig,ii,ik,io,is,it,iu,ja,jv,ka,kg,ki,kj,kk,kl,km,kn,ko,kr,ks,ku,kv,kw,ky,la,lb,lg,li,ln,lo,lt,lu,lv,mg,mh,mi,mk,ml,mn,mn-Mong,mr,ms,ms-Arab,mt,my,na,nb,nd,ne,ng,nl,nn,no,nr,nv,ny,oc,oj,om,or,os,pa,pi,pl,ps,pt,qu,rm,rn,ro,ru,rw,sa,sc,sd,se,sg,si,sk,sl,sn,so,sq,sr,ss,st,su,sv,sw,ta,te,tg,th,ti,tk,tl,tn,to,tr,ts,tt,tw,ty,ug,uk,ur,uz,ve,vi,vo,wa,wo,xh,yi,yo,za,zh,zu,zh-CN,zh-HK,zh-TW,zh-YUE,ast,chr,ckb,cnr,csb,gsw,jbo,kab,ldn,lfn,moh,nds,pdc,sco,sma,smj,szl,tok,vai,xal,zba,zgh".split(',');
+    const allLangs = new Set([...defaultCodes, ...(state.instanceLanguages || [])]);
+    
     Array.from(allLangs).sort().forEach(code => {
       const opt = document.createElement('option');
       opt.value = code;
-      opt.textContent = langMap[code] || code.toUpperCase();
+      opt.textContent = getLanguageLabel(code);
       selectEl.appendChild(opt);
     });
     selectEl.value = current;
