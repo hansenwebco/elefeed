@@ -11,11 +11,12 @@
  * rendered HTML are assigned to `window` at the bottom of this file.
  */
 
-import { state, store } from './state.js';
+import { $, state, store } from './state.js';
 import {
   escapeHTML, sanitizeHTML, processContent, extractTrailingHashtags,
-  renderCustomEmojis, relativeTime,
+  renderCustomEmojis, relativeTime, formatNum, getLanguageLabel,
 } from './utils.js';
+import { apiGet, apiPost } from './api.js';
 
 /**
  * Returns the HTML for a small "following" badge if the account is followed.
@@ -464,9 +465,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
 
   let postLangName = postLang;
   if (postLang) {
-    try {
-      postLangName = new Intl.DisplayNames([navigator.language || 'en'], { type: 'language' }).of(postLang);
-    } catch (err) { }
+    postLangName = getLanguageLabel(postLang);
   }
 
   /* ── Footer: reply, boost, favourite, bookmark, translate, external ── */

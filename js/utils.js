@@ -376,3 +376,22 @@ export function matchesLanguage(postLang, filter) {
   
   return false;
 }
+
+/**
+ * Generates a localized language name for a given ISO code.
+ * Replicates the "Common Name (Native Name)" pattern.
+ * Example: "fr" -> "French (français)"
+ */
+export function getLanguageLabel(code) {
+  if (!code || code === 'all' || code === 'browser') return code;
+  try {
+    const userLocale = navigator.language || 'en';
+    const commonName = new Intl.DisplayNames([userLocale], { type: 'language' }).of(code);
+    const nativeName = new Intl.DisplayNames([code], { type: 'language' }).of(code);
+    
+    if (commonName.toLowerCase() === nativeName.toLowerCase()) return commonName;
+    return `${commonName} (${nativeName})`;
+  } catch (e) {
+    return code.toUpperCase();
+  }
+}
