@@ -2452,6 +2452,10 @@ $('thread-close-btn').addEventListener('click', wrapDrawerClose(closeThreadDrawe
 $('thread-backdrop').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
 $('thread-back-btn').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
 
+import { closeFollowingDrawer } from './profile.js';
+$('following-close').addEventListener('click', wrapDrawerClose(closeFollowingDrawer));
+$('following-backdrop').addEventListener('click', wrapDrawerClose(closeFollowingDrawer));
+
 $('post-analytics-close')?.addEventListener('click', wrapDrawerClose(closePostAnalyticsDrawer));
 $('post-analytics-backdrop')?.addEventListener('click', wrapDrawerClose(closePostAnalyticsDrawer));
 
@@ -2459,6 +2463,8 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (document.body.classList.contains('thread-inline-active') || $('thread-drawer').classList.contains('open')) {
       closeThreadDrawer();
+    } else if ($('following-drawer').classList.contains('open')) {
+      closeFollowingDrawer();
     } else {
       closeProfileDrawer();
       closeComposeDrawer();
@@ -2467,7 +2473,7 @@ document.addEventListener('keydown', e => {
   }
 });
 // Hide pill when any drawer opens (immediate, no delay)
-['notif-drawer', 'thread-drawer', 'profile-drawer', 'compose-drawer', 'search-drawer', 'post-analytics-drawer'].forEach(id => {
+['notif-drawer', 'thread-drawer', 'profile-drawer', 'compose-drawer', 'search-drawer', 'post-analytics-drawer', 'following-drawer'].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener('transitionstart', setOverlayPillVisibility);
@@ -2504,13 +2510,29 @@ document.addEventListener('click', e => {
   const notifyBtn = e.target.closest('.profile-notify-btn');
   if (notifyBtn) { e.preventDefault(); closeAllProfileMoreMenus(); handleNotifyToggle(notifyBtn); return; }
 
-  /* Profile avatar / name → open profile drawer */
+  /* Following button click */
+  const followingBtn = e.target.closest('#profile-following-btn');
+  if (followingBtn) { 
+    e.preventDefault(); 
+    import('./profile.js').then(m => m.openFollowingDrawer(followingBtn.dataset.accountId, followingBtn.dataset.server)); 
+    return; 
+  }
+
+  /* Followers button click */
+  const followersBtn = e.target.closest('#profile-followers-btn');
+  if (followersBtn) {
+    e.preventDefault();
+    import('./profile.js').then(m => m.openFollowersDrawer(followersBtn.dataset.accountId, followersBtn.dataset.server));
+    return;
+  }
+
   /* Profile avatar / name → open profile drawer */
   const trigger = e.target.closest('[data-profile-id]');
   if (trigger) {
     if (e.target.closest('.profile-follow-btn') || e.target.closest('.profile-notify-btn')) return;
     e.preventDefault();
     closeComposeDrawer();
+    import('./profile.js').then(m => m.closeFollowingDrawer());
     const profileDrawer = $('profile-drawer');
     openProfileDrawer(trigger.dataset.profileId, trigger.dataset.profileServer);
     return;
@@ -2867,8 +2889,8 @@ document.addEventListener('mouseover', e => {
   const trigger = e.target.closest('[data-profile-id]');
   if (!trigger) return;
 
-  // Disable user profile popups in the "Trending People" feed as it's redundant
-  if (trigger.closest('.trending-person-card')) return;
+  // Disable user profile popups in certain contexts where they are redundant or intrusive
+  if (trigger.closest('.trending-person-card') || trigger.closest('.following-drawer')) return;
 
   const accountId = trigger.dataset.profileId;
   const server = trigger.dataset.profileServer || state.server;
