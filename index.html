@@ -754,6 +754,24 @@
       </div>
     </aside>
 
+    <!-- Following Drawer -->
+    <div class="following-backdrop" id="following-backdrop"></div>
+    <aside class="following-drawer" id="following-drawer" aria-hidden="true">
+      <div class="thread-drawer-header">
+        <span class="thread-drawer-title" id="following-drawer-title">Following</span>
+        <button class="thread-close-btn" id="following-close" aria-label="Close following list">
+          <iconify-icon icon="ph:x-bold" style="font-size: 16px;"></iconify-icon>
+        </button>
+      </div>
+      <div class="following-search-bar">
+        <iconify-icon icon="ph:magnifying-glass-bold"></iconify-icon>
+        <input type="text" id="following-search-input" placeholder="Search people you follow..." autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="following-drawer-inner">
+        <div id="following-content"></div>
+      </div>
+    </aside>
+
     <!-- Notification Drawer -->
     <div class="notif-backdrop" id="notif-backdrop"></div>
     <aside class="notif-drawer" id="notif-drawer" aria-hidden="true">

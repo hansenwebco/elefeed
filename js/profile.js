@@ -522,8 +522,8 @@ export function openProfileDrawer(accountId, server) {
         ${bio}
         <div class="profile-stats">
           <div class="profile-stat"><span class="profile-stat-num">${formatNum(account.statuses_count)}</span><span class="profile-stat-label">Posts</span></div>
-          <div class="profile-stat"><span class="profile-stat-num">${formatNum(account.following_count)}</span><span class="profile-stat-label">Following</span></div>
-          <div class="profile-stat"><span class="profile-stat-num">${formatNum(account.followers_count)}</span><span class="profile-stat-label">Followers</span></div>
+          <button class="profile-stat" id="profile-following-btn" data-account-id="${accountId}" data-server="${srv}"><span class="profile-stat-num">${formatNum(account.following_count)}</span><span class="profile-stat-label">Following</span></button>
+          <button class="profile-stat" id="profile-followers-btn" data-account-id="${accountId}" data-server="${srv}"><span class="profile-stat-num">${formatNum(account.followers_count)}</span><span class="profile-stat-label">Followers</span></button>
         </div>
         ${(account.fields && account.fields.length) ? `
           <div class="profile-fields">
@@ -1207,3 +1207,208 @@ export async function handleBookmarkToggle(btn) {
 }
 
 window.handleFavoriteToggle = handleFavoriteToggle;
+
+/* ── Following drawer ──────────────────────────────────────────────── */
+
+export function closeFollowingDrawer() {
+  const drawer = $('following-drawer');
+  const backdrop = $('following-backdrop');
+  if (drawer) {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+  if (backdrop) backdrop.classList.remove('open');
+}
+
+export async function openFollowingDrawer(accountId, server) {
+  return openUserListDrawer(accountId, server, 'following');
+}
+
+export async function openFollowersDrawer(accountId, server) {
+  return openUserListDrawer(accountId, server, 'followers');
+}
+
+async function openUserListDrawer(accountId, server, type = 'following') {
+  const drawer = $('following-drawer');
+  const backdrop = $('following-backdrop');
+  const content = $('following-content');
+  const searchInput = $('following-search-input');
+  const titleEl = $('following-drawer-title');
+  const inner = drawer.querySelector('.following-drawer-inner');
+
+  if (!drawer || !backdrop || !content) return;
+
+  const isFollowing = type === 'following';
+  if (titleEl) titleEl.textContent = isFollowing ? 'Following' : 'Followers';
+  if (searchInput) searchInput.placeholder = isFollowing ? 'Search people you follow...' : 'Search people...';
+
+  drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+  backdrop.classList.add('open');
+  content.innerHTML = '<div class="profile-loading"><div class="spinner"></div></div>';
+  if (searchInput) searchInput.value = '';
+
+  const srv = server || state.server;
+  let allUsers = [];
+  let maxId = null;
+  let isLoading = false;
+
+  const renderUserHtml = (account, relationship) => {
+    const isFollowingAccount = relationship ? relationship.following : (state.knownNotFollowing ? !state.knownNotFollowing.has(account.id) : true);
+    const followedBy = relationship ? relationship.followed_by : false;
+    const isRequested = relationship ? relationship.requested : false;
+    const displayName = renderCustomEmojis(account.display_name || account.username, account.emojis);
+    
+    let followBtnClass = `profile-follow-btn ${isFollowingAccount ? 'following' : ''}`;
+    let followBtnText = isFollowingAccount ? 'Following' : 'Follow';
+    let followBtnIcon = isFollowingAccount ? 'ph:user-check-bold' : 'ph:user-plus-bold';
+
+    if (isRequested) {
+      followBtnText = 'Requested';
+      followBtnIcon = 'ph:hourglass-bold';
+      followBtnClass += ' requested';
+    } else if (isFollowingAccount && followedBy) {
+      followBtnText = 'Mutual';
+      followBtnIcon = 'ph:handshake-bold';
+    } else if (!isFollowingAccount && followedBy) {
+      followBtnText = 'Follow Back';
+    }
+
+    return `
+      <div class="following-user-row">
+        <div class="following-user-avatar" data-profile-id="${escapeHTML(account.id)}" data-profile-server="${escapeHTML(srv)}" style="cursor:pointer;">
+          <img src="${escapeHTML(account.avatar_static || account.avatar)}" alt="" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
+        </div>
+        <div class="following-user-info">
+          <div class="following-user-name" data-profile-id="${escapeHTML(account.id)}" data-profile-server="${escapeHTML(srv)}" style="cursor:pointer;">
+            <span class="following-name-text">${displayName}</span>
+          </div>
+          <div class="following-user-acct">
+            <span class="following-acct-text">@${escapeHTML(account.acct)}</span>
+          </div>
+        </div>
+        <button class="${followBtnClass}" data-account-id="${escapeHTML(account.id)}" data-following="${isFollowingAccount}">
+          <iconify-icon icon="${followBtnIcon}" style="font-size: 13px; margin-right: 4px; vertical-align: -2px;"></iconify-icon>
+          <span>${followBtnText}</span>
+        </button>
+      </div>`;
+  };
+
+  const renderUserList = (users, relationshipsMap = {}) => {
+    if (!users || !users.length) {
+      content.innerHTML = `<div class="following-empty">No ${type} found.</div>`;
+      return;
+    }
+    content.innerHTML = users.map(u => renderUserHtml(u, relationshipsMap[u.id])).join('');
+  };
+
+  const loadUsers = async (isAppend = false) => {
+    if (isLoading) return;
+    isLoading = true;
+    
+    let loadingIndicator = null;
+    if (!isAppend) {
+      content.innerHTML = '<div class="profile-loading"><div class="spinner"></div></div>';
+      allUsers = [];
+      maxId = null;
+    } else {
+      loadingIndicator = document.createElement('div');
+      loadingIndicator.className = 'profile-loading-more';
+      loadingIndicator.innerHTML = '<div class="spinner"></div><span>Loading more…</span>';
+      content.appendChild(loadingIndicator);
+    }
+
+    try {
+      let url = `https://${srv}/api/v1/accounts/${accountId}/${type}?limit=40`;
+      if (isAppend && maxId) {
+        url += `&max_id=${maxId}`;
+      }
+
+      const res = await fetch(url, {
+        headers: state.token ? { 'Authorization': `Bearer ${state.token}` } : {},
+        cache: 'no-store'
+      });
+      if (!res.ok) throw new Error('Failed to load');
+
+      const linkHeader = res.headers.get('link');
+      if (linkHeader) {
+        const nextMatch = linkHeader.match(/<[^>]+max_id=([^&>]+)[^>]*>;\s*rel="next"/);
+        maxId = nextMatch ? nextMatch[1] : null;
+      } else {
+        maxId = null;
+      }
+
+      const users = await res.json();
+      
+      let relationshipsMap = {};
+      if (users.length > 0 && state.token) {
+        try {
+          const relRes = await apiGet(`/api/v1/accounts/relationships?${users.map(u => `id[]=${u.id}`).join('&')}`, state.token, srv);
+          relRes.forEach(r => relationshipsMap[r.id] = r);
+        } catch (e) {}
+      }
+
+      if (loadingIndicator) loadingIndicator.remove();
+
+      if (isAppend) {
+        allUsers = allUsers.concat(users);
+        const tmp = document.createElement('div');
+        tmp.innerHTML = users.map(u => renderUserHtml(u, relationshipsMap[u.id])).join('');
+        while(tmp.firstChild) content.appendChild(tmp.firstChild);
+      } else {
+        allUsers = users;
+        renderUserList(allUsers, relationshipsMap);
+      }
+    } catch (err) {
+      if (loadingIndicator) loadingIndicator.remove();
+      if (!isAppend) content.innerHTML = `<div class="following-empty" style="color:var(--danger)">Failed to load ${type} list</div>`;
+    } finally {
+      isLoading = false;
+    }
+  };
+
+  // Initial load
+  await loadUsers(false);
+
+  // Infinite scroll
+  if (inner) {
+    inner.onscroll = () => {
+      if (searchInput && searchInput.value.trim()) return; // Don't infinite scroll while searching
+      if (!maxId || isLoading) return;
+      if (inner.scrollTop + inner.clientHeight >= inner.scrollHeight - 200) {
+        loadUsers(true);
+      }
+    };
+  }
+
+  if (searchInput) {
+    let searchTimeout;
+    searchInput.oninput = (e) => {
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim();
+      if (!query) {
+        loadUsers(false);
+        return;
+      }
+      
+      searchTimeout = setTimeout(async () => {
+        content.innerHTML = '<div class="profile-loading"><div class="spinner"></div></div>';
+        try {
+          const searchRes = await apiGet(`/api/v2/search?q=${encodeURIComponent(query)}&type=accounts&limit=40${isFollowing ? '&following=true' : ''}`, state.token, srv);
+          if (searchRes && searchRes.accounts && searchRes.accounts.length > 0) {
+            let relationshipsMap = {};
+            try {
+              const relRes = await apiGet(`/api/v1/accounts/relationships?${searchRes.accounts.map(u => `id[]=${u.id}`).join('&')}`, state.token, srv);
+              relRes.forEach(r => relationshipsMap[r.id] = r);
+            } catch (e) {}
+            renderUserList(searchRes.accounts, relationshipsMap);
+          } else {
+            renderUserList([]);
+          }
+        } catch(err) {
+           content.innerHTML = `<div class="following-empty" style="color:var(--danger)">Search failed</div>`;
+        }
+      }, 400);
+    };
+  }
+}
