@@ -88,7 +88,7 @@ export function renderAnalyticsMenu(s) {
 function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost = false, context = 'home') {
   let mediaWarningMode = 'sensitive';
   try {
-    mediaWarningMode = localStorage.getItem('pref_media_warning_mode') || (localStorage.getItem('pref_hide_sensitive_media') === 'false' ? 'none' : 'sensitive');
+    mediaWarningMode = localStorage.getItem('pref_media_warning_mode') || (localStorage.getItem('pref_hide_sensitive_media') === 'true' ? 'sensitive' : 'none');
   } catch { }
 
   /* ── Media ── */
@@ -283,37 +283,45 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   // Suppress card if it's the same URL as the quoted status to avoid redundancy
   const isDuplicateCard = qStatus && s.card && (s.card.url === qStatus.url || s.card.url === qStatus.uri);
 
-  if (s.card && !isDuplicateCard && (!s.media_attachments || s.media_attachments.length === 0)) {
-    const isVideo = (s.card.type === 'video' || s.card.type === 'rich') && s.card.html;
-    const cardSensitive = s.sensitive && hideSensitiveMedia;
+    if (s.card && !isDuplicateCard && (!s.media_attachments || s.media_attachments.length === 0)) {
+      const isVideo = (s.card.type === 'video' || s.card.type === 'rich') && s.card.html;
 
-    let cardMediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image${cardSensitive ? ' media-sensitive-blur' : ''}" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
+      const sensitive = s.sensitive;
+      let cardStartBlurred = false;
+      let cardIsSubtle = false;
+      if (mediaWarningMode === 'all') {
+        cardStartBlurred = true;
+        cardIsSubtle = !sensitive;
+      } else if (mediaWarningMode === 'sensitive') {
+        cardStartBlurred = sensitive;
+      }
 
-    if (isVideo && cardMediaHTML) {
-      const encodedHtml = encodeURIComponent(s.card.html);
-      const ratio = s.card.width && s.card.height ? `${s.card.width} / ${s.card.height}` : '16 / 9';
-      cardMediaHTML = `
-        <div class="post-card-video-wrapper" onclick="event.preventDefault(); event.stopPropagation(); window.playCardVideo(this, '${encodedHtml}', '${ratio}')">
-          ${cardMediaHTML}
-          <div class="post-card-play-overlay">
-            <iconify-icon icon="ph:play-fill" style="font-size: 24px; color:#fff;"></iconify-icon>
-          </div>
-        </div>`;
-    }
+      let cardMediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image${cardStartBlurred ? ' media-sensitive-blur' : ''}" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
 
-    // Sensitive link cards with media are rendered as <div> (not <a>) so the
-    // browser can never auto-navigate. Navigation is handled via window.open.
-    let sensitiveCardLocked = false;
-    if ((cardSensitive || (mediaWarningMode === 'all' && cardMediaHTML)) && cardMediaHTML) {
-      const isSubtle = !s.sensitive;
-      const cardPill = `<button class="sensitive-pill${cardSensitive || (mediaWarningMode === 'all' && !s.sensitive) ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
-        <div class="sp-card${isSubtle ? ' sp-subtle' : ''}"><span class="sp-card-title">${s.sensitive ? 'Sensitive content' : 'Media hidden'}</span><span class="sp-card-sub">Click to show</span></div>
-        <iconify-icon icon="ph:eye-bold" class="sp-icon sp-icon-eye" style="font-size: 13px;"></iconify-icon>
-        <span class="sp-revealed-label">hide</span>
-      </button>`;
-      cardMediaHTML = `<div class="post-card-img-wrap">${cardMediaHTML}${cardPill}</div>`;
-      sensitiveCardLocked = true;
-    }
+      if (isVideo && cardMediaHTML) {
+        const encodedHtml = encodeURIComponent(s.card.html);
+        const ratio = s.card.width && s.card.height ? `${s.card.width} / ${s.card.height}` : '16 / 9';
+        cardMediaHTML = `
+          <div class="post-card-video-wrapper" onclick="event.preventDefault(); event.stopPropagation(); window.playCardVideo(this, '${encodedHtml}', '${ratio}')">
+            ${cardMediaHTML}
+            <div class="post-card-play-overlay">
+              <iconify-icon icon="ph:play-fill" style="font-size: 24px; color:#fff;"></iconify-icon>
+            </div>
+          </div>`;
+      }
+
+      // Sensitive link cards with media are rendered as <div> (not <a>) so the
+      // browser can never auto-navigate. Navigation is handled via window.open.
+      let sensitiveCardLocked = false;
+      if ((cardStartBlurred || sensitive) && cardMediaHTML) {
+        const cardPill = `<button class="sensitive-pill${cardStartBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
+          <div class="sp-card${cardIsSubtle ? ' sp-subtle' : ''}"><span class="sp-card-title">${sensitive ? 'Sensitive content' : 'Media hidden'}</span><span class="sp-card-sub">Click to show</span></div>
+          <iconify-icon icon="ph:eye-bold" class="sp-icon sp-icon-eye" style="font-size: 13px;"></iconify-icon>
+          <span class="sp-revealed-label">hide</span>
+        </button>`;
+        cardMediaHTML = `<div class="post-card-img-wrap">${cardMediaHTML}${cardPill}</div>`;
+        sensitiveCardLocked = true;
+      }
 
     const tag = (isVideo || sensitiveCardLocked) ? 'div' : 'a';
     const hrefAttr = isVideo

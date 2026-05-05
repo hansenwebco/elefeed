@@ -531,7 +531,7 @@ window.handleQuoteInit = async function (postId, acct, triggerEl) {
         if (purl) {
           let mediaWarningMode = 'sensitive';
           try {
-            mediaWarningMode = localStorage.getItem('pref_media_warning_mode') || (localStorage.getItem('pref_hide_sensitive_media') === 'false' ? 'none' : 'sensitive');
+            mediaWarningMode = localStorage.getItem('pref_media_warning_mode') || (localStorage.getItem('pref_hide_sensitive_media') === 'true' ? 'sensitive' : 'none');
           } catch { }
 
           const isSensitive = status.sensitive;

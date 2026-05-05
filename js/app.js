@@ -1325,9 +1325,9 @@ if (settingsMenuBtn) {
     let mediaWarningMode = store.get('pref_media_warning_mode');
     if (!mediaWarningMode) {
       const hideSensitive = store.get('pref_hide_sensitive_media');
-      // Migration: if hide_sensitive was 'false', it means "Show all media" (none)
-      // Otherwise, default to 'sensitive'
-      mediaWarningMode = (hideSensitive === 'false') ? 'none' : 'sensitive';
+      // Migration: if hide_sensitive was 'true', it means "Sensitive Only"
+      // Otherwise (if 'false' or null), default to 'none' (Show all)
+      mediaWarningMode = (hideSensitive === 'true') ? 'sensitive' : 'none';
       store.set('pref_media_warning_mode', mediaWarningMode);
     }
     const radio = document.querySelector(`#settings-media-warning-group input[value="${mediaWarningMode}"]`);
