@@ -490,17 +490,48 @@
 
 
 /* ─── Post Content ─── */
-.post-content {
+.post-content,
+.status-content {
   font-size: var(--app-font-size, 14px);
   line-height: 1.65;
   color: var(--text);
   word-break: break-word;
   overflow-wrap: anywhere;
+  min-width: 0;
+  width: 100%;
 
   /* Animation for show more/less expansion (height managed via JS) */
   max-height: none;
   overflow: hidden;
   transition: max-height 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.post-content pre,
+.status-content pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  background: var(--surface2);
+  padding: 12px;
+  border-radius: 8px;
+  margin: 8px 0;
+  max-width: 100%;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  border: 1px solid var(--border);
+}
+
+.post-content code,
+.status-content code {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  background: var(--surface2);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
 }
 
 
@@ -701,6 +732,8 @@
   flex-direction: column;
   align-items: center;
   /* Center the button */
+  min-width: 0;
+  width: 100%;
 }
 
 .post-content--collapsed {
