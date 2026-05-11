@@ -268,7 +268,7 @@ if ('serviceWorker' in navigator) {
         updateNotifBadge();
       }
       // Update the in-memory lastSeen so the next foreground poll is accurate
-      if (newestId && (!state.lastSeenNotifId || newestId > state.lastSeenNotifId)) {
+      if (newestId && (!state.lastSeenNotifId || safeBigInt(newestId) > safeBigInt(state.lastSeenNotifId))) {
         // Don't overwrite lastSeenNotifId - the user hasn't *seen* them yet,
         // but record that we know they exist so we don't double-count.
         state._swLastKnownId = newestId;
@@ -371,11 +371,16 @@ async function dismissNotifMarker() {
  * Check whether a notification is read. 
  * Source of truth: ID compared against state.lastSeenNotifId (which is synced via Marker API)
  */
+function safeBigInt(val) {
+  if (!val || val === 'null' || val === 'undefined') return 0n;
+  try { return BigInt(val); } catch { return 0n; }
+}
+
 function _isNotifRead(notifId) {
-  if (!state.lastSeenNotifId) return false;
+  if (!state.lastSeenNotifId || state.lastSeenNotifId === 'null' || state.lastSeenNotifId === 'undefined') return false;
   // Numerical comparison of IDs
   // Mastodon IDs are strings but numerical.
-  return BigInt(notifId) <= BigInt(state.lastSeenNotifId);
+  return safeBigInt(notifId) <= safeBigInt(state.lastSeenNotifId);
 }
 
 
@@ -410,6 +415,7 @@ function markAllRead() {
 /** Recalculate the unread count from the notifications cache. */
 function _recalcUnreadCount() {
   state.notifUnreadCount = state.notifications.filter(n => !_isNotifRead(n.id)).length;
+  console.log('[DEBUG-NOTIF] _recalcUnreadCount ->', state.notifUnreadCount);
 }
 
 /* ── Cache helpers ─────────────────────────────────────────────────── */
@@ -665,7 +671,9 @@ export async function pollNotifications() {
   if (!state.lastSeenNotifId) {
     const key = 'lastSeenNotifId_' + state.activeAccountId;
     const oldKey = 'lastSeenNotifId_' + state.server;
-    state.lastSeenNotifId = store.get(key) || store.get(oldKey) || null;
+    let stored = store.get(key) || store.get(oldKey);
+    if (stored === 'null' || stored === 'undefined') stored = null;
+    state.lastSeenNotifId = stored;
     
     // Migrate old key if found
     if (state.lastSeenNotifId && !store.get(key)) {
@@ -689,11 +697,29 @@ export async function pollNotifications() {
     }
   }
 
+  console.log('[DEBUG-NOTIF] Starting poll. token:', !!state.token, 'lastSeen:', state.lastSeenNotifId, '_lastFired:', state._lastFiredNotifId);
+
   try {
-    let notifs = await apiGet('/api/v1/notifications?limit=40', state.token);
+    let rawNotifs = await apiGet('/api/v1/notifications?limit=40', state.token);
     
+    console.log('[DEBUG-NOTIF] Fetched notifs length:', rawNotifs.length, 'newest ID:', rawNotifs.length > 0 ? rawNotifs[0].id : null);
+    
+    // Poison recovery: if local state is stuck in the future (due to account switching bugs or old migrations),
+    // it will permanently hide all notifications. Reset them if they exceed the absolute newest notification.
+    if (rawNotifs.length > 0) {
+      const trueNewest = rawNotifs[0].id;
+      if (state.lastSeenNotifId && safeBigInt(state.lastSeenNotifId) > safeBigInt(trueNewest)) {
+        console.warn('[DEBUG-NOTIF] Local lastSeenNotifId poisoned (', state.lastSeenNotifId, '> newest', trueNewest, '). Resetting.');
+        state.lastSeenNotifId = null;
+        store.del('lastSeenNotifId_' + state.activeAccountId);
+      }
+      if (state._lastFiredNotifId && safeBigInt(state._lastFiredNotifId) > safeBigInt(trueNewest)) {
+        state._lastFiredNotifId = null;
+      }
+    }
+
     // Filter out notifications associated with hidden statuses
-    notifs = notifs.filter(n => {
+    let notifs = rawNotifs.filter(n => {
       if (!n.status) return true;
       const s = n.status.reblog || n.status;
       
@@ -718,17 +744,27 @@ export async function pollNotifications() {
       try {
         const markers = await apiGet('/api/v1/markers?timeline[]=notifications', state.token);
         const markerId = markers?.notifications?.last_read_id;
-        if (markerId && (!state.lastSeenNotifId || BigInt(markerId) > BigInt(state.lastSeenNotifId))) {
+        
+        let isValidMarker = true;
+        if (markerId && rawNotifs.length > 0 && safeBigInt(markerId) > safeBigInt(rawNotifs[0].id)) {
+          console.warn('[DEBUG-NOTIF] Ignoring poisoned server marker:', markerId);
+          isValidMarker = false;
+        }
+
+        if (markerId && isValidMarker && (!state.lastSeenNotifId || safeBigInt(markerId) > safeBigInt(state.lastSeenNotifId))) {
           state.lastSeenNotifId = markerId;
           const key = 'lastSeenNotifId_' + state.activeAccountId;
           store.set(key, markerId);
         }
       } catch (e) { console.debug('[Elefeed] Marker sync failed:', e.message); }
 
+      console.log('[DEBUG-NOTIF] Marker sync complete. state.lastSeenNotifId is now:', state.lastSeenNotifId);
+
       // Recalc based on synced marker
       _recalcUnreadCount();
     } else {
       state.notifUnreadCount = 0;
+      console.log('[DEBUG-NOTIF] No notifs fetched, unread count = 0');
     }
 
     // Save unread count to the account registry for the switcher UI
@@ -755,6 +791,8 @@ export async function pollNotifications() {
     //   3. We haven't already alerted for this same notification ID
     //   4. OS permission is granted
     //   5. The background-notifications setting is enabled
+    console.log('[DEBUG-NOTIF] Alert check:', { unread: state.notifUnreadCount, drawerOpen: state.notifDrawerOpen, hasNotifs: notifs.length > 0 });
+    
     if (
       state.notifUnreadCount > 0 &&
       !state.notifDrawerOpen &&
@@ -767,11 +805,13 @@ export async function pollNotifications() {
       // before the app opened (the SW already handled those). Instead,
       // silently seed the ID so only truly new arrivals trigger an alert.
       if (state._lastFiredNotifId === null) {
+        console.log('[DEBUG-NOTIF] Seeding _lastFiredNotifId without alerting:', newest.id);
         state._lastFiredNotifId = newest.id;
         return;
       }
 
-      const alreadyFired = state._lastFiredNotifId >= newest.id;
+      const alreadyFired = safeBigInt(state._lastFiredNotifId) >= safeBigInt(newest.id);
+      console.log('[DEBUG-NOTIF] alreadyFired:', alreadyFired, '(', state._lastFiredNotifId, '>=', newest.id, ')');
       if (!alreadyFired) {
         state._lastFiredNotifId = newest.id;
         
@@ -806,6 +846,7 @@ export async function pollNotifications() {
     }
   } catch (err) {
     console.warn('Notification poll failed:', err.message);
+    console.error('[DEBUG-NOTIF] Poll error:', err);
   }
 }
 
@@ -822,7 +863,8 @@ export async function pollBackgroundAccounts() {
   for (const acct of backgroundAccounts) {
     try {
       // We only need the newest ID to compare with lastSeenNotifId
-      const lastSeenId = store.get('lastSeenNotifId_' + acct.id) || null;
+      let lastSeenId = store.get('lastSeenNotifId_' + acct.id);
+      if (lastSeenId === 'null' || lastSeenId === 'undefined') lastSeenId = null;
       
       // Fetch newest notification
       const notifs = await apiGet('/api/v1/notifications?limit=1', acct.token, acct.server);
@@ -840,7 +882,16 @@ export async function pollBackgroundAccounts() {
           continue;
         }
 
-        if (BigInt(newestId) > BigInt(lastSeenId)) {
+        // Poison recovery for background accounts
+        if (safeBigInt(lastSeenId) > safeBigInt(newestId)) {
+          console.warn('[DEBUG-NOTIF] Background lastSeenId poisoned. Resetting.');
+          lastSeenId = null;
+          store.del('lastSeenNotifId_' + acct.id);
+          // Without lastSeenId, unread count is unknown but effectively full.
+          // Let it fall through so we fetch a batch and count them.
+        }
+
+        if (lastSeenId === null || safeBigInt(newestId) > safeBigInt(lastSeenId)) {
           // For background accounts, we don't have the full count easily without fetching more,
           // but we can at least show a "1" or "+" badge. 
           // For now, let's just mark it as 1 to indicate "new stuff".
