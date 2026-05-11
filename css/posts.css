@@ -490,17 +490,80 @@
 
 
 /* ─── Post Content ─── */
-.post-content {
+.post-content,
+.status-content {
   font-size: var(--app-font-size, 14px);
   line-height: 1.65;
   color: var(--text);
   word-break: break-word;
   overflow-wrap: anywhere;
+  min-width: 0;
+  width: 100%;
 
   /* Animation for show more/less expansion (height managed via JS) */
   max-height: none;
   overflow: hidden;
   transition: max-height 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.post-content pre,
+.status-content pre {
+  white-space: pre-wrap !important;
+  word-break: normal !important;
+  word-wrap: normal !important;
+  overflow-wrap: break-word !important;
+  background: var(--surface2);
+  padding: 14px;
+  border-radius: 8px;
+  margin: 12px 0;
+  max-width: 100%;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid var(--border);
+  tab-size: 2;
+  -moz-tab-size: 2;
+}
+
+/* Custom scrollbar for code blocks to make them look premium */
+.post-content pre::-webkit-scrollbar,
+.status-content pre::-webkit-scrollbar {
+  height: 6px;
+}
+.post-content pre::-webkit-scrollbar-thumb,
+.status-content pre::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 10px;
+}
+.post-content pre::-webkit-scrollbar-track,
+.status-content pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Ensure code tags inside pre don't override the pre-block's white-space rule */
+.post-content code,
+.status-content code {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  background: var(--surface2);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* Ensure all children inside pre (code, a, etc.) don't override the pre-block's white-space rule */
+.post-content pre *,
+.status-content pre * {
+  white-space: inherit !important;
+  word-break: inherit !important;
+  overflow-wrap: inherit !important;
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-size: inherit !important;
 }
 
 
@@ -701,6 +764,8 @@
   flex-direction: column;
   align-items: center;
   /* Center the button */
+  min-width: 0;
+  width: 100%;
 }
 
 .post-content--collapsed {
