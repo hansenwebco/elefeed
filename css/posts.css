@@ -616,6 +616,45 @@
   color: var(--accent2);
 }
 
+/* Cleaned URLs - Premium Tidy Style */
+.post-content .cleaned-url {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  margin: 0 1px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent2);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  vertical-align: middle;
+}
+
+.post-content .cleaned-url::before {
+  content: " ";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  -webkit-mask: url("https://api.iconify.design/ph:link-bold.svg") no-repeat 50% 50%;
+  mask: url("https://api.iconify.design/ph:link-bold.svg") no-repeat 50% 50%;
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  opacity: 0.7;
+}
+
+.post-content .cleaned-url:hover {
+  background: var(--border);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 
 /* Collapse any <p> left empty after card URL suppression */
 .post-content p:empty {

@@ -10,7 +10,7 @@ import {
   getSyncAccountId, setSyncAccountId
 } from './state.js';
 import { delay, updateURLParam, escapeHTML, renderCustomEmojis, formatNum, getLanguageLabel } from './utils.js';
-import { apiGet, registerApp, exchangeCode } from './api.js';
+import { apiGet, getApiUrl, registerApp, exchangeCode } from './api.js';
 import {
   showScreen, showToast, showLoginError, clearLoginError,
   updateTabLabel, closeAllTabDropdowns, initVersion, openAboutModal, openPrivacyModal,
@@ -210,6 +210,14 @@ const loadExploreTab = loadTrendingTab;
    ══════════════════════════════════════════════════════════════════════ */
 
 async function initApp(server, token, demo = false) {
+  console.log(`[Init] Initializing app for server: ${server}, demo: ${demo}`);
+  
+  if (!server && !demo) {
+    console.error('[Init] Cannot initialize app: server is missing.');
+    showScreen('login-screen');
+    showLoginError('Error: Server information is missing. Please log in again.');
+    return;
+  }
 
   // Stop all active polling/streams before switching context
   if (typeof stopPolling === 'function') stopPolling();
@@ -234,9 +242,12 @@ async function initApp(server, token, demo = false) {
   }
 
   // Notify Android App if running in WebView
-  saveMastodonToken(token, server);
+  if (typeof saveMastodonToken === 'function') {
+    saveMastodonToken(token, server);
+  }
 
   // Load core data in parallel for faster startup
+  console.log('[Init] Fetching core data...');
   const [accountRes, tagsRes, instanceV1Res, _filtersRes] = await Promise.allSettled([
     apiGet('/api/v1/accounts/verify_credentials', token, server),
     apiGet('/api/v1/followed_tags?limit=200', token, server),
@@ -298,9 +309,14 @@ async function initApp(server, token, demo = false) {
   state.federatedSupported = true;
 
   try {
+    const localUrl = getApiUrl(server, '/api/v1/timelines/public?local=true&limit=1');
+    const fedUrl = getApiUrl(server, '/api/v1/timelines/public?limit=1');
+    
+    console.log(`[Init] Probing public timelines: ${localUrl}, ${fedUrl}`);
+
     const [localRes, fedRes] = await Promise.all([
-      fetch(`https://${server}/api/v1/timelines/public?local=true&limit=1`, { headers: { 'Authorization': `Bearer ${token}` } }),
-      fetch(`https://${server}/api/v1/timelines/public?limit=1`, { headers: { 'Authorization': `Bearer ${token}` } })
+      fetch(localUrl, { headers: { 'Authorization': `Bearer ${token}` } }),
+      fetch(fedUrl, { headers: { 'Authorization': `Bearer ${token}` } })
     ]);
     if (!localRes.ok) state.localSupported = false;
     else { const localData = await localRes.json(); state.localSupported = Array.isArray(localData) && localData.length > 0; }
@@ -388,16 +404,29 @@ async function initApp(server, token, demo = false) {
   updateTabLabel('explore');
   updateSidebarNav();
 
+  // Sync tab visibility classes to match state.activeTab
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === state.activeTab);
+    b.setAttribute('aria-selected', b.dataset.tab === state.activeTab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === `panel-${state.activeTab}`);
+  });
+
   if (state.activeTab === 'explore') {
     const isFeedContext = state.exploreSubtab === 'live' || state.exploreSubtab === 'federated';
     if (isFeedContext) {
+      console.log(`[Init] Loading Explore feed: ${state.exploreSubtab}`);
       state.feedFilter = state.exploreSubtab;
       loadFeedTab();
     } else {
+      console.log(`[Init] Loading Explore tab: ${state.exploreSubtab}`);
       loadExploreTab();
     }
   } else {
+    console.log('[Init] Calling loadFeedTab()...');
     loadFeedTab();
+    console.log('[Init] loadFeedTab() call returned (async).');
   }
 
   startPolling();
@@ -1279,6 +1308,11 @@ if (settingsMenuBtn) {
       hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
     }
 
+    const clearUrlsToggle = $('settings-clear-urls-toggle');
+    if (clearUrlsToggle) {
+      clearUrlsToggle.checked = store.get('pref_clear_urls') === 'true';
+    }
+
     const usageTrackingToggle = $('settings-usage-tracking-toggle');
     if (usageTrackingToggle) {
       usageTrackingToggle.checked = store.get('pref_usage_tracking') === 'true';
@@ -1614,6 +1648,16 @@ if (_inAppNotifToggle) {
   _inAppNotifToggle.addEventListener('change', () => {
     store.set('pref_in_app_notifs', _inAppNotifToggle.checked ? 'true' : 'false');
     triggerPush();
+  });
+}
+
+// Clear URLs
+const _clearUrlsToggle = $('settings-clear-urls-toggle');
+if (_clearUrlsToggle) {
+  _clearUrlsToggle.addEventListener('change', () => {
+    store.set('pref_clear_urls', _clearUrlsToggle.checked ? 'true' : 'false');
+    triggerPush();
+    if (window.loadFeedTab) window.loadFeedTab(false);
   });
 }
 

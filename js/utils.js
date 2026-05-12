@@ -3,6 +3,8 @@
  * Pure utility functions - no DOM mutations, no state dependencies.
  */
 
+
+
 /** HTML-escape a string for safe insertion into markup. */
 export function escapeHTML(str) {
   if (!str) return '';
@@ -26,6 +28,8 @@ export function sanitizeHTML(html, context = null) {
   const div = document.createElement('div');
   div.innerHTML = html;
 
+  const clearUrls = localStorage.getItem('pref_clear_urls') === 'true';
+
   // 1. Process links (mentions, hashtags, external)
   div.querySelectorAll('a').forEach(a => {
     const text = a.textContent.trim();
@@ -36,6 +40,30 @@ export function sanitizeHTML(html, context = null) {
       isMention = true;
     } else {
       a.classList.add('ext-link');
+
+      if (clearUrls && typeof text === 'string' && text.length > 0) {
+        let displayUrl = text;
+
+        // 1. Remove query parameters
+        displayUrl = displayUrl.split('?')[0];
+
+        // 2. Strip protocol and www
+        displayUrl = displayUrl.replace(/^https?:\/\/(www\.)?/, '');
+
+        // 3. Remove trailing slash
+        displayUrl = displayUrl.replace(/\/$/, '');
+
+        // 4. Smart middle truncation if still long (e.g. > 50 chars)
+        if (displayUrl.length > 50) {
+          const start = displayUrl.substring(0, 30);
+          const end = displayUrl.substring(displayUrl.length - 15);
+          displayUrl = start + '…' + end;
+        }
+
+        a.textContent = displayUrl;
+        a.classList.add('cleaned-url');
+        a.setAttribute('title', text); // Show original URL on hover
+      }
     }
 
     if (isMention && context && context.mentions) {
