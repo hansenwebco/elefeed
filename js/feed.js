@@ -1134,7 +1134,12 @@ window.toggleReplyPeek = async function(postId, countEl) {
 /**
  * Toggles the expanded (full) view of a condensed reply.
  */
+let currentExpansionLoadingId = null;
+
 window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false) {
+  const node = el.closest('.condensed-reply-node');
+  if (node) selectReplyNode(node);
+
   const container = document.getElementById(`expanded-${statusId}`);
   if (!container) return;
 
@@ -1157,20 +1162,37 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
     return;
   }
 
-  container.innerHTML = `<div class="reply-peek-loading"><div class="spinner spinner--small"></div></div>`;
-  container.classList.add('active');
-  el.classList.add('expanded');
+  // If already loading this one, ignore
+  if (el.classList.contains('loading')) return;
+
+  el.classList.add('loading');
+  currentExpansionLoadingId = statusId;
 
   try {
     const status = await apiGet(`/api/v1/statuses/${statusId}`, state.token);
+    
+    // Check if we are still wanting to load THIS specific one
+    if (currentExpansionLoadingId !== statusId) {
+      el.classList.remove('loading');
+      return;
+    }
+
     container.innerHTML = `<div class="full-reply-card">${renderThreadPost(status, 'reply')}</div>`;
+    
+    el.classList.remove('loading');
+    container.classList.add('active');
+    el.classList.add('expanded');
   } catch (err) {
-    container.innerHTML = `<div class="reply-peek-loading" style="color:var(--danger)">Failed to load.</div>`;
+    if (currentExpansionLoadingId === statusId) {
+      el.classList.remove('loading');
+      console.error('[Feed] Failed to expand reply:', err);
+    }
   }
 };
 
 // Keyboard navigation for peek view
 let selectedReplyNode = null;
+let expansionDebounceTimer = null;
 
 function selectReplyNode(node) {
   if (selectedReplyNode) selectedReplyNode.classList.remove('selected');
@@ -1178,6 +1200,17 @@ function selectReplyNode(node) {
   if (selectedReplyNode) {
     selectedReplyNode.classList.add('selected');
   }
+}
+
+function debouncedExpand(node) {
+  if (expansionDebounceTimer) clearTimeout(expansionDebounceTimer);
+  
+  // 250ms debounce for auto-expansion
+  expansionDebounceTimer = setTimeout(() => {
+    const sid = node.dataset.statusId;
+    const trig = node.querySelector('.condensed-reply');
+    if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+  }, 250);
 }
 
 window.addEventListener('keydown', (e) => {
