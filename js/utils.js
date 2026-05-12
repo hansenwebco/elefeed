@@ -61,6 +61,8 @@ export function sanitizeHTML(html, context = null) {
         }
 
         a.textContent = displayUrl;
+        a.classList.add('cleaned-url');
+        a.setAttribute('title', text); // Show original URL on hover
       }
     }
 
