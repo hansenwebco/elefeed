@@ -103,7 +103,7 @@ export function renderCondensedReply(s, depth = 0) {
   return `
     <div class="condensed-reply" onclick="if (!event.target.closest('.condensed-reply-author')) { event.stopPropagation(); window.toggleCondensedExpansion('${inner.id}', this); }">
       <div class="condensed-reply-content">${cleanedContent}</div>
-      <span class="condensed-reply-author" onclick="event.stopPropagation(); window.openProfileDrawer('${account.id}', '${escapeHTML(state.server || '')}')" title="${escapeHTML(account.acct)}"> - @${escapeHTML(displayHandle)}${serverIcon}</span>
+      <span class="condensed-reply-author" onclick="event.stopPropagation(); window.openProfileDrawer('${account.id}', '${escapeHTML(state.server || '')}')" title="${escapeHTML(account.acct)}">@${escapeHTML(displayHandle)}${serverIcon}</span>
     </div>
     <div class="condensed-reply-expanded-container" id="expanded-${inner.id}"></div>`;
 }
