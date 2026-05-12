@@ -1118,9 +1118,18 @@ window.toggleReplyPeek = async function(postId, countEl) {
     const tree = buildFullTree([], focalStatus, descendants);
     const focalNode = tree[0];
     
-    // Only show first few branches to keep it a "peek"
-    const branchesToShow = focalNode.children.slice(0, 3);
-    const html = renderCondensedTree(branchesToShow);
+    // Only show first 10 branches to keep it a "peek", but render all if small
+    const branchesToShow = focalNode.children.slice(0, 10);
+    let html = renderCondensedTree(branchesToShow);
+
+    // If there are other roots (fragmented thread), show them too
+    if (tree.length > 1) {
+      const otherRoots = tree.slice(1, 5); // Limit other roots
+      html += `<div class="peek-fragmented-separator"></div>` + renderCondensedTree(otherRoots);
+    }
+
+    // Warm up the cache with the status objects we just received
+    descendants.forEach(s => peekCache.set(s.id, s));
 
     const moreBtn = `<button class="load-more-btn" style="margin: 8px 0 0; width: 100%; padding: 8px; border-style: dashed;" onclick="event.stopPropagation(); window.openThreadDrawer('${postId}')">View full conversation thread...</button>`;
 
@@ -1135,6 +1144,7 @@ window.toggleReplyPeek = async function(postId, countEl) {
  * Toggles the expanded (full) view of a condensed reply.
  */
 let currentExpansionLoadingId = null;
+const peekCache = new Map();
 
 window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false) {
   const node = el.closest('.condensed-reply-node');
@@ -1145,7 +1155,7 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
 
   const wasActive = container.classList.contains('active');
 
-  // Close ALL other expanded containers in the document for a single-open experience
+  // Close ALL other expanded containers
   document.querySelectorAll('.condensed-reply-expanded-container.active').forEach(c => {
     if (c === container && !forceOpen) return; 
     c.classList.remove('active');
@@ -1162,6 +1172,18 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
     return;
   }
 
+  // Instant reveal if cached
+  if (peekCache.has(statusId)) {
+    const status = peekCache.get(statusId);
+    container.innerHTML = `
+      <div class="full-reply-card" onclick="event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply'))">
+        ${renderThreadPost(status, 'reply')}
+      </div>`;
+    container.classList.add('active');
+    el.classList.add('expanded');
+    return;
+  }
+
   // If already loading this one, ignore
   if (el.classList.contains('loading')) return;
 
@@ -1170,14 +1192,17 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
 
   try {
     const status = await apiGet(`/api/v1/statuses/${statusId}`, state.token);
+    peekCache.set(statusId, status); // Cache it
     
-    // Check if we are still wanting to load THIS specific one
     if (currentExpansionLoadingId !== statusId) {
       el.classList.remove('loading');
       return;
     }
 
-    container.innerHTML = `<div class="full-reply-card">${renderThreadPost(status, 'reply')}</div>`;
+    container.innerHTML = `
+      <div class="full-reply-card" onclick="event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply'))">
+        ${renderThreadPost(status, 'reply')}
+      </div>`;
     
     el.classList.remove('loading');
     container.classList.add('active');
@@ -1205,12 +1230,12 @@ function selectReplyNode(node) {
 function debouncedExpand(node) {
   if (expansionDebounceTimer) clearTimeout(expansionDebounceTimer);
   
-  // 250ms debounce for auto-expansion
+  // 150ms debounce for auto-expansion
   expansionDebounceTimer = setTimeout(() => {
     const sid = node.dataset.statusId;
     const trig = node.querySelector('.condensed-reply');
     if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
-  }, 250);
+  }, 150);
 }
 
 window.addEventListener('keydown', (e) => {

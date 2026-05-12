@@ -596,8 +596,7 @@
 }
 
 .condensed-reply.expanded {
-  background: rgba(155, 127, 255, 0.1);
-  color: var(--accent);
+  display: none;
 }
 
 .condensed-reply.loading {
@@ -658,6 +657,19 @@
 
 .condensed-reply-content .mention {
   display: none !important;
+}
+
+.condensed-media-placeholder {
+  font-style: italic;
+  color: var(--text-muted);
+  opacity: 0.8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.condensed-media-placeholder iconify-icon {
+  font-size: 14px;
 }
 
 .condensed-reply-author {

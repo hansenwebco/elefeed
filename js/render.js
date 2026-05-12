@@ -78,10 +78,27 @@ export function renderCondensedReply(s, depth = 0) {
     : '';
 
   // Aggressively strip newlines and block breaks from the HTML content
-  const cleanedContent = inner.content
+  let cleanedContent = inner.content
     .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<\/p>\s*<p>/gi, ' ')
     .replace(/[\r\n]+/g, ' ');
+
+  // If content is empty (excluding mentions which are hidden in CSS) and has media, show a placeholder
+  const textCheck = inner.content
+    .replace(/<[^>]*>/g, '')                      // Strip all tags to get plain text
+    .replace(/@[a-z0-9_]+(@[a-z0-9._-]+)?/gi, '') // Strip handles like @user or @user@domain
+    .replace(/[^a-z0-9]/gi, '')                   // Strip all non-alphanumeric noise
+    .trim();
+  
+  const hasMedia = inner.media_attachments && inner.media_attachments.length > 0;
+
+  if (!textCheck && hasMedia) {
+    const media = inner.media_attachments[0];
+    const type = media.type || 'media';
+    const alt = media.description ? ` - ${media.description}` : '';
+    const icon = type === 'video' ? 'ph:video-camera-bold' : 'ph:image-bold';
+    cleanedContent = `<span class="condensed-media-placeholder"><iconify-icon icon="${icon}"></iconify-icon> Media Post${escapeHTML(alt)}</span>`;
+  }
 
   return `
     <div class="condensed-reply" onclick="event.stopPropagation(); window.toggleCondensedExpansion('${inner.id}', this)">
