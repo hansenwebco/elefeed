@@ -1118,14 +1118,15 @@ window.toggleReplyPeek = async function(postId, countEl) {
     const tree = buildFullTree([], focalStatus, descendants);
     const focalNode = tree[0];
     
-    // Only show first 10 branches to keep it a "peek", but render all if small
-    const branchesToShow = focalNode.children.slice(0, 10);
+    // Only show first 50 branches to keep it a "peek"
+    const branchesToShow = focalNode.children.slice(0, 50);
     let html = renderCondensedTree(branchesToShow);
-
+    
     // If there are other roots (fragmented thread), show them too
+    let fragmentsHtml = '';
     if (tree.length > 1) {
-      const otherRoots = tree.slice(1, 5); // Limit other roots
-      html += `<div class="peek-fragmented-separator"></div>` + renderCondensedTree(otherRoots);
+      const otherRoots = tree.slice(1, 10); // Limit other roots to 10
+      fragmentsHtml = `<div class="peek-fragmented-separator"></div>` + renderCondensedTree(otherRoots);
     }
 
     // Warm up the cache with the status objects we just received
@@ -1133,7 +1134,21 @@ window.toggleReplyPeek = async function(postId, countEl) {
 
     const moreBtn = `<button class="load-more-btn" style="margin: 8px 0 0; width: 100%; padding: 8px; border-style: dashed;" onclick="event.stopPropagation(); window.openThreadDrawer('${postId}')">View full conversation thread...</button>`;
 
-    container.innerHTML = `<div class="condensed-reply-wrapper">${html}</div>` + moreBtn;
+    container.innerHTML = `
+      <div class="condensed-reply-wrapper">${html}${fragmentsHtml}</div>
+      <div class="condensed-reply-info-footer">
+        ${focalNode.children.length > 50 ? `
+          <div class="condensed-reply-info">
+            <iconify-icon icon="ph:dots-three-circle-bold"></iconify-icon>
+            <span>${focalNode.children.length - 50} more posts hidden in peek view</span>
+          </div>` : ''}
+        ${tree.length > 10 ? `
+          <div class="condensed-reply-info">
+            <iconify-icon icon="ph:dots-three-circle-bold"></iconify-icon>
+            <span>${tree.length - 10} other conversation fragments hidden</span>
+          </div>` : ''}
+      </div>
+    ` + moreBtn;
 
     // Auto-expand the first post in the tree for immediate context
     setTimeout(() => {
@@ -1186,7 +1201,7 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
   if (peekCache.has(statusId)) {
     const status = peekCache.get(statusId);
     container.innerHTML = `
-      <div class="full-reply-card" onclick="if (!event.target.closest('button, a, .post-stat, .post-media-item')) { event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply')); }">
+      <div class="full-reply-card">
         ${renderThreadPost(status, 'reply')}
       </div>`;
     container.classList.add('active');
@@ -1210,7 +1225,7 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
     }
 
     container.innerHTML = `
-      <div class="full-reply-card" onclick="if (!event.target.closest('button, a, .post-stat, .post-media-item')) { event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply')); }">
+      <div class="full-reply-card" onclick="if (!event.target.closest('button, a, .post-stat, .post-media-item, .post-display-name, .post-author-handle, .post-avatar')) { event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply')); }">
         ${renderThreadPost(status, 'reply')}
       </div>`;
     

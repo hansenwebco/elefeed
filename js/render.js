@@ -39,7 +39,7 @@ export function renderFollowingBadge(accountId) {
  */
 export function renderReplyIndicator(s) {
   if (!s.in_reply_to_account_id) return '';
-  
+
   const mentions = s.mentions || [];
   const target = mentions.find(m => m.id === s.in_reply_to_account_id) || mentions[0];
   if (!target) return '';
@@ -58,7 +58,7 @@ export function renderReplyIndicator(s) {
 export function renderCondensedReply(s, depth = 0) {
   const inner = s.reblog || s;
   const account = inner.account;
-  
+
   // Parse handle and server
   let displayHandle = account.acct;
   let serverName = '';
@@ -73,8 +73,8 @@ export function renderCondensedReply(s, depth = 0) {
     }
   }
 
-  const serverIcon = isRemote 
-    ? `<iconify-icon icon="ph:globe-bold" class="condensed-server-icon" title="External: ${escapeHTML(serverName)}"></iconify-icon>` 
+  const serverIcon = isRemote
+    ? `<iconify-icon icon="ph:globe-bold" class="condensed-server-icon" title="External: ${escapeHTML(serverName)}"></iconify-icon>`
     : '';
 
   // Aggressively strip newlines and block breaks from the HTML content
@@ -89,7 +89,7 @@ export function renderCondensedReply(s, depth = 0) {
     .replace(/@[a-z0-9_]+(@[a-z0-9._-]+)?/gi, '') // Strip handles like @user or @user@domain
     .replace(/[^a-z0-9]/gi, '')                   // Strip all non-alphanumeric noise
     .trim();
-  
+
   const hasMedia = inner.media_attachments && inner.media_attachments.length > 0;
 
   if (!textCheck && hasMedia) {
@@ -101,9 +101,9 @@ export function renderCondensedReply(s, depth = 0) {
   }
 
   return `
-    <div class="condensed-reply" onclick="event.stopPropagation(); window.toggleCondensedExpansion('${inner.id}', this)">
+    <div class="condensed-reply" onclick="if (!event.target.closest('.condensed-reply-author')) { event.stopPropagation(); window.toggleCondensedExpansion('${inner.id}', this); }">
       <div class="condensed-reply-content">${cleanedContent}</div>
-      <span class="condensed-reply-author" onclick="event.stopPropagation(); window.openProfileDrawer('${account.id}', state.server)" title="${escapeHTML(account.acct)}"> — @${escapeHTML(displayHandle)}${serverIcon}</span>
+      <span class="condensed-reply-author" onclick="event.stopPropagation(); window.openProfileDrawer('${account.id}', '${escapeHTML(state.server || '')}')" title="${escapeHTML(account.acct)}"> - @${escapeHTML(displayHandle)}${serverIcon}</span>
     </div>
     <div class="condensed-reply-expanded-container" id="expanded-${inner.id}"></div>`;
 }
@@ -115,7 +115,7 @@ export function renderCondensedTree(nodes, depth = 0) {
   if (!nodes || nodes.length === 0) return '';
   return nodes.map(node => {
     const html = renderCondensedReply(node.status, depth);
-    const children = node.children.length > 0 
+    const children = node.children.length > 0
       ? `<div class="condensed-reply-children">${renderCondensedTree(node.children, depth + 1)}</div>`
       : '';
     return `<div class="condensed-reply-node" data-status-id="${node.status.id}">${html}${children}</div>`;
@@ -375,45 +375,45 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   // Suppress card if it's the same URL as the quoted status to avoid redundancy
   const isDuplicateCard = qStatus && s.card && (s.card.url === qStatus.url || s.card.url === qStatus.uri);
 
-    if (s.card && !isDuplicateCard && (!s.media_attachments || s.media_attachments.length === 0)) {
-      const isVideo = (s.card.type === 'video' || s.card.type === 'rich') && s.card.html;
+  if (s.card && !isDuplicateCard && (!s.media_attachments || s.media_attachments.length === 0)) {
+    const isVideo = (s.card.type === 'video' || s.card.type === 'rich') && s.card.html;
 
-      const sensitive = s.sensitive;
-      let cardStartBlurred = false;
-      let cardIsSubtle = false;
-      if (mediaWarningMode === 'all') {
-        cardStartBlurred = true;
-        cardIsSubtle = !sensitive;
-      } else if (mediaWarningMode === 'sensitive') {
-        cardStartBlurred = sensitive;
-      }
+    const sensitive = s.sensitive;
+    let cardStartBlurred = false;
+    let cardIsSubtle = false;
+    if (mediaWarningMode === 'all') {
+      cardStartBlurred = true;
+      cardIsSubtle = !sensitive;
+    } else if (mediaWarningMode === 'sensitive') {
+      cardStartBlurred = sensitive;
+    }
 
-      let cardMediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image${cardStartBlurred ? ' media-sensitive-blur' : ''}" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
+    let cardMediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image${cardStartBlurred ? ' media-sensitive-blur' : ''}" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
 
-      if (isVideo && cardMediaHTML) {
-        const encodedHtml = encodeURIComponent(s.card.html);
-        const ratio = s.card.width && s.card.height ? `${s.card.width} / ${s.card.height}` : '16 / 9';
-        cardMediaHTML = `
+    if (isVideo && cardMediaHTML) {
+      const encodedHtml = encodeURIComponent(s.card.html);
+      const ratio = s.card.width && s.card.height ? `${s.card.width} / ${s.card.height}` : '16 / 9';
+      cardMediaHTML = `
           <div class="post-card-video-wrapper" onclick="event.preventDefault(); event.stopPropagation(); window.playCardVideo(this, '${encodedHtml}', '${ratio}')">
             ${cardMediaHTML}
             <div class="post-card-play-overlay">
               <iconify-icon icon="ph:play-fill" style="font-size: 24px; color:#fff;"></iconify-icon>
             </div>
           </div>`;
-      }
+    }
 
-      // Sensitive link cards with media are rendered as <div> (not <a>) so the
-      // browser can never auto-navigate. Navigation is handled via window.open.
-      let sensitiveCardLocked = false;
-      if ((cardStartBlurred || sensitive) && cardMediaHTML) {
-        const cardPill = `<button class="sensitive-pill${cardStartBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
+    // Sensitive link cards with media are rendered as <div> (not <a>) so the
+    // browser can never auto-navigate. Navigation is handled via window.open.
+    let sensitiveCardLocked = false;
+    if ((cardStartBlurred || sensitive) && cardMediaHTML) {
+      const cardPill = `<button class="sensitive-pill${cardStartBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
           <div class="sp-card${cardIsSubtle ? ' sp-subtle' : ''}"><span class="sp-card-title">${sensitive ? 'Sensitive content' : 'Media hidden'}</span><span class="sp-card-sub">Click to show</span></div>
           <iconify-icon icon="ph:eye-bold" class="sp-icon sp-icon-eye" style="font-size: 13px;"></iconify-icon>
           <span class="sp-revealed-label">hide</span>
         </button>`;
-        cardMediaHTML = `<div class="post-card-img-wrap">${cardMediaHTML}${cardPill}</div>`;
-        sensitiveCardLocked = true;
-      }
+      cardMediaHTML = `<div class="post-card-img-wrap">${cardMediaHTML}${cardPill}</div>`;
+      sensitiveCardLocked = true;
+    }
 
     const tag = (isVideo || sensitiveCardLocked) ? 'div' : 'a';
     const hrefAttr = isVideo
@@ -654,7 +654,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
         </div>
       </div>
     </div>`;
-  
+
   let peekBanner = '';
   const excludedContexts = ['account', 'search', 'thread', 'notification', 'bookmark', 'favorite'];
   if (s.replies_count > 0 && !excludedContexts.includes(context)) {
@@ -665,9 +665,9 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
       </div>`;
   }
 
-  return { 
-    contentHTML: contentHTML + peekBanner + `<div class="reply-peek-container" id="reply-peek-${idPrefix}${status.id}"></div>`, 
-    footerHTML 
+  return {
+    contentHTML: contentHTML + peekBanner + `<div class="reply-peek-container" id="reply-peek-${idPrefix}${status.id}"></div>`,
+    footerHTML
   };
 }
 
@@ -1341,7 +1341,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     lbAltBtn.title = 'Alt text';
     lbAltBtn.hidden = true;
     lbAltBtn.textContent = 'ALT';
-    lbAltBtn._sep = altSep; 
+    lbAltBtn._sep = altSep;
     lbAltBtn.onclick = (e) => {
       e.stopPropagation();
       const currentAlt = (mediaItems[currentIndex]?.dataset.alt || '').trim();
@@ -1472,7 +1472,7 @@ window.vpWrapperClick = function (e, wrap) {
     if (!_scrubState) return;
     const { bar, vid, wasPlaying } = _scrubState;
     bar.classList.remove('vp-scrubbing');
-    if (wasPlaying) vid.play().catch(() => {});
+    if (wasPlaying) vid.play().catch(() => { });
     _scrubState = null;
   }
 
@@ -1641,21 +1641,21 @@ window.toggleShowMore = function toggleShowMore(btn) {
   if (isExpanding) {
     // 1. Get the current height (collapsed)
     const startHeight = content.offsetHeight;
-    
+
     // 2. Temporarily expand to get the full scroll height
     content.classList.remove('post-content--collapsed');
     content.style.maxHeight = 'none';
     const endHeight = content.scrollHeight;
-    
+
     // 3. Reset to start height and force reflow
     content.style.maxHeight = startHeight + 'px';
     content.offsetHeight; // force reflow
-    
+
     // 4. Animate to full height
     content.style.maxHeight = endHeight + 'px';
     wrap.classList.remove('collapsed-active');
     btn.textContent = 'Show less';
-    
+
     // 5. Clean up after animation
     const onEnd = (e) => {
       if (e.propertyName === 'max-height') {
@@ -1667,17 +1667,17 @@ window.toggleShowMore = function toggleShowMore(btn) {
   } else {
     // 1. Get the current height (actual expanded height)
     const startHeight = content.scrollHeight;
-    
+
     // 2. Fix the height so the transition has a starting point other than 'none'
     content.style.maxHeight = startHeight + 'px';
     content.offsetHeight; // force reflow
-    
+
     // 3. Animate to collapsed height (400px)
     content.style.maxHeight = '400px';
     content.classList.add('post-content--collapsed');
     wrap.classList.add('collapsed-active');
     btn.textContent = 'Show more';
-    
+
     // 4. Clean up after animation
     const onEnd = (e) => {
       if (e.propertyName === 'max-height') {
@@ -1849,7 +1849,7 @@ window.handlePollVote = async function (pollId, pollEl) {
 
   const choices = Array.from(inputs).map(i => parseInt(i.value, 10));
   const voteBtn = pollEl.querySelector('.poll-vote-btn');
-  
+
   if (voteBtn) {
     voteBtn.disabled = true;
     voteBtn.textContent = 'Voting...';
@@ -1871,10 +1871,10 @@ window.handlePollVote = async function (pollId, pollEl) {
     }
 
     const updatedPoll = await res.json();
-    
+
     // Re-render the poll container in place
     pollEl.outerHTML = renderPoll(updatedPoll);
-    
+
   } catch (err) {
     console.error('Poll vote failed:', err);
     import('./ui.js').then(m => m.showToast('Failed to vote: ' + err.message));
@@ -1894,7 +1894,7 @@ window.handleHashtagClick = function (btn) {
   const rawText = (btn.textContent || btn.innerText || '').trim();
   const tag = rawText.replace(/^#/, '').split(/\s+/)[0].toLowerCase();
   if (!tag) return;
-  
+
   // Use the existing hashtag navigation logic from app.js
   // by dispatching through click handler delegation
   const hashtagLink = document.createElement('a');
@@ -1903,7 +1903,7 @@ window.handleHashtagClick = function (btn) {
   hashtagLink.textContent = rawText;
   hashtagLink.style.display = 'none';
   document.body.appendChild(hashtagLink);
-  
+
   const evt = new MouseEvent('click', {
     bubbles: true,
     cancelable: true,

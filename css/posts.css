@@ -628,6 +628,34 @@
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  transition: opacity var(--trans);
+}
+
+.condensed-reply-author:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+.condensed-reply-node--info {
+  /* Aligned to root */
+}
+
+.condensed-reply-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.8;
+  user-select: none;
+}
+
+.condensed-reply-info iconify-icon {
+  font-size: 14px;
 }
 
 .condensed-reply-content {

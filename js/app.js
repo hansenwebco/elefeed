@@ -2951,7 +2951,7 @@ document.addEventListener('mouseover', e => {
   if (!trigger) return;
 
   // Disable user profile popups in certain contexts where they are redundant or intrusive
-  if (trigger.closest('.trending-person-card') || trigger.closest('.following-drawer')) return;
+  if (trigger.closest('.trending-person-card') || trigger.closest('.following-drawer') || trigger.closest('.condensed-reply-wrapper') || trigger.closest('.full-reply-card')) return;
 
   const accountId = trigger.dataset.profileId;
   const server = trigger.dataset.profileServer || state.server;
