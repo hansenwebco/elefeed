@@ -3,6 +3,8 @@
  * Pure utility functions - no DOM mutations, no state dependencies.
  */
 
+import { store } from './state.js';
+
 /** HTML-escape a string for safe insertion into markup. */
 export function escapeHTML(str) {
   if (!str) return '';
@@ -26,6 +28,8 @@ export function sanitizeHTML(html, context = null) {
   const div = document.createElement('div');
   div.innerHTML = html;
 
+  const clearUrls = store.get('pref_clear_urls') === 'true';
+
   // 1. Process links (mentions, hashtags, external)
   div.querySelectorAll('a').forEach(a => {
     const text = a.textContent.trim();
@@ -36,6 +40,11 @@ export function sanitizeHTML(html, context = null) {
       isMention = true;
     } else {
       a.classList.add('ext-link');
+
+      if (clearUrls && text.includes('?')) {
+        // Remove query parameters from the display text
+        a.textContent = text.split('?')[0];
+      }
     }
 
     if (isMention && context && context.mentions) {

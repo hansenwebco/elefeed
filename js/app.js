@@ -1279,6 +1279,11 @@ if (settingsMenuBtn) {
       hideCardsToggle.checked = store.get('pref_hide_cards') === 'true';
     }
 
+    const clearUrlsToggle = $('settings-clear-urls-toggle');
+    if (clearUrlsToggle) {
+      clearUrlsToggle.checked = store.get('pref_clear_urls') === 'true';
+    }
+
     const usageTrackingToggle = $('settings-usage-tracking-toggle');
     if (usageTrackingToggle) {
       usageTrackingToggle.checked = store.get('pref_usage_tracking') === 'true';
@@ -1614,6 +1619,16 @@ if (_inAppNotifToggle) {
   _inAppNotifToggle.addEventListener('change', () => {
     store.set('pref_in_app_notifs', _inAppNotifToggle.checked ? 'true' : 'false');
     triggerPush();
+  });
+}
+
+// Clear URLs
+const _clearUrlsToggle = $('settings-clear-urls-toggle');
+if (_clearUrlsToggle) {
+  _clearUrlsToggle.addEventListener('change', () => {
+    store.set('pref_clear_urls', _clearUrlsToggle.checked ? 'true' : 'false');
+    triggerPush();
+    if (window.loadFeedTab) window.loadFeedTab(false);
   });
 }
 

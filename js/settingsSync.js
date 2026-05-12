@@ -176,6 +176,9 @@ function applySettings(prefs) {
       case 'pref_always_sensitive':
         if (window.refreshComposeDefaults) window.refreshComposeDefaults();
         break;
+      case 'pref_clear_urls':
+        if (window.loadFeedTab) window.loadFeedTab(false);
+        break;
     }
   });
 
