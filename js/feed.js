@@ -1134,6 +1134,16 @@ window.toggleReplyPeek = async function(postId, countEl) {
     const moreBtn = `<button class="load-more-btn" style="margin: 8px 0 0; width: 100%; padding: 8px; border-style: dashed;" onclick="event.stopPropagation(); window.openThreadDrawer('${postId}')">View full conversation thread...</button>`;
 
     container.innerHTML = `<div class="condensed-reply-wrapper">${html}</div>` + moreBtn;
+
+    // Auto-expand the first post in the tree for immediate context
+    setTimeout(() => {
+      const firstNode = container.querySelector('.condensed-reply-node');
+      if (firstNode) {
+        const sid = firstNode.dataset.statusId;
+        const trig = firstNode.querySelector('.condensed-reply');
+        if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+      }
+    }, 50);
   } catch (err) {
     console.error('[Feed] Reply peek failed:', err);
     container.innerHTML = `<div class="reply-peek-loading" style="color:var(--danger)"><span>Failed to load replies.</span></div>`;
@@ -1176,7 +1186,7 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
   if (peekCache.has(statusId)) {
     const status = peekCache.get(statusId);
     container.innerHTML = `
-      <div class="full-reply-card" onclick="event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply'))">
+      <div class="full-reply-card" onclick="if (!event.target.closest('button, a, .post-stat, .post-media-item')) { event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply')); }">
         ${renderThreadPost(status, 'reply')}
       </div>`;
     container.classList.add('active');
@@ -1200,7 +1210,7 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
     }
 
     container.innerHTML = `
-      <div class="full-reply-card" onclick="event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply'))">
+      <div class="full-reply-card" onclick="if (!event.target.closest('button, a, .post-stat, .post-media-item')) { event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply')); }">
         ${renderThreadPost(status, 'reply')}
       </div>`;
     
