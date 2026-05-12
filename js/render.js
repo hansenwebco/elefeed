@@ -33,6 +33,80 @@ export function renderFollowingBadge(accountId) {
 }
 
 /**
+ * Returns the HTML for a "replying to" indicator.
+ * @param {object} s The status object
+ * @returns {string}
+ */
+export function renderReplyIndicator(s) {
+  if (!s.in_reply_to_account_id) return '';
+  
+  const mentions = s.mentions || [];
+  const target = mentions.find(m => m.id === s.in_reply_to_account_id) || mentions[0];
+  if (!target) return '';
+
+  return `
+    <div class="reply-chain-indicator">
+      <iconify-icon icon="ph:arrow-bend-up-left-bold" style="font-size: 11px;"></iconify-icon>
+      <span>replying to</span>
+      <a href="#" class="reply-target" data-profile-id="${target.id}" onclick="event.preventDefault(); event.stopPropagation(); window.openProfileDrawer('${target.id}', state.server)">@${escapeHTML(target.acct)}</a>
+    </div>`;
+}
+
+/**
+ * Renders a condensed version of a reply for the peek view.
+ */
+export function renderCondensedReply(s, depth = 0) {
+  const inner = s.reblog || s;
+  const account = inner.account;
+  
+  // Parse handle and server
+  let displayHandle = account.acct;
+  let serverName = '';
+  let isRemote = false;
+
+  if (displayHandle.includes('@')) {
+    const parts = displayHandle.split('@');
+    displayHandle = parts[0];
+    serverName = parts[1];
+    if (serverName.toLowerCase() !== state.server.toLowerCase()) {
+      isRemote = true;
+    }
+  }
+
+  const serverIcon = isRemote 
+    ? `<iconify-icon icon="ph:globe-bold" class="condensed-server-icon" title="External: ${escapeHTML(serverName)}"></iconify-icon>` 
+    : '';
+
+  // Aggressively strip newlines and block breaks from the HTML content
+  const cleanedContent = inner.content
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/p>\s*<p>/gi, ' ')
+    .replace(/[\r\n]+/g, ' ');
+
+  return `
+    <div class="condensed-reply" onclick="event.stopPropagation(); window.toggleCondensedExpansion('${inner.id}', this)">
+      <div class="condensed-reply-content">${cleanedContent}</div>
+      <span class="condensed-reply-author" onclick="event.stopPropagation(); window.openProfileDrawer('${account.id}', state.server)" title="${escapeHTML(account.acct)}"> — @${escapeHTML(displayHandle)}${serverIcon}</span>
+    </div>
+    <div class="condensed-reply-expanded-container" id="expanded-${inner.id}"></div>`;
+}
+
+/**
+ * Recursively renders a tree of nodes into condensed HTML.
+ */
+export function renderCondensedTree(nodes, depth = 0) {
+  if (!nodes || nodes.length === 0) return '';
+  return nodes.map(node => {
+    const html = renderCondensedReply(node.status, depth);
+    const children = node.children.length > 0 
+      ? `<div class="condensed-reply-children">${renderCondensedTree(node.children, depth + 1)}</div>`
+      : '';
+    return `<div class="condensed-reply-node" data-status-id="${node.status.id}">${html}${children}</div>`;
+  }).join('');
+}
+
+
+/**
  * Returns the HTML for the "Insights" / Analytics menu button and dropdown.
  * @param {object} s The status object
  * @returns {string}
@@ -563,8 +637,20 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
         </div>
       </div>
     </div>`;
+  
+  let peekBanner = '';
+  if (s.replies_count > 0 && idPrefix !== 'thread-') {
+    peekBanner = `
+      <div class="post-peek-banner" onclick="event.stopPropagation(); if (window.toggleReplyPeek) window.toggleReplyPeek('${s.id}', this);">
+        <iconify-icon icon="ph:chat-circle-dots-bold"></iconify-icon>
+        <span>View ${s.replies_count} replies inline</span>
+      </div>`;
+  }
 
-  return { contentHTML, footerHTML };
+  return { 
+    contentHTML: contentHTML + peekBanner + `<div class="reply-peek-container" id="reply-peek-${idPrefix}${status.id}"></div>`, 
+    footerHTML 
+  };
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -650,6 +736,7 @@ export function renderPost(status, opts = {}) {
     <article class="post${contextClass}" data-id="${s.id}">
       ${boostLabelHTML}
       ${hashtagBanner}
+      ${renderReplyIndicator(s)}
       <div class="post-header post-header--with-server">
         <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer; align-self:center;">
           <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
@@ -723,6 +810,7 @@ export function renderThreadPost(status, variant) {
     <div class="${variantClass}" data-status-id="${s.id}">
       <article class="post${contextClass}" data-id="${s.id}">
         ${boostLabelHTML}
+        ${variant === 'focal' ? renderReplyIndicator(s) : ''}
         <div class="post-header post-header--with-server">
           <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer">
             <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>

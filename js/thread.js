@@ -100,7 +100,7 @@ async function loadThread(statusId, container, preserveScroll = false) {
 
 /* ── Tree building ─────────────────────────────────────────────────── */
 
-function buildFullTree(ancestors, focalStatus, descendants) {
+export function buildFullTree(ancestors, focalStatus, descendants) {
   const allPosts = [...ancestors, focalStatus, ...descendants];
   const map = {};
   const roots = [];

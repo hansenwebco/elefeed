@@ -454,6 +454,282 @@
   flex-shrink: 0;
 }
 
+/* ─── Reply Chain Indicator ─── */
+.reply-chain-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-body);
+}
+
+.reply-chain-indicator iconify-icon {
+  opacity: 0.7;
+}
+
+.reply-chain-indicator .reply-target {
+  color: var(--following-color);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.reply-chain-indicator .reply-target:hover {
+  text-decoration: underline;
+}
+
+/* ─── Reply Preview Peek ─── */
+.reply-peek-container {
+  margin-top: 12px;
+  border-top: 1px dashed var(--border);
+  padding-top: 12px;
+  display: none;
+  animation: slideDown 0.3s ease-out;
+}
+
+.reply-peek-container.active {
+  display: block;
+}
+
+.reply-peek-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.reply-peek-item {
+  border-left: 2px solid var(--border);
+  margin-left: 10px;
+  padding-left: 12px;
+  margin-bottom: 12px;
+}
+
+.reply-peek-item:last-child {
+  margin-bottom: 0;
+}
+
+.reply-peek-item .post {
+  padding: 8px 0;
+  border: none;
+  background: none !important;
+  cursor: default;
+}
+
+.reply-peek-item .post-avatar {
+  width: 24px;
+  height: 24px;
+}
+
+.reply-peek-item .post-display-name {
+  font-size: 13px;
+}
+
+.reply-peek-item .post-content {
+  font-size: 13px;
+}
+
+.post-reply-count {
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.post-peek-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0 4px;
+  padding: 8px;
+  background: rgba(155, 127, 255, 0.05);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--trans);
+  width: 100%;
+}
+
+.post-peek-banner:hover {
+  background: rgba(155, 127, 255, 0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.post-peek-banner iconify-icon {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* ─── Condensed Replies (Peek) ─── */
+.condensed-reply-wrapper {
+  padding: 4px 0;
+}
+
+.condensed-reply-node {
+  margin-bottom: 8px;
+}
+
+.condensed-reply {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: all var(--trans);
+  white-space: nowrap;
+  overflow: hidden;
+  width: 100%;
+}
+
+.condensed-reply:hover {
+  background: rgba(155, 127, 255, 0.05);
+}
+
+.condensed-reply.expanded {
+  background: rgba(155, 127, 255, 0.1);
+  color: var(--accent);
+}
+
+.condensed-reply-node.selected > .condensed-reply {
+  outline: 1px solid var(--accent);
+  background: rgba(155, 127, 255, 0.08);
+}
+
+.condensed-reply-author {
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.condensed-reply-content {
+  color: var(--text);
+  opacity: 0.9;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.condensed-reply-content p, 
+.condensed-reply-content br,
+.condensed-reply-content div,
+.condensed-reply-content blockquote,
+.condensed-reply-content span {
+  display: inline !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+}
+
+.condensed-reply-content p + p::before {
+  content: " ";
+}
+
+.condensed-reply-content .mention {
+  display: none !important;
+}
+
+.condensed-reply-author {
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.condensed-server-icon {
+  font-size: 10px;
+  opacity: 0.4;
+  margin-left: 2px;
+  vertical-align: middle;
+}
+
+.condensed-reply-children {
+  margin-left: 8px;
+  padding-left: 16px;
+  margin-top: 4px;
+  position: relative;
+}
+
+/* Vertical connector line */
+.condensed-reply-children::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: calc(100% - 10px);
+  background: var(--border2);
+  opacity: 0.6;
+}
+
+.condensed-reply-node {
+  position: relative;
+  margin-bottom: 6px;
+}
+
+/* Horizontal connector line (the 'L' branch) */
+.condensed-reply-node::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: -16px;
+  width: 12px;
+  height: 1px;
+  background: var(--border2);
+  opacity: 0.6;
+}
+
+/* ─── Expansion Container ─── */
+.condensed-reply-expanded-container {
+  display: none;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.condensed-reply-expanded-container.active {
+  display: block;
+}
+
+.full-reply-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: 8px;
+}
+
+.full-reply-card .post {
+  border: none;
+  background: none !important;
+  padding: 12px 14px;
+}
+
+/* Remove the line from item when expanded container is active */
+.condensed-reply-node:has(> .condensed-reply-expanded-container.active) {
+  margin-bottom: 20px;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ─── Auto-translate info label ─── */
 .post-translate-bar {
   margin-top: 8px;
@@ -552,6 +828,22 @@
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 0.9em;
+}
+
+/* ─── Generic Spinner ─── */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(155, 127, 255, 0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner--small {
+  width: 14px;
+  height: 14px;
+  border-width: 1.5px;
 }
 
 /* Ensure all children inside pre (code, a, etc.) don't override the pre-block's white-space rule */

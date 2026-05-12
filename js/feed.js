@@ -99,7 +99,7 @@ positionOverlayPill();
 import { $, state, store } from './state.js';
 import { apiGet } from './api.js';
 import { setLoading, setError, showToast, updateTabLabel } from './ui.js';
-import { renderPost } from './render.js';
+import { renderPost, renderThreadPost, renderCondensedTree } from './render.js';
 import { getDemoHomePosts, getDemoHashtagData } from './demo.js';
 import { matchesLanguage, updateURLParam } from './utils.js';
 import { updateTitleBar } from './titlebar.js';
@@ -1071,3 +1071,162 @@ export async function handleLoadMore(btn) {
     btn.textContent = 'Load More';
   }
 }
+/**
+ * Toggles an inline peek of replies for a post.
+ */
+window.toggleReplyPeek = async function(postId, countEl) {
+  const container = document.getElementById(`reply-peek-${postId}`);
+  const threadContainer = document.getElementById(`reply-peek-thread-${postId}`);
+  if (!container) return;
+
+  if (container.classList.contains('active')) {
+    container.classList.remove('active');
+    return;
+  }
+
+  // Clear previous content and show loading
+  container.innerHTML = `<div class="reply-peek-loading"><div class="spinner spinner--small"></div><span>Loading replies...</span></div>`;
+  container.classList.add('active');
+
+  try {
+    const context = await apiGet(`/api/v1/statuses/${postId}/context`, state.token);
+    const descendants = context.descendants || [];
+
+    if (descendants.length === 0) {
+      container.innerHTML = `<div class="reply-peek-loading"><span>No replies found on this server.</span></div>`;
+      setTimeout(() => container.classList.remove('active'), 2000);
+      return;
+    }
+
+    // Sort or filter? Mastodon context usually returns them in a decent order.
+    // Just take the first 3.
+    const peekCount = 5; // Increased for condensed
+    const topLevelDescendants = descendants.slice(0, peekCount);
+    
+    // Fetch relationships for these authors so following badges show up
+    await fetchRelationships(descendants);
+
+    // Build tree
+    const { buildFullTree } = await import('./thread.js');
+    // We need the focal status to build the tree correctly
+    const focalStatus = state.homeFeed?.find(p => p.id === postId) 
+      || state.localFeed?.find(p => p.id === postId)
+      || state.federatedFeed?.find(p => p.id === postId)
+      || state.hashtagFeed?.find(p => p.id === postId)
+      || (await apiGet(`/api/v1/statuses/${postId}`, state.token));
+
+    const tree = buildFullTree([], focalStatus, descendants);
+    const focalNode = tree[0];
+    
+    // Only show first few branches to keep it a "peek"
+    const branchesToShow = focalNode.children.slice(0, 3);
+    const html = renderCondensedTree(branchesToShow);
+
+    const moreBtn = `<button class="load-more-btn" style="margin: 8px 0 0; width: 100%; padding: 8px; border-style: dashed;" onclick="event.stopPropagation(); window.openThreadDrawer('${postId}')">View full conversation thread...</button>`;
+
+    container.innerHTML = `<div class="condensed-reply-wrapper">${html}</div>` + moreBtn;
+  } catch (err) {
+    console.error('[Feed] Reply peek failed:', err);
+    container.innerHTML = `<div class="reply-peek-loading" style="color:var(--danger)"><span>Failed to load replies.</span></div>`;
+    setTimeout(() => container.classList.remove('active'), 3000);
+  }
+};
+/**
+ * Toggles the expanded (full) view of a condensed reply.
+ */
+window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false) {
+  const container = document.getElementById(`expanded-${statusId}`);
+  if (!container) return;
+
+  const wasActive = container.classList.contains('active');
+
+  // Close ALL other expanded containers in the document for a single-open experience
+  document.querySelectorAll('.condensed-reply-expanded-container.active').forEach(c => {
+    if (c === container && !forceOpen) return; 
+    c.classList.remove('active');
+    c.innerHTML = '';
+    const otherId = c.id.replace('expanded-', '');
+    const trigger = document.querySelector(`.condensed-reply-node[data-status-id="${otherId}"] .condensed-reply`);
+    if (trigger) trigger.classList.remove('expanded');
+  });
+
+  if (wasActive && !forceOpen) {
+    container.classList.remove('active');
+    container.innerHTML = '';
+    el.classList.remove('expanded');
+    return;
+  }
+
+  container.innerHTML = `<div class="reply-peek-loading"><div class="spinner spinner--small"></div></div>`;
+  container.classList.add('active');
+  el.classList.add('expanded');
+
+  try {
+    const status = await apiGet(`/api/v1/statuses/${statusId}`, state.token);
+    container.innerHTML = `<div class="full-reply-card">${renderThreadPost(status, 'reply')}</div>`;
+  } catch (err) {
+    container.innerHTML = `<div class="reply-peek-loading" style="color:var(--danger)">Failed to load.</div>`;
+  }
+};
+
+// Keyboard navigation for peek view
+let selectedReplyNode = null;
+
+function selectReplyNode(node) {
+  if (selectedReplyNode) selectedReplyNode.classList.remove('selected');
+  selectedReplyNode = node;
+  if (selectedReplyNode) {
+    selectedReplyNode.classList.add('selected');
+  }
+}
+
+window.addEventListener('keydown', (e) => {
+  // Only handle if not in an input/textarea
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  
+  const key = e.key.toLowerCase();
+  if (key !== 'a' && key !== 'z') return;
+
+  const allNodes = Array.from(document.querySelectorAll('.condensed-reply-node'));
+  if (allNodes.length === 0) return;
+
+  e.preventDefault();
+
+  if (!selectedReplyNode) {
+    selectReplyNode(allNodes[0]);
+    return;
+  }
+
+  const currentIndex = allNodes.indexOf(selectedReplyNode);
+  if (key === 'z') {
+    // Next node
+    if (currentIndex < allNodes.length - 1) {
+      const next = allNodes[currentIndex + 1];
+      selectReplyNode(next);
+      const sid = next.dataset.statusId;
+      const trig = next.querySelector('.condensed-reply');
+      if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+    }
+  } else if (key === 'a') {
+    // Previous node
+    if (currentIndex > 0) {
+      const prev = allNodes[currentIndex - 1];
+      selectReplyNode(prev);
+      const sid = prev.dataset.statusId;
+      const trig = prev.querySelector('.condensed-reply');
+      if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+    }
+  }
+
+  // Auto-expand on selection? User said "Clicking a post will render the full content"
+  // But maybe Space or Enter expands? Let's add Enter.
+});
+
+window.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (e.key === 'Enter' && selectedReplyNode) {
+    const statusId = selectedReplyNode.dataset.statusId;
+    const trigger = selectedReplyNode.querySelector('.condensed-reply');
+    if (statusId && trigger) window.toggleCondensedExpansion(statusId, trigger);
+  }
+});
