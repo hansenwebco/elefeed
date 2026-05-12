@@ -5,7 +5,7 @@
  */
 
 import { $, store, state, getStoredAccounts, saveStoredAccounts } from './state.js';
-import { apiGet } from './api.js';
+import { apiGet, getApiUrl } from './api.js';
 import { escapeHTML, relativeTime, updateURLParam, formatCount, sanitizeHTML, renderCustomEmojis, processContent } from './utils.js';
 import { openProfileDrawer } from './profile.js';
 import { openThreadDrawer } from './thread.js';
@@ -177,7 +177,8 @@ export async function startSwPolling() {
       'subscription[keys][auth]': auth
     });
 
-    const response = await fetch(`https://${state.server}/api/v1/push/subscription`, {
+    const pushUrl = getApiUrl(state.server, '/api/v1/push/subscription');
+    const response = await fetch(pushUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${state.token}`,
@@ -206,7 +207,8 @@ export async function stopSwPolling() {
     const sub = await reg.pushManager.getSubscription();
     if (sub) {
       await sub.unsubscribe();
-      await fetch(`https://${state.server}/api/v1/push/subscription`, {
+      const pushUrl = getApiUrl(state.server, '/api/v1/push/subscription');
+      await fetch(pushUrl, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${state.token}` }
       });

@@ -238,7 +238,15 @@ function setupOverlayPillScroll() {
 /* ── Rendering ─────────────────────────────────────────────────────── */
 
 function renderFilteredPosts(displayPosts) {
+  console.log(`[Feed] renderFilteredPosts called with ${displayPosts?.length || 0} posts. Filter: ${state.feedFilter}`);
   const container = $('feed-posts');
+  if (!container) return;
+  
+  if (!displayPosts) {
+    console.warn('[Feed] renderFilteredPosts called with null/undefined displayPosts');
+    displayPosts = [];
+  }
+  
   const filter = state.feedFilter;
 
   // Apply feed filters (Boosts, Replies, Quotes)
@@ -552,6 +560,7 @@ async function loadHashtagsFeed() {
 /* ── Main feed tab loader ──────────────────────────────────────────── */
 
 export async function loadFeedTab(scrollTop = true) {
+  console.log('[Feed] loadFeedTab entered');
   // Safeguard: if clicking the Home tab while a public feed was active in Explore, revert to 'all'
   if (state.activeTab === 'feed' && (state.feedFilter === 'live' || state.feedFilter === 'federated')) {
     state.feedFilter = 'all';
@@ -590,8 +599,11 @@ export async function loadFeedTab(scrollTop = true) {
   updateTabPill(feedKey);
 
   // Setup overlay pill handlers
+  console.log('[Feed] setupOverlayPill calling...');
   setupOverlayPill();
+  console.log('[Feed] setupOverlayPillScroll calling...');
   setupOverlayPillScroll();
+  console.log('[Feed] setupOverlayPill calls done.');
 
   const fedBar = $('federated-info-bar');
   if (fedBar) {
@@ -617,6 +629,8 @@ export async function loadFeedTab(scrollTop = true) {
   $('feed-posts').innerHTML = '';
   setLoading('feed', true);
   setError('feed', null);
+  
+  console.log(`[Feed] loadFeedTab starting for filter: ${filter}`);
 
   try {
     const wrapper = $('feed-content-wrapper');

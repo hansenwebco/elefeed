@@ -3,7 +3,7 @@
  * Pure utility functions - no DOM mutations, no state dependencies.
  */
 
-import { store } from './state.js';
+
 
 /** HTML-escape a string for safe insertion into markup. */
 export function escapeHTML(str) {
@@ -28,7 +28,7 @@ export function sanitizeHTML(html, context = null) {
   const div = document.createElement('div');
   div.innerHTML = html;
 
-  const clearUrls = store.get('pref_clear_urls') === 'true';
+  const clearUrls = localStorage.getItem('pref_clear_urls') === 'true';
 
   // 1. Process links (mentions, hashtags, external)
   div.querySelectorAll('a').forEach(a => {
@@ -41,9 +41,26 @@ export function sanitizeHTML(html, context = null) {
     } else {
       a.classList.add('ext-link');
 
-      if (clearUrls && text.includes('?')) {
-        // Remove query parameters from the display text
-        a.textContent = text.split('?')[0];
+      if (clearUrls && typeof text === 'string' && text.length > 0) {
+        let displayUrl = text;
+
+        // 1. Remove query parameters
+        displayUrl = displayUrl.split('?')[0];
+
+        // 2. Strip protocol and www
+        displayUrl = displayUrl.replace(/^https?:\/\/(www\.)?/, '');
+
+        // 3. Remove trailing slash
+        displayUrl = displayUrl.replace(/\/$/, '');
+
+        // 4. Smart middle truncation if still long (e.g. > 50 chars)
+        if (displayUrl.length > 50) {
+          const start = displayUrl.substring(0, 30);
+          const end = displayUrl.substring(displayUrl.length - 15);
+          displayUrl = start + '…' + end;
+        }
+
+        a.textContent = displayUrl;
       }
     }
 
