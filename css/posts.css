@@ -669,7 +669,9 @@
 }
 
 .condensed-media-placeholder iconify-icon {
-  font-size: 14px;
+  font-size: 13px;
+  position: relative;
+  top: 2px;
 }
 
 .condensed-reply-author {
