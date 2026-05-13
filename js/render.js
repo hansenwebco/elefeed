@@ -95,7 +95,7 @@ export function renderCondensedReply(s, depth = 0) {
   if (!textCheck && hasMedia) {
     const media = inner.media_attachments[0];
     const type = media.type || 'media';
-    const alt = media.description ? ` - ${media.description}` : '';
+    const alt = media.description ? ` - ${media.description}` : ' - No ALT Text Provided :(';
     const icon = type === 'video' ? 'ph:video-camera-bold' : 'ph:image-bold';
     cleanedContent = `<span class="condensed-media-placeholder"><iconify-icon icon="${icon}"></iconify-icon> Media Post${escapeHTML(alt)}</span>`;
   }

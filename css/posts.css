@@ -292,6 +292,9 @@
   height: 40px;
   flex-shrink: 0;
   cursor: pointer;
+  background-image: var(--avatar-placeholder);
+  background-size: cover;
+  border-radius: 50%;
 }
 
 .post-avatar img {
@@ -300,7 +303,7 @@
   object-fit: cover;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: var(--surface2);
+  background: transparent;
   transition: border-color var(--trans);
 }
 
@@ -636,6 +639,18 @@
   white-space: nowrap;
   overflow: hidden;
   width: 100%;
+}
+
+.condensed-reply-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-image: var(--avatar-placeholder);
+  background-size: cover;
+  border: 1px solid var(--border);
+  background-color: transparent;
+  object-fit: cover;
 }
 
 .condensed-reply:hover {

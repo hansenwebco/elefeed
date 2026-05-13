@@ -472,7 +472,9 @@
   height: 56px;
   border-radius: 50%;
   border: 3px solid var(--surface);
-  background: var(--surface2);
+  background-image: var(--avatar-placeholder);
+  background-size: cover;
+  background-color: transparent;
   object-fit: cover;
   margin-top: -28px;
 }
@@ -1507,47 +1509,9 @@ body.manage-inline-active .manage-inline-panel {
   cursor: default;
 }
 
-/* ── Inline Threaded View: CSS Tree Lines (Entropic Thoughts) ── */
-.thread-inline-inner .thread-node,
-.thread-inline-inner .thread-reply-children {
-  position: relative;
-}
-
-.thread-inline-inner .thread-reply-children {
-  list-style: none;
-  padding-left: 20px;
-  margin-left: 20px;
-  border-left: none;
-}
-
-.thread-inline-inner .thread-reply-children .thread-node::before,
-.thread-inline-inner .thread-reply-children .thread-node::after {
-  content: "";
-  position: absolute;
-  left: -20px;
-}
-
-.thread-inline-inner .thread-reply-children .thread-node::before {
-  border-top: 2px solid var(--border);
-  top: 32px; /* Vertically aligns with avatar center roughly */
-  width: 20px;
-  height: 0;
-}
-
-.thread-inline-inner .thread-reply-children .thread-node::after {
-  border-left: 2px solid var(--border);
-  height: 100%;
-  width: 0px;
-  top: 0;
-}
-
-/* Last child's vertical line stops at the horizontal line */
-.thread-inline-inner .thread-reply-children > .thread-node:last-child::after {
-  height: 32px;
-}
-
 
 /* Section & focal labels */
+
 .thread-section-label {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -1955,7 +1919,9 @@ body.manage-inline-active .manage-inline-panel {
   border-radius: 50%;
   border: 1px solid var(--border);
   cursor: pointer;
-  background: var(--surface2);
+  background-image: var(--avatar-placeholder);
+  background-size: cover;
+  background-color: transparent;
   object-fit: cover;
 }
 
@@ -2246,6 +2212,9 @@ body.manage-inline-active .manage-inline-panel {
   width: 40px;
   height: 40px;
   flex-shrink: 0;
+  background-image: var(--avatar-placeholder);
+  background-size: cover;
+  background-color: transparent;
 }
 
 .following-user-avatar img {
@@ -2254,6 +2223,7 @@ body.manage-inline-active .manage-inline-panel {
   object-fit: cover;
   border-radius: 50%;
   display: block;
+  background: transparent;
 }
 
 .following-user-info {
