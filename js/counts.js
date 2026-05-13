@@ -148,13 +148,21 @@ function _setupIntersectionObserver() {
 function _registerArticle(article) {
   const id = article.dataset.id;
   if (!id) return;
+
+  const getOwn = (parent, selector) => {
+    for (const el of parent.querySelectorAll(selector)) {
+      if (el.closest('article') === parent) return el;
+    }
+    return null;
+  };
+
   // Seed from DOM so first poll diff is clean
   if (!knownCounts.has(id)) {
-    const replyEl = article.querySelector('.post-reply-count');
-    const boostEl = article.querySelector('.boost-count');
-    const quoteEl = article.querySelector('.quote-count');
-    const favEl   = article.querySelector('.post-fav-count');
-    const nameEl  = article.querySelector('.post-display-name');
+    const replyEl = getOwn(article, '.post-reply-count');
+    const boostEl = getOwn(article, '.boost-count');
+    const quoteEl = getOwn(article, '.quote-count');
+    const favEl   = getOwn(article, '.post-fav-count');
+    const nameEl  = getOwn(article, '.post-display-name');
     const seed = {
       name:    nameEl  ? nameEl.textContent.trim() : id,
       replies: replyEl ? (parseInt(replyEl.textContent, 10) || 0) : 0,
@@ -222,10 +230,19 @@ function _applyUpdate(status, fromUserAction) {
   knownCounts.set(id, next);
   const label = next.name || id;
 
+  // Helper to ensure we only select elements belonging to this specific article
+  // and not nested articles (e.g. inline threads).
+  const getOwn = (parent, selector) => {
+    for (const el of parent.querySelectorAll(selector)) {
+      if (el.closest('article') === parent) return el;
+    }
+    return null;
+  };
+
   // Sync button highlighted states, SVG fills, and datasets ALWAYS
   // regardless of count change, to keep UI correct across different views.
   document.querySelectorAll(`article[data-id="${id}"]`).forEach(article => {
-    const fb = article.querySelector('.post-fav-btn');
+    const fb = getOwn(article, '.post-fav-btn');
     if (fb) {
       fb.classList.toggle('favourited', !!source.favourited);
       fb.dataset.favourited = source.favourited ? 'true' : 'false';
@@ -233,7 +250,7 @@ function _applyUpdate(status, fromUserAction) {
       if (svg) svg.setAttribute('fill', source.favourited ? 'currentColor' : 'none');
     }
 
-    const bb = article.querySelector('.post-boost-btn');
+    const bb = getOwn(article, '.post-boost-btn');
     if (bb) {
       bb.classList.toggle('boosted', !!source.reblogged);
       bb.dataset.reblogged = source.reblogged ? 'true' : 'false';
@@ -244,14 +261,14 @@ function _applyUpdate(status, fromUserAction) {
       }
     }
 
-    const bkb = article.querySelector('.post-bookmark-btn');
+    const bkb = getOwn(article, '.post-bookmark-btn');
     if (bkb) {
       bkb.classList.toggle('bookmarked', !!source.bookmarked);
       bkb.dataset.bookmarked = source.bookmarked ? 'true' : 'false';
     }
 
     // Sync dropdown statistics and labels
-    const dropdown = article.querySelector('.boost-dropdown');
+    const dropdown = getOwn(article, '.boost-dropdown');
     if (dropdown) {
       const bStat = dropdown.querySelector('[data-action="boost"] .dropdown-stat-count');
       if (bStat) bStat.textContent = source.reblogs_count || 0;
@@ -272,7 +289,7 @@ function _applyUpdate(status, fromUserAction) {
 
     // Sync poll if it exists
     if (source.poll) {
-      const pollContainer = article.querySelector('.post-poll');
+      const pollContainer = getOwn(article, '.post-poll');
       if (pollContainer) {
         // Only update if the poll ID matches (sanity check)
         if (pollContainer.dataset.pollId === source.poll.id) {
@@ -310,19 +327,19 @@ function _applyUpdate(status, fromUserAction) {
 
   document.querySelectorAll(`article[data-id="${id}"]`).forEach(article => {
     if (rd !== 0) {
-      const el = article.querySelector('.post-reply-count');
+      const el = getOwn(article, '.post-reply-count');
       if (el) _animateCount(el, next.replies, (!fromUserAction && rd > 0) ? 'reply' : null);
     }
     if (bd !== 0) {
-      const el = article.querySelector('.boost-count');
+      const el = getOwn(article, '.boost-count');
       if (el) _animateCount(el, next.boosts, (!fromUserAction && bd > 0) ? 'boost' : null);
     }
     if (qd !== 0) {
-      const el = article.querySelector('.quote-count');
+      const el = getOwn(article, '.quote-count');
       if (el) _animateCount(el, next.quotes, (!fromUserAction && qd > 0) ? 'quote' : null);
     }
     if (fd !== 0) {
-      const el = article.querySelector('.post-fav-count');
+      const el = getOwn(article, '.post-fav-count');
       if (el) _animateCount(el, next.favs, (!fromUserAction && fd > 0) ? 'fav' : null);
     }
   });

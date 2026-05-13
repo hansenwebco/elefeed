@@ -1190,10 +1190,17 @@ window.expandMedia = function expandMedia(mediaItem) {
   if (postId) {
     // Article-backed context (feed / thread): read live state from DOM buttons.
     // Standalone context (profile media grid): read from data attributes on the media item.
-    const postReplyBtn = article ? article.querySelector('.post-reply-btn') : null;
-    const postQuoteBtn = article ? article.querySelector('.post-quote-btn') : null;
-    const postBoostBtn = article ? article.querySelector('.post-boost-btn') : null;
-    const postFavBtn = article ? article.querySelector('.post-fav-btn') : null;
+    const getOwnBtn = (selector) => {
+      if (!article) return null;
+      for (const el of article.querySelectorAll(selector)) {
+        if (el.closest('article') === article) return el;
+      }
+      return null;
+    };
+    const postReplyBtn = getOwnBtn('.post-reply-btn');
+    const postQuoteBtn = getOwnBtn('.post-quote-btn');
+    const postBoostBtn = getOwnBtn('.post-boost-btn');
+    const postFavBtn = getOwnBtn('.post-fav-btn');
     const canQuote = article
       ? (!!postQuoteBtn || !!article.querySelector('.boost-dropdown-item[data-action="quote"]'))
       : (_standalone && _standalone.dataset.canQuote === 'true');
