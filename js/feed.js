@@ -1190,7 +1190,7 @@ window.toggleCondensedExpansion = async function (statusId, el, forceOpen = fals
 
   // Close ALL other expanded containers
   document.querySelectorAll('.condensed-reply-expanded-container.active').forEach(c => {
-    if (c === container && !forceOpen) return;
+    if (c === container) return;
     c.classList.remove('active');
     c.innerHTML = '';
     const otherId = c.id.replace('expanded-', '');
@@ -1284,7 +1284,11 @@ window.addEventListener('keydown', (e) => {
   e.preventDefault();
 
   if (!selectedReplyNode) {
-    selectReplyNode(allNodes[0]);
+    const first = allNodes[0];
+    selectReplyNode(first);
+    const sid = first.dataset.statusId;
+    const trig = first.querySelector('.condensed-reply');
+    if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
     return;
   }
 
@@ -1305,6 +1309,11 @@ window.addEventListener('keydown', (e) => {
       selectReplyNode(prev);
       const sid = prev.dataset.statusId;
       const trig = prev.querySelector('.condensed-reply');
+      if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+    } else if (currentIndex === 0) {
+      // If we're at the top post, just ensure it's open and stay here
+      const sid = selectedReplyNode.dataset.statusId;
+      const trig = selectedReplyNode.querySelector('.condensed-reply');
       if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
     }
   }
