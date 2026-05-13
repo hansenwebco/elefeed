@@ -1272,8 +1272,8 @@ function debouncedExpand(node) {
 }
 
 window.addEventListener('keydown', (e) => {
-  // Only handle if not in an input/textarea
-  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  // Only handle if not in an input/textarea/contenteditable
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
 
   const key = e.key.toLowerCase();
   if (key !== 'a' && key !== 'z') return;
@@ -1323,7 +1323,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('keydown', (e) => {
-  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
   if (e.key === 'Enter' && selectedReplyNode) {
     const statusId = selectedReplyNode.dataset.statusId;
     const trigger = selectedReplyNode.querySelector('.condensed-reply');
