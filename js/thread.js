@@ -140,7 +140,7 @@ function renderTree(nodes, depth) {
       ? `<div class="thread-reply-children">${renderTree(node.children, depth + 1)}</div>`
       : '';
 
-    return postHTML + childrenHTML;
+    return `<div class="thread-node">${postHTML}${childrenHTML}</div>`;
   }).join('');
 }
 

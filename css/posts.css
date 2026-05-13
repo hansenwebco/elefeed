@@ -771,17 +771,8 @@
   position: relative;
 }
 
-/* Vertical connector line */
-.condensed-reply-children::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: calc(100% - 10px);
-  background: var(--border2);
-  opacity: 0.6;
-}
+/* Vertical connector line (removed from children container) */
+/* .condensed-reply-children::before { ... } removed */
 
 .condensed-reply-node {
   position: relative;
@@ -792,12 +783,29 @@
 .condensed-reply-node::before {
   content: "";
   position: absolute;
-  top: 10px;
+  top: 12px; /* vertically center with condensed-reply text */
   left: -16px;
   width: 12px;
-  height: 1px;
-  background: var(--border2);
+  height: 0;
+  border-top: 1px solid var(--border2);
   opacity: 0.6;
+}
+
+/* Vertical connector line (the stem, drawn per node) */
+.condensed-reply-children > .condensed-reply-node::after {
+  content: "";
+  position: absolute;
+  top: -4px; /* Reach up through margin-top: 4px of parent */
+  left: -16px;
+  width: 0;
+  border-left: 1px solid var(--border2);
+  height: calc(100% + 10px); /* 100% + 6px margin-bottom + 4px top offset */
+  opacity: 0.6;
+}
+
+/* Stop the vertical line at the last child's horizontal branch */
+.condensed-reply-children > .condensed-reply-node:last-child::after {
+  height: 16px; /* from top: -4px to top: 12px */
 }
 
 /* ─── Expansion Container ─── */
