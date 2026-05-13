@@ -620,6 +620,7 @@
 }
 
 .condensed-reply-node {
+  position: relative;
   margin-bottom: 8px;
 }
 
@@ -774,13 +775,8 @@
 /* Vertical connector line (removed from children container) */
 /* .condensed-reply-children::before { ... } removed */
 
-.condensed-reply-node {
-  position: relative;
-  margin-bottom: 6px;
-}
-
 /* Horizontal connector line (the 'L' branch) */
-.condensed-reply-node::before {
+.condensed-reply-children > .condensed-reply-node::before {
   content: "";
   position: absolute;
   top: 12px; /* vertically center with condensed-reply text */
@@ -811,8 +807,8 @@
 /* ─── Expansion Container ─── */
 .condensed-reply-expanded-container {
   display: none;
-  margin-top: 8px;
-  margin-bottom: 16px;
+  margin-top: 4px;
+  margin-bottom: 8px;
   animation: slideDown 0.3s ease-out;
 }
 
@@ -835,9 +831,7 @@
 }
 
 /* Remove the line from item when expanded container is active */
-.condensed-reply-node:has(> .condensed-reply-expanded-container.active) {
-  margin-bottom: 20px;
-}
+/* Removed excessive active expansion margin for consistency */
 
 @keyframes slideDown {
   from {
