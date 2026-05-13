@@ -81,10 +81,13 @@ export function updateCurrentThread(delay = 1000) {
 async function loadThread(statusId, container, preserveScroll = false) {
   const currentScroll = container.scrollTop;
   try {
-    const [focalStatus, context] = await Promise.all([
-      apiGet(`/api/v1/statuses/${statusId}`, state.token),
-      apiGet(`/api/v1/statuses/${statusId}/context`, state.token),
-    ]);
+    // Fetch focal status first to see if it's a reblog
+    const focalStatus = await apiGet(`/api/v1/statuses/${statusId}`, state.token);
+
+    // Use original post ID for context if it's a boost
+    const actualId = focalStatus.reblog ? focalStatus.reblog.id : focalStatus.id;
+
+    const context = await apiGet(`/api/v1/statuses/${actualId}/context`, state.token);
     const ancestors = context.ancestors || [];
     const descendants = context.descendants || [];
     await fetchRelationships([focalStatus, ...ancestors, ...descendants]);
@@ -167,7 +170,7 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
       const mentions = s.mentions || [];
       const recipient = mentions.find(m => m.id === s.in_reply_to_account_id) || mentions[0];
       const nameText = recipient ? `<strong style="color:var(--text); font-weight:600;">@${escapeHTML(recipient.acct)}</strong>` : 'another user';
-      
+
       parts.push(`
         <div class="thread-status" style="border-bottom:1px solid var(--border); padding:16px 20px; background:var(--surface2); margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:10px; color:var(--text-muted); font-size:13px;">

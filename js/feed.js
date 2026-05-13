@@ -45,7 +45,7 @@ export function scrollContainerTo(top, behavior = 'smooth') {
 export function hashtagScrollToTop() {
   const top = 0;
   const behavior = 'instant';
-  
+
   const feedCont = document.getElementById('feed-container');
   if (feedCont) feedCont.scrollTop = top;
 
@@ -156,7 +156,7 @@ export function updateTabPill(feedKey) {
   const refreshBadge = document.getElementById('refresh-badge');
   const count = getFilteredPendingPosts(feedKey).length;
   const style = store.get('pref_newpost_style') || 'badge'; // default: Refresh Notification
-  
+
   if (overlayPill) {
     if (count === 0) {
       overlayPill.style.display = 'none';
@@ -241,12 +241,12 @@ function renderFilteredPosts(displayPosts) {
   console.log(`[Feed] renderFilteredPosts called with ${displayPosts?.length || 0} posts. Filter: ${state.feedFilter}`);
   const container = $('feed-posts');
   if (!container) return;
-  
+
   if (!displayPosts) {
     console.warn('[Feed] renderFilteredPosts called with null/undefined displayPosts');
     displayPosts = [];
   }
-  
+
   const filter = state.feedFilter;
 
   // Apply feed filters (Boosts, Replies, Quotes)
@@ -297,7 +297,7 @@ function renderFilteredPosts(displayPosts) {
   const html = displayPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
   const loadMoreBtn = maxId ? '<button class="load-more-btn" data-feed="feed">Load More</button>' : '';
   container.innerHTML = html + loadMoreBtn;
-  
+
   // Re-render usage banner if enabled
   import('./usage.js').then(m => m.renderUsageUI());
 
@@ -315,7 +315,7 @@ export async function fetchRelationships(page) {
     // page can contain statuses (with .account), accounts (with .username), or tags (with neither)
     const isStatus = !!p.account;
     const isAccount = !isStatus && !!p.username;
-    
+
     if (isAccount) {
       if (!state.knownFollowing.has(p.id) && !state.knownNotFollowing.has(p.id)) {
         idsToCheck.add(p.id);
@@ -462,10 +462,10 @@ async function loadHashtagsFeed() {
       followBtn.style.display = 'flex';
       const tag = state.selectedHashtagFilter;
       const isFollowed = (state.followedHashtags || []).some(t => t.name.toLowerCase() === tag.toLowerCase());
-      
+
       const freshBtn = followBtn.cloneNode(true);
       followBtn.replaceWith(freshBtn);
-      
+
       // Set initial state matching profile.js requirements
       freshBtn.dataset.tag = tag;
       freshBtn.dataset.following = isFollowed ? 'true' : 'false';
@@ -476,7 +476,7 @@ async function loadHashtagsFeed() {
       freshBtn.onclick = async (e) => {
         e.stopPropagation();
         if (!state.token || state.demoMode) return;
-        
+
         try {
           const { handleHashtagFollowToggle } = await import('./profile.js');
           await handleHashtagFollowToggle(freshBtn);
@@ -629,7 +629,7 @@ export async function loadFeedTab(scrollTop = true) {
   $('feed-posts').innerHTML = '';
   setLoading('feed', true);
   setError('feed', null);
-  
+
   console.log(`[Feed] loadFeedTab starting for filter: ${filter}`);
 
   try {
@@ -681,8 +681,8 @@ let _pollNotifications = null;
 
 /** Provide the notifications poll fn to avoid circular import. */
 let _pollBackgroundAccounts = null;
-export function registerNotifPoller(fn, bgFn) { 
-  _pollNotifications = fn; 
+export function registerNotifPoller(fn, bgFn) {
+  _pollNotifications = fn;
   _pollBackgroundAccounts = bgFn;
 }
 
@@ -1074,7 +1074,7 @@ export async function handleLoadMore(btn) {
 /**
  * Toggles an inline peek of replies for a post.
  */
-window.toggleReplyPeek = async function(postId, countEl) {
+window.toggleReplyPeek = async function (postId, countEl) {
   const container = document.getElementById(`reply-peek-${postId}`);
   const threadContainer = document.getElementById(`reply-peek-thread-${postId}`);
   if (!container) return;
@@ -1084,12 +1084,26 @@ window.toggleReplyPeek = async function(postId, countEl) {
     return;
   }
 
+  // Strip prefix for API and state lookup
+  const rawId = postId.startsWith('t-') ? postId.substring(2) : postId;
+
   // Clear previous content and show loading
   container.innerHTML = `<div class="reply-peek-loading"><div class="spinner spinner--small"></div><span>Loading replies...</span></div>`;
   container.classList.add('active');
 
   try {
-    const context = await apiGet(`/api/v1/statuses/${postId}/context`, state.token);
+    // Find the focal status first (from feed or API)
+    // This is necessary to resolve boosted posts to their original ID
+    const focalStatus = state.homeFeed?.find(p => p.id === rawId)
+      || state.localFeed?.find(p => p.id === rawId)
+      || state.federatedFeed?.find(p => p.id === rawId)
+      || state.hashtagFeed?.find(p => p.id === rawId)
+      || (await apiGet(`/api/v1/statuses/${rawId}`, state.token));
+
+    // Use original post ID for context if it's a boost
+    const actualId = focalStatus.reblog ? focalStatus.reblog.id : focalStatus.id;
+
+    const context = await apiGet(`/api/v1/statuses/${actualId}/context`, state.token);
     const descendants = context.descendants || [];
 
     if (descendants.length === 0) {
@@ -1102,26 +1116,20 @@ window.toggleReplyPeek = async function(postId, countEl) {
     // Just take the first 3.
     const peekCount = 5; // Increased for condensed
     const topLevelDescendants = descendants.slice(0, peekCount);
-    
+
     // Fetch relationships for these authors so following badges show up
     await fetchRelationships(descendants);
 
     // Build tree
     const { buildFullTree } = await import('./thread.js');
-    // We need the focal status to build the tree correctly
-    const focalStatus = state.homeFeed?.find(p => p.id === postId) 
-      || state.localFeed?.find(p => p.id === postId)
-      || state.federatedFeed?.find(p => p.id === postId)
-      || state.hashtagFeed?.find(p => p.id === postId)
-      || (await apiGet(`/api/v1/statuses/${postId}`, state.token));
 
     const tree = buildFullTree([], focalStatus, descendants);
     const focalNode = tree[0];
-    
+
     // Only show first 50 branches to keep it a "peek"
     const branchesToShow = focalNode.children.slice(0, 50);
     let html = renderCondensedTree(branchesToShow);
-    
+
     // If there are other roots (fragmented thread), show them too
     let fragmentsHtml = '';
     if (tree.length > 1) {
@@ -1132,7 +1140,7 @@ window.toggleReplyPeek = async function(postId, countEl) {
     // Warm up the cache with the status objects we just received
     descendants.forEach(s => peekCache.set(s.id, s));
 
-    const moreBtn = `<button class="load-more-btn" style="margin: 8px 0 0; width: 100%; padding: 8px; border-style: dashed;" onclick="event.stopPropagation(); window.openThreadDrawer('${postId}')">View full conversation thread...</button>`;
+    const moreBtn = `<button class="load-more-btn" style="margin: 8px 0 0; width: 100%; padding: 8px; border-style: dashed;" onclick="event.stopPropagation(); window.openThreadDrawer('${actualId}')">View full conversation thread...</button>`;
 
     container.innerHTML = `
       <div class="condensed-reply-wrapper">${html}${fragmentsHtml}</div>
@@ -1171,7 +1179,7 @@ window.toggleReplyPeek = async function(postId, countEl) {
 let currentExpansionLoadingId = null;
 const peekCache = new Map();
 
-window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false) {
+window.toggleCondensedExpansion = async function (statusId, el, forceOpen = false) {
   const node = el.closest('.condensed-reply-node');
   if (node) selectReplyNode(node);
 
@@ -1182,7 +1190,7 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
 
   // Close ALL other expanded containers
   document.querySelectorAll('.condensed-reply-expanded-container.active').forEach(c => {
-    if (c === container && !forceOpen) return; 
+    if (c === container && !forceOpen) return;
     c.classList.remove('active');
     c.innerHTML = '';
     const otherId = c.id.replace('expanded-', '');
@@ -1218,7 +1226,7 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
   try {
     const status = await apiGet(`/api/v1/statuses/${statusId}`, state.token);
     peekCache.set(statusId, status); // Cache it
-    
+
     if (currentExpansionLoadingId !== statusId) {
       el.classList.remove('loading');
       return;
@@ -1228,7 +1236,7 @@ window.toggleCondensedExpansion = async function(statusId, el, forceOpen = false
       <div class="full-reply-card" onclick="if (!event.target.closest('button, a, .post-stat, .post-media-item, .post-display-name, .post-author-handle, .post-avatar')) { event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply')); }">
         ${renderThreadPost(status, 'reply')}
       </div>`;
-    
+
     el.classList.remove('loading');
     container.classList.add('active');
     el.classList.add('expanded');
@@ -1254,7 +1262,7 @@ function selectReplyNode(node) {
 
 function debouncedExpand(node) {
   if (expansionDebounceTimer) clearTimeout(expansionDebounceTimer);
-  
+
   // 150ms debounce for auto-expansion
   expansionDebounceTimer = setTimeout(() => {
     const sid = node.dataset.statusId;
@@ -1266,7 +1274,7 @@ function debouncedExpand(node) {
 window.addEventListener('keydown', (e) => {
   // Only handle if not in an input/textarea
   if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
-  
+
   const key = e.key.toLowerCase();
   if (key !== 'a' && key !== 'z') return;
 

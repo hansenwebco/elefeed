@@ -92,7 +92,10 @@ export function renderCondensedReply(s, depth = 0) {
 
   const hasMedia = inner.media_attachments && inner.media_attachments.length > 0;
 
-  if (!textCheck && hasMedia) {
+  const { isFiltered, filterAction, filterTitle } = getFilterInfo(s, 'thread');
+  if (isFiltered && filterAction === 'hide') {
+    cleanedContent = `<span class="condensed-media-placeholder" style="color:var(--text-muted); opacity:0.6;"><iconify-icon icon="ph:eye-slash-bold"></iconify-icon> Filtered: ${escapeHTML(filterTitle || 'Hidden post')}</span>`;
+  } else if (!textCheck && hasMedia) {
     const media = inner.media_attachments[0];
     const type = media.type || 'media';
     const alt = media.description ? ` - ${media.description}` : ' - No ALT Text Provided :(';
@@ -168,8 +171,39 @@ export function renderAnalyticsMenu(s) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   SHARED INNER BODY
+   FILTERING & SHARED INNER BODY
    ══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Checks a status against server-side and client-side filters.
+ * Returns { isFiltered, filterAction, filterTitle }.
+ */
+function getFilterInfo(status, context = 'home') {
+  const s = status.reblog || status;
+
+  // 1. Server-side filtering (Mastodon V2)
+  const filterResults = status.filtered || [];
+  if (filterResults.length > 0) {
+    return {
+      isFiltered: true,
+      filterAction: filterResults[0].filter.filter_action,
+      filterTitle: filterResults[0].filter.title
+    };
+  }
+
+  // 2. Client-side fallback: check status content against context-specific regexes
+  const ctxFilters = state.filterRegexes[context];
+  if (ctxFilters) {
+    const text = ((s.spoiler_text || '') + ' ' + (s.content || '')).toLowerCase();
+    if (ctxFilters.hide && ctxFilters.hide.test(text)) {
+      return { isFiltered: true, filterAction: 'hide', filterTitle: 'Custom Filter' };
+    } else if (ctxFilters.warn && ctxFilters.warn.test(text)) {
+      return { isFiltered: true, filterAction: 'warn', filterTitle: 'Custom Filter' };
+    }
+  }
+
+  return { isFiltered: false, filterAction: null, filterTitle: null };
+}
 
 /**
  * Build the inner content of a post: media grid, poll, quote, CW wrapper,
@@ -454,26 +488,8 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   let autoOpenSensitive = false;
   try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
 
-  /* ── Server-side filtering (Mastodon V2) ── */
-  const filterResults = status.filtered || [];
-  let isFiltered = filterResults.length > 0;
-  let filterAction = isFiltered ? filterResults[0].filter.filter_action : null;
-  let filterTitle = isFiltered ? filterResults[0].filter.title : null;
-
-  // Client-side fallback: check status content against context-specific regexes
-  if (!isFiltered) {
-    const ctxFilters = state.filterRegexes[context];
-    if (ctxFilters) {
-      const text = ((s.spoiler_text || '') + ' ' + (s.content || '')).toLowerCase();
-      if (ctxFilters.hide && ctxFilters.hide.test(text)) {
-        isFiltered = true;
-        filterAction = 'hide';
-      } else if (ctxFilters.warn && ctxFilters.warn.test(text)) {
-        isFiltered = true;
-        filterAction = 'warn';
-      }
-    }
-  }
+  /* ── Filtering ── */
+  const { isFiltered, filterAction, filterTitle } = getFilterInfo(status, context);
 
   // Apply "hide" action: return empty if filtered to hide
   if (isFiltered && filterAction === 'hide') {
@@ -659,7 +675,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   const excludedContexts = ['account', 'search', 'thread', 'notification', 'bookmark', 'favorite'];
   if (s.replies_count > 0 && !excludedContexts.includes(context)) {
     peekBanner = `
-      <div class="post-peek-banner" onclick="event.stopPropagation(); if (window.toggleReplyPeek) window.toggleReplyPeek('${s.id}', this);">
+      <div class="post-peek-banner" onclick="event.stopPropagation(); if (window.toggleReplyPeek) window.toggleReplyPeek('${idPrefix}${status.id}', this);">
         <iconify-icon icon="ph:chat-circle-dots-bold"></iconify-icon>
         <span>View ${s.replies_count} replies inline</span>
       </div>`;
