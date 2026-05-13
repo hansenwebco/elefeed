@@ -1140,7 +1140,7 @@ window.toggleReplyPeek = async function (postId, countEl) {
     // Warm up the cache with the status objects we just received
     descendants.forEach(s => peekCache.set(s.id, s));
 
-    const moreBtn = `<button class="load-more-btn" style="margin: 8px 0 0; width: 100%; padding: 8px; border-style: dashed;" onclick="event.stopPropagation(); window.openThreadDrawer('${actualId}')">View full conversation thread...</button>`;
+    const moreBtn = `<button class="thread-more-btn" style="margin: 8px 0 0; width: 100%; padding: 8px; border-style: dashed;" onclick="event.stopPropagation(); window.openThreadDrawer('${actualId}')">View full conversation thread...</button>`;
 
     container.innerHTML = `
       <div class="condensed-reply-wrapper">${html}${fragmentsHtml}</div>
