@@ -179,6 +179,9 @@ function applySettings(prefs) {
       case 'pref_clear_urls':
         if (window.loadFeedTab) window.loadFeedTab(false);
         break;
+      case 'pref_show_inline_thread':
+        state.showInlineThread = (prefs[key] !== 'false');
+        break;
     }
   });
 
