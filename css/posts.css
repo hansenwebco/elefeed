@@ -812,7 +812,6 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
-  margin-right: 8px;
 }
 
 .full-reply-card .post {
