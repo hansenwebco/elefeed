@@ -1345,6 +1345,11 @@ if (settingsMenuBtn) {
       countPollingToggle.checked = store.get('pref_count_polling') !== 'false';
     }
 
+    const showInlineThreadToggle = $('settings-show-inline-thread-toggle');
+    if (showInlineThreadToggle) {
+      showInlineThreadToggle.checked = state.showInlineThread;
+    }
+
     const autoOpenSensitiveToggle = $('settings-auto-open-sensitive-toggle');
     if (autoOpenSensitiveToggle) {
       autoOpenSensitiveToggle.checked = store.get('pref_auto_open_sensitive') === 'true';
@@ -1647,6 +1652,16 @@ if (_inAppNotifToggle) {
   _inAppNotifToggle.checked = store.get('pref_in_app_notifs') !== 'false';
   _inAppNotifToggle.addEventListener('change', () => {
     store.set('pref_in_app_notifs', _inAppNotifToggle.checked ? 'true' : 'false');
+    triggerPush();
+  });
+}
+
+// Inline thread option
+const _showInlineThreadToggle = $('settings-show-inline-thread-toggle');
+if (_showInlineThreadToggle) {
+  _showInlineThreadToggle.addEventListener('change', () => {
+    state.showInlineThread = _showInlineThreadToggle.checked;
+    store.set('pref_show_inline_thread', state.showInlineThread ? 'true' : 'false');
     triggerPush();
   });
 }

@@ -107,6 +107,7 @@ export const state = {
   sidebarExpanded: store.get('pref_sidebar_expanded') !== 'false' && window.innerHeight >= 800,
   bookmarksActive: false,
   giphyEnabled: store.get('pref_giphy_enabled') !== 'false',
+  showInlineThread: store.get('pref_show_inline_thread') !== 'false',
   
   /* Filters */
   filters: [],

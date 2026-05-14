@@ -672,7 +672,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
 
   let peekBanner = '';
   const excludedContexts = ['account', 'search', 'thread', 'notification', 'bookmark', 'favorite'];
-  if (s.replies_count > 0 && !excludedContexts.includes(context)) {
+  if (state.showInlineThread && s.replies_count > 0 && !excludedContexts.includes(context)) {
     peekBanner = `
       <div class="post-peek-banner" onclick="event.stopPropagation(); if (window.toggleReplyPeek) window.toggleReplyPeek('${idPrefix}${status.id}', this);">
         <iconify-icon icon="ph:chat-circle-dots-bold"></iconify-icon>
