@@ -1080,11 +1080,22 @@ export async function handleLoadMore(btn) {
  */
 window.toggleReplyPeek = async function (postId, countEl) {
   const container = document.getElementById(`reply-peek-${postId}`);
-  const threadContainer = document.getElementById(`reply-peek-thread-${postId}`);
   if (!container) return;
+
+  const setBannerText = (mode) => {
+    if (!countEl) return;
+    const span = countEl.querySelector('span');
+    if (!span) return;
+    if (mode === 'hide') {
+      span.textContent = span.textContent.replace('View', 'Hide');
+    } else {
+      span.textContent = span.textContent.replace('Hide', 'View');
+    }
+  };
 
   if (container.classList.contains('active')) {
     container.classList.remove('active');
+    setBannerText('view');
     return;
   }
 
@@ -1113,7 +1124,10 @@ window.toggleReplyPeek = async function (postId, countEl) {
 
     if (descendants.length === 0 && ancestors.length === 0) {
       container.innerHTML = `<div class="reply-peek-loading"><span>No replies found on this server.</span></div>`;
-      setTimeout(() => container.classList.remove('active'), 2000);
+      setTimeout(() => {
+        container.classList.remove('active');
+        setBannerText('view');
+      }, 2000);
       return;
     }
 
@@ -1133,7 +1147,10 @@ window.toggleReplyPeek = async function (postId, countEl) {
 
     if (filteredDescendants.length === 0 && ancestors.length === 0) {
       container.innerHTML = `<div class="reply-peek-loading"><span>No replies found (or all are filtered).</span></div>`;
-      setTimeout(() => container.classList.remove('active'), 2000);
+      setTimeout(() => {
+        container.classList.remove('active');
+        setBannerText('view');
+      }, 2000);
       return;
     }
 
@@ -1199,6 +1216,8 @@ window.toggleReplyPeek = async function (postId, countEl) {
       </div>
     ` + moreBtn;
 
+    setBannerText('hide');
+
     // Auto-expand the first post in the tree for immediate context
     setTimeout(() => {
       const firstNode = container.querySelector('.condensed-reply-node:not(.condensed-parent-node)');
@@ -1211,7 +1230,10 @@ window.toggleReplyPeek = async function (postId, countEl) {
   } catch (err) {
     console.error('[Feed] Reply peek failed:', err);
     container.innerHTML = `<div class="reply-peek-loading" style="color:var(--danger)"><span>Failed to load replies.</span></div>`;
-    setTimeout(() => container.classList.remove('active'), 3000);
+    setTimeout(() => {
+      container.classList.remove('active');
+      setBannerText('view');
+    }, 3000);
   }
 };
 /**
