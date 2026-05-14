@@ -574,6 +574,16 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
     postLangName = getLanguageLabel(postLang);
   }
 
+  let peekBanner = '';
+  const excludedContexts = ['account', 'search', 'thread', 'notification', 'bookmark', 'favorite'];
+  if (state.showInlineThread && s.replies_count > 0 && !excludedContexts.includes(context)) {
+    peekBanner = `
+      <div class="post-peek-banner" onclick="event.stopPropagation(); if (window.toggleReplyPeek) window.toggleReplyPeek('${idPrefix}${status.id}', this);">
+        <iconify-icon icon="ph:chat-circle-dots-bold"></iconify-icon>
+        <span>View ${s.replies_count} replies inline</span>
+      </div>`;
+  }
+
   /* ── Footer: reply, boost, favourite, bookmark, translate, external ── */
   const footerHTML = `
     <div class="post-footer">
@@ -668,20 +678,12 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
           </div>
         </div>
       </div>
-    </div>`;
-
-  let peekBanner = '';
-  const excludedContexts = ['account', 'search', 'thread', 'notification', 'bookmark', 'favorite'];
-  if (state.showInlineThread && s.replies_count > 0 && !excludedContexts.includes(context)) {
-    peekBanner = `
-      <div class="post-peek-banner" onclick="event.stopPropagation(); if (window.toggleReplyPeek) window.toggleReplyPeek('${idPrefix}${status.id}', this);">
-        <iconify-icon icon="ph:chat-circle-dots-bold"></iconify-icon>
-        <span>View ${s.replies_count} replies inline</span>
-      </div>`;
-  }
+    </div>
+    ${peekBanner}
+    <div class="reply-peek-container" id="reply-peek-${idPrefix}${status.id}"></div>`;
 
   return {
-    contentHTML: contentHTML + peekBanner + `<div class="reply-peek-container" id="reply-peek-${idPrefix}${status.id}"></div>`,
+    contentHTML,
     footerHTML
   };
 }
