@@ -67,6 +67,8 @@ export const state = {
   selectedHashtagFilter: urlParams.get('tag') || 'all',
   knownFollowing: new Set(),
   knownNotFollowing: new Set(),
+  knownMuting: new Set(),
+  knownBlocking: new Set(),
 
   /* UI state */
   activeTab: urlParams.get('tab') || 'feed',

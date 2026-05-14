@@ -72,10 +72,14 @@ export function renderCondensedReply(s, depth = 0) {
     .trim();
 
   const hasMedia = inner.media_attachments && inner.media_attachments.length > 0;
+  const hasCW = inner.spoiler_text && inner.spoiler_text.length > 0;
 
   const { isFiltered, filterAction, filterTitle } = getFilterInfo(s, 'thread');
-  if (isFiltered && filterAction === 'hide') {
+  if (isFiltered) {
+    if (filterAction === 'hide') return '';
     cleanedContent = `<span class="condensed-media-placeholder" style="color:var(--text-muted); opacity:0.6;"><iconify-icon icon="ph:eye-slash-bold"></iconify-icon> Filtered: ${escapeHTML(filterTitle || 'Hidden post')}</span>`;
+  } else if (hasCW) {
+    cleanedContent = `<span class="condensed-media-placeholder" style="color:var(--text-muted); opacity:0.8;"><iconify-icon icon="ph:warning-circle-bold"></iconify-icon> CW: ${renderCustomEmojis(inner.spoiler_text, inner.emojis)}</span>`;
   } else if (!textCheck && hasMedia) {
     const media = inner.media_attachments[0];
     const type = media.type || 'media';
@@ -99,6 +103,7 @@ export function renderCondensedTree(nodes, depth = 0) {
   if (!nodes || nodes.length === 0) return '';
   return nodes.map(node => {
     const html = renderCondensedReply(node.status, depth);
+    if (!html) return '';
     const children = node.children.length > 0
       ? `<div class="condensed-reply-children">${renderCondensedTree(node.children, depth + 1)}</div>`
       : '';
@@ -159,10 +164,23 @@ export function renderAnalyticsMenu(s) {
  * Checks a status against server-side and client-side filters.
  * Returns { isFiltered, filterAction, filterTitle }.
  */
-function getFilterInfo(status, context = 'home') {
+export function getFilterInfo(status, context = 'home') {
   const s = status.reblog || status;
 
-  // 1. Server-side filtering (Mastodon V2)
+  // 1. Check for blocked or muted users
+  if (state.knownBlocking.has(s.account.id)) {
+    return { isFiltered: true, filterAction: 'hide', filterTitle: 'Blocked user' };
+  }
+  if (state.knownMuting.has(s.account.id)) {
+    return { isFiltered: true, filterAction: 'hide', filterTitle: 'Muted user' };
+  }
+
+  // 2. Check for muted conversation
+  if (s.muted) {
+    return { isFiltered: true, filterAction: 'hide', filterTitle: 'Muted conversation' };
+  }
+
+  // 3. Server-side filtering (Mastodon V2)
   const filterResults = status.filtered || [];
   if (filterResults.length > 0) {
     return {
@@ -172,7 +190,7 @@ function getFilterInfo(status, context = 'home') {
     };
   }
 
-  // 2. Client-side fallback: check status content against context-specific regexes
+  // 4. Client-side fallback: check status content against context-specific regexes
   const ctxFilters = state.filterRegexes[context];
   if (ctxFilters) {
     const text = ((s.spoiler_text || '') + ' ' + (s.content || '')).toLowerCase();

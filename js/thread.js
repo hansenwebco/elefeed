@@ -5,7 +5,7 @@
 
 import { $, state } from './state.js';
 import { apiGet } from './api.js';
-import { renderThreadPost } from './render.js';
+import { renderThreadPost, getFilterInfo } from './render.js';
 import { fetchRelationships } from './feed.js';
 import { escapeHTML, updateURLParam } from './utils.js';
 
@@ -91,7 +91,18 @@ async function loadThread(statusId, container, preserveScroll = false) {
     const ancestors = context.ancestors || [];
     const descendants = context.descendants || [];
     await fetchRelationships([focalStatus, ...ancestors, ...descendants]);
-    renderThread(focalStatus, ancestors, descendants, container, preserveScroll ? currentScroll : 0);
+
+    // Apply visibility and filter rules
+    const filteredAncestors = ancestors.filter(s => {
+      const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
+      return !(isFiltered && filterAction === 'hide');
+    });
+    const filteredDescendants = descendants.filter(s => {
+      const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
+      return !(isFiltered && filterAction === 'hide');
+    });
+
+    renderThread(focalStatus, filteredAncestors, filteredDescendants, container, preserveScroll ? currentScroll : 0);
   } catch (err) {
     container.innerHTML = `
       <div class="thread-status">

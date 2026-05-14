@@ -99,7 +99,7 @@ positionOverlayPill();
 import { $, state, store } from './state.js';
 import { apiGet } from './api.js';
 import { setLoading, setError, showToast, updateTabLabel } from './ui.js';
-import { renderPost, renderThreadPost, renderCondensedTree } from './render.js';
+import { renderPost, renderThreadPost, renderCondensedTree, getFilterInfo } from './render.js';
 import { getDemoHomePosts, getDemoHashtagData } from './demo.js';
 import { matchesLanguage, updateURLParam } from './utils.js';
 import { updateTitleBar } from './titlebar.js';
@@ -134,18 +134,8 @@ export function getFilteredPendingPosts(feedKey) {
     const postLang = inner.language || p.language;
     if (!matchesLanguage(postLang, preferredLang)) return false;
 
-    // Filter hidden content from pending count
-    const filterResults = p.filtered || [];
-    const serverHide = filterResults.some(fr => fr.filter.filter_action === 'hide');
-    if (serverHide) return false;
-
-    // Client-side hide fallback
-    const context = (state.feedFilter === 'all') ? 'home' : 'public';
-    const ctxFilters = state.filterRegexes[context];
-    if (ctxFilters && ctxFilters.hide) {
-      const text = ((inner.spoiler_text || '') + ' ' + (inner.content || '')).toLowerCase();
-      if (ctxFilters.hide.test(text)) return false;
-    }
+    const { isFiltered, filterAction } = getFilterInfo(p, (state.feedFilter === 'all' ? 'home' : 'public'));
+    if (isFiltered && filterAction === 'hide') return false;
 
     return true;
   });
@@ -263,6 +253,10 @@ function renderFilteredPosts(displayPosts) {
 
     const postLang = inner.language || p.language;
     if (!matchesLanguage(postLang, preferredLang)) return false;
+
+    const { isFiltered, filterAction } = getFilterInfo(p, (filter === 'all' ? 'home' : 'public'));
+    if (isFiltered && filterAction === 'hide') return false;
+
     return true;
   });
 
@@ -345,6 +339,12 @@ export async function fetchRelationships(page) {
           rels.forEach(r => {
             if (r.following) state.knownFollowing.add(r.id);
             else state.knownNotFollowing.add(r.id);
+            
+            if (r.muting) state.knownMuting.add(r.id);
+            else state.knownMuting.delete(r.id);
+            
+            if (r.blocking) state.knownBlocking.add(r.id);
+            else state.knownBlocking.delete(r.id);
           });
         }).catch(() => { })
       );
@@ -1043,7 +1043,11 @@ export async function handleLoadMore(btn) {
     let display = newPosts.filter(p => {
       const inner = p.reblog || p;
       const postLang = inner.language || p.language;
-      return matchesLanguage(postLang, preferredLang);
+      if (!matchesLanguage(postLang, preferredLang)) return false;
+
+      const { isFiltered, filterAction } = getFilterInfo(p, (filter === 'all' ? 'home' : 'public'));
+      if (isFiltered && filterAction === 'hide') return false;
+      return true;
     });
 
     if (filter === 'following' && !state.demoMode) display = await filterForFollowing(display);
@@ -1121,10 +1125,22 @@ window.toggleReplyPeek = async function (postId, countEl) {
     // Fetch relationships for these authors so following badges show up
     await fetchRelationships([...ancestors, ...descendants]);
 
+    // Apply visibility and filter rules
+    const filteredDescendants = descendants.filter(s => {
+      const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
+      return !(isFiltered && filterAction === 'hide');
+    });
+
+    if (filteredDescendants.length === 0 && ancestors.length === 0) {
+      container.innerHTML = `<div class="reply-peek-loading"><span>No replies found (or all are filtered).</span></div>`;
+      setTimeout(() => container.classList.remove('active'), 2000);
+      return;
+    }
+
     // Build tree
     const { buildFullTree } = await import('./thread.js');
 
-    const tree = buildFullTree([], focalStatus.reblog || focalStatus, descendants);
+    const tree = buildFullTree([], focalStatus.reblog || focalStatus, filteredDescendants);
     const focalNode = tree[0];
 
     // Only show first 50 branches to keep it a "peek"
@@ -1139,9 +1155,14 @@ window.toggleReplyPeek = async function (postId, countEl) {
       fragmentsHtml = `<div class="peek-fragmented-separator"></div>` + renderCondensedTree(otherRoots);
     }
     
+    const filteredAncestors = ancestors.filter(s => {
+      const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
+      return !(isFiltered && filterAction === 'hide');
+    });
+
     let parentSnippet = '';
-    if (ancestors.length > 0) {
-      const parent = ancestors[ancestors.length - 1];
+    if (filteredAncestors.length > 0) {
+      const parent = filteredAncestors[filteredAncestors.length - 1];
       const parentHtml = renderCondensedReply(parent);
       parentSnippet = `
         <div class="condensed-reply-parent-snippet" style="opacity: 0.8; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border);">
