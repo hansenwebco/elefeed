@@ -1104,9 +1104,10 @@ window.toggleReplyPeek = async function (postId, countEl) {
     const actualId = focalStatus.reblog ? focalStatus.reblog.id : focalStatus.id;
 
     const context = await apiGet(`/api/v1/statuses/${actualId}/context`, state.token);
+    const ancestors = context.ancestors || [];
     const descendants = context.descendants || [];
 
-    if (descendants.length === 0) {
+    if (descendants.length === 0 && ancestors.length === 0) {
       container.innerHTML = `<div class="reply-peek-loading"><span>No replies found on this server.</span></div>`;
       setTimeout(() => container.classList.remove('active'), 2000);
       return;
@@ -1118,16 +1119,17 @@ window.toggleReplyPeek = async function (postId, countEl) {
     const topLevelDescendants = descendants.slice(0, peekCount);
 
     // Fetch relationships for these authors so following badges show up
-    await fetchRelationships(descendants);
+    await fetchRelationships([...ancestors, ...descendants]);
 
     // Build tree
     const { buildFullTree } = await import('./thread.js');
 
-    const tree = buildFullTree([], focalStatus, descendants);
+    const tree = buildFullTree([], focalStatus.reblog || focalStatus, descendants);
     const focalNode = tree[0];
 
     // Only show first 50 branches to keep it a "peek"
     const branchesToShow = focalNode.children.slice(0, 50);
+    const { renderCondensedTree, renderCondensedReply } = await import('./render.js');
     let html = renderCondensedTree(branchesToShow);
 
     // If there are other roots (fragmented thread), show them too
@@ -1136,6 +1138,24 @@ window.toggleReplyPeek = async function (postId, countEl) {
       const otherRoots = tree.slice(1, 10); // Limit other roots to 10
       fragmentsHtml = `<div class="peek-fragmented-separator"></div>` + renderCondensedTree(otherRoots);
     }
+    
+    let parentSnippet = '';
+    if (ancestors.length > 0) {
+      const parent = ancestors[ancestors.length - 1];
+      const parentHtml = renderCondensedReply(parent);
+      parentSnippet = `
+        <div class="condensed-reply-parent-snippet" style="opacity: 0.8; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border);">
+          <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-bottom: 4px; padding-left: 12px;">
+            <iconify-icon icon="ph:arrow-bend-down-right-bold"></iconify-icon>
+            <span>In reply to</span>
+          </div>
+          <div class="condensed-reply-node condensed-parent-node" data-status-id="${parent.id}">
+            ${parentHtml}
+          </div>
+        </div>
+      `;
+      peekCache.set(parent.id, parent);
+    }
 
     // Warm up the cache with the status objects we just received
     descendants.forEach(s => peekCache.set(s.id, s));
@@ -1143,7 +1163,7 @@ window.toggleReplyPeek = async function (postId, countEl) {
     const moreBtn = `<button class="thread-more-btn" style="margin: 8px 0 0; width: 100%; padding: 8px; border-style: dashed;" onclick="event.stopPropagation(); window.openThreadDrawer('${actualId}')">View full conversation thread...</button>`;
 
     container.innerHTML = `
-      <div class="condensed-reply-wrapper">${html}${fragmentsHtml}</div>
+      <div class="condensed-reply-wrapper">${parentSnippet}${html}${fragmentsHtml}</div>
       <div class="condensed-reply-info-footer">
         ${focalNode.children.length > 50 ? `
           <div class="condensed-reply-info">
@@ -1160,7 +1180,7 @@ window.toggleReplyPeek = async function (postId, countEl) {
 
     // Auto-expand the first post in the tree for immediate context
     setTimeout(() => {
-      const firstNode = container.querySelector('.condensed-reply-node');
+      const firstNode = container.querySelector('.condensed-reply-node:not(.condensed-parent-node)');
       if (firstNode) {
         const sid = firstNode.dataset.statusId;
         const trig = firstNode.querySelector('.condensed-reply');
