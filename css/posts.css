@@ -1017,24 +1017,24 @@
 
 /* Cleaned URLs - Premium Tidy Style */
 .post-content .cleaned-url {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 1px 6px;
-  margin: 0 1px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--accent2);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.85;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--text) 20%, transparent);
+  text-underline-offset: 3px;
+  display: inline;
   transition: all 0.2s ease;
-  vertical-align: middle;
+  vertical-align: baseline;
 }
 
 .post-content .cleaned-url::before {
-  content: " ";
+  content: "";
   display: inline-block;
   width: 12px;
   height: 12px;
@@ -1043,15 +1043,15 @@
   mask: url("https://api.iconify.design/ph:link-bold.svg") no-repeat 50% 50%;
   -webkit-mask-size: cover;
   mask-size: cover;
-  opacity: 0.7;
+  opacity: 0.4;
+  margin-right: 3px;
+  vertical-align: -1px;
 }
 
 .post-content .cleaned-url:hover {
-  background: var(--border);
-  border-color: var(--accent);
   color: var(--accent);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-decoration-color: var(--accent);
+  opacity: 1;
 }
 
 
