@@ -458,30 +458,6 @@
   flex-shrink: 0;
 }
 
-/* ─── Reply Chain Indicator ─── */
-.reply-chain-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-family: var(--font-body);
-}
-
-.reply-chain-indicator iconify-icon {
-  opacity: 0.7;
-}
-
-.reply-chain-indicator .reply-target {
-  color: var(--following-color);
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.reply-chain-indicator .reply-target:hover {
-  text-decoration: underline;
-}
 
 /* ─── Reply Preview Peek ─── */
 .reply-peek-container {

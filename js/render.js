@@ -32,25 +32,6 @@ export function renderFollowingBadge(accountId) {
   return '';
 }
 
-/**
- * Returns the HTML for a "replying to" indicator.
- * @param {object} s The status object
- * @returns {string}
- */
-export function renderReplyIndicator(s) {
-  if (!s.in_reply_to_account_id) return '';
-
-  const mentions = s.mentions || [];
-  const target = mentions.find(m => m.id === s.in_reply_to_account_id) || mentions[0];
-  if (!target) return '';
-
-  return `
-    <div class="reply-chain-indicator">
-      <iconify-icon icon="ph:arrow-bend-up-left-bold" style="font-size: 11px;"></iconify-icon>
-      <span>replying to</span>
-      <a href="#" class="reply-target" data-profile-id="${target.id}" onclick="event.preventDefault(); event.stopPropagation(); window.openProfileDrawer('${target.id}', state.server)">@${escapeHTML(target.acct)}</a>
-    </div>`;
-}
 
 /**
  * Renders a condensed version of a reply for the peek view.
@@ -770,7 +751,6 @@ export function renderPost(status, opts = {}) {
     <article class="post${contextClass}" data-id="${s.id}">
       ${boostLabelHTML}
       ${hashtagBanner}
-      ${renderReplyIndicator(s)}
       <div class="post-header post-header--with-server">
         <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer; align-self:center;">
           <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
@@ -844,7 +824,6 @@ export function renderThreadPost(status, variant) {
     <div class="${variantClass}" data-status-id="${s.id}">
       <article class="post${contextClass}" data-id="${s.id}">
         ${boostLabelHTML}
-        ${variant === 'focal' ? renderReplyIndicator(s) : ''}
         <div class="post-header post-header--with-server">
           <div class="post-avatar" data-profile-id="${s.account.id}" data-profile-server="${profileServer}" style="cursor:pointer">
             <img src="${s.account.avatar_static || s.account.avatar}" alt="${escapeHTML(s.account.display_name || s.account.username)}" loading="lazy" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
