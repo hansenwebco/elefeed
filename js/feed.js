@@ -45,7 +45,7 @@ export function scrollContainerTo(top, behavior = 'smooth') {
 export function hashtagScrollToTop() {
   const top = 0;
   const behavior = 'instant';
-  
+
   const feedCont = document.getElementById('feed-container');
   if (feedCont) feedCont.scrollTop = top;
 
@@ -99,7 +99,7 @@ positionOverlayPill();
 import { $, state, store } from './state.js';
 import { apiGet } from './api.js';
 import { setLoading, setError, showToast, updateTabLabel } from './ui.js';
-import { renderPost } from './render.js';
+import { renderPost, renderThreadPost, renderCondensedTree, getFilterInfo } from './render.js';
 import { getDemoHomePosts, getDemoHashtagData } from './demo.js';
 import { matchesLanguage, updateURLParam } from './utils.js';
 import { updateTitleBar } from './titlebar.js';
@@ -134,18 +134,8 @@ export function getFilteredPendingPosts(feedKey) {
     const postLang = inner.language || p.language;
     if (!matchesLanguage(postLang, preferredLang)) return false;
 
-    // Filter hidden content from pending count
-    const filterResults = p.filtered || [];
-    const serverHide = filterResults.some(fr => fr.filter.filter_action === 'hide');
-    if (serverHide) return false;
-
-    // Client-side hide fallback
-    const context = (state.feedFilter === 'all') ? 'home' : 'public';
-    const ctxFilters = state.filterRegexes[context];
-    if (ctxFilters && ctxFilters.hide) {
-      const text = ((inner.spoiler_text || '') + ' ' + (inner.content || '')).toLowerCase();
-      if (ctxFilters.hide.test(text)) return false;
-    }
+    const { isFiltered, filterAction } = getFilterInfo(p, (state.feedFilter === 'all' ? 'home' : 'public'));
+    if (isFiltered && filterAction === 'hide') return false;
 
     return true;
   });
@@ -156,7 +146,7 @@ export function updateTabPill(feedKey) {
   const refreshBadge = document.getElementById('refresh-badge');
   const count = getFilteredPendingPosts(feedKey).length;
   const style = store.get('pref_newpost_style') || 'badge'; // default: Refresh Notification
-  
+
   if (overlayPill) {
     if (count === 0) {
       overlayPill.style.display = 'none';
@@ -241,12 +231,12 @@ function renderFilteredPosts(displayPosts) {
   console.log(`[Feed] renderFilteredPosts called with ${displayPosts?.length || 0} posts. Filter: ${state.feedFilter}`);
   const container = $('feed-posts');
   if (!container) return;
-  
+
   if (!displayPosts) {
     console.warn('[Feed] renderFilteredPosts called with null/undefined displayPosts');
     displayPosts = [];
   }
-  
+
   const filter = state.feedFilter;
 
   // Apply feed filters (Boosts, Replies, Quotes)
@@ -263,6 +253,10 @@ function renderFilteredPosts(displayPosts) {
 
     const postLang = inner.language || p.language;
     if (!matchesLanguage(postLang, preferredLang)) return false;
+
+    const { isFiltered, filterAction } = getFilterInfo(p, (filter === 'all' ? 'home' : 'public'));
+    if (isFiltered && filterAction === 'hide') return false;
+
     return true;
   });
 
@@ -297,7 +291,7 @@ function renderFilteredPosts(displayPosts) {
   const html = displayPosts.map(p => renderPost(p, { tags: p._sourceTags || [] })).join('');
   const loadMoreBtn = maxId ? '<button class="load-more-btn" data-feed="feed">Load More</button>' : '';
   container.innerHTML = html + loadMoreBtn;
-  
+
   // Re-render usage banner if enabled
   import('./usage.js').then(m => m.renderUsageUI());
 
@@ -315,7 +309,7 @@ export async function fetchRelationships(page) {
     // page can contain statuses (with .account), accounts (with .username), or tags (with neither)
     const isStatus = !!p.account;
     const isAccount = !isStatus && !!p.username;
-    
+
     if (isAccount) {
       if (!state.knownFollowing.has(p.id) && !state.knownNotFollowing.has(p.id)) {
         idsToCheck.add(p.id);
@@ -345,6 +339,12 @@ export async function fetchRelationships(page) {
           rels.forEach(r => {
             if (r.following) state.knownFollowing.add(r.id);
             else state.knownNotFollowing.add(r.id);
+            
+            if (r.muting) state.knownMuting.add(r.id);
+            else state.knownMuting.delete(r.id);
+            
+            if (r.blocking) state.knownBlocking.add(r.id);
+            else state.knownBlocking.delete(r.id);
           });
         }).catch(() => { })
       );
@@ -462,10 +462,10 @@ async function loadHashtagsFeed() {
       followBtn.style.display = 'flex';
       const tag = state.selectedHashtagFilter;
       const isFollowed = (state.followedHashtags || []).some(t => t.name.toLowerCase() === tag.toLowerCase());
-      
+
       const freshBtn = followBtn.cloneNode(true);
       followBtn.replaceWith(freshBtn);
-      
+
       // Set initial state matching profile.js requirements
       freshBtn.dataset.tag = tag;
       freshBtn.dataset.following = isFollowed ? 'true' : 'false';
@@ -476,7 +476,7 @@ async function loadHashtagsFeed() {
       freshBtn.onclick = async (e) => {
         e.stopPropagation();
         if (!state.token || state.demoMode) return;
-        
+
         try {
           const { handleHashtagFollowToggle } = await import('./profile.js');
           await handleHashtagFollowToggle(freshBtn);
@@ -629,7 +629,7 @@ export async function loadFeedTab(scrollTop = true) {
   $('feed-posts').innerHTML = '';
   setLoading('feed', true);
   setError('feed', null);
-  
+
   console.log(`[Feed] loadFeedTab starting for filter: ${filter}`);
 
   try {
@@ -681,8 +681,8 @@ let _pollNotifications = null;
 
 /** Provide the notifications poll fn to avoid circular import. */
 let _pollBackgroundAccounts = null;
-export function registerNotifPoller(fn, bgFn) { 
-  _pollNotifications = fn; 
+export function registerNotifPoller(fn, bgFn) {
+  _pollNotifications = fn;
   _pollBackgroundAccounts = bgFn;
 }
 
@@ -1043,7 +1043,11 @@ export async function handleLoadMore(btn) {
     let display = newPosts.filter(p => {
       const inner = p.reblog || p;
       const postLang = inner.language || p.language;
-      return matchesLanguage(postLang, preferredLang);
+      if (!matchesLanguage(postLang, preferredLang)) return false;
+
+      const { isFiltered, filterAction } = getFilterInfo(p, (filter === 'all' ? 'home' : 'public'));
+      if (isFiltered && filterAction === 'hide') return false;
+      return true;
     });
 
     if (filter === 'following' && !state.demoMode) display = await filterForFollowing(display);
@@ -1071,3 +1075,321 @@ export async function handleLoadMore(btn) {
     btn.textContent = 'Load More';
   }
 }
+/**
+ * Toggles an inline peek of replies for a post.
+ */
+window.toggleReplyPeek = async function (postId, countEl) {
+  const container = document.getElementById(`reply-peek-${postId}`);
+  if (!container) return;
+
+  const setBannerText = (mode) => {
+    if (!countEl) return;
+    const span = countEl.querySelector('span');
+    if (!span) return;
+    if (mode === 'hide') {
+      span.textContent = span.textContent.replace('View', 'Hide');
+    } else {
+      span.textContent = span.textContent.replace('Hide', 'View');
+    }
+  };
+
+  if (container.classList.contains('active')) {
+    container.classList.remove('active');
+    setBannerText('view');
+    return;
+  }
+
+  // Strip prefix for API and state lookup
+  const rawId = postId.startsWith('t-') ? postId.substring(2) : postId;
+
+  // Clear previous content and show loading
+  container.innerHTML = `<div class="reply-peek-loading"><div class="spinner spinner--small"></div><span>Loading replies...</span></div>`;
+  container.classList.add('active');
+
+  try {
+    // Find the focal status first (from feed or API)
+    // This is necessary to resolve boosted posts to their original ID
+    const focalStatus = state.homeFeed?.find(p => p.id === rawId)
+      || state.localFeed?.find(p => p.id === rawId)
+      || state.federatedFeed?.find(p => p.id === rawId)
+      || state.hashtagFeed?.find(p => p.id === rawId)
+      || (await apiGet(`/api/v1/statuses/${rawId}`, state.token));
+
+    // Use original post ID for context if it's a boost
+    const actualId = focalStatus.reblog ? focalStatus.reblog.id : focalStatus.id;
+
+    const context = await apiGet(`/api/v1/statuses/${actualId}/context`, state.token);
+    const ancestors = context.ancestors || [];
+    const descendants = context.descendants || [];
+
+    if (descendants.length === 0 && ancestors.length === 0) {
+      container.innerHTML = `<div class="reply-peek-loading"><span>No replies found on this server.</span></div>`;
+      setTimeout(() => {
+        container.classList.remove('active');
+        setBannerText('view');
+      }, 2000);
+      return;
+    }
+
+    // Sort or filter? Mastodon context usually returns them in a decent order.
+    // Just take the first 3.
+    const peekCount = 5; // Increased for condensed
+    const topLevelDescendants = descendants.slice(0, peekCount);
+
+    // Fetch relationships for these authors so following badges show up
+    await fetchRelationships([...ancestors, ...descendants]);
+
+    // Apply visibility and filter rules
+    const filteredDescendants = descendants.filter(s => {
+      const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
+      return !(isFiltered && filterAction === 'hide');
+    });
+
+    if (filteredDescendants.length === 0 && ancestors.length === 0) {
+      container.innerHTML = `<div class="reply-peek-loading"><span>No replies found (or all are filtered).</span></div>`;
+      setTimeout(() => {
+        container.classList.remove('active');
+        setBannerText('view');
+      }, 2000);
+      return;
+    }
+
+    // Build tree
+    const { buildFullTree } = await import('./thread.js');
+
+    const tree = buildFullTree([], focalStatus.reblog || focalStatus, filteredDescendants);
+    const focalNode = tree[0];
+
+    // Only show first 50 branches to keep it a "peek"
+    const branchesToShow = focalNode.children.slice(0, 50);
+    const { renderCondensedTree, renderCondensedReply } = await import('./render.js');
+    let html = renderCondensedTree(branchesToShow);
+
+    // If there are other roots (fragmented thread), show them too
+    let fragmentsHtml = '';
+    if (tree.length > 1) {
+      const otherRoots = tree.slice(1, 10); // Limit other roots to 10
+      fragmentsHtml = `<div class="peek-fragmented-separator"></div>` + renderCondensedTree(otherRoots);
+    }
+    
+    const filteredAncestors = ancestors.filter(s => {
+      const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
+      return !(isFiltered && filterAction === 'hide');
+    });
+
+    let parentSnippet = '';
+    if (filteredAncestors.length > 0) {
+      const parent = filteredAncestors[filteredAncestors.length - 1];
+      const parentHtml = renderCondensedReply(parent);
+      parentSnippet = `
+        <div class="condensed-reply-parent-snippet" style="opacity: 0.8; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border);">
+          <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-bottom: 4px; padding-left: 12px;">
+            <iconify-icon icon="ph:arrow-bend-down-right-bold"></iconify-icon>
+            <span>In reply to</span>
+          </div>
+          <div class="condensed-reply-node condensed-parent-node" data-status-id="${parent.id}">
+            ${parentHtml}
+          </div>
+        </div>
+      `;
+      peekCache.set(parent.id, parent);
+    }
+
+    // Warm up the cache with the status objects we just received
+    descendants.forEach(s => peekCache.set(s.id, s));
+
+    const moreBtn = `<button class="thread-more-btn" style="margin: 8px 0 0; width: 100%; padding: 8px; border-style: dashed;" onclick="event.stopPropagation(); window.openThreadDrawer('${actualId}')">View full conversation thread...</button>`;
+
+    container.innerHTML = `
+      <div class="condensed-reply-wrapper">${parentSnippet}${html}${fragmentsHtml}</div>
+      <div class="condensed-reply-info-footer">
+        ${focalNode.children.length > 50 ? `
+          <div class="condensed-reply-info">
+            <iconify-icon icon="ph:dots-three-circle-bold"></iconify-icon>
+            <span>${focalNode.children.length - 50} more posts hidden in peek view</span>
+          </div>` : ''}
+        ${tree.length > 10 ? `
+          <div class="condensed-reply-info">
+            <iconify-icon icon="ph:dots-three-circle-bold"></iconify-icon>
+            <span>${tree.length - 10} other conversation fragments hidden</span>
+          </div>` : ''}
+      </div>
+    ` + moreBtn;
+
+    setBannerText('hide');
+
+    // Auto-expand the first post in the tree for immediate context
+    setTimeout(() => {
+      const firstNode = container.querySelector('.condensed-reply-node:not(.condensed-parent-node)');
+      if (firstNode) {
+        const sid = firstNode.dataset.statusId;
+        const trig = firstNode.querySelector('.condensed-reply');
+        if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+      }
+    }, 50);
+  } catch (err) {
+    console.error('[Feed] Reply peek failed:', err);
+    container.innerHTML = `<div class="reply-peek-loading" style="color:var(--danger)"><span>Failed to load replies.</span></div>`;
+    setTimeout(() => {
+      container.classList.remove('active');
+      setBannerText('view');
+    }, 3000);
+  }
+};
+/**
+ * Toggles the expanded (full) view of a condensed reply.
+ */
+let currentExpansionLoadingId = null;
+const peekCache = new Map();
+
+window.toggleCondensedExpansion = async function (statusId, el, forceOpen = false) {
+  const node = el.closest('.condensed-reply-node');
+  if (node) selectReplyNode(node);
+
+  const container = document.getElementById(`expanded-${statusId}`);
+  if (!container) return;
+
+  const wasActive = container.classList.contains('active');
+
+  // Close ALL other expanded containers
+  document.querySelectorAll('.condensed-reply-expanded-container.active').forEach(c => {
+    if (c === container) return;
+    c.classList.remove('active');
+    c.innerHTML = '';
+    const otherId = c.id.replace('expanded-', '');
+    const trigger = document.querySelector(`.condensed-reply-node[data-status-id="${otherId}"] .condensed-reply`);
+    if (trigger) trigger.classList.remove('expanded');
+  });
+
+  if (wasActive && !forceOpen) {
+    container.classList.remove('active');
+    container.innerHTML = '';
+    el.classList.remove('expanded');
+    return;
+  }
+
+  // Instant reveal if cached
+  if (peekCache.has(statusId)) {
+    const status = peekCache.get(statusId);
+    container.innerHTML = `
+      <div class="full-reply-card">
+        ${renderThreadPost(status, 'reply')}
+      </div>`;
+    container.classList.add('active');
+    el.classList.add('expanded');
+    return;
+  }
+
+  // If already loading this one, ignore
+  if (el.classList.contains('loading')) return;
+
+  el.classList.add('loading');
+  currentExpansionLoadingId = statusId;
+
+  try {
+    const status = await apiGet(`/api/v1/statuses/${statusId}`, state.token);
+    peekCache.set(statusId, status); // Cache it
+
+    if (currentExpansionLoadingId !== statusId) {
+      el.classList.remove('loading');
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="full-reply-card" onclick="if (!event.target.closest('button, a, .post-stat, .post-media-item, .post-display-name, .post-author-handle, .post-avatar')) { event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply')); }">
+        ${renderThreadPost(status, 'reply')}
+      </div>`;
+
+    el.classList.remove('loading');
+    container.classList.add('active');
+    el.classList.add('expanded');
+  } catch (err) {
+    if (currentExpansionLoadingId === statusId) {
+      el.classList.remove('loading');
+      console.error('[Feed] Failed to expand reply:', err);
+    }
+  }
+};
+
+// Keyboard navigation for peek view
+let selectedReplyNode = null;
+let expansionDebounceTimer = null;
+
+function selectReplyNode(node) {
+  if (selectedReplyNode) selectedReplyNode.classList.remove('selected');
+  selectedReplyNode = node;
+  if (selectedReplyNode) {
+    selectedReplyNode.classList.add('selected');
+  }
+}
+
+function debouncedExpand(node) {
+  if (expansionDebounceTimer) clearTimeout(expansionDebounceTimer);
+
+  // 150ms debounce for auto-expansion
+  expansionDebounceTimer = setTimeout(() => {
+    const sid = node.dataset.statusId;
+    const trig = node.querySelector('.condensed-reply');
+    if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+  }, 150);
+}
+
+window.addEventListener('keydown', (e) => {
+  // Only handle if not in an input/textarea/contenteditable
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
+
+  const key = e.key.toLowerCase();
+  if (key !== 'a' && key !== 'z') return;
+
+  const allNodes = Array.from(document.querySelectorAll('.condensed-reply-node'));
+  if (allNodes.length === 0) return;
+
+  e.preventDefault();
+
+  if (!selectedReplyNode) {
+    const first = allNodes[0];
+    selectReplyNode(first);
+    const sid = first.dataset.statusId;
+    const trig = first.querySelector('.condensed-reply');
+    if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+    return;
+  }
+
+  const currentIndex = allNodes.indexOf(selectedReplyNode);
+  if (key === 'z') {
+    // Next node
+    if (currentIndex < allNodes.length - 1) {
+      const next = allNodes[currentIndex + 1];
+      selectReplyNode(next);
+      const sid = next.dataset.statusId;
+      const trig = next.querySelector('.condensed-reply');
+      if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+    }
+  } else if (key === 'a') {
+    // Previous node
+    if (currentIndex > 0) {
+      const prev = allNodes[currentIndex - 1];
+      selectReplyNode(prev);
+      const sid = prev.dataset.statusId;
+      const trig = prev.querySelector('.condensed-reply');
+      if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+    } else if (currentIndex === 0) {
+      // If we're at the top post, just ensure it's open and stay here
+      const sid = selectedReplyNode.dataset.statusId;
+      const trig = selectedReplyNode.querySelector('.condensed-reply');
+      if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+    }
+  }
+
+  // Auto-expand on selection? User said "Clicking a post will render the full content"
+  // But maybe Space or Enter expands? Let's add Enter.
+});
+
+window.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
+  if (e.key === 'Enter' && selectedReplyNode) {
+    const statusId = selectedReplyNode.dataset.statusId;
+    const trigger = selectedReplyNode.querySelector('.condensed-reply');
+    if (statusId && trigger) window.toggleCondensedExpansion(statusId, trigger);
+  }
+});

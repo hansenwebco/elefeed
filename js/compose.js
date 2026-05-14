@@ -291,7 +291,7 @@ window.selectQuoteOption = function (val, skipChangeHandler) {
   const input = $('modal-quote-select');
   const quoteList = $('quote-options-list');
   if (quoteList && quoteList.classList.contains('disabled')) return;
-  
+
   input.value = val;
   document.querySelectorAll('#quote-options-list .theme-segment-btn').forEach(el => {
     el.classList.toggle('active', el.dataset.value === val);
@@ -349,7 +349,7 @@ window.handleModalVisibilityChange = function () {
   const vis = $('modal-visibility-select').value;
   const quote = $('modal-quote-select');
   const quoteList = $('quote-options-list');
-  
+
   if (vis === 'private' || vis === 'direct') {
     // If visibility is Followers only, quote can only be Followers or No one.
     // If Direct, only No one.
@@ -357,19 +357,19 @@ window.handleModalVisibilityChange = function () {
     if (vis === 'private' && quote.value !== 'nobody') {
       forcedVal = 'followers';
     }
-    
+
     // Update internal value and UI active state without triggering recursive handler
     quote.value = forcedVal;
     document.querySelectorAll('#quote-options-list .theme-segment-btn').forEach(el => {
       el.classList.toggle('active', el.dataset.value === forcedVal);
     });
-    
+
     quote.disabled = true;
     if (quoteList) quoteList.classList.add('disabled');
   } else {
     quote.disabled = false;
     if (quoteList) quoteList.classList.remove('disabled');
-    
+
     // Restore the active state for the current value in the UI
     document.querySelectorAll('#quote-options-list .theme-segment-btn').forEach(el => {
       el.classList.toggle('active', el.dataset.value === quote.value);
@@ -643,7 +643,7 @@ window.handleMuteConversationToggle = async function (postId, isMuted, triggerEl
         headers: { 'Authorization': `Bearer ${state.token}` },
       });
       if (!res.ok) throw new Error('Failed to update mute state');
-      
+
       showToast(willBeMuted ? 'Conversation muted' : 'Conversation unmuted');
     } catch (err) {
       // Rollback

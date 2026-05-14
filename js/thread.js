@@ -5,7 +5,7 @@
 
 import { $, state } from './state.js';
 import { apiGet } from './api.js';
-import { renderThreadPost } from './render.js';
+import { renderThreadPost, getFilterInfo } from './render.js';
 import { fetchRelationships } from './feed.js';
 import { escapeHTML, updateURLParam } from './utils.js';
 
@@ -81,14 +81,28 @@ export function updateCurrentThread(delay = 1000) {
 async function loadThread(statusId, container, preserveScroll = false) {
   const currentScroll = container.scrollTop;
   try {
-    const [focalStatus, context] = await Promise.all([
-      apiGet(`/api/v1/statuses/${statusId}`, state.token),
-      apiGet(`/api/v1/statuses/${statusId}/context`, state.token),
-    ]);
+    // Fetch focal status first to see if it's a reblog
+    const focalStatus = await apiGet(`/api/v1/statuses/${statusId}`, state.token);
+
+    // Use original post ID for context if it's a boost
+    const actualId = focalStatus.reblog ? focalStatus.reblog.id : focalStatus.id;
+
+    const context = await apiGet(`/api/v1/statuses/${actualId}/context`, state.token);
     const ancestors = context.ancestors || [];
     const descendants = context.descendants || [];
     await fetchRelationships([focalStatus, ...ancestors, ...descendants]);
-    renderThread(focalStatus, ancestors, descendants, container, preserveScroll ? currentScroll : 0);
+
+    // Apply visibility and filter rules
+    const filteredAncestors = ancestors.filter(s => {
+      const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
+      return !(isFiltered && filterAction === 'hide');
+    });
+    const filteredDescendants = descendants.filter(s => {
+      const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
+      return !(isFiltered && filterAction === 'hide');
+    });
+
+    renderThread(focalStatus, filteredAncestors, filteredDescendants, container, preserveScroll ? currentScroll : 0);
   } catch (err) {
     container.innerHTML = `
       <div class="thread-status">
@@ -100,7 +114,7 @@ async function loadThread(statusId, container, preserveScroll = false) {
 
 /* ── Tree building ─────────────────────────────────────────────────── */
 
-function buildFullTree(ancestors, focalStatus, descendants) {
+export function buildFullTree(ancestors, focalStatus, descendants) {
   const allPosts = [...ancestors, focalStatus, ...descendants];
   const map = {};
   const roots = [];
@@ -140,7 +154,7 @@ function renderTree(nodes, depth) {
       ? `<div class="thread-reply-children">${renderTree(node.children, depth + 1)}</div>`
       : '';
 
-    return postHTML + childrenHTML;
+    return `<div class="thread-node">${postHTML}${childrenHTML}</div>`;
   }).join('');
 }
 
@@ -167,7 +181,7 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
       const mentions = s.mentions || [];
       const recipient = mentions.find(m => m.id === s.in_reply_to_account_id) || mentions[0];
       const nameText = recipient ? `<strong style="color:var(--text); font-weight:600;">@${escapeHTML(recipient.acct)}</strong>` : 'another user';
-      
+
       parts.push(`
         <div class="thread-status" style="border-bottom:1px solid var(--border); padding:16px 20px; background:var(--surface2); margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:10px; color:var(--text-muted); font-size:13px;">

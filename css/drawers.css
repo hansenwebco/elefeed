@@ -472,7 +472,9 @@
   height: 56px;
   border-radius: 50%;
   border: 3px solid var(--surface);
-  background: var(--surface2);
+  background-image: var(--avatar-placeholder);
+  background-size: cover;
+  background-color: transparent;
   object-fit: cover;
   margin-top: -28px;
 }
@@ -613,11 +615,6 @@
 .profile-follow-btn.muted:hover {
   background: rgba(107, 114, 128, 0.2);
   border-color: rgba(107, 114, 128, 0.6);
-}
-
-.profile-follow-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .profile-follow-btn:disabled {
@@ -1300,9 +1297,6 @@ button.profile-stat:hover {
     display: none !important;
   }
 
-  body.manage-inline-active .manage-inline-panel {
-    display: flex;
-  }
 
   body.manage-inline-active .tab-bar {
     display: none;
@@ -1509,6 +1503,7 @@ body.manage-inline-active .manage-inline-panel {
 
 
 /* Section & focal labels */
+
 .thread-section-label {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -1805,9 +1800,6 @@ body.manage-inline-active .manage-inline-panel {
 }
 
 /* Smooth transition when marking as read */
-.notif-icon {
-  transition: background 300ms ease, box-shadow 300ms ease;
-}
 
 .notif-icon svg,
 .notif-icon iconify-icon {
@@ -1861,6 +1853,7 @@ body.manage-inline-active .manage-inline-panel {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 300ms ease, box-shadow 300ms ease;
 }
 
 .notif-icon.type-mention {
@@ -1916,7 +1909,9 @@ body.manage-inline-active .manage-inline-panel {
   border-radius: 50%;
   border: 1px solid var(--border);
   cursor: pointer;
-  background: var(--surface2);
+  background-image: var(--avatar-placeholder);
+  background-size: cover;
+  background-color: transparent;
   object-fit: cover;
 }
 
@@ -2082,7 +2077,7 @@ body.manage-inline-active .manage-inline-panel {
 .notif-load-more:hover {
   background: var(--surface2);
 }
-}
+
 
 /* ────────────────────────────────────────────────
    FOLLOWING DRAWER
@@ -2207,6 +2202,9 @@ body.manage-inline-active .manage-inline-panel {
   width: 40px;
   height: 40px;
   flex-shrink: 0;
+  background-image: var(--avatar-placeholder);
+  background-size: cover;
+  background-color: transparent;
 }
 
 .following-user-avatar img {
@@ -2215,6 +2213,7 @@ body.manage-inline-active .manage-inline-panel {
   object-fit: cover;
   border-radius: 50%;
   display: block;
+  background: transparent;
 }
 
 .following-user-info {

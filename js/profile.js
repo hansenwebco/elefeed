@@ -95,12 +95,12 @@ export function toggleProfileMoreMenu(btn) {
   const accountId = btn.dataset.accountId;
   const menu = document.querySelector(`.profile-more-menu[data-account-id="${accountId}"]`);
   if (!menu) return;
-  
+
   // Close any other open menus
   document.querySelectorAll('.profile-more-menu.open').forEach(m => {
     if (m !== menu) m.classList.remove('open');
   });
-  
+
   menu.classList.toggle('open');
 }
 
@@ -231,7 +231,7 @@ async function loadProfileTab(tabName, panel) {
         return matchesLanguage(postLang, preferredLang);
       });
     }
-    
+
     if (tabName === 'media') {
       panel.innerHTML = statuses.length
         ? `<div class="profile-media-grid">${statuses.map(s => renderMediaItem(s)).join('')}</div>${loadMoreHtml}`
@@ -371,10 +371,10 @@ export function openProfileDrawer(accountId, server) {
   ]).then(async ([account, statuses, relationships, pinnedStatuses]) => {
     const titleEl = $('profile-drawer-title');
     if (titleEl) titleEl.innerHTML = renderCustomEmojis(account.display_name || account.username, account.emojis);
-    
+
     const relationship = relationships && relationships.length ? relationships[0] : null;
     const isFollowing = relationship && relationship.following;
-    
+
     // Update global following state
     if (relationship) {
       if (relationship.following || relationship.requested) {
@@ -635,7 +635,7 @@ export function openProfileDrawer(accountId, server) {
         function goTo(idx) {
           const newIdx = (idx + total) % total;
           carouselEl.style.transform = `translateX(-${newIdx * 100}%)`;
-          
+
           updateHeight(newIdx);
 
           slides[current].classList.remove('active');
@@ -751,7 +751,7 @@ export function openBookmarksDrawer() {
         return matchesLanguage(postLang, preferredLang);
       });
       const postsHtml = display.map(s => renderPost(s, { context: 'account' })).join('');
-      
+
       const titleEl = $('profile-drawer-title');
       const extraEl = $('profile-drawer-extra');
       if (titleEl) titleEl.textContent = 'Bookmarks';
@@ -806,7 +806,7 @@ export async function handleFollowToggle(btn) {
     if (!res.ok) throw new Error('Failed to update relationship');
 
     const relationship = await res.json();
-    
+
     // Use helper to update UI consistently
     updateFollowButtonUI(btn, relationship, btn.dataset.locked === 'true');
 
@@ -820,7 +820,7 @@ export async function handleFollowToggle(btn) {
       if (wasHidden && nowFollowing) {
         notifyBtn.classList.add('pop-in');
         setTimeout(() => notifyBtn.classList.remove('pop-in'), 500);
-        
+
         // Also trigger a small ring after the pop
         setTimeout(() => {
           notifyBtn.classList.add('ringing');
@@ -849,11 +849,11 @@ export async function handleNotifyToggle(btn) {
 
   btn.disabled = true;
   const icon = btn.querySelector('svg, iconify-icon');
-  
+
   btn.dataset.notifying = willNotify ? 'true' : 'false';
   btn.classList.toggle('notifying', willNotify);
   btn.title = willNotify ? 'Stop post notifications' : 'Get notified about posts';
-  
+
   // Replace innerHTML to ensure the iconify-icon is fresh and updates immediately
   btn.innerHTML = `<iconify-icon icon="${willNotify ? 'ph:bell-fill' : 'ph:bell-bold'}" style="font-size: 15px;"></iconify-icon>`;
 
@@ -916,7 +916,7 @@ export async function handleBlockToggle(btn) {
     // If blocking and user is muted, unmute them first
     const muteBtn = document.querySelector(`.profile-mute-btn[data-account-id="${accountId}"]`);
     const isMuted = muteBtn && muteBtn.dataset.muted === 'true';
-    
+
     if (!isBlocked && isMuted) {
       // Blocking and they're muted, so unmute them
       await fetch(`https://${state.server}/api/v1/accounts/${accountId}/unmute`, {
@@ -991,7 +991,7 @@ export async function handleMuteToggle(btn) {
     // If muting and user is blocked, unblock them first
     const blockBtn = document.querySelector(`.profile-block-btn[data-account-id="${accountId}"]`);
     const isBlocked = blockBtn && blockBtn.dataset.blocked === 'true';
-    
+
     if (!isMuted && isBlocked) {
       // Muting and they're blocked, so unblock them
       await fetch(`https://${state.server}/api/v1/accounts/${accountId}/unblock`, {
@@ -1101,11 +1101,11 @@ export async function handleFavoriteToggle(btn) {
   if (store.get('pref_confirm_interactions') === 'true') {
     const isActuallyFavourited = btn.dataset.favourited === 'true';
     const action = isActuallyFavourited ? 'unfavorite' : 'favorite';
-    
+
     // Find preview content by searching for the parent post container
-    const postEl = btn.closest('.feed-status, .post-item, .notification-item, .post-thread-item, article.post, .post') || 
-                   document.querySelector(`[data-id="${postId}"]`);
-    
+    const postEl = btn.closest('.feed-status, .post-item, .notification-item, .post-thread-item, article.post, .post') ||
+      document.querySelector(`[data-id="${postId}"]`);
+
     // Capture content, media, and quotes for a high-fidelity preview
     let previewHTML = '';
     if (postEl) {
@@ -1113,10 +1113,10 @@ export async function handleFavoriteToggle(btn) {
       const media = postEl.querySelector('.post-media, .post-media-grid')?.outerHTML || '';
       const quote = postEl.querySelector('.post-quote')?.outerHTML || '';
       const card = postEl.querySelector('.post-card')?.outerHTML || '';
-      
+
       previewHTML = (content + media + quote + card).replace(/onclick="[^"]*"/g, ''); // Strip interactions
     }
-    
+
     // Fallback: if no text found, show author info
     if (!previewHTML && postEl) {
       const name = postEl.querySelector('.post-display-name, .profile-display-name')?.textContent || 'this post';
@@ -1283,7 +1283,7 @@ async function openUserListDrawer(accountId, server, type = 'following') {
     const followedBy = relationship ? relationship.followed_by : false;
     const isRequested = relationship ? relationship.requested : false;
     const displayName = renderCustomEmojis(account.display_name || account.username, account.emojis);
-    
+
     let followBtnClass = `profile-follow-btn ${isFollowingAccount ? 'following' : ''}`;
     let followBtnText = isFollowingAccount ? 'Following' : (account.locked ? 'Request' : 'Follow');
     let followBtnIcon = isFollowingAccount ? 'ph:user-check-bold' : (account.locked ? 'ph:lock-key-bold' : 'ph:user-plus-bold');
@@ -1331,7 +1331,7 @@ async function openUserListDrawer(accountId, server, type = 'following') {
   const loadUsers = async (isAppend = false) => {
     if (isLoading) return;
     isLoading = true;
-    
+
     let loadingIndicator = null;
     if (!isAppend) {
       content.innerHTML = '<div class="profile-loading"><div class="spinner"></div></div>';
@@ -1365,13 +1365,13 @@ async function openUserListDrawer(accountId, server, type = 'following') {
       }
 
       const users = await res.json();
-      
+
       let relationshipsMap = {};
       if (users.length > 0 && state.token) {
         try {
           const relRes = await apiGet(`/api/v1/accounts/relationships?${users.map(u => `id[]=${u.id}`).join('&')}`, state.token, srv);
           relRes.forEach(r => relationshipsMap[r.id] = r);
-        } catch (e) {}
+        } catch (e) { }
       }
 
       if (loadingIndicator) loadingIndicator.remove();
@@ -1380,7 +1380,7 @@ async function openUserListDrawer(accountId, server, type = 'following') {
         allUsers = allUsers.concat(users);
         const tmp = document.createElement('div');
         tmp.innerHTML = users.map(u => renderUserHtml(u, relationshipsMap[u.id])).join('');
-        while(tmp.firstChild) content.appendChild(tmp.firstChild);
+        while (tmp.firstChild) content.appendChild(tmp.firstChild);
       } else {
         allUsers = users;
         renderUserList(allUsers, relationshipsMap);
@@ -1416,7 +1416,7 @@ async function openUserListDrawer(accountId, server, type = 'following') {
         loadUsers(false);
         return;
       }
-      
+
       searchTimeout = setTimeout(async () => {
         content.innerHTML = '<div class="profile-loading"><div class="spinner"></div></div>';
         try {
@@ -1426,13 +1426,13 @@ async function openUserListDrawer(accountId, server, type = 'following') {
             try {
               const relRes = await apiGet(`/api/v1/accounts/relationships?${searchRes.accounts.map(u => `id[]=${u.id}`).join('&')}`, state.token, srv);
               relRes.forEach(r => relationshipsMap[r.id] = r);
-            } catch (e) {}
+            } catch (e) { }
             renderUserList(searchRes.accounts, relationshipsMap);
           } else {
             renderUserList([]);
           }
-        } catch(err) {
-           content.innerHTML = `<div class="following-empty" style="color:var(--danger)">Search failed</div>`;
+        } catch (err) {
+          content.innerHTML = `<div class="following-empty" style="color:var(--danger)">Search failed</div>`;
         }
       }, 400);
     };

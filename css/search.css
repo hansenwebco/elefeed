@@ -357,7 +357,9 @@
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
-    background: var(--surface2);
+    background-image: var(--avatar-placeholder);
+    background-size: cover;
+    background-color: transparent;
 }
 
 .search-account-info {
@@ -503,7 +505,9 @@
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
-    background: var(--surface2);
+    background-image: var(--avatar-placeholder);
+    background-size: cover;
+    background-color: transparent;
 }
 
 .search-status-author {

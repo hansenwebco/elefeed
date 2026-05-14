@@ -32,6 +32,86 @@ export function renderFollowingBadge(accountId) {
   return '';
 }
 
+
+/**
+ * Renders a condensed version of a reply for the peek view.
+ */
+export function renderCondensedReply(s, depth = 0) {
+  const inner = s.reblog || s;
+  const account = inner.account;
+
+  // Parse handle and server
+  let displayHandle = account.acct;
+  let serverName = '';
+  let isRemote = false;
+
+  if (displayHandle.includes('@')) {
+    const parts = displayHandle.split('@');
+    displayHandle = parts[0];
+    serverName = parts[1];
+    if (serverName.toLowerCase() !== state.server.toLowerCase()) {
+      isRemote = true;
+    }
+  }
+
+  const serverIcon = isRemote
+    ? `<iconify-icon icon="ph:globe-bold" class="condensed-server-icon" title="External: ${escapeHTML(serverName)}"></iconify-icon>`
+    : '';
+
+  // Aggressively strip newlines and block breaks from the HTML content
+  let cleanedContent = inner.content
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/p>\s*<p>/gi, ' ')
+    .replace(/[\r\n]+/g, ' ');
+
+  // If content is empty (excluding mentions which are hidden in CSS) and has media, show a placeholder
+  const textCheck = inner.content
+    .replace(/<[^>]*>/g, '')                      // Strip all tags to get plain text
+    .replace(/@[a-z0-9_]+(@[a-z0-9._-]+)?/gi, '') // Strip handles like @user or @user@domain
+    .replace(/[^a-z0-9]/gi, '')                   // Strip all non-alphanumeric noise
+    .trim();
+
+  const hasMedia = inner.media_attachments && inner.media_attachments.length > 0;
+  const hasCW = inner.spoiler_text && inner.spoiler_text.length > 0;
+
+  const { isFiltered, filterAction, filterTitle } = getFilterInfo(s, 'thread');
+  if (isFiltered) {
+    if (filterAction === 'hide') return '';
+    cleanedContent = `<span class="condensed-media-placeholder" style="color:var(--text-muted); opacity:0.6;"><iconify-icon icon="ph:eye-slash-bold"></iconify-icon> Filtered: ${escapeHTML(filterTitle || 'Hidden post')}</span>`;
+  } else if (hasCW) {
+    cleanedContent = `<span class="condensed-media-placeholder" style="color:var(--text-muted); opacity:0.8;"><iconify-icon icon="ph:warning-circle-bold"></iconify-icon> CW: ${renderCustomEmojis(inner.spoiler_text, inner.emojis)}</span>`;
+  } else if (!textCheck && hasMedia) {
+    const media = inner.media_attachments[0];
+    const type = media.type || 'media';
+    const alt = media.description ? ` - ${media.description}` : ' - No ALT Text Provided :(';
+    const icon = type === 'video' ? 'ph:video-camera-bold' : 'ph:image-bold';
+    cleanedContent = `<span class="condensed-media-placeholder"><iconify-icon icon="${icon}"></iconify-icon> Media Post${escapeHTML(alt)}</span>`;
+  }
+
+  return `
+    <div class="condensed-reply" onclick="if (!event.target.closest('.condensed-reply-author')) { event.stopPropagation(); window.toggleCondensedExpansion('${inner.id}', this); }">
+      <div class="condensed-reply-content">${cleanedContent}</div>
+      <span class="condensed-reply-author" onclick="event.stopPropagation(); window.openProfileDrawer('${account.id}', '${escapeHTML(state.server || '')}')" title="${escapeHTML(account.acct)}">@${escapeHTML(displayHandle)}${serverIcon}</span>
+    </div>
+    <div class="condensed-reply-expanded-container" id="expanded-${inner.id}"></div>`;
+}
+
+/**
+ * Recursively renders a tree of nodes into condensed HTML.
+ */
+export function renderCondensedTree(nodes, depth = 0) {
+  if (!nodes || nodes.length === 0) return '';
+  return nodes.map(node => {
+    const html = renderCondensedReply(node.status, depth);
+    if (!html) return '';
+    const children = node.children.length > 0
+      ? `<div class="condensed-reply-children">${renderCondensedTree(node.children, depth + 1)}</div>`
+      : '';
+    return `<div class="condensed-reply-node" data-status-id="${node.status.id}">${html}${children}</div>`;
+  }).join('');
+}
+
+
 /**
  * Returns the HTML for the "Insights" / Analytics menu button and dropdown.
  * @param {object} s The status object
@@ -77,8 +157,52 @@ export function renderAnalyticsMenu(s) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   SHARED INNER BODY
+   FILTERING & SHARED INNER BODY
    ══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Checks a status against server-side and client-side filters.
+ * Returns { isFiltered, filterAction, filterTitle }.
+ */
+export function getFilterInfo(status, context = 'home') {
+  const s = status.reblog || status;
+
+  // 1. Check for blocked or muted users
+  if (state.knownBlocking.has(s.account.id)) {
+    return { isFiltered: true, filterAction: 'hide', filterTitle: 'Blocked user' };
+  }
+  if (state.knownMuting.has(s.account.id)) {
+    return { isFiltered: true, filterAction: 'hide', filterTitle: 'Muted user' };
+  }
+
+  // 2. Check for muted conversation
+  if (s.muted) {
+    return { isFiltered: true, filterAction: 'hide', filterTitle: 'Muted conversation' };
+  }
+
+  // 3. Server-side filtering (Mastodon V2)
+  const filterResults = status.filtered || [];
+  if (filterResults.length > 0) {
+    return {
+      isFiltered: true,
+      filterAction: filterResults[0].filter.filter_action,
+      filterTitle: filterResults[0].filter.title
+    };
+  }
+
+  // 4. Client-side fallback: check status content against context-specific regexes
+  const ctxFilters = state.filterRegexes[context];
+  if (ctxFilters) {
+    const text = ((s.spoiler_text || '') + ' ' + (s.content || '')).toLowerCase();
+    if (ctxFilters.hide && ctxFilters.hide.test(text)) {
+      return { isFiltered: true, filterAction: 'hide', filterTitle: 'Custom Filter' };
+    } else if (ctxFilters.warn && ctxFilters.warn.test(text)) {
+      return { isFiltered: true, filterAction: 'warn', filterTitle: 'Custom Filter' };
+    }
+  }
+
+  return { isFiltered: false, filterAction: null, filterTitle: null };
+}
 
 /**
  * Build the inner content of a post: media grid, poll, quote, CW wrapper,
@@ -284,45 +408,45 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   // Suppress card if it's the same URL as the quoted status to avoid redundancy
   const isDuplicateCard = qStatus && s.card && (s.card.url === qStatus.url || s.card.url === qStatus.uri);
 
-    if (s.card && !isDuplicateCard && (!s.media_attachments || s.media_attachments.length === 0)) {
-      const isVideo = (s.card.type === 'video' || s.card.type === 'rich') && s.card.html;
+  if (s.card && !isDuplicateCard && (!s.media_attachments || s.media_attachments.length === 0)) {
+    const isVideo = (s.card.type === 'video' || s.card.type === 'rich') && s.card.html;
 
-      const sensitive = s.sensitive;
-      let cardStartBlurred = false;
-      let cardIsSubtle = false;
-      if (mediaWarningMode === 'all') {
-        cardStartBlurred = true;
-        cardIsSubtle = !sensitive;
-      } else if (mediaWarningMode === 'sensitive') {
-        cardStartBlurred = sensitive;
-      }
+    const sensitive = s.sensitive;
+    let cardStartBlurred = false;
+    let cardIsSubtle = false;
+    if (mediaWarningMode === 'all') {
+      cardStartBlurred = true;
+      cardIsSubtle = !sensitive;
+    } else if (mediaWarningMode === 'sensitive') {
+      cardStartBlurred = sensitive;
+    }
 
-      let cardMediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image${cardStartBlurred ? ' media-sensitive-blur' : ''}" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
+    let cardMediaHTML = s.card.image ? `<img src="${s.card.image}" alt="" class="post-card-image${cardStartBlurred ? ' media-sensitive-blur' : ''}" loading="lazy" ${s.card.width && s.card.height ? `style="aspect-ratio: ${s.card.width} / ${s.card.height}"` : ''} />` : '';
 
-      if (isVideo && cardMediaHTML) {
-        const encodedHtml = encodeURIComponent(s.card.html);
-        const ratio = s.card.width && s.card.height ? `${s.card.width} / ${s.card.height}` : '16 / 9';
-        cardMediaHTML = `
+    if (isVideo && cardMediaHTML) {
+      const encodedHtml = encodeURIComponent(s.card.html);
+      const ratio = s.card.width && s.card.height ? `${s.card.width} / ${s.card.height}` : '16 / 9';
+      cardMediaHTML = `
           <div class="post-card-video-wrapper" onclick="event.preventDefault(); event.stopPropagation(); window.playCardVideo(this, '${encodedHtml}', '${ratio}')">
             ${cardMediaHTML}
             <div class="post-card-play-overlay">
               <iconify-icon icon="ph:play-fill" style="font-size: 24px; color:#fff;"></iconify-icon>
             </div>
           </div>`;
-      }
+    }
 
-      // Sensitive link cards with media are rendered as <div> (not <a>) so the
-      // browser can never auto-navigate. Navigation is handled via window.open.
-      let sensitiveCardLocked = false;
-      if ((cardStartBlurred || sensitive) && cardMediaHTML) {
-        const cardPill = `<button class="sensitive-pill${cardStartBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
+    // Sensitive link cards with media are rendered as <div> (not <a>) so the
+    // browser can never auto-navigate. Navigation is handled via window.open.
+    let sensitiveCardLocked = false;
+    if ((cardStartBlurred || sensitive) && cardMediaHTML) {
+      const cardPill = `<button class="sensitive-pill${cardStartBlurred ? '' : ' sp-revealed'}" onclick="event.stopPropagation(); toggleSensitiveMedia(this)" aria-label="Toggle sensitive media">
           <div class="sp-card${cardIsSubtle ? ' sp-subtle' : ''}"><span class="sp-card-title">${sensitive ? 'Sensitive content' : 'Media hidden'}</span><span class="sp-card-sub">Click to show</span></div>
           <iconify-icon icon="ph:eye-bold" class="sp-icon sp-icon-eye" style="font-size: 13px;"></iconify-icon>
           <span class="sp-revealed-label">hide</span>
         </button>`;
-        cardMediaHTML = `<div class="post-card-img-wrap">${cardMediaHTML}${cardPill}</div>`;
-        sensitiveCardLocked = true;
-      }
+      cardMediaHTML = `<div class="post-card-img-wrap">${cardMediaHTML}${cardPill}</div>`;
+      sensitiveCardLocked = true;
+    }
 
     const tag = (isVideo || sensitiveCardLocked) ? 'div' : 'a';
     const hrefAttr = isVideo
@@ -363,26 +487,8 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   let autoOpenSensitive = false;
   try { autoOpenSensitive = localStorage.getItem('pref_auto_open_sensitive') === 'true'; } catch { }
 
-  /* ── Server-side filtering (Mastodon V2) ── */
-  const filterResults = status.filtered || [];
-  let isFiltered = filterResults.length > 0;
-  let filterAction = isFiltered ? filterResults[0].filter.filter_action : null;
-  let filterTitle = isFiltered ? filterResults[0].filter.title : null;
-
-  // Client-side fallback: check status content against context-specific regexes
-  if (!isFiltered) {
-    const ctxFilters = state.filterRegexes[context];
-    if (ctxFilters) {
-      const text = ((s.spoiler_text || '') + ' ' + (s.content || '')).toLowerCase();
-      if (ctxFilters.hide && ctxFilters.hide.test(text)) {
-        isFiltered = true;
-        filterAction = 'hide';
-      } else if (ctxFilters.warn && ctxFilters.warn.test(text)) {
-        isFiltered = true;
-        filterAction = 'warn';
-      }
-    }
-  }
+  /* ── Filtering ── */
+  const { isFiltered, filterAction, filterTitle } = getFilterInfo(status, context);
 
   // Apply "hide" action: return empty if filtered to hide
   if (isFiltered && filterAction === 'hide') {
@@ -564,7 +670,20 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
       </div>
     </div>`;
 
-  return { contentHTML, footerHTML };
+  let peekBanner = '';
+  const excludedContexts = ['account', 'search', 'thread', 'notification', 'bookmark', 'favorite'];
+  if (s.replies_count > 0 && !excludedContexts.includes(context)) {
+    peekBanner = `
+      <div class="post-peek-banner" onclick="event.stopPropagation(); if (window.toggleReplyPeek) window.toggleReplyPeek('${idPrefix}${status.id}', this);">
+        <iconify-icon icon="ph:chat-circle-dots-bold"></iconify-icon>
+        <span>View ${s.replies_count} replies inline</span>
+      </div>`;
+  }
+
+  return {
+    contentHTML: contentHTML + peekBanner + `<div class="reply-peek-container" id="reply-peek-${idPrefix}${status.id}"></div>`,
+    footerHTML
+  };
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -1068,10 +1187,17 @@ window.expandMedia = function expandMedia(mediaItem) {
   if (postId) {
     // Article-backed context (feed / thread): read live state from DOM buttons.
     // Standalone context (profile media grid): read from data attributes on the media item.
-    const postReplyBtn = article ? article.querySelector('.post-reply-btn') : null;
-    const postQuoteBtn = article ? article.querySelector('.post-quote-btn') : null;
-    const postBoostBtn = article ? article.querySelector('.post-boost-btn') : null;
-    const postFavBtn = article ? article.querySelector('.post-fav-btn') : null;
+    const getOwnBtn = (selector) => {
+      if (!article) return null;
+      for (const el of article.querySelectorAll(selector)) {
+        if (el.closest('article') === article) return el;
+      }
+      return null;
+    };
+    const postReplyBtn = getOwnBtn('.post-reply-btn');
+    const postQuoteBtn = getOwnBtn('.post-quote-btn');
+    const postBoostBtn = getOwnBtn('.post-boost-btn');
+    const postFavBtn = getOwnBtn('.post-fav-btn');
     const canQuote = article
       ? (!!postQuoteBtn || !!article.querySelector('.boost-dropdown-item[data-action="quote"]'))
       : (_standalone && _standalone.dataset.canQuote === 'true');
@@ -1235,7 +1361,7 @@ window.expandMedia = function expandMedia(mediaItem) {
     lbAltBtn.title = 'Alt text';
     lbAltBtn.hidden = true;
     lbAltBtn.textContent = 'ALT';
-    lbAltBtn._sep = altSep; 
+    lbAltBtn._sep = altSep;
     lbAltBtn.onclick = (e) => {
       e.stopPropagation();
       const currentAlt = (mediaItems[currentIndex]?.dataset.alt || '').trim();
@@ -1366,7 +1492,7 @@ window.vpWrapperClick = function (e, wrap) {
     if (!_scrubState) return;
     const { bar, vid, wasPlaying } = _scrubState;
     bar.classList.remove('vp-scrubbing');
-    if (wasPlaying) vid.play().catch(() => {});
+    if (wasPlaying) vid.play().catch(() => { });
     _scrubState = null;
   }
 
@@ -1535,21 +1661,21 @@ window.toggleShowMore = function toggleShowMore(btn) {
   if (isExpanding) {
     // 1. Get the current height (collapsed)
     const startHeight = content.offsetHeight;
-    
+
     // 2. Temporarily expand to get the full scroll height
     content.classList.remove('post-content--collapsed');
     content.style.maxHeight = 'none';
     const endHeight = content.scrollHeight;
-    
+
     // 3. Reset to start height and force reflow
     content.style.maxHeight = startHeight + 'px';
     content.offsetHeight; // force reflow
-    
+
     // 4. Animate to full height
     content.style.maxHeight = endHeight + 'px';
     wrap.classList.remove('collapsed-active');
     btn.textContent = 'Show less';
-    
+
     // 5. Clean up after animation
     const onEnd = (e) => {
       if (e.propertyName === 'max-height') {
@@ -1561,17 +1687,17 @@ window.toggleShowMore = function toggleShowMore(btn) {
   } else {
     // 1. Get the current height (actual expanded height)
     const startHeight = content.scrollHeight;
-    
+
     // 2. Fix the height so the transition has a starting point other than 'none'
     content.style.maxHeight = startHeight + 'px';
     content.offsetHeight; // force reflow
-    
+
     // 3. Animate to collapsed height (400px)
     content.style.maxHeight = '400px';
     content.classList.add('post-content--collapsed');
     wrap.classList.add('collapsed-active');
     btn.textContent = 'Show more';
-    
+
     // 4. Clean up after animation
     const onEnd = (e) => {
       if (e.propertyName === 'max-height') {
@@ -1743,7 +1869,7 @@ window.handlePollVote = async function (pollId, pollEl) {
 
   const choices = Array.from(inputs).map(i => parseInt(i.value, 10));
   const voteBtn = pollEl.querySelector('.poll-vote-btn');
-  
+
   if (voteBtn) {
     voteBtn.disabled = true;
     voteBtn.textContent = 'Voting...';
@@ -1765,10 +1891,10 @@ window.handlePollVote = async function (pollId, pollEl) {
     }
 
     const updatedPoll = await res.json();
-    
+
     // Re-render the poll container in place
     pollEl.outerHTML = renderPoll(updatedPoll);
-    
+
   } catch (err) {
     console.error('Poll vote failed:', err);
     import('./ui.js').then(m => m.showToast('Failed to vote: ' + err.message));
@@ -1788,7 +1914,7 @@ window.handleHashtagClick = function (btn) {
   const rawText = (btn.textContent || btn.innerText || '').trim();
   const tag = rawText.replace(/^#/, '').split(/\s+/)[0].toLowerCase();
   if (!tag) return;
-  
+
   // Use the existing hashtag navigation logic from app.js
   // by dispatching through click handler delegation
   const hashtagLink = document.createElement('a');
@@ -1797,7 +1923,7 @@ window.handleHashtagClick = function (btn) {
   hashtagLink.textContent = rawText;
   hashtagLink.style.display = 'none';
   document.body.appendChild(hashtagLink);
-  
+
   const evt = new MouseEvent('click', {
     bubbles: true,
     cancelable: true,

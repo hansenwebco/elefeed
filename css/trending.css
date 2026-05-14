@@ -167,6 +167,9 @@
   border-radius: 50%;
   border: 1px solid var(--border);
   object-fit: cover;
+  background-image: var(--avatar-placeholder);
+  background-size: cover;
+  background-color: transparent;
 }
 
 .trending-person-meta {
