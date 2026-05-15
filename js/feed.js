@@ -10,8 +10,10 @@ function positionOverlayPill() {
 
 // Returns the active scroll container: feed-container on mobile, window on desktop
 export function getScrollContainer() {
-  if (window.innerWidth <= 900) return document.getElementById('feed-container');
-  return null; // null = use window
+  if (document.body.classList.contains('thread-inline-active')) {
+    return document.getElementById('thread-inline-panel');
+  }
+  return document.querySelector('.tab-panel.active') || document.getElementById('feed-container');
 }
 
 export function getScrollTop() {

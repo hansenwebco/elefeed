@@ -598,133 +598,135 @@
       </div>
 
       <main class="feed-container" id="feed-container">
-        <!-- Inline thread panel (desktop: replaces the feed with back button) -->
-        <div class="thread-inline-panel" id="thread-inline-panel">
-          <div class="thread-back-bar">
-            <button class="thread-back-btn" id="thread-back-btn" aria-label="Back to feed">
-              <iconify-icon icon="ph:arrow-left-bold" style="font-size: 16px;"></iconify-icon>
-              Back
-            </button>
-
-          </div>
-          <div class="thread-inline-inner" id="thread-inline-content">
-            <div class="thread-status">
-              <div class="spinner"></div>
-            </div>
-          </div>
-        </div>
-        <!-- Feed Tab (unified: All / Following / #Hashtags) -->
-        <div class="tab-panel active" id="panel-feed" role="tabpanel">
-          <!-- Hashtag View Container (Dedicated landing for hashtags) -->
-          <div class="hashtag-view-container" id="hashtag-filter-bar" style="display:none;">
-            <div class="hashtag-header-box">
-              <!-- Page Header: Search and Manage -->
-              <header class="hashtag-page-header">
-                <div class="hashtag-search-hero">
-                  <iconify-icon icon="ph:magnifying-glass-bold" class="search-icon-fixed" style="font-size: 20px;"></iconify-icon>
-                  <input type="text" id="hashtag-search-input" class="hashtag-main-search-input" placeholder="Search followed hashtags or look up new ones..." autocomplete="off" />
-                  <button id="manage-hashtags-btn" class="hashtag-manage-toggle">
-                    <iconify-icon icon="ph:gear-bold" style="font-size: 16px;"></iconify-icon>
-                    <span>Manage</span>
-                  </button>
-                  <div id="hashtag-lookup-results" class="hashtag-suggestions" style="position:absolute !important; top:100%; left:0; width:100%; margin-top:4px; max-height:300px; display:none; z-index: 100;"></div>
-                </div>
-              </header>
-
-              <!-- Current Selection / Breadcrumb - only shown when a specific tag is active -->
-              <div id="hashtag-active-view-header" style="display:none;">
-                <div class="hashtag-feed-header">
-                  <div class="hashtag-active-pill">
-                    <span class="hashtag-active-pill-symbol">#</span>
-                    <span class="hashtag-active-pill-name" id="hashtag-active-title">all</span>
-                    <button id="hashtag-clear-filter" class="hashtag-active-pill-close" aria-label="Clear hashtag filter">
-                      <iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>
+        <div id="feed-stage">
+          <!-- Feed Tab (unified: All / Following / #Hashtags) -->
+          <div class="tab-panel active" id="panel-feed" role="tabpanel">
+            <!-- Hashtag View Container (Dedicated landing for hashtags) -->
+            <div class="hashtag-view-container" id="hashtag-filter-bar" style="display:none;">
+              <div class="hashtag-header-box">
+                <!-- Page Header: Search and Manage -->
+                <header class="hashtag-page-header">
+                  <div class="hashtag-search-hero">
+                    <iconify-icon icon="ph:magnifying-glass-bold" class="search-icon-fixed" style="font-size: 20px;"></iconify-icon>
+                    <input type="text" id="hashtag-search-input" class="hashtag-main-search-input" placeholder="Search followed hashtags or look up new ones..." autocomplete="off" />
+                    <button id="manage-hashtags-btn" class="hashtag-manage-toggle">
+                      <iconify-icon icon="ph:gear-bold" style="font-size: 16px;"></iconify-icon>
+                      <span>Manage</span>
                     </button>
+                    <div id="hashtag-lookup-results" class="hashtag-suggestions" style="position:absolute !important; top:100%; left:0; width:100%; margin-top:4px; max-height:300px; display:none; z-index: 100;"></div>
                   </div>
-                  <button id="hashtag-header-follow-btn" class="hashtag-follow-btn-standalone" style="display:none;"></button>
+                </header>
+
+                <!-- Current Selection / Breadcrumb - only shown when a specific tag is active -->
+                <div id="hashtag-active-view-header" style="display:none;">
+                  <div class="hashtag-feed-header">
+                    <div class="hashtag-active-pill">
+                      <span class="hashtag-active-pill-symbol">#</span>
+                      <span class="hashtag-active-pill-name" id="hashtag-active-title">all</span>
+                      <button id="hashtag-clear-filter" class="hashtag-active-pill-close" aria-label="Clear hashtag filter">
+                        <iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>
+                      </button>
+                    </div>
+                    <button id="hashtag-header-follow-btn" class="hashtag-follow-btn-standalone" style="display:none;"></button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Main Hashtag Grid (The "Listing" the user mentioned) -->
+              <div id="hashtag-landing-grid-view" style="display:none;">
+                <h4 class="hashtag-section-title" id="followed-hashtags-count-label">Followed Hashtags</h4>
+                <div id="followed-hashtags-grid" class="hashtag-grid">
+                  <!-- Populated by JS -->
+                  <div class="hashtag-card" onclick="window.selectHashtag('all')">
+                    <div class="hashtag-card-name">All Hashtags</div>
+                    <div class="hashtag-card-stats">Unified Feed</div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <!-- Main Hashtag Grid (The "Listing" the user mentioned) -->
-            <div id="hashtag-landing-grid-view" style="display:none;">
-              <h4 class="hashtag-section-title" id="followed-hashtags-count-label">Followed Hashtags</h4>
-              <div id="followed-hashtags-grid" class="hashtag-grid">
-                <!-- Populated by JS -->
-                <div class="hashtag-card" onclick="window.selectHashtag('all')">
-                  <div class="hashtag-card-name">All Hashtags</div>
-                  <div class="hashtag-card-stats">Unified Feed</div>
+            <div id="feed-content-wrapper" style="position:relative;">
+              <div id="federated-info-bar" class="federated-info-bar" style="display:none;">
+                <iconify-icon icon="ph:info-bold" class="federated-info-bar-icon" style="font-size: 24px;"></iconify-icon>
+                <div class="federated-info-bar-text">
+                  The federated timeline displays all public posts from users known to your server.
                 </div>
+                <button id="federated-info-dismiss" class="federated-info-bar-dismiss" aria-label="Dismiss">
+                  <iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>
+                </button>
+              </div>
+              <div class="feed-loading" id="feed-loading">
+                <div class="skeleton-posts" id="feed-skeleton"></div>
+              </div>
+              <div class="error-banner" id="feed-error"></div>
+              <div style="position:relative;">
+                <div id="feed-posts" style="position:relative;"></div>
+                <!-- Move overlay pill to end of body to avoid stacking context issues -->
+                <button id="new-posts-pill" class="overlay-pill" style="display:none;">New posts</button>
               </div>
             </div>
           </div>
-          <div id="feed-content-wrapper" style="position:relative;">
-            <div id="federated-info-bar" class="federated-info-bar" style="display:none;">
-              <iconify-icon icon="ph:info-bold" class="federated-info-bar-icon" style="font-size: 24px;"></iconify-icon>
-              <div class="federated-info-bar-text">
-                The federated timeline displays all public posts from users known to your server.
+
+          <!-- Explore Tab -->
+          <div class="tab-panel" id="panel-explore" role="tabpanel">
+            <div class="trending-subpanel" id="trending-subpanel-live"></div>
+            <div class="trending-subpanel" id="trending-subpanel-federated"></div>
+            <div class="trending-subpanel active" id="trending-subpanel-posts">
+              <div class="feed-loading" id="trending-posts-loading" style="display:none;">
+                <div class="skeleton-posts" id="trending-posts-skeleton"></div>
               </div>
-              <button id="federated-info-dismiss" class="federated-info-bar-dismiss" aria-label="Dismiss">
-                <iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>
+              <div class="error-banner" id="trending-posts-error"></div>
+              <div id="trending-posts-list"></div>
+            </div>
+            <div class="trending-subpanel" id="trending-subpanel-hashtags">
+              <div class="feed-loading" id="trending-hashtags-loading" style="display:none;">
+                <div class="skeleton-posts" id="trending-hashtags-skeleton"></div>
+              </div>
+              <div class="error-banner" id="trending-hashtags-error"></div>
+              <div class="trending-section">
+                <div id="trending-hashtags-list" class="trending-tags-grid"></div>
+              </div>
+            </div>
+            <div class="trending-subpanel" id="trending-subpanel-people">
+              <div class="feed-loading" id="trending-people-loading" style="display:none;">
+                <div class="skeleton-posts" id="trending-people-skeleton"></div>
+              </div>
+              <div class="error-banner" id="trending-people-error"></div>
+              <div class="trending-section">
+                <div id="trending-people-list" class="trending-people-grid"></div>
+              </div>
+            </div>
+            <div class="trending-subpanel" id="trending-subpanel-news">
+              <div class="feed-loading" id="trending-news-loading" style="display:none;">
+                <div class="skeleton-posts" id="trending-news-skeleton"></div>
+              </div>
+              <div class="error-banner" id="trending-news-error"></div>
+              <div class="trending-section">
+                <div id="trending-news-list" class="trending-links-list"></div>
+              </div>
+            </div>
+            <div class="trending-subpanel" id="trending-subpanel-following">
+              <div class="feed-loading" id="trending-following-loading" style="display:none;">
+                <div class="skeleton-posts" id="trending-following-skeleton"></div>
+                <div class="trending-following-progress" id="trending-following-progress"></div>
+              </div>
+              <div class="error-banner" id="trending-following-error"></div>
+              <div id="trending-following-list"></div>
+            </div>
+          </div>
+
+          <!-- Inline thread panel (desktop: slides in from right) -->
+          <div class="thread-inline-panel" id="thread-inline-panel">
+            <div class="thread-back-bar">
+              <button class="thread-back-btn" id="thread-back-btn" aria-label="Back to feed">
+                <iconify-icon icon="ph:arrow-left-bold" style="font-size: 16px;"></iconify-icon>
+                <span>Back</span>
               </button>
             </div>
-            <div class="feed-loading" id="feed-loading">
-              <div class="skeleton-posts" id="feed-skeleton"></div>
+            <div class="thread-inline-inner" id="thread-inline-content">
+              <div class="thread-status">
+                <div class="spinner"></div>
+              </div>
             </div>
-            <div class="error-banner" id="feed-error"></div>
-            <div style="position:relative;">
-              <div id="feed-posts" style="position:relative;"></div>
-              <!-- Move overlay pill to end of body to avoid stacking context issues -->
-              <button id="new-posts-pill" class="overlay-pill" style="display:none;">New posts</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Explore Tab -->
-        <div class="tab-panel" id="panel-explore" role="tabpanel">
-          <div class="trending-subpanel" id="trending-subpanel-live"></div>
-          <div class="trending-subpanel" id="trending-subpanel-federated"></div>
-          <div class="trending-subpanel active" id="trending-subpanel-posts">
-            <div class="feed-loading" id="trending-posts-loading" style="display:none;">
-              <div class="skeleton-posts" id="trending-posts-skeleton"></div>
-            </div>
-            <div class="error-banner" id="trending-posts-error"></div>
-            <div id="trending-posts-list"></div>
-          </div>
-          <div class="trending-subpanel" id="trending-subpanel-hashtags">
-            <div class="feed-loading" id="trending-hashtags-loading" style="display:none;">
-              <div class="skeleton-posts" id="trending-hashtags-skeleton"></div>
-            </div>
-            <div class="error-banner" id="trending-hashtags-error"></div>
-            <div class="trending-section">
-              <div id="trending-hashtags-list" class="trending-tags-grid"></div>
-            </div>
-          </div>
-          <div class="trending-subpanel" id="trending-subpanel-people">
-            <div class="feed-loading" id="trending-people-loading" style="display:none;">
-              <div class="skeleton-posts" id="trending-people-skeleton"></div>
-            </div>
-            <div class="error-banner" id="trending-people-error"></div>
-            <div class="trending-section">
-              <div id="trending-people-list" class="trending-people-grid"></div>
-            </div>
-          </div>
-          <div class="trending-subpanel" id="trending-subpanel-news">
-            <div class="feed-loading" id="trending-news-loading" style="display:none;">
-              <div class="skeleton-posts" id="trending-news-skeleton"></div>
-            </div>
-            <div class="error-banner" id="trending-news-error"></div>
-            <div class="trending-section">
-              <div id="trending-news-list" class="trending-links-list"></div>
-            </div>
-          </div>
-          <div class="trending-subpanel" id="trending-subpanel-following">
-            <div class="feed-loading" id="trending-following-loading" style="display:none;">
-              <div class="skeleton-posts" id="trending-following-skeleton"></div>
-              <div class="trending-following-progress" id="trending-following-progress"></div>
-            </div>
-            <div class="error-banner" id="trending-following-error"></div>
-            <div id="trending-following-list"></div>
           </div>
         </div>
       </main>

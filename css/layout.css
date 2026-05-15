@@ -414,6 +414,22 @@
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
+    height: calc(100dvh - 90px); /* Adjust based on header+tabs height */
+  }
+}
+
+@media (min-width: 901px) {
+  body {
+    overflow: hidden;
+  }
+  .feed-container {
+    height: calc(100vh - 94px); /* Header + Tab bar height approx */
+    overflow: hidden; /* Changed from auto to hidden */
+    position: relative;
+  }
+  .main-wrapper {
+    height: 100vh;
+    overflow: hidden;
   }
 }
 
@@ -528,6 +544,7 @@
   margin: 0 auto;
   width: 100%;
   padding: 0 12px;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .tab-btn {
