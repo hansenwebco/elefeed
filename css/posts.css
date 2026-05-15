@@ -767,10 +767,11 @@
 /* .condensed-reply-children::before { ... } removed */
 
 /* Horizontal connector line (the 'L' branch) */
-.condensed-reply-children > .condensed-reply-node::before {
+.condensed-reply-children>.condensed-reply-node::before {
   content: "";
   position: absolute;
-  top: 12px; /* vertically center with condensed-reply text */
+  top: 12px;
+  /* vertically center with condensed-reply text */
   left: -16px;
   width: 12px;
   height: 0;
@@ -779,20 +780,23 @@
 }
 
 /* Vertical connector line (the stem, drawn per node) */
-.condensed-reply-children > .condensed-reply-node::after {
+.condensed-reply-children>.condensed-reply-node::after {
   content: "";
   position: absolute;
-  top: -4px; /* Reach up through margin-top: 4px of parent */
+  top: -4px;
+  /* Reach up through margin-top: 4px of parent */
   left: -16px;
   width: 0;
   border-left: 1px solid var(--border2);
-  height: calc(100% + 10px); /* 100% + 6px margin-bottom + 4px top offset */
+  height: calc(100% + 10px);
+  /* 100% + 6px margin-bottom + 4px top offset */
   opacity: 0.6;
 }
 
 /* Stop the vertical line at the last child's horizontal branch */
-.condensed-reply-children > .condensed-reply-node:last-child::after {
-  height: 16px; /* from top: -4px to top: 12px */
+.condensed-reply-children>.condensed-reply-node:last-child::after {
+  height: 16px;
+  /* from top: -4px to top: 12px */
 }
 
 /* ─── Expansion Container ─── */
@@ -875,6 +879,7 @@
 .status-content {
   font-size: var(--app-font-size, 14px);
   line-height: 1.65;
+  white-space: pre-wrap;
   color: var(--text);
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -968,7 +973,7 @@
 
 
 .post-content p {
-  margin-bottom: 0;
+  margin-bottom: 1em;
 }
 
 .post-content p:last-child {
@@ -1005,39 +1010,50 @@
 }
 
 
-/* External links & Cleaned URLs - Tidy matching style */
-.post-content .ext-link,
+/* External links are visually quieter than hashtags/mentions */
+.post-content .ext-link {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  lei
+}
+
+.post-content .ext-link:hover {
+  color: var(--accent2);
+}
+
+/* Cleaned URLs - Premium Tidy Style */
 .post-content .cleaned-url {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
   color: var(--text);
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+  opacity: 0.85;
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, var(--text) 20%, transparent);
   text-underline-offset: 3px;
   display: inline;
   transition: all 0.2s ease;
   vertical-align: baseline;
-  margin: 0;
-  padding: 0;
 }
 
 .post-content .cleaned-url::before {
   content: "";
   display: inline-block;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   background-color: currentColor;
   -webkit-mask: url("https://api.iconify.design/ph:link-bold.svg") no-repeat 50% 50%;
   mask: url("https://api.iconify.design/ph:link-bold.svg") no-repeat 50% 50%;
   -webkit-mask-size: cover;
   mask-size: cover;
   opacity: 0.4;
-  margin-right: 4px;
-  vertical-align: -2px;
+  margin-right: 3px;
+  vertical-align: -1px;
 }
 
-.post-content .ext-link:hover,
 .post-content .cleaned-url:hover {
   color: var(--accent);
   text-decoration-color: var(--accent);
@@ -1117,7 +1133,7 @@
 
 /* Trailing hashtag block moved below media/cards */
 .post-tags {
-  margin-top: 0;
+  margin-top: 8px;
 }
 
 .post-content .mention {
