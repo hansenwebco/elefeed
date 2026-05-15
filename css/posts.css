@@ -995,8 +995,12 @@
   margin-bottom: 0;
 }
 
-.post-content a {
-  color: var(--accent2);
+.post-content a,
+.status-content a,
+.notif-preview a,
+.notif-follow-bio a,
+.toast-notif-preview a {
+  color: inherit;
   text-decoration: none;
   -webkit-tap-highlight-color: rgba(155, 127, 255, 0.15);
   position: relative;
@@ -1004,57 +1008,68 @@
   /* ensure links are above the article background */
 }
 
-.post-content a:active {
+.post-content a:active,
+.status-content a:active,
+.notif-preview a:active,
+.notif-follow-bio a:active,
+.toast-notif-preview a:active {
   background: rgba(155, 127, 255, 0.1);
   border-radius: 3px;
 }
 
 
 /* External links are visually quieter than hashtags/mentions */
-.post-content .ext-link {
-  color: var(--text-muted);
-  font-size: 0.9em;
-  lei
+.post-content .ext-link,
+.status-content .ext-link,
+.notif-preview .ext-link,
+.notif-follow-bio .ext-link,
+.toast-notif-preview .ext-link {
+  color: var(--text);
+  opacity: 0.8;
+  font-size: 0.95em;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--text) 25%, transparent);
+  text-underline-offset: 3px;
+  word-break: break-all;
+  transition: all 0.2s ease;
 }
 
-.post-content .ext-link:hover {
-  color: var(--accent2);
+.post-content .ext-link:hover,
+.status-content .ext-link:hover,
+.notif-preview .ext-link:hover,
+.notif-follow-bio .ext-link:hover,
+.toast-notif-preview .ext-link:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
 }
 
 /* Cleaned URLs - Premium Tidy Style */
-.post-content .cleaned-url {
+.post-content .cleaned-url,
+.status-content .cleaned-url,
+.notif-preview .cleaned-url,
+.notif-follow-bio .cleaned-url,
+.toast-notif-preview .cleaned-url {
   background: none;
   border: none;
   padding: 0;
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: 13px;
   color: var(--text);
   opacity: 0.85;
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--text) 20%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--text) 30%, transparent);
   text-underline-offset: 3px;
   display: inline;
   transition: all 0.2s ease;
   vertical-align: baseline;
+  word-break: break-all;
 }
 
-.post-content .cleaned-url::before {
-  content: "";
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  background-color: currentColor;
-  -webkit-mask: url("https://api.iconify.design/ph:link-bold.svg") no-repeat 50% 50%;
-  mask: url("https://api.iconify.design/ph:link-bold.svg") no-repeat 50% 50%;
-  -webkit-mask-size: cover;
-  mask-size: cover;
-  opacity: 0.4;
-  margin-right: 3px;
-  vertical-align: -1px;
-}
 
-.post-content .cleaned-url:hover {
+.post-content .cleaned-url:hover,
+.status-content .cleaned-url:hover,
+.notif-preview .cleaned-url:hover,
+.notif-follow-bio .cleaned-url:hover,
+.toast-notif-preview .cleaned-url:hover {
   color: var(--accent);
   text-decoration-color: var(--accent);
   opacity: 1;
