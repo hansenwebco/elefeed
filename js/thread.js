@@ -11,7 +11,7 @@ import { escapeHTML, updateURLParam } from './utils.js';
 
 /* ── Open / close ──────────────────────────────────────────────────── */
 
-let _savedScrollY = 0;
+
 export let currentThreadId = null;
 
 export function openThreadDrawer(statusId) {
@@ -19,11 +19,11 @@ export function openThreadDrawer(statusId) {
   const isDesktop = window.innerWidth > 900;
 
   if (isDesktop) {
-    _savedScrollY = window.scrollY;
+    const inlinePanel = $('thread-inline-panel');
+    if (inlinePanel) inlinePanel.scrollTop = 0;
     const inlineContent = $('thread-inline-content');
     inlineContent.innerHTML = '<div class="thread-status"><div class="spinner"></div></div>';
     document.body.classList.add('thread-inline-active');
-    window.scrollTo({ top: 0, behavior: 'instant' });
     loadThread(statusId, inlineContent);
   } else {
     const drawer = $('thread-drawer');
@@ -54,9 +54,7 @@ export function closeThreadDrawer() {
     document.body.style.overflow = '';
   }
 
-  if (wasInline) {
-    requestAnimationFrame(() => window.scrollTo(0, _savedScrollY));
-  }
+
   // Reset scroll position in both containers
   const inlineContent = $('thread-inline-content');
   if (inlineContent) inlineContent.scrollTop = 0;
@@ -205,18 +203,28 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
   } else {
     requestAnimationFrame(() => {
       const focalPost = container.querySelector('.thread-post-focal');
+      const isDesktop = window.innerWidth > 900;
+      
       if (focalPost) {
-        if (window.innerWidth > 900) {
-          const y = focalPost.getBoundingClientRect().top + window.scrollY - 120;
-          window.scrollTo({ top: y, behavior: 'auto' });
+        if (isDesktop) {
+          const panel = $('thread-inline-panel');
+          if (panel) {
+            const focalRect = focalPost.getBoundingClientRect();
+            const panelRect = panel.getBoundingClientRect();
+            panel.scrollTop += (focalRect.top - panelRect.top - 80);
+          }
         } else {
           const containerRect = container.getBoundingClientRect();
           const focalRect = focalPost.getBoundingClientRect();
           container.scrollTop += (focalRect.top - containerRect.top - 16);
         }
       } else {
-        if (window.innerWidth > 900) window.scrollTo(0, 0);
-        else container.scrollTop = 0;
+        if (isDesktop) {
+          const panel = $('thread-inline-panel');
+          if (panel) panel.scrollTop = 0;
+        } else {
+          container.scrollTop = 0;
+        }
       }
     });
   }

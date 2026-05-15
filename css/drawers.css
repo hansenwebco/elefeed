@@ -377,7 +377,7 @@
   transform: scale(0);
   transition: 120ms transform ease-in-out;
   background: #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .settings-radio-input:checked {
@@ -1276,6 +1276,11 @@ button.profile-stat:hover {
 }
 
 /* Desktop inline mode */
+#feed-stage {
+  display: block;
+  width: 100%;
+}
+
 @media (min-width: 901px) {
   body.thread-inline-active .thread-drawer {
     display: none;
@@ -1293,24 +1298,57 @@ button.profile-stat:hover {
     display: none;
   }
 
-  body.thread-inline-active .feed-container>.tab-panel {
+  /* Sliding Stage setup */
+  #feed-stage {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 200%;
+    height: 100%;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+
+  body.thread-inline-active #feed-stage {
+    transform: translateX(-50%);
+  }
+
+  /* Individual panels within the stage */
+  #feed-stage>.tab-panel.active,
+  #feed-stage>.thread-inline-panel {
+    flex: 0 0 50%;
+    width: 50%;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex !important;
+    flex-direction: column;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    position: relative;
+    background: var(--bg);
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Ensure inactive panels are completely removed from the flex flow */
+  #feed-stage>.tab-panel:not(.active) {
     display: none !important;
   }
 
-
-  body.manage-inline-active .tab-bar {
-    display: none;
+  /* Only show the active tab when thread is NOT active */
+  body:not(.thread-inline-active) .feed-container>#feed-stage>.tab-panel:not(.active) {
+    display: none !important;
   }
 
-  body.manage-inline-active .feed-container>.tab-panel {
-    display: none !important;
+  /* Keep the thread panel layout clean */
+  .thread-inline-panel {
+    display: flex !important;
+    flex-direction: column;
   }
 }
 
 .thread-inline-panel {
   display: none;
   flex-direction: column;
-  flex: 1;
   background: var(--surface);
 }
 
@@ -1318,17 +1356,17 @@ button.profile-stat:hover {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 20px;
-  height: 48px;
+  padding: 0 12px;
+  height: 52px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   flex-shrink: 0;
   position: sticky;
   top: 0;
-  z-index: 98;
+  z-index: 100;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 0 !important;
 }
 
 .thread-back-btn {
@@ -1379,9 +1417,9 @@ button.profile-stat:hover {
   body.manage-inline-active .manage-inline-panel {
     flex: 1;
   }
-  
+
   .thread-back-bar {
-    top: 55px;
+    top: 0px;
   }
 }
 
@@ -1994,7 +2032,8 @@ body.manage-inline-active .manage-inline-panel {
 .notif-follow-panel {
   margin-top: 10px;
   padding: 12px;
-  background: var(--bg2); /* Subtle contrast against the surface */
+  background: var(--bg2);
+  /* Subtle contrast against the surface */
   border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
@@ -2268,9 +2307,16 @@ body.manage-inline-active .manage-inline-panel {
 
 /* Large Desktop Overrides */
 @media (min-width: 1400px) {
-  .post-analytics-drawer, .profile-drawer, .manage-hashtag-drawer, .settings-drawer, .notif-drawer, .following-drawer {
+
+  .post-analytics-drawer,
+  .profile-drawer,
+  .manage-hashtag-drawer,
+  .settings-drawer,
+  .notif-drawer,
+  .following-drawer {
     width: min(560px, 100%) !important;
   }
+
   .thread-drawer {
     width: min(840px, 100%) !important;
   }

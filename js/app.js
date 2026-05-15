@@ -2521,12 +2521,22 @@ function wrapDrawerClose(fn) {
   };
 }
 
-$('profile-close').addEventListener('click', wrapDrawerClose(closeProfileDrawer));
-$('profile-backdrop').addEventListener('click', wrapDrawerClose(closeProfileDrawer));
+// Use event delegation for buttons that might be replaced during DOM updates
+document.addEventListener('click', e => {
+  const target = e.target.closest('#thread-back-btn, #profile-close, #profile-backdrop, #thread-close-btn, #thread-backdrop, #following-close, #following-backdrop, #post-analytics-close, #post-analytics-backdrop');
+  if (!target) return;
 
-$('thread-close-btn').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
-$('thread-backdrop').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
-$('thread-back-btn').addEventListener('click', wrapDrawerClose(closeThreadDrawer));
+  const id = target.id;
+  if (id === 'thread-back-btn' || id === 'thread-close-btn' || id === 'thread-backdrop') {
+    wrapDrawerClose(closeThreadDrawer)();
+  } else if (id === 'profile-close' || id === 'profile-backdrop') {
+    wrapDrawerClose(closeProfileDrawer)();
+  } else if (id === 'following-close' || id === 'following-backdrop') {
+    wrapDrawerClose(closeFollowingDrawer)();
+  } else if (id === 'post-analytics-close' || id === 'post-analytics-backdrop') {
+    wrapDrawerClose(closePostAnalyticsDrawer)();
+  }
+});
 
 import { closeFollowingDrawer } from './profile.js';
 $('following-close').addEventListener('click', wrapDrawerClose(closeFollowingDrawer));
@@ -2813,7 +2823,7 @@ document.addEventListener('click', e => {
   // List of selectors that should NOT trigger opening the full thread.
   const INTERACTIVE = 'a, a *, button, button *, input, select, textarea, [data-profile-id], [data-profile-id] *, .post-footer, .post-footer *, .cw-wrapper, .cw-wrapper *, .post-quote, .post-quote *, .media-item, .media-item *, .post-poll, .post-poll *, .boost-dropdown, .tab-dropdown-item, video, .sensitive-overlay, .sensitive-pill, .hashtag, .hashtag *, [onclick]';
   const postArticle = e.target.closest('article.post');
-  if (postArticle && !e.target.closest(INTERACTIVE) && !e.target.closest('.thread-drawer, .thread-inline-panel, .post-analytics-drawer')) {
+  if (postArticle && !e.target.closest(INTERACTIVE) && !e.target.closest('.thread-drawer, .post-analytics-drawer')) {
     e.preventDefault();
     const statusId = postArticle.dataset.id;
     if (statusId) {
