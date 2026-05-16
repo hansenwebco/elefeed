@@ -138,8 +138,8 @@
 }
 
 .analytics-user-acct {
-  font-size: 11.5px;
-  color: var(--text-dim);
+  font-size: 0.82em;
+  color: var(--hashtag-color);
   font-family: var(--font-mono);
   display: flex;
   align-items: center;
@@ -534,8 +534,8 @@
 
 .profile-acct {
   font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-dim);
+  font-size: 0.85em;
+  color: var(--hashtag-color);
   margin-top: 2px;
 }
 
@@ -1526,7 +1526,7 @@ body.manage-inline-active .manage-inline-panel {
 }
 
 .thread-reply-to-acct {
-  color: var(--accent2);
+  color: var(--hashtag-color);
   font-weight: 500;
 }
 
@@ -2289,7 +2289,7 @@ body.manage-inline-active .manage-inline-panel {
 
 .following-user-acct {
   font-size: 11.5px;
-  color: var(--text-dim);
+  color: var(--hashtag-color);
   font-family: var(--font-mono);
   display: flex;
   align-items: center;
