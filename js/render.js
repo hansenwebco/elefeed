@@ -257,34 +257,55 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
         }
       }
 
+      const altId = `alt-${Math.random().toString(36).substr(2, 9)}`;
+      const altTextRaw = (m.description || '').trim();
+      const altText = altTextRaw.replace(/"/g, '&quot;');
+      const altBadge = altTextRaw ? `<button class="media-alt-badge" data-alt-id="${altId}" onclick="event.stopPropagation(); window.toggleMediaAlt(this)" title="Show description">ALT</button>` : '';
+      const altPanel = altTextRaw ? `<div class="media-alt-panel" id="${altId}" onclick="event.stopPropagation(); window.toggleMediaAlt(document.querySelector('.media-alt-badge[data-alt-id=\\\'${altId}\\\']'))">
+        <div class="media-alt-content">${escapeHTML(altTextRaw)}</div>
+      </div>` : '';
+
       if (m.type === 'image') {
-        return `<div class="media-item" data-full-url="${m.url}" data-type="image" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)"${itemStyle}>
-          <img src="${m.preview_url || m.url}" alt="${(m.description || '').replace(/"/g, '&quot;')}" class="${blurClass}" loading="lazy"/>
+        return `<div class="media-item" data-full-url="${m.url}" data-type="image" data-alt="${altText}" onclick="expandMedia(this)"${itemStyle}>
+          <div class="media-item-img-clip">
+            <img src="${m.preview_url || m.url}" alt="${altText}" class="${blurClass}" loading="lazy"/>
+          </div>
+          ${altBadge}${altPanel}
         </div>`;
       } else if (m.type === 'gifv') {
         // GIFV: use <video> with no controls; don't autoplay while hidden behind a sensitive warning
-        return `<div class="media-item" data-full-url="${m.url}" data-type="gifv" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="expandMedia(this)"${itemStyle}>
-          <video src="${m.url}" poster="${m.preview_url || ''}" ${startBlurred ? '' : 'autoplay '}loop muted playsinline class="${blurClass}"></video>
+        return `<div class="media-item" data-full-url="${m.url}" data-type="gifv" data-alt="${altText}" onclick="expandMedia(this)"${itemStyle}>
+          <div class="media-item-img-clip">
+            <video src="${m.url}" poster="${m.preview_url || ''}" ${startBlurred ? '' : 'autoplay '}loop muted playsinline class="${blurClass}"></video>
+          </div>
+          ${altBadge}${altPanel}
         </div>`;
       } else if (m.type === 'video') {
         // Video: custom minimal player (consistent across all browsers)
-        return `<div class="media-item video-player-wrap vp-muted" data-full-url="${m.url}" data-type="video" data-alt="${(m.description || '').replace(/"/g, '&quot;')}" onclick="vpWrapperClick(event,this)"${itemStyle}>
-          <video src="${m.url}" poster="${m.preview_url || ''}" muted playsinline class="${blurClass}"></video>
-          <div class="vid-overlay-play" onclick="event.stopPropagation();vpTogglePlay(this.closest('.video-player-wrap'))">
-            <div class="vid-overlay-btn"><iconify-icon icon="ph:play-fill" style="font-size: 24px;"></iconify-icon></div>
+        return `<div class="media-item video-player-wrap vp-muted" data-full-url="${m.url}" data-type="video" data-alt="${altText}" onclick="vpWrapperClick(event,this)"${itemStyle}>
+          <div class="media-item-img-clip">
+            <video src="${m.url}" poster="${m.preview_url || ''}" muted playsinline class="${blurClass}"></video>
+            <div class="vid-overlay-play" onclick="event.stopPropagation();vpTogglePlay(this.closest('.video-player-wrap'))">
+              <div class="vid-overlay-btn"><iconify-icon icon="ph:play-fill" style="font-size: 24px;"></iconify-icon></div>
+            </div>
+            <div class="vid-controls" onclick="event.stopPropagation()">
+              <button class="vid-btn" onclick="vpTogglePlay(this.closest('.video-player-wrap'))">
+                <iconify-icon icon="ph:play-fill" class="vp-icon-play" style="font-size: 18px;"></iconify-icon>
+                <iconify-icon icon="ph:pause-fill" class="vp-icon-pause" style="font-size: 18px;"></iconify-icon>
+              </button>
+              <div class="vid-progress" onclick="vpSeek(event,this.closest('.video-player-wrap'))"><div class="vid-progress-fill"></div></div>
+              <span class="vid-time">0:00</span>
+              <button class="vid-btn" onclick="vpToggleMute(this.closest('.video-player-wrap'))">
+                <iconify-icon icon="ph:speaker-high-fill" class="vp-icon-sound" style="font-size: 18px;"></iconify-icon>
+                <iconify-icon icon="ph:speaker-slash-fill" class="vp-icon-mute" style="font-size: 18px;"></iconify-icon>
+              </button>
+              <button class="vid-btn" onclick="vpToggleFullscreen(this.closest('.video-player-wrap'))" title="Toggle Fullscreen">
+                <iconify-icon icon="ph:corners-out-fill" class="vp-icon-fullscreen" style="font-size: 18px;"></iconify-icon>
+                <iconify-icon icon="ph:corners-in-fill" class="vp-icon-exit-fullscreen" style="font-size: 18px;"></iconify-icon>
+              </button>
+            </div>
           </div>
-          <div class="vid-controls" onclick="event.stopPropagation()">
-            <button class="vid-btn" onclick="vpTogglePlay(this.closest('.video-player-wrap'))">
-              <iconify-icon icon="ph:play-fill" class="vp-icon-play" style="font-size: 18px;"></iconify-icon>
-              <iconify-icon icon="ph:pause-fill" class="vp-icon-pause" style="font-size: 18px;"></iconify-icon>
-            </button>
-            <div class="vid-progress" onclick="vpSeek(event,this.closest('.video-player-wrap'))"><div class="vid-progress-fill"></div></div>
-            <span class="vid-time">0:00</span>
-            <button class="vid-btn" onclick="vpToggleMute(this.closest('.video-player-wrap'))">
-              <iconify-icon icon="ph:speaker-high-fill" class="vp-icon-sound" style="font-size: 18px;"></iconify-icon>
-              <iconify-icon icon="ph:speaker-slash-fill" class="vp-icon-mute" style="font-size: 18px;"></iconify-icon>
-            </button>
-          </div>
+          ${altBadge}${altPanel}
         </div>`;
       }
       return '';
@@ -1010,6 +1031,10 @@ window.expandMedia = function expandMedia(mediaItem) {
         <button class="vid-btn" onclick="vpToggleMute(this.closest('.video-player-wrap'))">
           <iconify-icon icon="ph:speaker-high-fill" class="vp-icon-sound" style="font-size: 18px;"></iconify-icon>
           <iconify-icon icon="ph:speaker-slash-fill" class="vp-icon-mute" style="font-size: 18px;"></iconify-icon>
+        </button>
+        <button class="vid-btn" onclick="vpToggleFullscreen(this.closest('.video-player-wrap'))" title="Toggle Fullscreen">
+          <iconify-icon icon="ph:corners-out-fill" class="vp-icon-fullscreen" style="font-size: 18px;"></iconify-icon>
+          <iconify-icon icon="ph:corners-in-fill" class="vp-icon-exit-fullscreen" style="font-size: 18px;"></iconify-icon>
         </button>`;
       wrap.appendChild(controls);
 
@@ -1451,6 +1476,26 @@ window.vpSeek = function (e, wrap) {
   vid.currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * vid.duration;
 };
 
+window.vpToggleFullscreen = function (wrap) {
+  if (!document.fullscreenElement) {
+    if (wrap.requestFullscreen) {
+      wrap.requestFullscreen();
+    } else if (wrap.webkitRequestFullscreen) {
+      wrap.webkitRequestFullscreen();
+    } else if (wrap.msRequestFullscreen) {
+      wrap.msRequestFullscreen();
+    }
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+  }
+};
+
 /** Wrapper click: if already playing - pause; if paused - open lightbox. */
 window.vpWrapperClick = function (e, wrap) {
   const vid = wrap && wrap.querySelector('video');
@@ -1598,6 +1643,24 @@ function _vpClearHideTimer(wrap) {
   const t = _vpHideTimers.get(wrap);
   if (t) { clearTimeout(t); _vpHideTimers.delete(wrap); }
 }
+
+// Fullscreen state listener
+document.addEventListener('fullscreenchange', () => {
+  const fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+  if (fsEl && fsEl.classList.contains('video-player-wrap')) {
+    fsEl.classList.add('vp-fullscreen');
+  } else {
+    document.querySelectorAll('.video-player-wrap.vp-fullscreen').forEach(el => el.classList.remove('vp-fullscreen'));
+  }
+});
+document.addEventListener('webkitfullscreenchange', () => {
+  const fsEl = document.webkitFullscreenElement;
+  if (fsEl && fsEl.classList.contains('video-player-wrap')) {
+    fsEl.classList.add('vp-fullscreen');
+  } else {
+    document.querySelectorAll('.video-player-wrap.vp-fullscreen').forEach(el => el.classList.remove('vp-fullscreen'));
+  }
+});
 
 // Any mouse movement or touch on the player resets the hide timer
 document.addEventListener('mousemove', (e) => {
@@ -1934,3 +1997,66 @@ window.handleHashtagClick = function (btn) {
   hashtagLink.dispatchEvent(evt);
   hashtagLink.remove();
 };
+
+/** Toggle visibility of the alt text panel on a media item. */
+window.toggleMediaAlt = function (btn) {
+  const altId = btn.dataset.altId;
+  let panel = document.getElementById(altId);
+  const item = btn.closest('.media-item');
+
+  if (!panel) return;
+
+  const isOpening = !panel.classList.contains('visible');
+
+  if (isOpening) {
+    // Close any other open panels first
+    window.closeAllMediaAlt();
+
+    // Move to body if not already there to escape clipping containers
+    if (panel.parentElement !== document.body) {
+      document.body.appendChild(panel);
+    }
+
+    // Position relative to the badge
+    const rect = btn.getBoundingClientRect();
+    panel.style.position = 'fixed';
+    panel.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+    panel.style.right = (window.innerWidth - rect.right) + 'px';
+    panel.style.left = 'auto';
+    panel.style.top = 'auto';
+
+    panel.classList.add('visible');
+    btn.classList.add('active');
+    if (item) item.classList.add('alt-open');
+
+    // Auto-close on scroll to prevent "detached" floating panel
+    const closeOnScroll = () => {
+      window.closeAllMediaAlt();
+      window.removeEventListener('scroll', closeOnScroll, true);
+    };
+    window.addEventListener('scroll', closeOnScroll, true);
+
+  } else {
+    window.closeAllMediaAlt();
+  }
+};
+
+/** Close all visible ALT panels and reset badge/item states */
+window.closeAllMediaAlt = function () {
+  document.querySelectorAll('.media-alt-panel.visible').forEach(p => {
+    p.classList.remove('visible');
+    const ownerBtn = document.querySelector(`.media-alt-badge[data-alt-id="${p.id}"]`);
+    if (ownerBtn) ownerBtn.classList.remove('active');
+  });
+  // Clean up all elevated items
+  document.querySelectorAll('.media-item.alt-open').forEach(it => {
+    it.classList.remove('alt-open');
+  });
+};
+
+// Global listener to close ALT panels when clicking outside
+document.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.media-alt-badge') || e.target.closest('.media-alt-panel')) return;
+  window.closeAllMediaAlt();
+}, true);
+
