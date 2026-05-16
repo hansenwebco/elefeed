@@ -3041,6 +3041,83 @@ document.addEventListener('click', e => {
   }
 }, true);
 
+/* ── Global Wheel Proxier (Desktop) ── */
+let _wheelTargetScroll = null;
+let _wheelRAF = null;
+
+function _smoothScrollStep() {
+  const sc = getScrollContainer();
+  if (!sc || _wheelTargetScroll === null) {
+    _wheelRAF = null;
+    return;
+  }
+
+  const current = sc.scrollTop;
+  const diff = _wheelTargetScroll - current;
+
+  // If we're very close to the target, just snap to it and stop
+  if (Math.abs(diff) < 0.5) {
+    sc.scrollTop = _wheelTargetScroll;
+    _wheelTargetScroll = null;
+    _wheelRAF = null;
+  } else {
+    // Move a fraction of the distance for a smooth easing effect
+    // 0.25 is a good balance between responsiveness and smoothness
+    sc.scrollTop = current + (diff * 0.25);
+    _wheelRAF = requestAnimationFrame(_smoothScrollStep);
+  }
+}
+
+window.addEventListener('wheel', e => {
+  // Only for desktop view and when no modal/drawer/lightbox/alt-panel is active
+  if (window.innerWidth <= 900 || isAnyDrawerOpen() || window._lightboxOpen || e.target.closest('.media-alt-panel')) return;
+
+  const activeSC = getScrollContainer();
+  if (!activeSC) return;
+
+  // If hovering the active scroll container itself, let the browser handle it natively (with its own smoothing)
+  if (activeSC.contains(e.target)) {
+    _wheelTargetScroll = null; // Cancel any pending proxy animation
+    return;
+  }
+
+  // Check if we are over another scrollable element
+  let el = e.target;
+  while (el && el !== document.body && el !== activeSC) {
+    const style = window.getComputedStyle(el);
+    const canScrollY = (style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight;
+
+    if (canScrollY) {
+      // Let this element scroll naturally
+      // But only if it's NOT at the scroll boundary in the direction the user is scrolling.
+      const isAtTop = el.scrollTop <= 0 && e.deltaY < 0;
+      const isAtBottom = el.scrollTop + el.clientHeight >= el.scrollHeight && e.deltaY > 0;
+      if (!isAtTop && !isAtBottom) {
+        _wheelTargetScroll = null;
+        return;
+      }
+    }
+    el = el.parentElement;
+  }
+
+  // Initialize target if starting a new scroll sequence
+  if (_wheelTargetScroll === null) {
+    _wheelTargetScroll = activeSC.scrollTop;
+  }
+
+  // Accumulate the delta into the target
+  _wheelTargetScroll += e.deltaY;
+
+  // Clamp the target to the container boundaries
+  const maxScroll = activeSC.scrollHeight - activeSC.clientHeight;
+  _wheelTargetScroll = Math.max(0, Math.min(_wheelTargetScroll, maxScroll));
+
+  // Start the animation loop if not already running
+  if (!_wheelRAF) {
+    _wheelRAF = requestAnimationFrame(_smoothScrollStep);
+  }
+}, { passive: true });
+
 /* ══════════════════════════════════════════════════════════════════════
    NETWORK STATUS
    ══════════════════════════════════════════════════════════════════════ */

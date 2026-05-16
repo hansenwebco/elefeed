@@ -2030,18 +2030,35 @@ window.toggleMediaAlt = function (btn) {
       panel.style.top = 'auto';
     }
     
-    panel.style.right = (window.innerWidth - rect.right) + 'px';
-    panel.style.left = 'auto';
-
     panel.classList.add('visible');
     btn.classList.add('active');
     if (item) item.classList.add('alt-open');
 
+    // Horizontal positioning: align right edge of panel with right edge of badge,
+    // but ensure it stays within the viewport (pushed right if necessary).
+    const gutter = 12;
+    const panelWidth = panel.offsetWidth;
+    if (rect.right - panelWidth < gutter) {
+      // Panel would go off-screen on the left (common for left items in a grid)
+      panel.style.left = gutter + 'px';
+      panel.style.right = 'auto';
+    } else {
+      // Default: align panel right edge with badge right edge
+      panel.style.right = (window.innerWidth - rect.right) + 'px';
+      panel.style.left = 'auto';
+    }
+
     // Auto-close on scroll to prevent "detached" floating panel
-    const closeOnScroll = () => {
+    if (window._currentAltScrollHandler) {
+      window.removeEventListener('scroll', window._currentAltScrollHandler, true);
+    }
+    const closeOnScroll = (e) => {
+      // If the scroll happened inside the panel (e.g. scrolling long alt text), don't close.
+      if (e.target === panel || panel.contains(e.target)) return;
+      
       window.closeAllMediaAlt();
-      window.removeEventListener('scroll', closeOnScroll, true);
     };
+    window._currentAltScrollHandler = closeOnScroll;
     window.addEventListener('scroll', closeOnScroll, true);
 
   } else {
@@ -2060,6 +2077,11 @@ window.closeAllMediaAlt = function () {
   document.querySelectorAll('.media-item.alt-open').forEach(it => {
     it.classList.remove('alt-open');
   });
+  // Clean up scroll listener
+  if (window._currentAltScrollHandler) {
+    window.removeEventListener('scroll', window._currentAltScrollHandler, true);
+    window._currentAltScrollHandler = null;
+  }
 };
 
 // Global listener to close ALT panels when clicking outside

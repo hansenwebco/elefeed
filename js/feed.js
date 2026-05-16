@@ -11,12 +11,27 @@ function positionOverlayPill() {
 // Returns the active scroll container: feed-container on mobile, window on desktop
 export function getScrollContainer() {
   if (document.body.classList.contains('thread-inline-active')) {
-    return document.getElementById('thread-inline-panel');
+    const threadPanel = document.getElementById('thread-inline-panel');
+    return threadPanel?.querySelector('.thread-inline-inner') || threadPanel;
   }
   // On desktop (sliding stage), individual panels scroll.
   // On mobile, the feed-container scrolls.
   if (window.innerWidth > 900) {
-    return document.querySelector('.tab-panel.active') || document.getElementById('feed-container');
+    const activePanel = document.querySelector('.tab-panel.active');
+    if (activePanel) {
+      // On desktop, the actual scrollable area is usually .tab-content-scroll
+      const inner = activePanel.querySelector('.tab-content-scroll');
+      if (inner && window.getComputedStyle(inner).display !== 'none') {
+        return inner;
+      }
+      // Or it could be the hashtag landing view
+      const hashtagView = activePanel.querySelector('.hashtag-view-container');
+      if (hashtagView && window.getComputedStyle(hashtagView).display !== 'none') {
+        return hashtagView;
+      }
+      return activePanel;
+    }
+    return document.getElementById('feed-container');
   }
   return document.getElementById('feed-container');
 }
