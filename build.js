@@ -25,6 +25,7 @@ async function build() {
         sourcemap: true,
         target: ['es2020'],
         outfile: path.join(distDir, 'js', jsFile),
+        drop: process.env.GITHUB_ACTIONS === 'true' ? ['console', 'debugger'] : [],
     });
 
     // 3. Build CSS
