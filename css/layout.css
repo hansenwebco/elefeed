@@ -549,6 +549,11 @@
   margin: 0 auto;
   width: 100%;
   padding: 0 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 

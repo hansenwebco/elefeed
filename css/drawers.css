@@ -1323,15 +1323,21 @@ button.profile-stat:hover {
     box-sizing: border-box;
     display: flex !important;
     flex-direction: column;
-    overflow-y: auto;
-    scrollbar-width: thin;
     position: relative;
-    padding: 0 0 40px;
     background: var(--bg);
     margin: 0;
+    padding: 0;
+    overflow: hidden;
   }
 
-  /* Ensure inactive panels are completely removed from the flex flow */
+  /* Inner scrollable area for consistent scrollbar start position */
+  #feed-stage>.tab-panel.active .tab-content-scroll,
+  #feed-stage>.thread-inline-panel .thread-inline-inner {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding: 0 0 40px;
+  }/* Ensure inactive panels are completely removed from the flex flow */
   #feed-stage>.tab-panel:not(.active) {
     display: none !important;
   }
