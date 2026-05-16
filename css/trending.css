@@ -188,7 +188,7 @@
 }
 
 .trending-person-name {
-  font-size: 14px;
+  font-size: 1em;
   font-weight: 500;
   color: var(--text);
   white-space: nowrap;
@@ -198,8 +198,8 @@
 
 .trending-person-acct {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-dim);
+  font-size: 0.8em;
+  color: var(--hashtag-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -209,8 +209,8 @@
 .trending-person-server {
   display: none;
   /* Desktop default: handle name/handle display differently? No, follow feed style. */
-  font-size: 11px;
-  color: var(--text-dim);
+  font-size: 0.8em;
+  color: var(--hashtag-color);
   font-family: var(--font-mono);
   line-height: 1.2;
   margin-top: 2px;
@@ -223,7 +223,7 @@
 
 .trending-person-action .profile-follow-btn {
   padding: 6px 14px;
-  font-size: 12px;
+  font-size: 0.85em;
   border-radius: 6px;
   min-width: 82px;
   height: 30px;
@@ -247,7 +247,7 @@
 
   .trending-person-action .profile-follow-btn {
     padding: 5px 12px;
-    font-size: 11px;
+    font-size: 0.8em;
     min-width: 74px;
     height: 28px;
   }
@@ -423,7 +423,7 @@
 }
 
 .trending-link-stat-sep {
-   color: var(--text-dim);
+   color: var(--hashtag-color);
    opacity: 0.5;
    font-size: 12px;
 }

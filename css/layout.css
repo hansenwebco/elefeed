@@ -25,7 +25,8 @@
   align-items: flex-start;
   gap: 24px;
   padding: 0 20px;
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 #app-screen.active {
@@ -402,7 +403,9 @@
   }
 
   .main-wrapper {
+    flex: 1;
     min-height: 0;
+    height: 100dvh;
     overflow: hidden;
   }
 
@@ -411,10 +414,11 @@
   }
 
   .feed-container {
+    flex: 1;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    height: calc(100dvh - 90px); /* Adjust based on header+tabs height */
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -423,12 +427,13 @@
     overflow: hidden;
   }
   .feed-container {
-    height: calc(100vh - 94px); /* Header + Tab bar height approx */
-    overflow: hidden; /* Changed from auto to hidden */
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
     position: relative;
   }
   .main-wrapper {
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
   }
 }
@@ -544,6 +549,11 @@
   margin: 0 auto;
   width: 100%;
   padding: 0 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
@@ -691,7 +701,7 @@
   max-width: 680px;
   margin: 0 auto;
   width: 100%;
-  padding: 0 0 60px;
+  padding: 0;
   display: flex;
   flex-direction: column;
 }

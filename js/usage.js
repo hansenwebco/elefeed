@@ -110,8 +110,8 @@ export function startTracking() {
   // Sync every 1 minute to server
   _saveInterval = setInterval(syncUsage, 60 * 1000);
 
-  // Update the UI display every 55 seconds (since sync is every 1 min)
-  _uiInterval = setInterval(renderUsageUI, 55 * 1000);
+  // Update the UI display every 15 seconds for a more responsive feel
+  _uiInterval = setInterval(renderUsageUI, 15 * 1000);
 
   renderUsageUI();
 }
@@ -132,8 +132,9 @@ export function stopTracking() {
 }
 
 function startTimer() {
-  if (!_activeStartTime && document.visibilityState === 'visible') {
+  if (!_activeStartTime && document.visibilityState === 'visible' && document.hasFocus()) {
     _activeStartTime = Date.now();
+    renderUsageUI();
   }
 }
 
@@ -263,7 +264,14 @@ export function renderUsageUI() {
     container = document.createElement('article');
     container.id = 'usage-note-container';
     container.className = 'post usage-note-banner';
-    feedCont.prepend(container);
+    
+    // Insert after tab-bar / before feed-stage so it's under the tabs
+    const stage = $('feed-stage');
+    if (stage) {
+      feedCont.insertBefore(container, stage);
+    } else {
+      feedCont.appendChild(container);
+    }
   }
 
   const today = getLocalDateString();

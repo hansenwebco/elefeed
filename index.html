@@ -500,6 +500,10 @@
           </div>
         </div>
 
+
+      </header>
+
+      <main class="feed-container" id="feed-container">
         <div class="tab-bar" role="tablist">
           <div class="tab-btn-wrap">
             <button class="tab-btn active" role="tab" data-tab="feed" aria-selected="true" id="tab-btn-feed">
@@ -587,17 +591,14 @@
             </div>
           </div>
         </div>
-      </header>
 
-      <div class="demo-notice" id="demo-notice" style="display:none;">
-        ⚡ Demo mode - showing sample data. Connect to a real Mastodon server to see your actual feed.
-      </div>
+        <div class="demo-notice" id="demo-notice" style="display:none;">
+          ⚡ Demo mode - showing sample data. Connect to a real Mastodon server to see your actual feed.
+        </div>
 
-      <div class="offline-bar" id="offline-bar">
-        ⚠ Network unavailable - showing cached data
-      </div>
-
-      <main class="feed-container" id="feed-container">
+        <div class="offline-bar" id="offline-bar">
+          ⚠ Network unavailable - showing cached data
+        </div>
         <div id="feed-stage">
           <!-- Feed Tab (unified: All / Following / #Hashtags) -->
           <div class="tab-panel active" id="panel-feed" role="tabpanel">
@@ -644,7 +645,7 @@
                 </div>
               </div>
             </div>
-            <div id="feed-content-wrapper" style="position:relative;">
+            <div id="feed-content-wrapper" class="tab-content-scroll" style="position:relative;">
               <div id="federated-info-bar" class="federated-info-bar" style="display:none;">
                 <iconify-icon icon="ph:info-bold" class="federated-info-bar-icon" style="font-size: 24px;"></iconify-icon>
                 <div class="federated-info-bar-text">
@@ -668,7 +669,8 @@
 
           <!-- Explore Tab -->
           <div class="tab-panel" id="panel-explore" role="tabpanel">
-            <div class="trending-subpanel" id="trending-subpanel-live"></div>
+            <div class="tab-content-scroll">
+              <div class="trending-subpanel" id="trending-subpanel-live"></div>
             <div class="trending-subpanel" id="trending-subpanel-federated"></div>
             <div class="trending-subpanel active" id="trending-subpanel-posts">
               <div class="feed-loading" id="trending-posts-loading" style="display:none;">
@@ -711,6 +713,7 @@
               </div>
               <div class="error-banner" id="trending-following-error"></div>
               <div id="trending-following-list"></div>
+            </div>
             </div>
           </div>
 

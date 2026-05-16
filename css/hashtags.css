@@ -6,7 +6,7 @@
   --hashtag-card-bg: var(--surface2);
   --hashtag-card-hover: var(--surface);
   --hashtag-card-border: var(--border);
-  --hashtag-card-accent: var(--accent);
+  --hashtag-card-accent: var(--hashtag-color);
 }
 
 /* ─── Hashtag View Container ─── */
@@ -247,7 +247,7 @@
 }
 
 .hashtag-active-pill-symbol {
-  color: var(--accent);
+  color: var(--hashtag-color);
   font-weight: 800;
   font-size: 14px;
   opacity: 0.9;
@@ -439,7 +439,7 @@
 }
 
 .hashtag-follow-strip-text strong {
-  color: var(--accent);
+  color: var(--hashtag-color);
   font-weight: 600;
 }
 
