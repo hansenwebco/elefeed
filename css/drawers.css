@@ -1326,9 +1326,9 @@ button.profile-stat:hover {
     overflow-y: auto;
     scrollbar-width: thin;
     position: relative;
+    padding: 0 0 40px;
     background: var(--bg);
     margin: 0;
-    padding: 0;
   }
 
   /* Ensure inactive panels are completely removed from the flex flow */
@@ -1410,10 +1410,7 @@ button.profile-stat:hover {
 
 @media (min-width: 901px) {
 
-  body.thread-inline-active .feed-container,
-  body.manage-inline-active .feed-container {
-    padding-bottom: 0;
-  }
+
 
   body.thread-inline-active .thread-inline-panel,
   body.manage-inline-active .manage-inline-panel {

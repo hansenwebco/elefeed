@@ -13,7 +13,12 @@ export function getScrollContainer() {
   if (document.body.classList.contains('thread-inline-active')) {
     return document.getElementById('thread-inline-panel');
   }
-  return document.querySelector('.tab-panel.active') || document.getElementById('feed-container');
+  // On desktop (sliding stage), individual panels scroll.
+  // On mobile, the feed-container scrolls.
+  if (window.innerWidth > 900) {
+    return document.querySelector('.tab-panel.active') || document.getElementById('feed-container');
+  }
+  return document.getElementById('feed-container');
 }
 
 export function getScrollTop() {
@@ -22,13 +27,12 @@ export function getScrollTop() {
 }
 
 export function scrollContainerTo(top, behavior = 'smooth') {
-  // Reset the feed container if it exists
-  const feedCont = document.getElementById('feed-container');
-  if (feedCont) {
+  const sc = getScrollContainer();
+  if (sc) {
     try {
-      feedCont.scrollTo({ top, behavior });
+      sc.scrollTo({ top, behavior });
     } catch (e) {
-      feedCont.scrollTop = top;
+      sc.scrollTop = top;
     }
   }
 
@@ -48,8 +52,11 @@ export function hashtagScrollToTop() {
   const top = 0;
   const behavior = 'instant';
 
+  const sc = getScrollContainer();
+  if (sc) sc.scrollTop = top;
+
   const feedCont = document.getElementById('feed-container');
-  if (feedCont) feedCont.scrollTop = top;
+  if (feedCont && feedCont !== sc) feedCont.scrollTop = top;
 
   document.documentElement.scrollTop = top;
   document.body.scrollTop = top;
