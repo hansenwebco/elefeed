@@ -2020,10 +2020,18 @@ window.toggleMediaAlt = function (btn) {
     // Position relative to the badge
     const rect = btn.getBoundingClientRect();
     panel.style.position = 'fixed';
-    panel.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+    
+    // If badge is near the top (like on videos), open below. Otherwise open above.
+    if (rect.top < 300) {
+      panel.style.top = (rect.bottom + 8) + 'px';
+      panel.style.bottom = 'auto';
+    } else {
+      panel.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+      panel.style.top = 'auto';
+    }
+    
     panel.style.right = (window.innerWidth - rect.right) + 'px';
     panel.style.left = 'auto';
-    panel.style.top = 'auto';
 
     panel.classList.add('visible');
     btn.classList.add('active');

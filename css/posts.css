@@ -1439,6 +1439,11 @@
   border-bottom-right-radius: calc(var(--radius) - 1px);
 }
 
+.video-player-wrap .media-alt-badge {
+  bottom: auto;
+  top: 8px;
+}
+
 .media-alt-badge {
   position: absolute;
   bottom: 8px;
@@ -1825,7 +1830,7 @@
 /* Standalone ALT badge - only used when there is no action bar */
 .lightbox-alt-badge {
   position: absolute;
-  bottom: 24px;
+  top: 80px;
   right: 24px;
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -3143,7 +3148,7 @@ body.hide-cards-enabled .post-card {
 
 /* Fullscreen layout tweaks */
 .video-player-wrap:fullscreen {
-  background: #000;
+  background: #000 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -3155,6 +3160,16 @@ body.hide-cards-enabled .post-card {
   margin: 0 !important;
   border: none !important;
   border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+.video-player-wrap:fullscreen .media-item-img-clip {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #000 !important;
 }
 
 .video-player-wrap:fullscreen video {
@@ -3163,6 +3178,7 @@ body.hide-cards-enabled .post-card {
   width: auto !important;
   height: auto !important;
   object-fit: contain !important;
+  flex-shrink: 0 !important;
 }
 
 .video-player-wrap.vp-fullscreen .vid-controls {
@@ -3176,7 +3192,7 @@ body.hide-cards-enabled .post-card {
 
 /* Support for older webkit (Safari) */
 .video-player-wrap:-webkit-full-screen {
-  background: #000;
+  background: #000 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -3188,6 +3204,16 @@ body.hide-cards-enabled .post-card {
   margin: 0 !important;
   border: none !important;
   border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+.video-player-wrap:-webkit-full-screen .media-item-img-clip {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #000 !important;
 }
 
 .video-player-wrap:-webkit-full-screen video {
@@ -3196,31 +3222,34 @@ body.hide-cards-enabled .post-card {
   width: auto !important;
   height: auto !important;
   object-fit: contain !important;
+  flex-shrink: 0 !important;
 }
 
 /* Lightbox video player wrapper */
 .vid-lightbox-wrap {
   position: relative;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8);
   background: #000;
-  max-width: min(90vw, 960px);
-  max-height: calc(100vh - 80px);
-  display: flex;
-  flex-direction: column;
+  max-width: min(90vw, 1200px);
+  max-height: calc(100vh - 100px);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .vid-lightbox-wrap video {
   display: block;
   max-width: 100%;
-  max-height: calc(100vh - 130px);
+  max-height: 100%;
   width: auto;
   height: auto;
   background: #000;
   cursor: default;
   border-radius: 0;
   box-shadow: none;
+  object-fit: contain;
 }
 
 /* --- Hashtag Show More --- */
