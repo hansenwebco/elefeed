@@ -445,7 +445,7 @@
 }
 
 /* ─── Load More ─── */
-.load-more-btn, .thread-more-btn {
+.load-more-btn {
   display: block;
   width: calc(100% - 40px);
   margin: 20px auto;
@@ -461,7 +461,7 @@
   transition: all var(--trans);
 }
 
-.load-more-btn:hover, .thread-more-btn:hover {
+.load-more-btn:hover {
   border-color: var(--accent);
   color: var(--accent2);
 }

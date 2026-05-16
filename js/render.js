@@ -601,7 +601,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
     peekBanner = `
       <div class="post-peek-banner" onclick="event.stopPropagation(); if (window.toggleReplyPeek) window.toggleReplyPeek('${idPrefix}${status.id}', this);">
         <iconify-icon icon="ph:chat-circle-dots-bold"></iconify-icon>
-        <span>View ${s.replies_count} replies inline</span>
+        <span>View ${s.replies_count} replies</span>
       </div>`;
   }
 
@@ -2020,7 +2020,7 @@ window.toggleMediaAlt = function (btn) {
     // Position relative to the badge
     const rect = btn.getBoundingClientRect();
     panel.style.position = 'fixed';
-    
+
     // If badge is near the top (like on videos), open below. Otherwise open above.
     if (rect.top < 300) {
       panel.style.top = (rect.bottom + 8) + 'px';
@@ -2029,7 +2029,7 @@ window.toggleMediaAlt = function (btn) {
       panel.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
       panel.style.top = 'auto';
     }
-    
+
     panel.classList.add('visible');
     btn.classList.add('active');
     if (item) item.classList.add('alt-open');
@@ -2055,7 +2055,7 @@ window.toggleMediaAlt = function (btn) {
     const closeOnScroll = (e) => {
       // If the scroll happened inside the panel (e.g. scrolling long alt text), don't close.
       if (e.target === panel || panel.contains(e.target)) return;
-      
+
       window.closeAllMediaAlt();
     };
     window._currentAltScrollHandler = closeOnScroll;
