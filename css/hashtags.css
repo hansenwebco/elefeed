@@ -20,6 +20,15 @@
   animation: fadeIn 0.3s ease;
 }
 
+@media (min-width: 901px) {
+  .hashtag-view-container {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding-bottom: 40px;
+  }
+}
+
 .hashtag-header-box {
   display: flex;
   flex-direction: column;
