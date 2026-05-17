@@ -80,6 +80,15 @@
     }
     metaTheme.content = themeColor;
 
+    // Dynamically set color-scheme meta tag early to prevent forced WebView dark mode
+    let metaColorScheme = document.querySelector('meta[name="color-scheme"]');
+    if (!metaColorScheme) {
+      metaColorScheme = document.createElement('meta');
+      metaColorScheme.name = 'color-scheme';
+      document.head.appendChild(metaColorScheme);
+    }
+    metaColorScheme.content = isDark ? 'only dark' : 'only light';
+
     try {
       // Font & Font Size initialization
       const _f = localStorage.getItem('pref_font_family') || 'sans';
