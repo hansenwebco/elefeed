@@ -55,7 +55,10 @@ html[data-mode="light"] {
 
 html[data-mode="dark"] {
   color-scheme: only dark !important;
+}
 
+:root,
+html[data-palette="classic"][data-mode="dark"] {
   /* Colors */
   --bg: #0d0d0f;
   --surface: #141418;
