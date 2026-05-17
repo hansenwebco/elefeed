@@ -678,7 +678,7 @@
 }
 
 .condensed-reply-author {
-  font-weight: 600;
+  font-weight: normal;
   color: var(--accent);
   cursor: pointer;
   white-space: nowrap;
@@ -758,7 +758,7 @@
 }
 
 .condensed-reply-author {
-  font-weight: 600;
+  font-weight: normal;
   color: var(--accent);
   cursor: pointer;
   white-space: nowrap;
