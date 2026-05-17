@@ -1099,35 +1099,169 @@ export async function handleLoadMore(btn) {
     btn.textContent = 'Load More';
   }
 }
+const activePeeksData = new Map();
+const peekCache = new Map();
+
+function setBannerText(countEl, mode) {
+  if (!countEl) return;
+  const span = countEl.querySelector('span');
+  if (!span) return;
+  if (mode === 'hide') {
+    span.textContent = span.textContent.replace('View', 'Hide');
+  } else {
+    span.textContent = span.textContent.replace('Hide', 'View');
+  }
+}
+
+export async function renderReplyPeek(container, focalStatus, ancestors, descendants, scrollToId = null, countEl = null) {
+  if (descendants.length === 0 && ancestors.length === 0) {
+    container.innerHTML = `<div class="reply-peek-loading"><span>No replies found on this server.</span></div>`;
+    setTimeout(() => {
+      container.classList.remove('active');
+      setBannerText(countEl, 'view');
+    }, 2000);
+    return;
+  }
+
+  // Fetch relationships for these authors so following badges show up
+  await fetchRelationships([...ancestors, ...descendants]);
+
+  // Apply visibility and filter rules
+  const filteredDescendants = descendants.filter(s => {
+    const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
+    return !(isFiltered && filterAction === 'hide');
+  });
+
+  if (filteredDescendants.length === 0 && ancestors.length === 0) {
+    container.innerHTML = `<div class="reply-peek-loading"><span>No replies found (or all are filtered).</span></div>`;
+    setTimeout(() => {
+      container.classList.remove('active');
+      setBannerText(countEl, 'view');
+    }, 2000);
+    return;
+  }
+
+  // Build tree
+  const { buildFullTree } = await import('./thread.js');
+
+  const tree = buildFullTree([], focalStatus.reblog || focalStatus, filteredDescendants);
+  const focalNode = tree[0];
+
+  // Only show first 50 branches to keep it a "peek"
+  const branchesToShow = focalNode.children.slice(0, 50);
+  const { renderCondensedTree, renderCondensedReply } = await import('./render.js');
+  let html = renderCondensedTree(branchesToShow);
+
+  // If there are other roots (fragmented thread), show them too
+  let fragmentsHtml = '';
+  if (tree.length > 1) {
+    const otherRoots = tree.slice(1, 10); // Limit other roots to 10
+    fragmentsHtml = `<div class="peek-fragmented-separator"></div>` + renderCondensedTree(otherRoots);
+  }
+  
+  const filteredAncestors = ancestors.filter(s => {
+    const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
+    return !(isFiltered && filterAction === 'hide');
+  });
+
+  let parentSnippet = '';
+  if (filteredAncestors.length > 0) {
+    const parent = filteredAncestors[filteredAncestors.length - 1];
+    const parentHtml = renderCondensedReply(parent);
+    parentSnippet = `
+      <div class="condensed-reply-parent-snippet" style="opacity: 0.8; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border);">
+        <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-bottom: 4px; padding-left: 12px;">
+          <iconify-icon icon="ph:arrow-bend-down-right-bold"></iconify-icon>
+          <span>In reply to</span>
+        </div>
+        <div class="condensed-reply-node condensed-parent-node" data-status-id="${parent.id}">
+          ${parentHtml}
+        </div>
+      </div>
+    `;
+    peekCache.set(parent.id, parent);
+  }
+
+  // Warm up the cache with the status objects we just received
+  descendants.forEach(s => peekCache.set(s.id, s));
+
+  container.innerHTML = `
+    <div class="condensed-reply-wrapper">${parentSnippet}${html}${fragmentsHtml}</div>
+    <div class="condensed-reply-info-footer">
+      ${focalNode.children.length > 50 ? `
+        <div class="condensed-reply-info">
+          <iconify-icon icon="ph:dots-three-circle-bold"></iconify-icon>
+          <span>${focalNode.children.length - 50} more posts hidden in peek view</span>
+        </div>` : ''}
+      ${tree.length > 10 ? `
+        <div class="condensed-reply-info">
+          <iconify-icon icon="ph:dots-three-circle-bold"></iconify-icon>
+          <span>${tree.length - 10} other conversation fragments hidden</span>
+        </div>` : ''}
+    </div>
+  `;
+
+  setBannerText(countEl, 'hide');
+
+  if (scrollToId) {
+    requestAnimationFrame(() => {
+      // Look for the post in the peek container
+      const targetPost = container.querySelector(`article.post[data-post-id="${scrollToId}"], .condensed-reply-node[data-status-id="${scrollToId}"]`);
+      if (targetPost) {
+        console.log('[Feed] Scrolling to targetPost in peek:', scrollToId);
+        targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetPost.classList.add('flash-highlight');
+        
+        // Selection and Expansion (as if clicked)
+        if (targetPost.classList.contains('condensed-reply-node')) {
+          selectReplyNode(targetPost);
+          const trig = targetPost.querySelector('.condensed-reply');
+          if (trig) window.toggleCondensedExpansion(scrollToId, trig, true);
+        } else {
+          targetPost.classList.add('selected');
+        }
+
+        setTimeout(() => targetPost.classList.remove('flash-highlight'), 2000);
+      }
+    });
+  }
+
+  // Auto-expand the first post in the tree for immediate context (only if not scrolling to a specific one)
+  if (!scrollToId) {
+    setTimeout(() => {
+      const firstNode = container.querySelector('.condensed-reply-node:not(.condensed-parent-node)');
+      if (firstNode) {
+        const sid = firstNode.dataset.statusId;
+        const trig = firstNode.querySelector('.condensed-reply');
+        if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
+      }
+    }, 50);
+  }
+}
+
 /**
  * Toggles an inline peek of replies for a post.
  */
-window.toggleReplyPeek = async function (postId, countEl) {
+window.toggleReplyPeek = async function (postId, countEl, forceRefresh = false, scrollToId = null) {
   const container = document.getElementById(`reply-peek-${postId}`);
   if (!container) return;
 
-  const setBannerText = (mode) => {
-    if (!countEl) return;
-    const span = countEl.querySelector('span');
-    if (!span) return;
-    if (mode === 'hide') {
-      span.textContent = span.textContent.replace('View', 'Hide');
-    } else {
-      span.textContent = span.textContent.replace('Hide', 'View');
-    }
-  };
+  const setBannerTextLocal = (mode) => setBannerText(countEl, mode);
 
-  if (container.classList.contains('active')) {
+  if (container.classList.contains('active') && !forceRefresh) {
     container.classList.remove('active');
-    setBannerText('view');
+    setBannerTextLocal('view');
+    activePeeksData.delete(postId);
     return;
   }
 
   // Strip prefix for API and state lookup
   const rawId = postId.startsWith('t-') ? postId.substring(2) : postId;
 
-  // Clear previous content and show loading
-  container.innerHTML = `<div class="reply-peek-loading"><div class="spinner spinner--small"></div><span>Loading replies...</span></div>`;
+  // Clear previous content and show loading (only if not a background refresh)
+  if (!forceRefresh) {
+    container.innerHTML = `<div class="reply-peek-loading"><div class="spinner spinner--small"></div><span>Loading replies...</span></div>`;
+  }
   container.classList.add('active');
 
   try {
@@ -1146,123 +1280,55 @@ window.toggleReplyPeek = async function (postId, countEl) {
     const ancestors = context.ancestors || [];
     const descendants = context.descendants || [];
 
-    if (descendants.length === 0 && ancestors.length === 0) {
-      container.innerHTML = `<div class="reply-peek-loading"><span>No replies found on this server.</span></div>`;
-      setTimeout(() => {
-        container.classList.remove('active');
-        setBannerText('view');
-      }, 2000);
-      return;
-    }
-
-    // Sort or filter? Mastodon context usually returns them in a decent order.
-    // Just take the first 3.
-    const peekCount = 5; // Increased for condensed
-    const topLevelDescendants = descendants.slice(0, peekCount);
-
-    // Fetch relationships for these authors so following badges show up
-    await fetchRelationships([...ancestors, ...descendants]);
-
-    // Apply visibility and filter rules
-    const filteredDescendants = descendants.filter(s => {
-      const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
-      return !(isFiltered && filterAction === 'hide');
+    activePeeksData.set(postId, {
+      focalStatus,
+      ancestors,
+      descendants,
+      container,
+      countEl
     });
 
-    if (filteredDescendants.length === 0 && ancestors.length === 0) {
-      container.innerHTML = `<div class="reply-peek-loading"><span>No replies found (or all are filtered).</span></div>`;
-      setTimeout(() => {
-        container.classList.remove('active');
-        setBannerText('view');
-      }, 2000);
-      return;
-    }
+    await renderReplyPeek(container, focalStatus, ancestors, descendants, scrollToId, countEl);
 
-    // Build tree
-    const { buildFullTree } = await import('./thread.js');
-
-    const tree = buildFullTree([], focalStatus.reblog || focalStatus, filteredDescendants);
-    const focalNode = tree[0];
-
-    // Only show first 50 branches to keep it a "peek"
-    const branchesToShow = focalNode.children.slice(0, 50);
-    const { renderCondensedTree, renderCondensedReply } = await import('./render.js');
-    let html = renderCondensedTree(branchesToShow);
-
-    // If there are other roots (fragmented thread), show them too
-    let fragmentsHtml = '';
-    if (tree.length > 1) {
-      const otherRoots = tree.slice(1, 10); // Limit other roots to 10
-      fragmentsHtml = `<div class="peek-fragmented-separator"></div>` + renderCondensedTree(otherRoots);
-    }
-    
-    const filteredAncestors = ancestors.filter(s => {
-      const { isFiltered, filterAction } = getFilterInfo(s, 'thread');
-      return !(isFiltered && filterAction === 'hide');
-    });
-
-    let parentSnippet = '';
-    if (filteredAncestors.length > 0) {
-      const parent = filteredAncestors[filteredAncestors.length - 1];
-      const parentHtml = renderCondensedReply(parent);
-      parentSnippet = `
-        <div class="condensed-reply-parent-snippet" style="opacity: 0.8; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border);">
-          <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-bottom: 4px; padding-left: 12px;">
-            <iconify-icon icon="ph:arrow-bend-down-right-bold"></iconify-icon>
-            <span>In reply to</span>
-          </div>
-          <div class="condensed-reply-node condensed-parent-node" data-status-id="${parent.id}">
-            ${parentHtml}
-          </div>
-        </div>
-      `;
-      peekCache.set(parent.id, parent);
-    }
-
-    // Warm up the cache with the status objects we just received
-    descendants.forEach(s => peekCache.set(s.id, s));
-
-    container.innerHTML = `
-      <div class="condensed-reply-wrapper">${parentSnippet}${html}${fragmentsHtml}</div>
-      <div class="condensed-reply-info-footer">
-        ${focalNode.children.length > 50 ? `
-          <div class="condensed-reply-info">
-            <iconify-icon icon="ph:dots-three-circle-bold"></iconify-icon>
-            <span>${focalNode.children.length - 50} more posts hidden in peek view</span>
-          </div>` : ''}
-        ${tree.length > 10 ? `
-          <div class="condensed-reply-info">
-            <iconify-icon icon="ph:dots-three-circle-bold"></iconify-icon>
-            <span>${tree.length - 10} other conversation fragments hidden</span>
-          </div>` : ''}
-      </div>
-    `;
-
-    setBannerText('hide');
-
-    // Auto-expand the first post in the tree for immediate context
-    setTimeout(() => {
-      const firstNode = container.querySelector('.condensed-reply-node:not(.condensed-parent-node)');
-      if (firstNode) {
-        const sid = firstNode.dataset.statusId;
-        const trig = firstNode.querySelector('.condensed-reply');
-        if (sid && trig) window.toggleCondensedExpansion(sid, trig, true);
-      }
-    }, 50);
   } catch (err) {
     console.error('[Feed] Reply peek failed:', err);
+    activePeeksData.delete(postId);
     container.innerHTML = `<div class="reply-peek-loading" style="color:var(--danger)"><span>Failed to load replies.</span></div>`;
     setTimeout(() => {
       container.classList.remove('active');
-      setBannerText('view');
+      setBannerTextLocal('view');
     }, 3000);
   }
 };
+
+export async function insertPostIntoActivePeeks(newStatus) {
+  let matched = false;
+  for (const [postId, data] of activePeeksData.entries()) {
+    const focalId = data.focalStatus.reblog ? data.focalStatus.reblog.id : data.focalStatus.id;
+    const isReplyToFocal = newStatus.in_reply_to_id === focalId;
+    const isReplyToDescendant = data.descendants.some(d => {
+      const id = d.reblog ? d.reblog.id : d.id;
+      return newStatus.in_reply_to_id === id;
+    });
+
+    if (isReplyToFocal || isReplyToDescendant) {
+      console.log('[Feed] Instantly inserting new status into active peek:', postId, newStatus.id);
+      data.descendants.push(newStatus);
+      peekCache.set(newStatus.id, newStatus);
+      
+      // Update UI instantly
+      await renderReplyPeek(data.container, data.focalStatus, data.ancestors, data.descendants, newStatus.id, data.countEl);
+      matched = true;
+    }
+  }
+  return matched;
+}
+
+window.insertPostIntoActivePeeks = insertPostIntoActivePeeks;
 /**
  * Toggles the expanded (full) view of a condensed reply.
  */
 let currentExpansionLoadingId = null;
-const peekCache = new Map();
 
 window.toggleCondensedExpansion = async function (statusId, el, forceOpen = false) {
   const node = el.closest('.condensed-reply-node');
@@ -1333,17 +1399,43 @@ window.toggleCondensedExpansion = async function (statusId, el, forceOpen = fals
   }
 };
 
+/**
+ * Refreshes all currently open inline reply peeks.
+ */
+export async function refreshActiveReplyPeeks(scrollToId = null) {
+  // Use a delay to allow the server to process the new post before fetching context
+  setTimeout(async () => {
+    const activePeeks = document.querySelectorAll('.reply-peek-container.active');
+    if (activePeeks.length === 0) {
+      console.log('[Feed] refreshActiveReplyPeeks: No active peeks found.');
+      return;
+    }
+    
+    console.log(`[Feed] Refreshing ${activePeeks.length} active reply peeks...`, scrollToId ? `(scroll to ${scrollToId})` : '');
+    for (const container of activePeeks) {
+      const postId = container.id.replace('reply-peek-', '');
+      if (window.toggleReplyPeek) {
+        await window.toggleReplyPeek(postId, null, true, scrollToId);
+      }
+    }
+  }, 1000);
+}
+
+
+
+
 // Keyboard navigation for peek view
 let selectedReplyNode = null;
 let expansionDebounceTimer = null;
 
-function selectReplyNode(node) {
+export function selectReplyNode(node) {
   if (selectedReplyNode) selectedReplyNode.classList.remove('selected');
   selectedReplyNode = node;
   if (selectedReplyNode) {
     selectedReplyNode.classList.add('selected');
   }
 }
+
 
 function debouncedExpand(node) {
   if (expansionDebounceTimer) clearTimeout(expansionDebounceTimer);

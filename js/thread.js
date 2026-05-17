@@ -13,6 +13,8 @@ import { escapeHTML, updateURLParam } from './utils.js';
 
 
 export let currentThreadId = null;
+let activeThreadData = null;
+
 
 export function openThreadDrawer(statusId) {
   currentThreadId = statusId;
@@ -41,6 +43,7 @@ export function openThreadDrawer(statusId) {
 
 export function closeThreadDrawer() {
   currentThreadId = null;
+  activeThreadData = null;
   updateURLParam('thread', null);
   const wasInline = document.body.classList.contains('thread-inline-active');
   document.body.classList.remove('thread-inline-active');
@@ -62,32 +65,49 @@ export function closeThreadDrawer() {
   if (drawerContent) drawerContent.scrollTop = 0;
 }
 
-export function updateCurrentThread(delay = 1000) {
-  if (!currentThreadId) return;
+export function updateCurrentThread(delay = 1000, scrollToId = null) {
+  if (!currentThreadId) {
+    console.log('[Thread] updateCurrentThread: No currentThreadId, skipping.');
+    return;
+  }
+  console.log('[Thread] updateCurrentThread: scheduled refresh in', delay, 'ms for ID:', currentThreadId, scrollToId ? `(scroll to ${scrollToId})` : '');
   setTimeout(() => {
     const isDesktop = window.innerWidth > 900;
-    if (isDesktop && document.body.classList.contains('thread-inline-active')) {
-      loadThread(currentThreadId, $('thread-inline-content'), true);
-    } else if (!isDesktop && $('thread-drawer').classList.contains('open')) {
-      loadThread(currentThreadId, $('thread-content'), true);
+    const isInline = document.body.classList.contains('thread-inline-active');
+    const isDrawerOpen = $('thread-drawer').classList.contains('open');
+
+    console.log('[Thread] updateCurrentThread: executing refresh.', { isDesktop, isInline, isDrawerOpen });
+
+    if (isDesktop && isInline) {
+      loadThread(currentThreadId, $('thread-inline-content'), true, scrollToId);
+    } else if (!isDesktop && isDrawerOpen) {
+      loadThread(currentThreadId, $('thread-content'), true, scrollToId);
+    } else {
+      console.log('[Thread] updateCurrentThread: No active thread container found for refresh.');
     }
   }, delay);
 }
 
+
+
 /* ── Load thread data ──────────────────────────────────────────────── */
 
-async function loadThread(statusId, container, preserveScroll = false) {
+async function loadThread(statusId, container, preserveScroll = false, scrollToId = null) {
   const currentScroll = container.scrollTop;
+  console.log('[Thread] loadThread starting for ID:', statusId, { preserveScroll, scrollToId });
   try {
     // Fetch focal status first to see if it's a reblog
     const focalStatus = await apiGet(`/api/v1/statuses/${statusId}`, state.token);
 
     // Use original post ID for context if it's a boost
     const actualId = focalStatus.reblog ? focalStatus.reblog.id : focalStatus.id;
+    console.log('[Thread] loadThread: fetching context for actualId:', actualId);
 
     const context = await apiGet(`/api/v1/statuses/${actualId}/context`, state.token);
     const ancestors = context.ancestors || [];
     const descendants = context.descendants || [];
+    console.log(`[Thread] loadThread: received context. ancestors=${ancestors.length}, descendants=${descendants.length}`);
+
     await fetchRelationships([focalStatus, ...ancestors, ...descendants]);
 
     // Apply visibility and filter rules
@@ -100,8 +120,17 @@ async function loadThread(statusId, container, preserveScroll = false) {
       return !(isFiltered && filterAction === 'hide');
     });
 
-    renderThread(focalStatus, filteredAncestors, filteredDescendants, container, preserveScroll ? currentScroll : 0);
+    console.log('[Thread] loadThread: rendering thread...');
+    renderThread(focalStatus, filteredAncestors, filteredDescendants, container, preserveScroll ? currentScroll : 0, scrollToId);
+
+    activeThreadData = {
+      focalStatus,
+      ancestors: filteredAncestors,
+      descendants: filteredDescendants,
+      container
+    };
   } catch (err) {
+    console.error('[Thread] loadThread error:', err);
     container.innerHTML = `
       <div class="thread-status">
         <iconify-icon icon="ph:warning-circle-bold" style="font-size: 20px;"></iconify-icon>
@@ -109,6 +138,8 @@ async function loadThread(statusId, container, preserveScroll = false) {
       </div>`;
   }
 }
+
+
 
 /* ── Tree building ─────────────────────────────────────────────────── */
 
@@ -158,12 +189,12 @@ function renderTree(nodes, depth) {
 
 /* ── Full thread render ────────────────────────────────────────────── */
 
-function renderThread(focalStatus, ancestors, descendants, container, prevScroll = 0) {
+function renderThread(focalStatus, ancestors, descendants, container, prevScroll = 0, scrollToId = null) {
   const treeNodes = buildFullTree(ancestors, focalStatus, descendants);
 
   const parts = [];
 
-  console.log('[Thread] Rendering:', { focalStatus, ancestorsCount: ancestors.length, in_reply_to_account_id: focalStatus.in_reply_to_account_id });
+  console.log('[Thread] Rendering:', { focalStatus, ancestorsCount: ancestors.length, in_reply_to_account_id: focalStatus.in_reply_to_account_id, scrollToId });
   if (ancestors.length > 0) {
     const topAncestorId = ancestors[0].reblog ? ancestors[0].reblog.id : ancestors[0].id;
     parts.push(`<div class="thread-section-label context-jump-btn" data-status-id="${topAncestorId}" title="View full context">
@@ -198,10 +229,26 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
   }
 
   container.innerHTML = parts.join('');
-  if (prevScroll > 0) {
-    container.scrollTop = prevScroll;
-  } else {
-    requestAnimationFrame(() => {
+
+  requestAnimationFrame(() => {
+    // If we have a specific target post (e.g. just posted)
+    if (scrollToId) {
+      const targetPost = container.querySelector(`article.post[data-post-id="${scrollToId}"]`);
+      if (targetPost) {
+        console.log('[Thread] Scrolling to targetPost:', scrollToId);
+        targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetPost.classList.add('flash-highlight');
+        targetPost.classList.add('selected');
+        setTimeout(() => targetPost.classList.remove('flash-highlight'), 2000);
+        return;
+      }
+
+    }
+
+    // Default scroll behavior (focal post or preserved scroll)
+    if (prevScroll > 0) {
+      container.scrollTop = prevScroll;
+    } else {
       const focalPost = container.querySelector('.thread-post-focal');
       const isDesktop = window.innerWidth > 900;
       
@@ -226,6 +273,41 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
           container.scrollTop = 0;
         }
       }
-    });
-  }
+    }
+  });
 }
+
+export function insertPostIntoActiveThread(newStatus) {
+  if (!activeThreadData) {
+    console.log('[Thread] No active thread open for local insertion.');
+    return false;
+  }
+
+  const focalId = activeThreadData.focalStatus.reblog ? activeThreadData.focalStatus.reblog.id : activeThreadData.focalStatus.id;
+  const isReplyToFocal = newStatus.in_reply_to_id === focalId;
+  const isReplyToDescendant = activeThreadData.descendants.some(d => {
+    const id = d.reblog ? d.reblog.id : d.id;
+    return newStatus.in_reply_to_id === id;
+  });
+
+  if (isReplyToFocal || isReplyToDescendant) {
+    console.log('[Thread] Instantly inserting new status into active thread:', newStatus.id);
+    activeThreadData.descendants.push(newStatus);
+    
+    renderThread(
+      activeThreadData.focalStatus,
+      activeThreadData.ancestors,
+      activeThreadData.descendants,
+      activeThreadData.container,
+      0,
+      newStatus.id
+    );
+    return true;
+  }
+  
+  return false;
+}
+
+window.insertPostIntoActiveThread = insertPostIntoActiveThread;
+
+

@@ -162,7 +162,24 @@
   background: rgba(136, 136, 160, 0.06);
 }
 
+@keyframes flashHighlight {
+  0% { background-color: var(--surface2); }
+  30% { background-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+  100% { background-color: transparent; }
+}
+
+.flash-highlight {
+  animation: flashHighlight 2s ease-out;
+}
+
+
+.post.selected {
+  border-left-color: var(--accent) !important;
+  background: rgba(155, 127, 255, 0.05);
+}
+
 /* ─── Hashtag Banner (above post) ─── */
+
 .post-hashtag-banner {
   display: flex;
   align-items: center;
