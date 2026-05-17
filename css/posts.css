@@ -163,9 +163,17 @@
 }
 
 @keyframes flashHighlight {
-  0% { background-color: var(--surface2); }
-  30% { background-color: color-mix(in srgb, var(--accent) 30%, transparent); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: var(--surface2);
+  }
+
+  30% {
+    background-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  100% {
+    background-color: transparent;
+  }
 }
 
 .flash-highlight {
@@ -693,9 +701,6 @@
   opacity: 0.8;
 }
 
-.condensed-reply-node--info {
-  /* Aligned to root */
-}
 
 .condensed-reply-info {
   display: flex;
@@ -1168,7 +1173,7 @@
   top: -1px;
   font-size: 0.92em;
   line-height: 1.2;
-  margin: 2px 3px;
+  margin: 2px 1.5px;
   text-decoration: none;
   transition: all var(--trans);
   cursor: pointer;
@@ -1361,7 +1366,8 @@
   border-radius: var(--radius);
   border: 1px solid var(--border);
   position: relative;
-  overflow: visible; /* Allow alt panels to break out */
+  overflow: visible;
+  /* Allow alt panels to break out */
   z-index: 5;
 }
 
@@ -1400,7 +1406,8 @@
 }
 
 .media-item.alt-open {
-  z-index: 100; /* Float above other items in the grid */
+  z-index: 100;
+  /* Float above other items in the grid */
 }
 
 .media-item-img-clip {
@@ -3150,6 +3157,110 @@ body.hide-cards-enabled .post-card {
 
 .video-player-wrap.vp-muted .vp-icon-mute {
   display: block;
+}
+
+/* Volume container and popover panel */
+.vid-volume-wrap {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.vid-volume-popover {
+  position: absolute;
+  bottom: calc(100% + 10px); /* 10px above the control bar */
+  left: 50%;
+  transform: translateX(-50%) translateY(8px) scale(0.95);
+  background: rgba(10, 10, 10, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  width: 38px;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 99;
+}
+
+/* Show popover when volume open state is active */
+.vid-volume-wrap.vp-volume-open .vid-volume-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* Naturally vertical volume range slider using writing-mode */
+.vid-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  writing-mode: vertical-lr; /* Naturally vertical */
+  direction: rtl; /* Bottom is 0, Top is 1.0 */
+  width: 30px; /* interactive horizontal thickness of vertical slider */
+  height: 90px; /* interactive height of vertical slider */
+  background: transparent !important;
+  outline: none;
+  cursor: pointer;
+  position: absolute;
+  margin: 0;
+}
+
+/* Chrome/Safari track */
+.vid-volume-slider::-webkit-slider-runnable-track {
+  width: 4px; /* thickness of the vertical track */
+  height: 100%;
+  background: var(--volume-track-bg, rgba(255, 255, 255, 0.25));
+  border-radius: 99px;
+}
+
+/* Chrome/Safari thumb - enlarged for high tactile ease on mobile/touch */
+.vid-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  margin-left: -5px; /* Center the 14px thumb horizontally on the 4px track width: (4px - 14px) / 2 = -5px */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vid-volume-slider:hover::-webkit-slider-thumb,
+.vid-volume-slider:active::-webkit-slider-thumb {
+  transform: scale(1.25);
+}
+
+/* Firefox track */
+.vid-volume-slider::-moz-range-track {
+  width: 4px; /* thickness of the vertical track */
+  height: 100%;
+  background: var(--volume-track-bg, rgba(255, 255, 255, 0.25));
+  border-radius: 99px;
+}
+
+/* Firefox thumb - enlarged for high tactile ease on mobile/touch */
+.vid-volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vid-volume-slider:hover::-moz-range-thumb,
+.vid-volume-slider:active::-moz-range-thumb {
+  transform: scale(1.25);
 }
 
 .video-player-wrap .vp-icon-exit-fullscreen {

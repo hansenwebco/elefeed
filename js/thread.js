@@ -42,6 +42,20 @@ export function openThreadDrawer(statusId) {
 }
 
 export function closeThreadDrawer() {
+  // Pause any playing videos inside the thread before closing/clearing
+  const containers = [$('thread-inline-content'), $('thread-content')];
+  containers.forEach(container => {
+    if (container) {
+      container.querySelectorAll('video').forEach(vid => {
+        try {
+          vid.pause();
+        } catch (e) {
+          console.error('[Thread] Failed to pause video on close:', e);
+        }
+      });
+    }
+  });
+
   currentThreadId = null;
   activeThreadData = null;
   updateURLParam('thread', null);
