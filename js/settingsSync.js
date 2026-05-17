@@ -121,7 +121,7 @@ function applySettings(prefs) {
   if (!prefs) return;
   const changedKeys = [];
   Object.keys(prefs).forEach(key => {
-    if (localStorage.getItem(key) !== prefs[key]) {
+    if (store.get(key) !== prefs[key]) {
       store.set(key, prefs[key]);
       changedKeys.push(key);
     }
