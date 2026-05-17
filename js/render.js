@@ -295,10 +295,15 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
               </button>
               <div class="vid-progress" onclick="vpSeek(event,this.closest('.video-player-wrap'))"><div class="vid-progress-fill"></div></div>
               <span class="vid-time">0:00</span>
-              <button class="vid-btn" onclick="vpToggleMute(this.closest('.video-player-wrap'))">
-                <iconify-icon icon="ph:speaker-high-fill" class="vp-icon-sound" style="font-size: 18px;"></iconify-icon>
-                <iconify-icon icon="ph:speaker-slash-fill" class="vp-icon-mute" style="font-size: 18px;"></iconify-icon>
-              </button>
+              <div class="vid-volume-wrap">
+                <button class="vid-btn" onclick="vpToggleVolumePopover(event, this.closest('.video-player-wrap'))">
+                  <iconify-icon icon="ph:speaker-high-fill" class="vp-icon-sound" style="font-size: 18px;"></iconify-icon>
+                  <iconify-icon icon="ph:speaker-slash-fill" class="vp-icon-mute" style="font-size: 18px;"></iconify-icon>
+                </button>
+                <div class="vid-volume-popover" onclick="event.stopPropagation()">
+                  <input type="range" class="vid-volume-slider" min="0" max="1" step="0.05" value="0" orient="vertical" onclick="event.stopPropagation()" oninput="vpVolumeInput(event, this.closest('.video-player-wrap'))" onchange="vpVolumeInput(event, this.closest('.video-player-wrap'))" style="--volume-track-bg: linear-gradient(to top, #fff 0%, rgba(255,255,255,0.25) 0%);">
+                </div>
+              </div>
               <button class="vid-btn" onclick="vpToggleFullscreen(this.closest('.video-player-wrap'))" title="Toggle Fullscreen">
                 <iconify-icon icon="ph:corners-out-fill" class="vp-icon-fullscreen" style="font-size: 18px;"></iconify-icon>
                 <iconify-icon icon="ph:corners-in-fill" class="vp-icon-exit-fullscreen" style="font-size: 18px;"></iconify-icon>
@@ -1028,10 +1033,15 @@ window.expandMedia = function expandMedia(mediaItem) {
         </button>
         <div class="vid-progress" onclick="vpSeek(event,this.closest('.video-player-wrap'))"><div class="vid-progress-fill"></div></div>
         <span class="vid-time">0:00</span>
-        <button class="vid-btn" onclick="vpToggleMute(this.closest('.video-player-wrap'))">
-          <iconify-icon icon="ph:speaker-high-fill" class="vp-icon-sound" style="font-size: 18px;"></iconify-icon>
-          <iconify-icon icon="ph:speaker-slash-fill" class="vp-icon-mute" style="font-size: 18px;"></iconify-icon>
-        </button>
+        <div class="vid-volume-wrap">
+          <button class="vid-btn" onclick="vpToggleVolumePopover(event, this.closest('.video-player-wrap'))">
+            <iconify-icon icon="ph:speaker-high-fill" class="vp-icon-sound" style="font-size: 18px;"></iconify-icon>
+            <iconify-icon icon="ph:speaker-slash-fill" class="vp-icon-mute" style="font-size: 18px;"></iconify-icon>
+          </button>
+          <div class="vid-volume-popover" onclick="event.stopPropagation()">
+            <input type="range" class="vid-volume-slider" min="0" max="1" step="0.05" value="0" orient="vertical" onclick="event.stopPropagation()" oninput="vpVolumeInput(event, this.closest('.video-player-wrap'))" onchange="vpVolumeInput(event, this.closest('.video-player-wrap'))" style="--volume-track-bg: linear-gradient(to top, #fff 0%, rgba(255,255,255,0.25) 0%);">
+          </div>
+        </div>
         <button class="vid-btn" onclick="vpToggleFullscreen(this.closest('.video-player-wrap'))" title="Toggle Fullscreen">
           <iconify-icon icon="ph:corners-out-fill" class="vp-icon-fullscreen" style="font-size: 18px;"></iconify-icon>
           <iconify-icon icon="ph:corners-in-fill" class="vp-icon-exit-fullscreen" style="font-size: 18px;"></iconify-icon>
@@ -1464,8 +1474,45 @@ window.vpTogglePlay = function (wrap) {
 window.vpToggleMute = function (wrap) {
   const vid = wrap && wrap.querySelector('video');
   if (!vid) return;
-  vid.muted = !vid.muted;
+  if (vid.muted) {
+    vid.muted = false;
+    if (vid.volume === 0) {
+      vid.volume = 0.8;
+    }
+  } else {
+    vid.muted = true;
+  }
   wrap.classList.toggle('vp-muted', vid.muted);
+};
+
+window.vpToggleVolumePopover = function (e, wrap) {
+  e.stopPropagation();
+  const volWrap = wrap.querySelector('.vid-volume-wrap');
+  if (!volWrap) return;
+  const isOpen = volWrap.classList.contains('vp-volume-open');
+  
+  if (!isOpen) {
+    // Close other volume popovers first
+    document.querySelectorAll('.vid-volume-wrap.vp-volume-open').forEach(el => {
+      el.classList.remove('vp-volume-open');
+    });
+    volWrap.classList.add('vp-volume-open');
+    
+    // Keep controls visible while adjusting volume
+    _vpClearHideTimer(wrap);
+  } else {
+    volWrap.classList.remove('vp-volume-open');
+    _vpShowControls(wrap);
+  }
+};
+
+window.vpVolumeInput = function (e, wrap) {
+  const vid = wrap && wrap.querySelector('video');
+  const slider = e.target;
+  if (!vid || !slider) return;
+  const vol = parseFloat(slider.value);
+  vid.volume = vol;
+  vid.muted = (vol === 0);
 };
 
 window.vpSeek = function (e, wrap) {
@@ -1477,19 +1524,35 @@ window.vpSeek = function (e, wrap) {
 };
 
 window.vpToggleFullscreen = function (wrap) {
-  if (!document.fullscreenElement) {
+  const vid = wrap && wrap.querySelector('video');
+  const fsEl = document.fullscreenElement || 
+               document.webkitFullscreenElement || 
+               document.mozFullScreenElement || 
+               document.msFullscreenElement;
+
+  if (!fsEl) {
     if (wrap.requestFullscreen) {
-      wrap.requestFullscreen();
+      wrap.requestFullscreen().catch(err => {
+        if (vid && vid.webkitEnterFullscreen) {
+          vid.webkitEnterFullscreen();
+        }
+      });
     } else if (wrap.webkitRequestFullscreen) {
       wrap.webkitRequestFullscreen();
+    } else if (wrap.mozRequestFullScreen) {
+      wrap.mozRequestFullScreen();
     } else if (wrap.msRequestFullscreen) {
       wrap.msRequestFullscreen();
+    } else if (vid && vid.webkitEnterFullscreen) {
+      vid.webkitEnterFullscreen();
     }
   } else {
     if (document.exitFullscreen) {
       document.exitFullscreen();
     } else if (document.webkitExitFullscreen) {
       document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
     } else if (document.msExitFullscreen) {
       document.msExitFullscreen();
     }
@@ -1623,6 +1686,34 @@ document.addEventListener('pause', (e) => {
   }
 }, true);
 
+document.addEventListener('volumechange', (e) => {
+  if (!(e.target instanceof HTMLVideoElement)) return;
+  const wrap = e.target.closest('.video-player-wrap');
+  if (wrap) {
+    const isMuted = e.target.muted || e.target.volume === 0;
+    wrap.classList.toggle('vp-muted', isMuted);
+    const slider = wrap.querySelector('.vid-volume-slider');
+    if (slider) {
+      slider.value = isMuted ? 0 : e.target.volume;
+      const pct = (slider.value * 100) + '%';
+      slider.style.setProperty('--volume-track-bg', `linear-gradient(to top, #fff ${pct}, rgba(255,255,255,0.25) ${pct})`);
+    }
+  }
+}, true);
+
+// Close open volume controls on clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.vid-volume-wrap')) {
+    document.querySelectorAll('.vid-volume-wrap.vp-volume-open').forEach(el => {
+      el.classList.remove('vp-volume-open');
+      const wrap = el.closest('.video-player-wrap');
+      if (wrap) {
+        _vpShowControls(wrap);
+      }
+    });
+  }
+});
+
 // ── Auto-hide controls after inactivity ──────────────────────────────────
 const _vpHideTimers = new WeakMap();
 const VP_HIDE_DELAY = 2500; // ms
@@ -1630,6 +1721,13 @@ const VP_HIDE_DELAY = 2500; // ms
 function _vpShowControls(wrap) {
   wrap.classList.add('vp-controls-visible');
   _vpClearHideTimer(wrap);
+  
+  // If volume panel is open, do not auto-hide controls
+  const volWrap = wrap.querySelector('.vid-volume-wrap');
+  if (volWrap && volWrap.classList.contains('vp-volume-open')) {
+    return;
+  }
+  
   // Only auto-hide while playing
   const vid = wrap.querySelector('video');
   if (vid && !vid.paused) {

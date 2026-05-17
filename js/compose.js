@@ -10,7 +10,7 @@ import { apiGet } from './api.js';
 import { showToast, showConfirm } from './ui.js';
 import { applyCountsFromStatus } from './counts.js';
 import { escapeHTML, renderCustomEmojis, placeCursorAtEnd, getEditorText } from './utils.js';
-import { loadFeedTab } from './feed.js';
+import { loadFeedTab, refreshActiveReplyPeeks } from './feed.js';
 import { updateCurrentThread } from './thread.js';
 import { openEmojiPicker, closeEmojiPicker, initEmojiPicker, initEmojiAutocomplete } from './emoji.js';
 
@@ -1339,19 +1339,34 @@ async function doPost(suffix = '') {
       headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(postData),
     });
+    
+    const result = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const error = await res.json().catch(() => ({}));
-      throw new Error(error.error || 'Failed to post');
+      throw new Error(result.error || 'Failed to post');
     }
 
+    const newStatusId = result.id;
     showToast('Posted successfully!');
 
+    const wasReply = !!composeState.replyToId;
     // Form reset happens largely via resetReplyState
     resetReplyState();
 
     if (!isSidebar) closeComposeDrawer();
-    if (state.activeTab === 'feed') loadFeedTab(false);
-    updateCurrentThread();
+    
+    // Only refresh the entire feed if it wasn't a reply (new post)
+    // Refreshing the feed for a reply is disruptive to peeks/threads
+    if (state.activeTab === 'feed' && !wasReply) {
+      loadFeedTab(false);
+    }
+    
+    if (wasReply && window.insertNewPostLocally) {
+      window.insertNewPostLocally(result);
+    } else {
+      updateCurrentThread(1000, newStatusId);
+      refreshActiveReplyPeeks(newStatusId);
+    }
+
   } catch (err) {
     showToast('Failed to post: ' + err.message);
   } finally {
@@ -1359,6 +1374,22 @@ async function doPost(suffix = '') {
     btn.textContent = 'Post';
   }
 }
+
+window.insertNewPostLocally = function (newStatus) {
+  let threadMatched = false;
+
+  if (window.insertPostIntoActiveThread) {
+    threadMatched = window.insertPostIntoActiveThread(newStatus);
+  }
+  if (window.insertPostIntoActivePeeks) {
+    window.insertPostIntoActivePeeks(newStatus).then(matched => {
+      console.log('[Compose] Peek local insertion complete. Matched:', matched);
+    });
+  }
+
+  console.log('[Compose] Local insertion triggered.', { threadMatched });
+};
+
 
 /* ══════════════════════════════════════════════════════════════════════
    MENTION AUTOCOMPLETE

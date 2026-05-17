@@ -56,6 +56,7 @@ async function build() {
         'manifest.json',
         'favicon.svg',
         'favicon-dev.svg',
+        'favicon.ico',
         'icon512x512.png',
         'og-image.png',
         'sw.js',
