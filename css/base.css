@@ -43,7 +43,18 @@ input::-ms-reveal {
 
 :root,
 html[data-palette="classic"][data-mode="dark"] {
-  color-scheme: dark !important;
+  color-scheme: dark;
+
+  /* Global Color Scheme Overrides for WebViews */
+  color-scheme: only dark !important;
+}
+
+html[data-mode="light"] {
+  color-scheme: only light !important;
+}
+
+html[data-mode="dark"] {
+  color-scheme: only dark !important;
 
   /* Colors */
   --bg: #0d0d0f;

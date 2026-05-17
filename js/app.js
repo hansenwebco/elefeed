@@ -1457,6 +1457,18 @@ function applyTheme(t) {
   } else {
     document.documentElement.removeAttribute('data-theme');
   }
+
+  // Update theme-color and color-scheme meta tags dynamically to prevent WebView forced darkening
+  const isDark = actualMode === 'dark';
+  const themeColor = isDark ? '#0d0d0f' : '#f4f4f7';
+
+  let metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) metaTheme.setAttribute('content', themeColor);
+
+  let metaColorScheme = document.querySelector('meta[name="color-scheme"]');
+  if (metaColorScheme) {
+    metaColorScheme.setAttribute('content', isDark ? 'only dark' : 'only light');
+  }
 }
 
 function applyPalette(p) {
