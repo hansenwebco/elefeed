@@ -477,7 +477,10 @@ async function loadHashtagsFeed() {
   const isSpecificTag = state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all' && state.selectedHashtagFilter !== 'landing';
 
   const filterBar = $('hashtag-filter-bar');
-  if (filterBar) filterBar.style.display = 'block';
+  if (filterBar) {
+    filterBar.style.display = 'block';
+    filterBar.classList.toggle('landing-mode', isLanding);
+  }
 
   // Toggle consolidated follow button in the active pill
   const followBtn = $('hashtag-header-follow-btn');

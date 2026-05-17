@@ -21,7 +21,7 @@
 }
 
 @media (min-width: 901px) {
-  .hashtag-view-container {
+  .hashtag-view-container.landing-mode {
     flex: 1;
     overflow-y: auto;
     scrollbar-width: thin;
@@ -35,7 +35,7 @@
   gap: 12px;
   max-width: 680px;
   width: 100%;
-  margin: 16px auto 24px auto;
+  margin: 12px auto 18px auto;
   padding: 16px 20px;
   background: var(--surface2);
   border: 1px solid var(--border);
