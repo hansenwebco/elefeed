@@ -28,7 +28,10 @@ export function sanitizeHTML(html, context = null) {
   const div = document.createElement('div');
   div.innerHTML = html;
 
-  const clearUrls = localStorage.getItem('pref_clear_urls') === 'true';
+  let clearUrls = false;
+  try {
+    clearUrls = localStorage.getItem('pref_clear_urls') === 'true';
+  } catch (e) { }
 
   // 1. Process links (mentions, hashtags, external)
   div.querySelectorAll('a').forEach(a => {
