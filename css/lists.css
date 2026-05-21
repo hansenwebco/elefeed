@@ -94,6 +94,7 @@
 
 .list-search-input {
   padding: 0 12px;
+  width: 100%;
 }
 
 .list-main-search-input {
@@ -348,6 +349,15 @@
   height: 38px;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .list-action-btn-main:hover {
@@ -369,6 +379,9 @@
   gap: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .list-action-btn-danger:hover {
@@ -507,14 +520,22 @@
 
 .member-remove-btn {
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border2);
   color: var(--text-muted);
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: 0 12px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .member-remove-btn:hover {
@@ -528,11 +549,19 @@
   border: none;
   color: var(--bg);
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 5px 12px;
+  padding: 0 14px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .member-add-btn:hover {
@@ -685,3 +714,195 @@
   }
 }
 
+/* ─── Smart Suggestions ─── */
+.list-suggestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.list-suggestion-item:hover {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.list-suggestion-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #6b6b6b;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.list-suggestion-avatar:hover {
+  opacity: 0.85;
+}
+
+.list-suggestion-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.list-suggestion-name:hover {
+  text-decoration: underline;
+  color: var(--accent);
+}
+
+.list-suggestion-handle {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-suggestion-reason-badge {
+  font-size: 8.5px;
+  color: var(--accent);
+  font-weight: 600;
+  background: rgba(var(--accent-rgb, 155, 127, 255), 0.08);
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  display: inline-block;
+}
+
+.list-suggestion-add-btn {
+  background: var(--accent);
+  border: none;
+  color: var(--bg);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 14px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.list-suggestion-add-btn:hover {
+  background: var(--accent2);
+}
+
+.list-suggestion-add-btn.added {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: default;
+}
+
+/* ─── List Drawer Utility Classes ─── */
+
+.list-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.list-select-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 32px 0 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  line-height: 36px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text);
+  font-family: var(--font-body);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.list-select-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 155, 127, 255), 0.12);
+  background: var(--bg);
+}
+
+.list-select-wrapper .list-select-caret {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  pointer-events: none;
+  font-size: 14px;
+}
+
+.list-member-search-wrap {
+  position: relative;
+}
+
+.list-member-search-wrap .list-member-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  pointer-events: none;
+  font-size: 14px;
+}
+
+.list-member-search-wrap .list-search-input {
+  padding-left: 32px;
+}
+
+.list-suggestions-explainer {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+.list-suggestions-keyword-wrap {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.list-suggestions-keyword-input-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.list-suggestions-keyword-input-wrap .list-suggestions-keyword-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  pointer-events: none;
+  font-size: 13px;
+}
+
+.list-suggestions-keyword-input-wrap .list-search-input {
+  padding-left: 30px;
+}
