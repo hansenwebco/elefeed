@@ -3203,17 +3203,26 @@ async function initListsUI() {
   const {
     openListsManager, closeListsManager, closeListDetail,
     handleListMemberSearch, createUserList, renameUserList,
-    deleteUserList, renderListsOverview, selectList
+    deleteUserList, renderListsOverview, selectList, renderListsGrid,
+    openListDetail, updateUserListRepliesPolicy
   } = await import('./lists.js');
 
   window.openListsManager = openListsManager;
   window.closeListsManager = closeListsManager;
 
   $('manage-lists-btn')?.addEventListener('click', openListsManager);
-  $('list-clear-filter')?.addEventListener('click', () => selectList('landing'));
+  $('list-clear-filter')?.addEventListener('click', () => {
+    const input = $('list-search-input');
+    if (input) input.value = '';
+    selectList('landing');
+  });
   $('manage-lists-close')?.addEventListener('click', closeListsManager);
   $('manage-lists-backdrop')?.addEventListener('click', closeListsManager);
   $('manage-list-back-btn')?.addEventListener('click', closeListDetail);
+
+  $('list-search-input')?.addEventListener('input', () => {
+    renderListsGrid();
+  });
 
   $('list-member-search-input')?.addEventListener('input', e => {
     handleListMemberSearch(e.target.value);
@@ -3222,10 +3231,16 @@ async function initListsUI() {
   const handleCreateSubmit = async () => {
     const input = $('list-create-input');
     const title = input.value.trim();
+    const policySelect = $('list-create-replies-policy-select');
+    const repliesPolicy = policySelect ? policySelect.value : 'followed';
     if (title) {
-      await createUserList(title);
+      const newList = await createUserList(title, repliesPolicy);
       input.value = '';
+      if (policySelect) policySelect.value = 'followed';
       renderListsOverview();
+      if (newList && newList.id) {
+        openListDetail(newList.id);
+      }
     }
   };
 
@@ -3234,6 +3249,13 @@ async function initListsUI() {
     if (e.key === 'Enter') {
       e.preventDefault();
       handleCreateSubmit();
+    }
+  });
+
+  $('list-replies-policy-select')?.addEventListener('change', async e => {
+    const { activeListDetailId } = await import('./lists.js');
+    if (activeListDetailId) {
+      await updateUserListRepliesPolicy(activeListDetailId, e.target.value);
     }
   });
 
@@ -3276,6 +3298,9 @@ async function initListsUI() {
       if (success) {
         closeListDetail();
         renderListsOverview();
+        if (state.feedFilter === 'lists') {
+          import('./feed.js').then(m => m.loadFeedTab(true));
+        }
       }
     }
   });

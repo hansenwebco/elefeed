@@ -69,13 +69,22 @@
   gap: 12px;
 }
 
-.list-search-input {
+.search-icon-fixed {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.list-search-input,
+.list-main-search-input {
   flex: 1;
   height: 38px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 0 12px;
   font-size: 14px;
   color: var(--text);
   font-family: var(--font-body);
@@ -83,7 +92,16 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.list-search-input:focus {
+.list-search-input {
+  padding: 0 12px;
+}
+
+.list-main-search-input {
+  padding: 0 12px 0 38px;
+}
+
+.list-search-input:focus,
+.list-main-search-input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 155, 127, 255), 0.12);
@@ -198,7 +216,6 @@
 .list-feed-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   animation: listSlideIn 0.2s ease;
   width: 100%;
@@ -250,26 +267,28 @@
 
 .list-follow-btn-standalone {
   flex-shrink: 0;
-  background: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  color: var(--bg);
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text-muted);
   font-family: var(--font-sans);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   padding: 6px 16px;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
+  min-width: 82px;
+  height: 30px;
 }
 
 .list-follow-btn-standalone:hover {
-  background: var(--accent2);
-  border-color: var(--accent2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: none;
 }
 
 #lists-landing-grid-view {
@@ -637,3 +656,32 @@
     opacity: 0.8;
   }
 }
+
+@media (max-width: 480px) {
+  .list-search-hero {
+    gap: 8px;
+  }
+
+  .list-manage-toggle span {
+    display: none;
+  }
+
+  .list-manage-toggle {
+    width: 38px;
+    padding: 0 !important;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .list-main-search-input {
+    font-size: 13px;
+    padding-left: 36px;
+  }
+
+  .search-icon-fixed {
+    left: 10px;
+    width: 16px;
+    height: 16px;
+  }
+}
+

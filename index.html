@@ -664,12 +664,14 @@
             <!-- Lists View Container (Dedicated landing for lists) -->
             <div class="list-view-container" id="lists-filter-bar" style="display:none;">
               <div class="list-header-box">
-                <!-- Page Header: Manage -->
+                <!-- Page Header: Search and Manage -->
                 <header class="list-page-header">
                   <div class="list-search-hero">
-                    <button id="manage-lists-btn" class="list-manage-toggle" style="margin-left: auto;">
+                    <iconify-icon icon="ph:magnifying-glass-bold" class="search-icon-fixed" style="font-size: 20px;"></iconify-icon>
+                    <input type="text" id="list-search-input" class="list-main-search-input" placeholder="Search my lists..." autocomplete="off" />
+                    <button id="manage-lists-btn" class="list-manage-toggle">
                       <iconify-icon icon="ph:gear-bold" style="font-size: 16px;"></iconify-icon>
-                      <span>Manage Lists</span>
+                      <span>Manage</span>
                     </button>
                   </div>
                 </header>
@@ -684,7 +686,7 @@
                         <iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>
                       </button>
                     </div>
-                    <button id="list-header-edit-btn" class="list-follow-btn-standalone" style="display:none;">Manage Members</button>
+                    <button id="list-header-edit-btn" class="list-follow-btn-standalone" style="display:none;">Manage List</button>
                   </div>
                 </div>
               </div>
@@ -1085,10 +1087,21 @@
     <div class="manage-list-drawer-inner">
       <!-- Standard view: List of all lists and "Create new list" -->
       <div id="manage-lists-overview" class="lists-drawer-section">
-        <div style="padding:16px; border-bottom:1px solid var(--border);">
+        <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:12px;">
           <div class="list-create-wrap">
             <input type="text" id="list-create-input" class="list-search-input" placeholder="Create new list title..." autocomplete="off" />
             <button id="list-create-btn" class="list-action-btn-main">Create</button>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <label for="list-create-replies-policy-select" style="font-size:12px; font-weight:500; color:var(--text-muted);">Include replies from list members to:</label>
+            <div class="list-select-wrapper" style="position:relative; width:100%;">
+              <select id="list-create-replies-policy-select" class="list-search-input" style="width:100%; padding-right:32px; appearance:none; cursor:pointer; height:38px; line-height:36px; padding-left:12px; border-radius:10px;">
+                <option value="none">No one</option>
+                <option value="list">Members of the list</option>
+                <option value="followed" selected>Any followed user</option>
+              </select>
+              <iconify-icon icon="ph:caret-down-bold" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none; font-size:14px;"></iconify-icon>
+            </div>
           </div>
         </div>
         <div style="padding:16px;">
@@ -1118,6 +1131,18 @@
             <iconify-icon icon="ph:trash-bold" style="font-size: 14px;"></iconify-icon>
             Delete List
           </button>
+        </div>
+
+        <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:6px;">
+          <label for="list-replies-policy-select" style="font-size:12px; font-weight:500; color:var(--text-muted);">Include replies from list members to:</label>
+          <div class="list-select-wrapper" style="position:relative; width:100%;">
+            <select id="list-replies-policy-select" class="list-search-input" style="width:100%; padding-right:32px; appearance:none; cursor:pointer; height:38px; line-height:36px; padding-left:12px; border-radius:10px;">
+              <option value="none">No one</option>
+              <option value="list">Members of the list</option>
+              <option value="followed">Any followed user</option>
+            </select>
+            <iconify-icon icon="ph:caret-down-bold" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none; font-size:14px;"></iconify-icon>
+          </div>
         </div>
 
         <!-- Member Search Section -->

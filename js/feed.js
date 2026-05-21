@@ -609,6 +609,17 @@ async function loadListsFeed() {
     }
   }
 
+  // Verify that the currently selected list still exists.
+  // If it doesn't, move the user off the old list (revert to landing).
+  if (state.selectedListId && state.selectedListId !== 'landing') {
+    const listExists = state.lists && state.lists.some(l => l.id === state.selectedListId);
+    if (!listExists) {
+      console.warn(`Selected list ${state.selectedListId} no longer exists. Reverting to landing.`);
+      state.selectedListId = 'landing';
+      updateURLParam('list', null);
+    }
+  }
+
   // 1. Determine if we are in "Landing" mode or "Feed" mode
   const isLanding = !state.selectedListId || state.selectedListId === 'landing';
   const isSpecificList = state.selectedListId && state.selectedListId !== 'landing';

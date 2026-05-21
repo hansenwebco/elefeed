@@ -92,8 +92,7 @@ export async function deleteUserList(listId) {
     delete mockAccounts[listId];
     state.lists = [...mockLists];
     if (state.selectedListId === listId) {
-      state.selectedListId = null;
-      state.feedFilter = 'all';
+      state.selectedListId = 'landing';
     }
     showToast(`List "${title}" deleted.`, 'success');
     return true;
@@ -103,8 +102,7 @@ export async function deleteUserList(listId) {
     await apiDelete(`/api/v1/lists/${listId}`, state.token);
     await fetchUserLists();
     if (state.selectedListId === listId) {
-      state.selectedListId = null;
-      state.feedFilter = 'all';
+      state.selectedListId = 'landing';
     }
     showToast(`List "${title}" deleted.`, 'success');
     return true;
@@ -139,6 +137,35 @@ export async function renameUserList(listId, newTitle) {
     return res;
   } catch (err) {
     showToast(`Failed to rename list: ${err.message}`, 'error');
+    throw err;
+  }
+}
+
+/**
+ * Update list replies policy.
+ */
+export async function updateUserListRepliesPolicy(listId, repliesPolicy) {
+  if (state.demoMode) {
+    const list = mockLists.find(l => l.id === listId);
+    if (list) list.replies_policy = repliesPolicy;
+    state.lists = [...mockLists];
+    showToast(`Replies policy updated.`, 'success');
+    return list;
+  }
+
+  try {
+    const res = await apiPut(`/api/v1/lists/${listId}`, { replies_policy: repliesPolicy }, state.token);
+    
+    // Dynamically update local state.lists to ensure immediate, cache-proof synchronization
+    if (state.lists) {
+      const list = state.lists.find(l => l.id === listId);
+      if (list) list.replies_policy = repliesPolicy;
+    }
+    
+    showToast(`Replies policy updated successfully!`, 'success');
+    return res;
+  } catch (err) {
+    showToast(`Failed to update replies policy: ${err.message}`, 'error');
     throw err;
   }
 }
@@ -318,13 +345,9 @@ export function renderListsOverview() {
       const success = await deleteUserList(id);
       if (success) {
         renderListsOverview();
-        // If we deleted the active list timeline, reload the grid
+        // If we deleted the active list timeline, reload the feed
         if (state.feedFilter === 'lists') {
-          if (!state.selectedListId) {
-            renderListsGrid();
-          } else {
-            import('./feed.js').then(m => m.loadFeedTab(true));
-          }
+          import('./feed.js').then(m => m.loadFeedTab(true));
         }
       }
     };
@@ -343,6 +366,7 @@ export async function openListDetail(listId) {
   const detail = $('manage-list-detail');
   const detailTitle = $('manage-list-detail-title');
   const renameInput = $('list-rename-input');
+  const repliesPolicySelect = $('list-replies-policy-select');
   const memberSearchInput = $('list-member-search-input');
   const memberSearchResults = $('list-member-search-results');
 
@@ -353,6 +377,9 @@ export async function openListDetail(listId) {
 
   detailTitle.textContent = `Manage: ${list.title}`;
   renameInput.value = list.title;
+  if (repliesPolicySelect) {
+    repliesPolicySelect.value = list.replies_policy || 'followed';
+  }
   memberSearchInput.value = '';
   memberSearchResults.innerHTML = '';
 
@@ -541,8 +568,18 @@ export function renderListsGrid() {
   const countLabel = $('user-lists-count-label');
   if (!grid) return;
 
+  const searchInput = $('list-search-input');
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+  let filteredLists = state.lists || [];
+  if (query) {
+    filteredLists = filteredLists.filter(list => list.title.toLowerCase().includes(query));
+  }
+
   if (countLabel) {
-    countLabel.textContent = `My Lists (${state.lists ? state.lists.length : 0})`;
+    countLabel.textContent = query 
+      ? `Search Results (${filteredLists.length})` 
+      : `My Lists (${state.lists ? state.lists.length : 0})`;
   }
 
   // Generate hero card for adding/creating a list
@@ -554,8 +591,10 @@ export function renderListsGrid() {
     </div>
   `;
 
-  if (!state.lists || state.lists.length === 0) {
-    grid.innerHTML = addCardHTML;
+  if (filteredLists.length === 0) {
+    grid.innerHTML = query
+      ? `<div class="list-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px;">No matching lists found.</div>` + addCardHTML
+      : addCardHTML;
     
     // Wire hero click
     const hero = $('list-card-create-hero');
@@ -563,7 +602,7 @@ export function renderListsGrid() {
     return;
   }
 
-  grid.innerHTML = state.lists.map(list => `
+  grid.innerHTML = filteredLists.map(list => `
     <div class="list-card" data-id="${list.id}">
       <iconify-icon icon="ph:list-bullets-bold" style="font-size: 24px; color: var(--accent); opacity: 0.8; margin-bottom: 4px;"></iconify-icon>
       <div class="list-card-name">${escapeHTML(list.title)}</div>
