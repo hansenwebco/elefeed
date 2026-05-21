@@ -1094,13 +1094,13 @@
           </div>
           <div style="display:flex; flex-direction:column; gap:6px;">
             <label for="list-create-replies-policy-select" style="font-size:12px; font-weight:500; color:var(--text-muted);">Include replies from list members to:</label>
-            <div class="list-select-wrapper" style="position:relative; width:100%;">
-              <select id="list-create-replies-policy-select" class="list-search-input" style="width:100%; padding-right:32px; appearance:none; cursor:pointer; height:38px; line-height:36px; padding-left:12px; border-radius:10px;">
+            <div class="list-select-wrapper">
+              <select id="list-create-replies-policy-select" class="list-select-input">
                 <option value="none">No one</option>
                 <option value="list">Members of the list</option>
                 <option value="followed" selected>Any followed user</option>
               </select>
-              <iconify-icon icon="ph:caret-down-bold" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none; font-size:14px;"></iconify-icon>
+              <iconify-icon icon="ph:caret-down-bold" class="list-select-caret"></iconify-icon>
             </div>
           </div>
         </div>
@@ -1135,22 +1135,22 @@
 
         <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:6px;">
           <label for="list-replies-policy-select" style="font-size:12px; font-weight:500; color:var(--text-muted);">Include replies from list members to:</label>
-          <div class="list-select-wrapper" style="position:relative; width:100%;">
-            <select id="list-replies-policy-select" class="list-search-input" style="width:100%; padding-right:32px; appearance:none; cursor:pointer; height:38px; line-height:36px; padding-left:12px; border-radius:10px;">
+          <div class="list-select-wrapper">
+            <select id="list-replies-policy-select" class="list-select-input">
               <option value="none">No one</option>
               <option value="list">Members of the list</option>
               <option value="followed">Any followed user</option>
             </select>
-            <iconify-icon icon="ph:caret-down-bold" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none; font-size:14px;"></iconify-icon>
+            <iconify-icon icon="ph:caret-down-bold" class="list-select-caret"></iconify-icon>
           </div>
         </div>
 
         <!-- Member Search Section -->
         <div style="padding:16px; border-bottom:1px solid var(--border);">
           <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.08em; font-family:var(--font-mono);">Add Members (Followed Profiles)</h4>
-          <div class="list-member-search-wrap" style="position:relative;">
-            <iconify-icon icon="ph:magnifying-glass-bold" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none; font-size: 14px;"></iconify-icon>
-            <input type="text" id="list-member-search-input" class="list-search-input" placeholder="Search followed profiles..." autocomplete="off" style="padding-left:32px;" />
+          <div class="list-member-search-wrap">
+            <iconify-icon icon="ph:magnifying-glass-bold" class="list-member-search-icon"></iconify-icon>
+            <input type="text" id="list-member-search-input" class="list-search-input" placeholder="Search followed profiles..." autocomplete="off" />
           </div>
           <div id="list-member-search-results" class="lists-member-results" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
             <!-- Populated dynamically -->
@@ -1158,10 +1158,35 @@
         </div>
 
         <!-- Current Members Section -->
-        <div style="padding:16px;">
+        <div style="padding:16px; border-bottom:1px solid var(--border);">
           <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Current Members (<span id="list-member-count">0</span>)</h4>
           <div id="list-members-container" class="lists-members-grid" style="display:flex; flex-direction:column; gap:8px;">
             <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Smart Suggestions Section -->
+        <div id="list-suggestions-section" style="padding:16px; display:none;">
+          <div id="list-suggestions-header" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;">
+            <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin:0; letter-spacing:0.08em; font-family:var(--font-mono); display:flex; align-items:center; gap:4px;">
+              <iconify-icon icon="ph:sparkle-bold" style="color:var(--accent); font-size:13px;"></iconify-icon> Smart Suggestions
+            </h4>
+            <iconify-icon id="list-suggestions-toggle-icon" icon="ph:caret-down-bold" style="color:var(--text-dim); font-size:14px; transition: transform 0.2s; transform: rotate(0deg);"></iconify-icon>
+          </div>
+          <div id="list-suggestions-body" style="display:block;">
+            <p class="list-suggestions-explainer">Smart suggestions find profiles you follow whose bios, usernames, or posts match your list's name. Enter custom keywords or tags below to find other candidates.</p>
+            <div id="list-suggestions-keyword-wrap" class="list-suggestions-keyword-wrap">
+              <div class="list-suggestions-keyword-input-wrap">
+                <iconify-icon icon="ph:tag-bold" class="list-suggestions-keyword-icon"></iconify-icon>
+                <input type="text" id="list-suggestions-keyword-input" class="list-search-input" placeholder="Enter custom keywords or tags..." autocomplete="off" />
+              </div>
+              <button id="list-suggestions-keyword-btn" class="list-action-btn-main">
+                <iconify-icon icon="ph:magnifying-glass-bold" style="font-size:14px;"></iconify-icon> Search
+              </button>
+            </div>
+            <div id="list-suggestions-container" style="display:flex; flex-direction:column; gap:8px; margin-top:12px; transition: all 0.3s ease;">
+              <!-- Rendered dynamically by js/lists.js -->
+            </div>
           </div>
         </div>
       </div>
@@ -1194,6 +1219,8 @@
       </div>
     </div>
   </div>
+
+
 
   <!-- Filter Edit Modal -->
   <div id="filter-edit-modal" class="compose-alt-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(13,13,15,0.85); align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">

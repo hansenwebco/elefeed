@@ -383,6 +383,14 @@ export async function openListDetail(listId) {
   memberSearchInput.value = '';
   memberSearchResults.innerHTML = '';
 
+  const keywordInput = $('list-suggestions-keyword-input');
+  if (keywordInput) keywordInput.value = '';
+
+  const suggestionsSection = $('list-suggestions-section');
+  const suggestionsContainer = $('list-suggestions-container');
+  if (suggestionsSection) suggestionsSection.style.display = 'none';
+  if (suggestionsContainer) suggestionsContainer.innerHTML = '';
+
   // Load current members
   const countEl = $('list-member-count');
   const listContainer = $('list-members-container');
@@ -398,6 +406,7 @@ export async function openListDetail(listId) {
   try {
     currentListMembers = await fetchListAccounts(listId);
     renderListMembers();
+    loadSmartSuggestions(listId, list.title);
   } catch (err) {
     showToast('Failed to load list members.', 'error');
   }
@@ -639,4 +648,325 @@ export async function selectList(listId) {
     state.selectedListId = 'landing';
     import('./feed.js').then(m => m.loadFeedTab(true));
   }
+}
+
+/**
+ * Loads and renders smart suggested list members based on followed hashtags & title keywords.
+ */
+export async function loadSmartSuggestions(listId, listTitle, customKeyword = null) {
+  const container = $('list-suggestions-container');
+  const section = $('list-suggestions-section');
+  if (!container || !section) return;
+
+  // Clear suggestions list
+  container.innerHTML = '';
+
+  // Show suggestions section
+  section.style.display = 'block';
+  // Ensure the body wrapper is visible (expanded by default) and caret rotated down
+  const body = $('list-suggestions-body');
+  if (body) {
+    body.style.display = 'block';
+  }
+  const toggleIcon = $('list-suggestions-toggle-icon');
+  if (toggleIcon) {
+    toggleIcon.style.transform = 'rotate(0deg)';
+  }
+
+  // Wire header toggle click listener once
+  const header = $('list-suggestions-header');
+  if (header && !header.dataset.listenerWired) {
+    header.dataset.listenerWired = 'true';
+    header.onclick = () => {
+      const isCollapsed = body ? body.style.display === 'none' : false;
+      if (body) {
+        body.style.display = isCollapsed ? 'block' : 'none';
+      }
+      const toggleIcon = $('list-suggestions-toggle-icon');
+      if (toggleIcon) {
+        toggleIcon.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(-90deg)';
+      }
+    };
+  }
+
+  // Wire custom keyword search elements
+  const keywordInput = $('list-suggestions-keyword-input');
+  const keywordBtn = $('list-suggestions-keyword-btn');
+  if (keywordInput && keywordBtn && !keywordInput.dataset.listenerWired) {
+    keywordInput.dataset.listenerWired = 'true';
+
+    const triggerSearch = () => {
+      const val = keywordInput.value.trim();
+      loadSmartSuggestions(listId, listTitle, val);
+    };
+
+    keywordBtn.onclick = triggerSearch;
+    keywordInput.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        triggerSearch();
+      }
+    };
+  }
+
+  // Identify all search tags
+  const searchTags = [];
+  if (customKeyword && customKeyword.trim()) {
+    customKeyword
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 0)
+      .forEach(w => {
+        if (!searchTags.includes(w)) searchTags.push(w);
+      });
+  } else {
+    // 1. Clean list title into matching words
+    const cleanWords = listTitle
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .split(/\s+/)
+      .filter(w => w.length > 2);
+
+    // 2. Identify all matching followed hashtags (or fall back to clean words)
+    if (state.followedHashtags && state.followedHashtags.length > 0) {
+      for (const tag of state.followedHashtags) {
+        const tagNameLower = tag.name.toLowerCase();
+        if (cleanWords.some(w => tagNameLower.includes(w) || w.includes(tagNameLower))) {
+          if (!searchTags.includes(tag.name)) {
+            searchTags.push(tag.name);
+          }
+        }
+      }
+    }
+
+    // Fallback if no matching followed hashtags are found
+    if (searchTags.length === 0) {
+      cleanWords.forEach(word => {
+        if (!searchTags.includes(word)) {
+          searchTags.push(word);
+        }
+      });
+    }
+    // Ensure we at least have the lowercased full list title if cleanWords was empty
+    if (searchTags.length === 0) {
+      searchTags.push(listTitle.toLowerCase());
+    }
+  }
+
+  let suggestions = [];
+
+  if (state.demoMode) {
+    // --- DEMO MODE MOCK SUGGESTIONS ---
+    const allMockFollowed = [
+      { id: 'm-a1', username: 'design_daily', display_name: 'Design Daily', avatar: '', acct: 'design_daily@mastodon.art', bio: 'Daily design inspiration.', tag: 'design', last_status_at: '2026-05-21', statuses_count: 1200 },
+      { id: 'm-a2', username: 'uicraft', display_name: 'UI Craft', avatar: '', acct: 'uicraft@ux.social', bio: 'Handcrafted UI designs and CSS.', tag: 'design', last_status_at: '2026-05-20', statuses_count: 850 },
+      { id: 'm-a3', username: 'webdev_news', display_name: 'WebDev News', avatar: '', acct: 'webdev_news@tech.social', bio: 'Latest news in web dev.', tag: 'webdev', last_status_at: '2026-05-19', statuses_count: 2300 },
+      { id: 'm-p1', username: 'kevin', display_name: 'Kevin Rose', avatar: '', acct: 'kevin@mastodon.social', bio: 'Tech entrepreneur, investor.', tag: 'webdev', last_status_at: '2026-05-15', statuses_count: 140 },
+      { id: 'm-p2', username: 'taylor', display_name: 'Taylor Swift', avatar: '', acct: 'taylor@pop.music', bio: 'Musician. Songwriter.', tag: 'music', last_status_at: '2026-05-10', statuses_count: 45 },
+      { id: 'm-p3', username: 'elizabeth', display_name: 'Elizabeth', avatar: '', acct: 'elizabeth@history.org', bio: 'Historian, archivist.', tag: 'history', last_status_at: '2026-04-01', statuses_count: 900 }
+    ];
+
+    const memberIds = new Set(currentListMembers.map(m => m.id));
+    let candidates = allMockFollowed.filter(a => !memberIds.has(a.id));
+
+    if (customKeyword && customKeyword.trim()) {
+      const kw = customKeyword.trim().toLowerCase();
+      candidates = candidates.filter(c => 
+        c.tag.toLowerCase().includes(kw) || 
+        c.username.toLowerCase().includes(kw) || 
+        c.display_name.toLowerCase().includes(kw) ||
+        (c.bio && c.bio.toLowerCase().includes(kw))
+      );
+      candidates.sort((a, b) => {
+        const timeA = a.last_status_at ? new Date(a.last_status_at).getTime() : 0;
+        const timeB = b.last_status_at ? new Date(b.last_status_at).getTime() : 0;
+        if (timeA !== timeB) return timeB - timeA;
+        return (b.statuses_count || 0) - (a.statuses_count || 0);
+      });
+      suggestions = candidates.slice(0, 15).map(c => ({
+        ...c,
+        reason: `Matched "${customKeyword}"`
+      }));
+    } else {
+      // Find all target tags matched by the cleanWords
+      const targetTags = [];
+      const cleanWords = listTitle
+        .toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .split(/\s+/)
+        .filter(w => w.length > 2);
+
+      if (cleanWords.some(w => w.includes('design') || w.includes('art') || w.includes('inspire'))) targetTags.push('design');
+      if (cleanWords.some(w => w.includes('tech') || w.includes('dev') || w.includes('web') || w.includes('code'))) targetTags.push('webdev');
+      if (cleanWords.some(w => w.includes('music') || w.includes('song'))) targetTags.push('music');
+      if (cleanWords.some(w => w.includes('history') || w.includes('archive') || w.includes('past'))) targetTags.push('history');
+
+      candidates = candidates.sort((a, b) => {
+        const aMatch = targetTags.length > 0 && targetTags.includes(a.tag);
+        const bMatch = targetTags.length > 0 && targetTags.includes(b.tag);
+        if (aMatch && !bMatch) return -1;
+        if (!aMatch && bMatch) return 1;
+
+        const timeA = a.last_status_at ? new Date(a.last_status_at).getTime() : 0;
+        const timeB = b.last_status_at ? new Date(b.last_status_at).getTime() : 0;
+        if (timeA !== timeB) return timeB - timeA;
+        return (b.statuses_count || 0) - (a.statuses_count || 0);
+      });
+
+      suggestions = candidates.slice(0, 15).map(c => ({
+        ...c,
+        reason: targetTags.includes(c.tag) ? `Active in #${c.tag}` : 'Followed Profile'
+      }));
+    }
+
+  } else {
+    // --- PRODUCTION API PIPELINE ---
+    if (!state.token) return;
+    try {
+      // Fetch concurrent search requests for each search tag
+      const fetchPromises = searchTags.map(tag => 
+        apiGet(`/api/v2/search?q=${encodeURIComponent(tag)}&type=accounts&following=true&limit=20`, state.token)
+          .catch(err => {
+            console.error(`Failed to fetch search suggestions for tag #${tag}:`, err);
+            return null;
+          })
+      );
+      const responses = await Promise.all(fetchPromises);
+      
+      const memberIds = new Set(currentListMembers.map(m => m.id));
+      const seenAccountIds = new Set();
+      const uniqueCandidates = [];
+
+      responses.forEach((results, index) => {
+        const tag = searchTags[index];
+        if (results && results.accounts && results.accounts.length > 0) {
+          results.accounts.forEach(account => {
+            if (!memberIds.has(account.id) && !seenAccountIds.has(account.id)) {
+              seenAccountIds.add(account.id);
+              uniqueCandidates.push({
+                ...account,
+                reason: customKeyword ? `Matched "${customKeyword}"` : `Active in #${tag}`
+              });
+            }
+          });
+        }
+      });
+
+      // Sort unique candidates by activity (last_status_at descending, statuses_count descending)
+      uniqueCandidates.sort((a, b) => {
+        const timeA = a.last_status_at ? new Date(a.last_status_at).getTime() : 0;
+        const timeB = b.last_status_at ? new Date(b.last_status_at).getTime() : 0;
+        if (timeA !== timeB) {
+          return timeB - timeA;
+        }
+        return (b.statuses_count || 0) - (a.statuses_count || 0);
+      });
+
+      suggestions = uniqueCandidates.slice(0, 15);
+    } catch (err) {
+      console.error('Failed to load smart suggestions:', err);
+      return;
+    }
+  }
+
+  if (suggestions.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:16px; color:var(--text-muted); font-size:12px;">
+        ${customKeyword ? `No suggestions found matching "${escapeHTML(customKeyword)}".` : 'No default suggestions found based on list title.'}<br/>
+        Try entering custom keywords/tags above!
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = suggestions.map(account => {
+    const avatar = account.avatar || account.avatar_static || window._AVATAR_PLACEHOLDER;
+    const name = account.display_name || account.username;
+    const handle = '@' + (account.acct.includes('@') ? account.acct : `${account.acct}@${state.server || 'server'}`);
+    const reason = account.reason || `Interests: #${searchTags.join(', #')}`;
+
+    return `
+      <div class="list-suggestion-item" data-account-id="${account.id}">
+        <div class="member-item-info">
+          <img class="list-suggestion-avatar" src="${escapeHTML(avatar)}" alt="" onerror="this.src=window._AVATAR_PLACEHOLDER" />
+          <div class="member-item-text">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="list-suggestion-name">${escapeHTML(name)}</span>
+              <span class="list-suggestion-reason-badge" title="${escapeHTML(reason)}">${escapeHTML(reason)}</span>
+            </div>
+            <span class="list-suggestion-handle" title="${escapeHTML(handle)}">${escapeHTML(handle)}</span>
+          </div>
+        </div>
+        <button class="list-suggestion-add-btn">Add</button>
+      </div>
+    `;
+  }).join('');
+
+  // Wire events
+  container.querySelectorAll('.list-suggestion-item').forEach(card => {
+    const accountId = card.dataset.accountId;
+    const avatarImg = card.querySelector('.list-suggestion-avatar');
+    const nameSpan = card.querySelector('.list-suggestion-name');
+    const addBtn = card.querySelector('.list-suggestion-add-btn');
+
+    // Click avatar or name to open the standard Profile Drawer
+    if (avatarImg) {
+      avatarImg.onclick = () => {
+        if (window.openProfileDrawer) {
+          window.openProfileDrawer(accountId, state.server);
+        }
+      };
+    }
+    if (nameSpan) {
+      nameSpan.onclick = () => {
+        if (window.openProfileDrawer) {
+          window.openProfileDrawer(accountId, state.server);
+        }
+      };
+    }
+
+    if (addBtn) {
+      addBtn.onclick = async () => {
+        addBtn.disabled = true;
+        addBtn.textContent = 'Adding...';
+
+        const accountData = suggestions.find(a => a.id === accountId);
+        const success = await addAccountToList(activeListDetailId, accountId, accountData);
+
+        if (success) {
+          addBtn.textContent = 'Added';
+          addBtn.classList.add('added');
+          addBtn.disabled = true;
+
+          if (accountData) {
+            if (!currentListMembers.some(m => m.id === accountId)) {
+              currentListMembers.push(accountData);
+              renderListMembers();
+            }
+          }
+
+          setTimeout(() => {
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            card.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+              card.remove();
+              if (container.querySelectorAll('.list-suggestion-item').length === 0) {
+                container.innerHTML = `
+                  <div style="text-align:center; padding:16px; color:var(--text-muted); font-size:12px;">
+                    All suggestions added! Try entering new custom keywords/tags above.
+                  </div>
+                `;
+              }
+            }, 300);
+          }, 600);
+
+        } else {
+          addBtn.textContent = 'Add';
+          addBtn.disabled = false;
+        }
+      };
+    }
+  });
 }

@@ -675,6 +675,32 @@
   animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.profile-list-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--trans);
+}
+
+.profile-list-btn:hover {
+  background: var(--surface2);
+  border-color: var(--accent);
+  color: var(--accent2);
+}
+
+.profile-list-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .profile-more-menu-wrapper {
   position: relative;
 }
