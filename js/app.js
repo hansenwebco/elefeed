@@ -2768,7 +2768,7 @@ document.addEventListener('click', e => {
 
   /* Reply */
   const replyBtn = e.target.closest('.post-reply-btn');
-  if (replyBtn) { e.preventDefault(); handleReply(replyBtn.dataset.postId, replyBtn.dataset.accountAcct); return; }
+  if (replyBtn) { e.preventDefault(); handleReply(replyBtn.dataset.postId, replyBtn.dataset.accountAcct, replyBtn.dataset.mentions); return; }
 
   /* Dropdown item (Boost / Quote / Edit) */
   const boostItem = e.target.closest('.boost-dropdown-item');
