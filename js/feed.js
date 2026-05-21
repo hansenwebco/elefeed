@@ -138,6 +138,9 @@ export function activeFeedKey() {
   if (filter === 'hashtags') {
     return 'feed_hashtags_' + (state.selectedHashtagFilter || 'all');
   }
+  if (filter === 'lists') {
+    return 'feed_lists_' + (state.selectedListId || 'landing');
+  }
   return 'feed_' + filter;
 }
 
@@ -297,6 +300,7 @@ function renderFilteredPosts(displayPosts) {
     let msg = 'Nothing here yet.';
     if (filter === 'following') msg = 'No recent posts from people you follow.';
     if (filter === 'hashtags') msg = 'No recent posts matching your hashtags.';
+    if (filter === 'lists') msg = 'No recent posts in this list. Add followed profiles to populate it!';
     if (filter === 'live') msg = 'No recent posts on this server.';
     if (filter === 'federated') msg = 'No recent posts from the federated timeline.';
     container.innerHTML = `<div class="feed-status"><div class="status-icon">📭</div><p>${msg}</p></div>`;
@@ -306,6 +310,8 @@ function renderFilteredPosts(displayPosts) {
   let maxId = state.homeMaxId;
   if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
     maxId = state.hashtagMaxId;
+  } else if (filter === 'lists' && state.selectedListId && state.selectedListId !== 'landing') {
+    maxId = state.listMaxId;
   } else if (filter === 'live') {
     maxId = state.localMaxId;
   } else if (filter === 'federated') {
@@ -584,6 +590,122 @@ async function loadHashtagsFeed() {
   renderFilteredPosts(display);
 }
 
+/* ── Lists feed loader ─────────────────────────────────────────────── */
+
+async function loadListsFeed() {
+  const container = $('feed-posts');
+  const gridView = $('lists-landing-grid-view');
+  const activeHeader = $('list-active-view-header');
+  const wrapper = $('feed-content-wrapper');
+
+  // 0. Ensure user lists are loaded
+  if (state.token && (!state.lists || state.lists.length === 0)) {
+    try {
+      const { fetchUserLists } = await import('./lists.js');
+      await fetchUserLists();
+    } catch (e) {
+      console.warn('Failed to fetch user lists in feed tab:', e);
+      state.lists = state.lists || [];
+    }
+  }
+
+  // 1. Determine if we are in "Landing" mode or "Feed" mode
+  const isLanding = !state.selectedListId || state.selectedListId === 'landing';
+  const isSpecificList = state.selectedListId && state.selectedListId !== 'landing';
+
+  const filterBar = $('lists-filter-bar');
+  if (filterBar) {
+    filterBar.style.display = 'block';
+  }
+
+  // Toggle edit/members button in the active pill
+  const editBtn = $('list-header-edit-btn');
+  if (editBtn) {
+    if (isSpecificList) {
+      editBtn.style.display = 'flex';
+      const listId = state.selectedListId;
+
+      const freshBtn = editBtn.cloneNode(true);
+      editBtn.replaceWith(freshBtn);
+
+      freshBtn.onclick = async (e) => {
+        e.stopPropagation();
+        const { openListsManager, openListDetail } = await import('./lists.js');
+        await openListsManager();
+        await openListDetail(listId);
+      };
+    } else {
+      editBtn.style.display = 'none';
+    }
+  }
+
+  if (isLanding) {
+    updateURLParam('list', null);
+    if (wrapper) wrapper.style.display = 'none';
+    if (activeHeader) activeHeader.style.display = 'none';
+    if (gridView) {
+      gridView.style.display = 'block';
+      const { renderListsGrid } = await import('./lists.js');
+      renderListsGrid();
+    }
+    hashtagScrollToTop();
+    return;
+  }
+
+  updateURLParam('list', state.selectedListId);
+
+  // 2. Feed Mode
+  if (gridView) gridView.style.display = 'none';
+  if (wrapper) wrapper.style.display = 'block';
+  if (activeHeader) {
+    activeHeader.style.display = 'block';
+    const titleEl = $('list-active-title');
+    if (titleEl) {
+      const list = state.lists.find(l => l.id === state.selectedListId);
+      titleEl.textContent = list ? list.title : 'List Feed';
+    }
+  }
+  container.innerHTML = '';
+  hashtagScrollToTop();
+
+  // DATA FETCHING
+  let listPostsPromise = null;
+
+  if (!state.demoMode && isSpecificList) {
+    listPostsPromise = apiGet(`/api/v1/timelines/list/${state.selectedListId}?limit=40`, state.token);
+  }
+
+  let display = [];
+  if (state.demoMode) {
+    // Return posts from members of this list
+    const { fetchListAccounts } = await import('./lists.js');
+    const members = await fetchListAccounts(state.selectedListId);
+    const memberUsernames = new Set(members.map(m => m.username.toLowerCase()));
+
+    // Filter home feed posts by mock member usernames
+    await ensureHomeFeedLoaded();
+    display = (state.homeFeed || []).filter(p => {
+      const author = (p.reblog || p).account.username.toLowerCase();
+      return memberUsernames.has(author);
+    });
+  } else if (isSpecificList) {
+    try {
+      const listPosts = await listPostsPromise;
+      state.listFeed = listPosts;
+      state.listMaxId = listPosts.length ? listPosts[listPosts.length - 1].id : null;
+      display = listPosts;
+    } catch (e) {
+      console.error('Failed to load list timeline:', e);
+      display = [];
+    }
+  }
+
+  if (!state.demoMode) {
+    await fetchRelationships(display);
+  }
+  renderFilteredPosts(display);
+}
+
 /* ── Main feed tab loader ──────────────────────────────────────────── */
 
 export async function loadFeedTab(scrollTop = true) {
@@ -661,6 +783,17 @@ export async function loadFeedTab(scrollTop = true) {
 
   try {
     const wrapper = $('feed-content-wrapper');
+    
+    // Hide lists elements if not viewing lists
+    if (filter !== 'lists') {
+      const listsGrid = $('lists-landing-grid-view');
+      if (listsGrid) listsGrid.style.display = 'none';
+      const listsHeader = $('list-active-view-header');
+      if (listsHeader) listsHeader.style.display = 'none';
+      const listsBar = $('lists-filter-bar');
+      if (listsBar) listsBar.style.display = 'none';
+    }
+
     if (filter !== 'hashtags') {
       if (wrapper) wrapper.style.display = 'block';
       const gridView = $('hashtag-landing-grid-view');
@@ -683,6 +816,8 @@ export async function loadFeedTab(scrollTop = true) {
       renderFilteredPosts(display);
     } else if (filter === 'hashtags') {
       await loadHashtagsFeed();
+    } else if (filter === 'lists') {
+      await loadListsFeed();
     } else if (filter === 'live') {
       await ensureLocalFeedLoaded();
       if (!state.demoMode) await fetchRelationships(state.localFeed);
@@ -830,6 +965,8 @@ async function pollForNewPosts() {
   let minIdToUse = state.homeFeed && state.homeFeed.length > 0 ? state.homeFeed[0].id : null;
   if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
     minIdToUse = state.hashtagFeed && state.hashtagFeed.length > 0 ? state.hashtagFeed[0].id : null;
+  } else if (filter === 'lists' && state.selectedListId && state.selectedListId !== 'landing') {
+    minIdToUse = state.listFeed && state.listFeed.length > 0 ? state.listFeed[0].id : null;
   } else if (filter === 'live') {
     minIdToUse = state.localFeed && state.localFeed.length > 0 ? state.localFeed[0].id : null;
   }
@@ -851,6 +988,9 @@ async function pollForNewPosts() {
       const tag = encodeURIComponent(state.selectedHashtagFilter);
       newPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40&min_id=${minIdToUse}`, state.token);
       newPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
+      newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
+    } else if (filter === 'lists' && state.selectedListId && state.selectedListId !== 'landing') {
+      newPosts = await apiGet(`/api/v1/timelines/list/${state.selectedListId}?limit=40&min_id=${minIdToUse}`, state.token);
       newPosts.sort((a, b) => (a.id.length !== b.id.length ? b.id.length - a.id.length : (b.id > a.id ? 1 : b.id < a.id ? -1 : 0)));
     } else {
       if (filter === 'live') {
@@ -915,6 +1055,8 @@ export function flushPendingPosts(feedKey, scrollToTop) {
   // min_id anchor advances and won't re-fetch these posts on the next cycle.
   if (feedKey.startsWith('feed_hashtags_') && feedKey !== 'feed_hashtags_all') {
     state.hashtagFeed = [...allPending, ...(state.hashtagFeed || [])];
+  } else if (feedKey.startsWith('feed_lists_') && feedKey !== 'feed_lists_landing') {
+    state.listFeed = [...allPending, ...(state.listFeed || [])];
   } else if (feedKey === 'feed_live') {
     state.localFeed = [...allPending, ...(state.localFeed || [])];
   } else if (feedKey === 'feed_federated') {
@@ -1020,6 +1162,8 @@ export async function handleLoadMore(btn) {
   let maxIdToUse = state.homeMaxId;
   if (filter === 'hashtags' && state.selectedHashtagFilter && state.selectedHashtagFilter !== 'all') {
     maxIdToUse = state.hashtagMaxId;
+  } else if (filter === 'lists' && state.selectedListId && state.selectedListId !== 'landing') {
+    maxIdToUse = state.listMaxId;
   } else if (filter === 'live') {
     maxIdToUse = state.localMaxId;
   } else if (filter === 'federated') {
@@ -1039,6 +1183,15 @@ export async function handleLoadMore(btn) {
       state.hashtagFeed = [...(state.hashtagFeed || []), ...newPosts];
       state.hashtagMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
       maxIdToUse = state.hashtagMaxId;
+    } else if (filter === 'lists' && state.selectedListId && state.selectedListId !== 'landing') {
+      if (state.demoMode) {
+        newPosts = [];
+      } else {
+        newPosts = await apiGet(`/api/v1/timelines/list/${state.selectedListId}?limit=40&max_id=${maxIdToUse}`, state.token);
+      }
+      state.listFeed = [...(state.listFeed || []), ...newPosts];
+      state.listMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
+      maxIdToUse = state.listMaxId;
     } else if (filter === 'live') {
       newPosts = await apiGet(`/api/v1/timelines/public?local=true&limit=40&max_id=${maxIdToUse}`, state.token);
       state.localFeed = [...(state.localFeed || []), ...newPosts];

@@ -224,7 +224,8 @@
    MANAGE HASHTAGS DRAWER
    ──────────────────────────────────────────────── */
 .manage-hashtag-backdrop,
-.settings-backdrop {
+.settings-backdrop,
+.manage-list-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -235,13 +236,15 @@
 }
 
 .manage-hashtag-backdrop.open,
-.settings-backdrop.open {
+.settings-backdrop.open,
+.manage-list-backdrop.open {
   opacity: 1;
   pointer-events: all;
 }
 
 .manage-hashtag-drawer,
-.settings-drawer {
+.settings-drawer,
+.manage-list-drawer {
   position: fixed;
   top: 0;
   right: 0;
@@ -258,20 +261,23 @@
 }
 
 .manage-hashtag-drawer.open,
-.settings-drawer.open {
+.settings-drawer.open,
+.manage-list-drawer.open {
   transform: translateX(0);
 }
 
 @media (max-width: 900px) {
 
   .manage-hashtag-drawer,
-  .settings-drawer {
+  .settings-drawer,
+  .manage-list-drawer {
     width: 100%;
     border-left: none;
   }
 }
 
-.manage-hashtag-drawer-inner {
+.manage-hashtag-drawer-inner,
+.manage-list-drawer-inner {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;

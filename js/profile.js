@@ -417,6 +417,21 @@ export function openProfileDrawer(accountId, server) {
           <iconify-icon icon="${isNotifying ? 'ph:bell-fill' : 'ph:bell-bold'}" style="font-size: 15px;"></iconify-icon></button>`
       : '';
 
+    const listsButton = !isSelf && state.token
+      ? `<div class="profile-lists-btn-wrap">
+          <button class="profile-list-btn"
+            data-account-id="${accountId}"
+            title="Add or remove from lists"
+            style="${isFollowing ? '' : 'display: none;'}">
+            <iconify-icon icon="ph:list-plus-bold" style="font-size: 15px;"></iconify-icon>
+          </button>
+          <div class="profile-lists-popover" style="display: none;">
+            <div class="profile-lists-popover-header">Manage Lists</div>
+            <div class="profile-lists-popover-content"></div>
+          </div>
+        </div>`
+      : '';
+
     const moreMenu = !isSelf
       ? `<div class="profile-more-menu-wrapper">
           <button class="profile-more-menu-btn" data-account-id="${accountId}" title="More options">
@@ -530,7 +545,7 @@ export function openProfileDrawer(accountId, server) {
             <img class="profile-avatar-large" src="${escapeHTML(account.avatar_static || account.avatar)}" alt="" onerror="this.onerror=null;this.src=window._AVATAR_PLACEHOLDER"/>
             ${renderFollowingBadge(account.id)}
           </div>
-          <div class="profile-action-group">${followButton}${notifyButton}${moreMenu}</div>
+          <div class="profile-action-group">${followButton}${notifyButton}${listsButton}${moreMenu}</div>
         </div>
         <div class="profile-name-row">
           <div>
@@ -826,6 +841,23 @@ export async function handleFollowToggle(btn) {
           notifyBtn.classList.add('ringing');
           setTimeout(() => notifyBtn.classList.remove('ringing'), 600);
         }, 300);
+      }
+    }
+
+    const listsBtnWrap = btn.closest('.profile-action-group')?.querySelector('.profile-lists-btn-wrap');
+    if (listsBtnWrap) {
+      const listsBtn = listsBtnWrap.querySelector('.profile-list-btn');
+      if (listsBtn) {
+        const wasHidden = listsBtn.style.display === 'none';
+        listsBtn.style.display = nowFollowing ? '' : 'none';
+        if (wasHidden && nowFollowing) {
+          listsBtn.classList.add('pop-in');
+          setTimeout(() => listsBtn.classList.remove('pop-in'), 500);
+        }
+        if (!nowFollowing) {
+          const popover = listsBtnWrap.querySelector('.profile-lists-popover');
+          if (popover) popover.style.display = 'none';
+        }
       }
     }
 
@@ -1436,5 +1468,84 @@ async function openUserListDrawer(accountId, server, type = 'following') {
         }
       }, 400);
     };
+  }
+}
+
+/**
+ * Toggle the profile lists checklist popover, fetching and rendering current list states.
+ */
+export async function toggleProfileListsPopover(btn) {
+  const accountId = btn.dataset.accountId;
+  const wrap = btn.closest('.profile-lists-btn-wrap');
+  if (!wrap) return;
+  const popover = wrap.querySelector('.profile-lists-popover');
+  const content = wrap.querySelector('.profile-lists-popover-content');
+  if (!popover || !content) return;
+
+  // Toggle display
+  const isOpening = popover.style.display === 'none';
+  
+  // Close any other open popovers/menus
+  document.querySelectorAll('.profile-lists-popover').forEach(p => {
+    if (p !== popover) p.style.display = 'none';
+  });
+  closeAllProfileMoreMenus();
+
+  if (!isOpening) {
+    popover.style.display = 'none';
+    return;
+  }
+
+  popover.style.display = 'flex';
+  content.innerHTML = '<div class="profile-lists-empty">Loading...</div>';
+
+  try {
+    const { fetchUserLists, fetchAccountListMemberships, addAccountToList, removeAccountFromList } = await import('./lists.js');
+    
+    // Fetch user lists and account memberships in parallel
+    const [allLists, memberLists] = await Promise.all([
+      fetchUserLists(),
+      fetchAccountListMemberships(accountId)
+    ]);
+
+    if (!allLists || allLists.length === 0) {
+      content.innerHTML = '<div class="profile-lists-empty">No lists found. Create a list in the Lists feed first!</div>';
+      return;
+    }
+
+    content.innerHTML = allLists.map(list => {
+      const isMember = memberLists.some(ml => ml.id === list.id);
+      return `
+        <label class="profile-lists-item" data-list-id="${list.id}">
+          <input type="checkbox" ${isMember ? 'checked' : ''} data-list-id="${list.id}" data-account-id="${accountId}">
+          <span>${escapeHTML(list.title)}</span>
+        </label>
+      `;
+    }).join('');
+
+    // Wire checkbox events
+    content.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', async () => {
+        const listId = cb.dataset.listId;
+        const checked = cb.checked;
+        cb.disabled = true;
+        
+        let success = false;
+        if (checked) {
+          success = await addAccountToList(listId, accountId);
+        } else {
+          success = await removeAccountFromList(listId, accountId);
+        }
+
+        if (!success) {
+          // Revert checkbox state on failure
+          cb.checked = !checked;
+        }
+        cb.disabled = false;
+      });
+    });
+
+  } catch (err) {
+    content.innerHTML = `<div class="profile-lists-empty" style="color:var(--danger);">Error loading lists</div>`;
   }
 }

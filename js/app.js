@@ -127,6 +127,15 @@ function closeAnyDrawer() {
     const bd = $('settings-backdrop');
     if (bd) bd.classList.remove('open');
   }
+  if ($('manage-lists-drawer') && $('manage-lists-drawer').classList.contains('open')) {
+    if (typeof window.closeListsManager === 'function') {
+      window.closeListsManager();
+    } else {
+      $('manage-lists-drawer').classList.remove('open');
+      const bd = $('manage-lists-backdrop');
+      if (bd) bd.classList.remove('open');
+    }
+  }
 }
 
 // Listen for popstate to restore drawers or tabs properly via back/forward
@@ -163,6 +172,7 @@ window.addEventListener('popstate', async e => {
     // Restore or clear hashtag filter state based on URL params
     const feedParam = currentParams.get('feed');
     const tagParam = currentParams.get('tag');
+    const listParam = currentParams.get('list');
     const prevFeedFilter = state.feedFilter;
 
     if (feedParam === 'hashtags' && tagParam) {
@@ -179,6 +189,18 @@ window.addEventListener('popstate', async e => {
       document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(b =>
         b.classList.toggle('active', b.dataset.filter === state.feedFilter));
       $('hashtag-filter-bar').style.display = 'none';
+    }
+
+    if (feedParam === 'lists') {
+      state.selectedListId = listParam || 'landing';
+      state.feedFilter = 'lists';
+      document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(b =>
+        b.classList.toggle('active', b.dataset.filter === 'lists'));
+    } else if (state.feedFilter === 'lists') {
+      state.feedFilter = feedParam || 'all';
+      state.selectedListId = null;
+      document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(b =>
+        b.classList.toggle('active', b.dataset.filter === state.feedFilter));
     }
 
     // Restore tab if it changed
@@ -237,6 +259,12 @@ async function initApp(server, token, demo = false) {
 
   if (demo) {
     $('demo-notice').style.display = 'block';
+    try {
+      const { fetchUserLists } = await import('./lists.js');
+      await fetchUserLists();
+    } catch (e) {
+      console.error('Failed to pre-fetch lists on demo boot:', e);
+    }
     loadFeedTab();
     return;
   }
@@ -248,11 +276,20 @@ async function initApp(server, token, demo = false) {
 
   // Load core data in parallel for faster startup
   console.log('[Init] Fetching core data...');
-  const [accountRes, tagsRes, instanceV1Res, _filtersRes] = await Promise.allSettled([
+  let fetchListsPromise = Promise.resolve();
+  try {
+    const { fetchUserLists } = await import('./lists.js');
+    fetchListsPromise = fetchUserLists();
+  } catch (e) {
+    console.error('Failed to load lists module for pre-fetch:', e);
+  }
+
+  const [accountRes, tagsRes, instanceV1Res, _filtersRes, _listsRes] = await Promise.allSettled([
     apiGet('/api/v1/accounts/verify_credentials', token, server),
     apiGet('/api/v1/followed_tags?limit=200', token, server),
     apiGet('/api/v1/instance', token, server),
-    loadFilters()
+    loadFilters(),
+    fetchListsPromise
   ]);
 
   if (accountRes.status === 'fulfilled') {
@@ -1011,6 +1048,11 @@ document.querySelectorAll('#tab-dropdown-feed .tab-dropdown-item').forEach(item 
 
     state.feedFilter = filter;
     updateURLParam('feed', filter);
+
+    if (filter === 'lists') {
+      state.selectedListId = 'landing';
+      updateURLParam('list', null);
+    }
 
     const filterBar = $('hashtag-filter-bar');
     if (filterBar) filterBar.style.display = (filter === 'hashtags') ? '' : 'none';
@@ -2106,6 +2148,7 @@ function updateSidebarNav() {
     { action: 'home', label: 'Home', icon: 'ph:house-bold', active: state.activeTab === 'feed' && state.feedFilter === 'all' },
     { action: 'following', label: 'Followed Profiles', icon: 'ph:users-bold', active: state.activeTab === 'feed' && state.feedFilter === 'following' },
     { action: 'followed-hashtags', label: 'Followed Hashtags', icon: 'ph:hash-bold', active: state.activeTab === 'feed' && state.feedFilter === 'hashtags' },
+    { action: 'lists', label: 'Lists', icon: 'ph:list-bullets-bold', active: state.activeTab === 'feed' && state.feedFilter === 'lists' },
     { action: 'trending', label: 'Trending', icon: 'ph:chart-line-up-bold', active: state.activeTab === 'explore' && state.exploreSubtab === 'posts' },
     { action: 'notifications', label: 'Notifications', icon: 'ph:bell-bold', active: state.notifDrawerOpen },
     { action: 'search', label: 'Search', icon: 'ph:magnifying-glass-bold' }
@@ -2115,8 +2158,7 @@ function updateSidebarNav() {
     { action: 'local', label: 'Local Feed', icon: 'ph:broadcast-bold', active: state.activeTab === 'explore' && state.exploreSubtab === 'live' },
     { action: 'federated', label: 'Federated Feed', icon: 'ph:globe-bold', active: state.activeTab === 'explore' && state.exploreSubtab === 'federated' },
     { action: 'bookmarks', label: 'Bookmarks', icon: 'ph:bookmark-simple-bold', active: state.bookmarksActive },
-    { action: 'hashtags', label: 'Manage Hashtags', icon: 'ph:hash-bold' },
-    { action: 'zen', label: 'Zen Mode', icon: 'ri:flower-line', active: state.zenMode }
+    { action: 'hashtags', label: 'Manage Hashtags', icon: 'ph:hash-bold' }
   ];
 
   const renderItem = (item) => {
@@ -2239,6 +2281,11 @@ $('sidebar-nav')?.addEventListener('click', e => {
     state.feedFilter = 'hashtags';
     state.selectedHashtagFilter = 'all';
     updateURLParam('feed', 'hashtags');
+  } else if (action === 'lists') {
+    state.feedFilter = 'lists';
+    state.selectedListId = 'landing';
+    updateURLParam('feed', 'lists');
+    updateURLParam('list', null);
   } else if (action === 'local') {
     state.feedFilter = 'live';
     state.exploreSubtab = 'live';
@@ -2269,16 +2316,10 @@ $('sidebar-nav')?.addEventListener('click', e => {
       $('manage-hashtag-backdrop')?.classList.add('visible');
     }
     return;
-  } else if (action === 'zen') {
-    state.zenMode = !state.zenMode;
-    store.set('zen_mode', state.zenMode);
-    applyZenMode();
-    import('./ui.js').then(m => m.showToast(state.zenMode ? 'Zen Mode enabled' : 'Zen Mode disabled'));
-    return;
   }
 
   // Determine target tab
-  const feedActions = ['home', 'following', 'followed-hashtags'];
+  const feedActions = ['home', 'following', 'followed-hashtags', 'lists'];
   const targetTab = feedActions.includes(action) ? 'feed' : 'explore';
 
   // Hashtag filter bar visibility
@@ -2584,6 +2625,11 @@ setTimeout(setOverlayPillVisibility, 100);
 document.addEventListener('click', e => {
   const menu = e.target.closest('.profile-more-menu, .profile-more-menu-btn');
   if (!menu) closeAllProfileMoreMenus();
+
+  const popover = e.target.closest('.profile-lists-popover, .profile-list-btn');
+  if (!popover) {
+    document.querySelectorAll('.profile-lists-popover').forEach(p => p.style.display = 'none');
+  }
 });
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2633,6 +2679,16 @@ document.addEventListener('click', e => {
     import('./profile.js').then(m => m.closeFollowingDrawer());
     const profileDrawer = $('profile-drawer');
     openProfileDrawer(trigger.dataset.profileId, trigger.dataset.profileServer);
+    return;
+  }
+
+  /* Profile list button click */
+  const profileListBtn = e.target.closest('.profile-list-btn');
+  if (profileListBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllProfileMoreMenus();
+    import('./profile.js').then(m => m.toggleProfileListsPopover(profileListBtn));
     return;
   }
 
@@ -3142,6 +3198,95 @@ window.addEventListener('online', () => $('offline-bar').classList.remove('visib
    ══════════════════════════════════════════════════════════════════════ */
 
 
+// Initialize Lists UI Event Listeners
+async function initListsUI() {
+  const {
+    openListsManager, closeListsManager, closeListDetail,
+    handleListMemberSearch, createUserList, renameUserList,
+    deleteUserList, renderListsOverview, selectList
+  } = await import('./lists.js');
+
+  window.openListsManager = openListsManager;
+  window.closeListsManager = closeListsManager;
+
+  $('manage-lists-btn')?.addEventListener('click', openListsManager);
+  $('list-clear-filter')?.addEventListener('click', () => selectList('landing'));
+  $('manage-lists-close')?.addEventListener('click', closeListsManager);
+  $('manage-lists-backdrop')?.addEventListener('click', closeListsManager);
+  $('manage-list-back-btn')?.addEventListener('click', closeListDetail);
+
+  $('list-member-search-input')?.addEventListener('input', e => {
+    handleListMemberSearch(e.target.value);
+  });
+
+  const handleCreateSubmit = async () => {
+    const input = $('list-create-input');
+    const title = input.value.trim();
+    if (title) {
+      await createUserList(title);
+      input.value = '';
+      renderListsOverview();
+    }
+  };
+
+  $('list-create-btn')?.addEventListener('click', handleCreateSubmit);
+  $('list-create-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleCreateSubmit();
+    }
+  });
+
+  const handleRenameSubmit = async () => {
+    const input = $('list-rename-input');
+    const title = input.value.trim();
+    const { activeListDetailId, renderListsOverview, renderListsGrid } = await import('./lists.js');
+    if (title && activeListDetailId) {
+      await renameUserList(activeListDetailId, title);
+      const titleEl = $('manage-list-detail-title');
+      if (titleEl) titleEl.textContent = `Manage: ${title}`;
+
+      // Update the lists overview inside the Manage Lists drawer
+      renderListsOverview();
+
+      // Update the main view dynamically if lists are currently shown
+      if (state.feedFilter === 'lists') {
+        if (!state.selectedListId || state.selectedListId === 'landing') {
+          renderListsGrid();
+        } else if (state.selectedListId === activeListDetailId) {
+          const mainTitleEl = $('list-active-title');
+          if (mainTitleEl) mainTitleEl.textContent = title;
+        }
+      }
+    }
+  };
+
+  $('list-rename-btn')?.addEventListener('click', handleRenameSubmit);
+  $('list-rename-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleRenameSubmit();
+    }
+  });
+
+  $('list-delete-btn')?.addEventListener('click', async () => {
+    const { activeListDetailId } = await import('./lists.js');
+    if (activeListDetailId) {
+      const success = await deleteUserList(activeListDetailId);
+      if (success) {
+        closeListDetail();
+        renderListsOverview();
+      }
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && $('manage-lists-drawer')?.classList.contains('open')) {
+      closeListsManager();
+    }
+  });
+}
+
 async function boot() {
 
   // Wire up component init functions
@@ -3149,6 +3294,7 @@ async function boot() {
   initCompose();
   initNotifications();
   initSearch();
+  initListsUI();
 
   // Apply saved font preferences (safety call in case index.html script was bypassed)
   applyFont(store.get('pref_font_family') || 'sans');

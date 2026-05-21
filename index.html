@@ -204,6 +204,7 @@
   <link rel="stylesheet" href="css/search.css" />
   <link rel="stylesheet" href="css/hashtags.css" />
   <link rel="stylesheet" href="css/filters.css" />
+  <link rel="stylesheet" href="css/lists.css" />
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 </head>
 
@@ -533,6 +534,10 @@
                 <iconify-icon icon="ph:hash-bold" style="font-size: 14px;"></iconify-icon>
                 Followed Hashtags
               </button>
+              <button class="tab-dropdown-item" data-filter="lists">
+                <iconify-icon icon="ph:list-bullets-bold" style="font-size: 14px;"></iconify-icon>
+                Lists
+              </button>
             </div>
           </div>
           <div class="tab-btn-wrap">
@@ -653,6 +658,42 @@
                     <div class="hashtag-card-name">All Hashtags</div>
                     <div class="hashtag-card-stats">Unified Feed</div>
                   </div>
+                </div>
+              </div>
+            </div>
+            <!-- Lists View Container (Dedicated landing for lists) -->
+            <div class="list-view-container" id="lists-filter-bar" style="display:none;">
+              <div class="list-header-box">
+                <!-- Page Header: Manage -->
+                <header class="list-page-header">
+                  <div class="list-search-hero">
+                    <button id="manage-lists-btn" class="list-manage-toggle" style="margin-left: auto;">
+                      <iconify-icon icon="ph:gear-bold" style="font-size: 16px;"></iconify-icon>
+                      <span>Manage Lists</span>
+                    </button>
+                  </div>
+                </header>
+
+                <!-- Current Selection / Breadcrumb - only shown when a specific list is active -->
+                <div id="list-active-view-header" style="display:none;">
+                  <div class="list-feed-header">
+                    <div class="list-active-pill">
+                      <span class="list-active-pill-symbol"><iconify-icon icon="ph:list-bullets-bold" style="font-size: 14px; vertical-align: middle;"></iconify-icon></span>
+                      <span class="list-active-pill-name" id="list-active-title">all</span>
+                      <button id="list-clear-filter" class="list-active-pill-close" aria-label="Clear list filter">
+                        <iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>
+                      </button>
+                    </div>
+                    <button id="list-header-edit-btn" class="list-follow-btn-standalone" style="display:none;">Manage Members</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Main Lists Grid -->
+              <div id="lists-landing-grid-view" style="display:none;">
+                <h4 class="list-section-title" id="user-lists-count-label">My Lists</h4>
+                <div id="user-lists-grid" class="list-grid">
+                  <!-- Populated by JS -->
                 </div>
               </div>
             </div>
@@ -1028,6 +1069,76 @@
       <div style="padding:16px;">
         <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Currently Following</h4>
         <div id="manage-hashtags-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Lists Drawer -->
+  <div class="manage-list-backdrop" id="manage-lists-backdrop"></div>
+  <div class="manage-list-drawer" id="manage-lists-drawer">
+    <div class="thread-drawer-header">
+      <span class="thread-drawer-title" id="manage-lists-drawer-title">Manage Lists</span>
+      <button class="thread-close-btn" id="manage-lists-close" aria-label="Close">
+        <iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>
+      </button>
+    </div>
+    <div class="manage-list-drawer-inner">
+      <!-- Standard view: List of all lists and "Create new list" -->
+      <div id="manage-lists-overview" class="lists-drawer-section">
+        <div style="padding:16px; border-bottom:1px solid var(--border);">
+          <div class="list-create-wrap">
+            <input type="text" id="list-create-input" class="list-search-input" placeholder="Create new list title..." autocomplete="off" />
+            <button id="list-create-btn" class="list-action-btn-main">Create</button>
+          </div>
+        </div>
+        <div style="padding:16px;">
+          <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Your Lists</h4>
+          <div id="manage-lists-list-container" class="lists-edit-list">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail view: editing/managing a specific list -->
+      <div id="manage-list-detail" class="lists-drawer-section" style="display:none;">
+        <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; background:var(--surface2);">
+          <button id="manage-list-back-btn" class="list-back-btn" aria-label="Back to lists list">
+            <iconify-icon icon="ph:arrow-left-bold" style="font-size: 14px;"></iconify-icon>
+            <span>Back</span>
+          </button>
+          <span id="manage-list-detail-title" style="font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;">Edit List</span>
+        </div>
+
+        <div style="padding:16px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:12px;">
+          <div class="list-rename-wrap">
+            <input type="text" id="list-rename-input" class="list-search-input" placeholder="Rename list..." autocomplete="off" />
+            <button id="list-rename-btn" class="list-action-btn-main">Rename</button>
+          </div>
+          <button id="list-delete-btn" class="list-action-btn-danger">
+            <iconify-icon icon="ph:trash-bold" style="font-size: 14px;"></iconify-icon>
+            Delete List
+          </button>
+        </div>
+
+        <!-- Member Search Section -->
+        <div style="padding:16px; border-bottom:1px solid var(--border);">
+          <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.08em; font-family:var(--font-mono);">Add Members (Followed Profiles)</h4>
+          <div class="list-member-search-wrap" style="position:relative;">
+            <iconify-icon icon="ph:magnifying-glass-bold" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none; font-size: 14px;"></iconify-icon>
+            <input type="text" id="list-member-search-input" class="list-search-input" placeholder="Search followed profiles..." autocomplete="off" style="padding-left:32px;" />
+          </div>
+          <div id="list-member-search-results" class="lists-member-results" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Current Members Section -->
+        <div style="padding:16px;">
+          <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">Current Members (<span id="list-member-count">0</span>)</h4>
+          <div id="list-members-container" class="lists-members-grid" style="display:flex; flex-direction:column; gap:8px;">
+            <!-- Populated by JS -->
+          </div>
+        </div>
       </div>
     </div>
   </div>
