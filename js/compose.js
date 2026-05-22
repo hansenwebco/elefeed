@@ -381,7 +381,7 @@ window.handleModalVisibilityChange = function () {
    REPLY & QUOTE HANDLERS
    ══════════════════════════════════════════════════════════════════════ */
 
-export function handleReply(postId, acct) {
+export function handleReply(postId, acct, mentions = '') {
   composeState.replyToId = postId;
   composeState.replyToAcct = acct;
   const isDesktop = window.innerWidth > 900;
@@ -401,9 +401,54 @@ export function handleReply(postId, acct) {
     to.textContent = '@' + acct;
   }
 
-  const mentionText = `@${acct}\u00A0`;
-  if (!textarea.innerText.includes(mentionText.trim())) {
-    textarea.innerText = mentionText + textarea.innerText;
+  // Parse mentions list
+  const mentionList = mentions ? mentions.split(',').map(m => m.trim()).filter(Boolean) : [];
+  const authorLower = acct.toLowerCase();
+  const authorUsername = authorLower.split('@')[0];
+
+  const myAcct = (state.account?.acct || '').toLowerCase();
+  const myUsername = (state.account?.username || '').toLowerCase();
+
+  const filteredMentions = mentionList.filter(m => {
+    const mLower = m.toLowerCase();
+    const mUsername = mLower.split('@')[0];
+
+    // Exclude author
+    if (mLower === authorLower || mUsername === authorUsername) {
+      return false;
+    }
+    // Exclude self (logged in user)
+    if (myAcct && (mLower === myAcct || mUsername === myUsername)) {
+      return false;
+    }
+    return true;
+  });
+
+  // Keep unique mentions
+  const uniqueMentions = [];
+  const seen = new Set();
+  for (const m of filteredMentions) {
+    const key = m.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueMentions.push(m);
+    }
+  }
+
+  const allHandles = [acct, ...uniqueMentions];
+  let prependStr = '';
+  for (const handle of allHandles) {
+    const tag = `@${handle}`;
+    const text = textarea.innerText || '';
+    const escapedTag = tag.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const pattern = new RegExp(`\\B${escapedTag}(?:$|[^a-zA-Z0-9_.-@])`, 'i');
+    if (!pattern.test(text)) {
+      prependStr += tag + '\n';
+    }
+  }
+
+  if (prependStr) {
+    textarea.innerText = prependStr + textarea.innerText;
   }
 
   if (!isDesktop) {

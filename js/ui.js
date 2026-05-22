@@ -308,8 +308,8 @@ export function setLoading(section, on) {
 
 export function isMobileWidth() { return window.innerWidth <= 500; }
 
-const filterLabels = { all: 'All', following: 'Followed Profiles', hashtags: 'Followed Hashtags' };
-const filterLabelsMobile = { all: 'All', following: 'Following', hashtags: 'Hashtags' };
+const filterLabels = { all: 'All', following: 'Followed Profiles', hashtags: 'Followed Hashtags', lists: 'Lists' };
+const filterLabelsMobile = { all: 'All', following: 'Following', hashtags: 'Hashtags', lists: 'Lists' };
 const subtabLabels = { posts: 'Trending Posts', hashtags: 'Trending Hashtags', people: 'Trending People', news: 'Trending News', following: 'From Following', live: 'Local Feed', federated: 'Federated Feed' };
 const subtabLabelsMobile = { posts: 'Trending', hashtags: 'Hashtags', people: 'People', news: 'News', following: 'Following', live: 'Local', federated: 'Federated' };
 

@@ -613,7 +613,7 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
   /* ── Footer: reply, boost, favourite, bookmark, translate, external ── */
   const footerHTML = `
     <div class="post-footer">
-      <button class="post-stat post-reply-btn" data-post-id="${s.id}" data-account-acct="${s.account.acct}" title="Reply">
+      <button class="post-stat post-reply-btn" data-post-id="${s.id}" data-account-acct="${s.account.acct}" data-mentions="${escapeHTML((s.mentions || []).map(m => m.acct).join(','))}" title="Reply">
         <iconify-icon icon="ph:arrow-bend-up-left-bold" style="font-size: 13px;"></iconify-icon>
         <span class="post-reply-count">${s.replies_count || 0}</span>
       </button>
@@ -1241,6 +1241,9 @@ window.expandMedia = function expandMedia(mediaItem) {
     const acct = postReplyBtn
       ? postReplyBtn.dataset.accountAcct
       : (_standalone ? _standalone.dataset.accountAcct : '');
+    const mentions = postReplyBtn
+      ? postReplyBtn.dataset.mentions
+      : (_standalone ? _standalone.dataset.mentions : '');
 
     let isBoosted = postBoostBtn
       ? postBoostBtn.classList.contains('boosted')
@@ -1266,10 +1269,11 @@ window.expandMedia = function expandMedia(mediaItem) {
     replyBtn.title = 'Reply';
     replyBtn.dataset.postId = postId;
     replyBtn.dataset.accountAcct = acct;
+    replyBtn.dataset.mentions = mentions;
     replyBtn.innerHTML = `<iconify-icon icon="ph:arrow-bend-up-left-bold" style="font-size: 15px;"></iconify-icon><span class="post-reply-count">${replyCount}</span>`;
     replyBtn.onclick = (e) => {
       e.stopPropagation();
-      if (window.handleReply) window.handleReply(postId, acct);
+      if (window.handleReply) window.handleReply(postId, acct, mentions);
       close();
     };
     actionBar.appendChild(replyBtn);
