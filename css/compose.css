@@ -584,6 +584,8 @@
   border: 1px solid transparent;
   max-width: fit-content;
   height: 28px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .compose-visibility-btn:hover {
@@ -628,6 +630,24 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.compose-visibility-btn span[id*="visibility-text"] span {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Hide text label on desktop sidebar and narrow screens for clean layout */
+.compose-sidebar-body .compose-visibility-btn span[id*="visibility-text"] > span:first-child {
+  display: none;
+}
+
+@media (max-width: 450px) {
+  .compose-visibility-btn span[id*="visibility-text"] > span:first-child {
+    display: none;
+  }
 }
 
 .compose-visibility-btn .lang-tag {

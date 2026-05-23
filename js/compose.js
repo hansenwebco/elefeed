@@ -158,7 +158,7 @@ export function resetReplyState() {
       visBtn.title = "";
       visBtn.style.opacity = '1';
 
-      const visLabels = { 'public': 'Public', 'unlisted': 'Quiet public', 'private': 'Followers', 'direct': 'Private mention' };
+      const visLabels = { 'public': 'Public', 'unlisted': 'Quiet', 'private': 'Followers', 'direct': 'Mention' };
       const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
 
       const icon = $('compose-visibility-icon' + suffix);
@@ -226,7 +226,7 @@ export function refreshComposeDefaults() {
     visBtn.dataset.lang = defaultLang;
     visBtn.dataset.sensitive = defaultSensitive;
 
-    const visLabels = { 'public': 'Public', 'unlisted': 'Quiet public', 'private': 'Followers', 'direct': 'Private mention' };
+    const visLabels = { 'public': 'Public', 'unlisted': 'Quiet', 'private': 'Followers', 'direct': 'Mention' };
     const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
 
     const icon = $('compose-visibility-icon' + suffix);
@@ -318,7 +318,7 @@ window.saveVisibilityModal = function () {
     visBtn.dataset.lang = lang;
     visBtn.dataset.sensitive = sensitive ? 'true' : 'false';
 
-    const visLabels = { 'public': 'Public', 'unlisted': 'Quiet public', 'private': 'Followers', 'direct': 'Private mention' };
+    const visLabels = { 'public': 'Public', 'unlisted': 'Quiet', 'private': 'Followers', 'direct': 'Mention' };
     const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
     const iconNode = $('compose-visibility-icon' + suffix);
     const textNode = $('compose-visibility-text' + suffix);
@@ -834,7 +834,7 @@ window.handleEditInit = async function (postId) {
       const vis = statusResponse.visibility || 'public';
       visBtn.dataset.visibility = vis;
 
-      const visLabels = { 'public': 'Public', 'unlisted': 'Quiet public', 'private': 'Followers', 'direct': 'Private mention' };
+      const visLabels = { 'public': 'Public', 'unlisted': 'Quiet', 'private': 'Followers', 'direct': 'Mention' };
       const quoteLabelsFull = { 'public': 'Anyone can quote', 'followers': 'Followers only can quote', 'nobody': 'No one can quote' };
 
       const lang = statusResponse.language || 'browser';
