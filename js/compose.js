@@ -449,7 +449,7 @@ export function handleReply(postId, acct, mentions = '') {
   }
 
   if (prependStr) {
-    textarea.innerText = prependStr + '\n\n' + textarea.innerText;
+    textarea.innerText = prependStr + '\n' + textarea.innerText;
   }
 
   if (!isDesktop) {
@@ -1388,7 +1388,7 @@ async function doPost(suffix = '') {
       headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(postData),
     });
-    
+
     const result = await res.json().catch(() => ({}));
     if (!res.ok) {
       throw new Error(result.error || 'Failed to post');
@@ -1402,13 +1402,13 @@ async function doPost(suffix = '') {
     resetReplyState();
 
     if (!isSidebar) closeComposeDrawer();
-    
+
     // Only refresh the entire feed if it wasn't a reply (new post)
     // Refreshing the feed for a reply is disruptive to peeks/threads
     if (state.activeTab === 'feed' && !wasReply) {
       loadFeedTab(false);
     }
-    
+
     if (wasReply && window.insertNewPostLocally) {
       window.insertNewPostLocally(result);
     } else {
