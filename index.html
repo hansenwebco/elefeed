@@ -391,8 +391,8 @@
       <div class="compose-sidebar-body" style="display:flex; flex-direction:column; overflow:hidden;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px;">
           <span id="compose-account-name-sidebar"
-            style="font-weight:600; font-size:13px; color:var(--text-dim); flex:1;">New message</span>
-          <button class="hashtag-filter-select compose-visibility-btn" id="compose-visibility-btn-sidebar"
+            style="font-weight:600; font-size:13px; color:var(--text-dim); flex:1; display:flex; align-items:center; height:28px;">New message</span>
+          <button class="compose-visibility-btn" id="compose-visibility-btn-sidebar"
             data-visibility="public" data-quote="public" onclick="window.openVisibilityModal('-sidebar')">
             <span id="compose-visibility-icon-sidebar"><iconify-icon icon="ph:globe-bold"
                 style="font-size: 14px;"></iconify-icon></span>
@@ -980,10 +980,10 @@
               style="width:36px; height:36px; margin-left:-8px; border-radius:50%; display:flex; justify-content:center; align-items:center; z-index:2; flex-shrink:0;">
               <iconify-icon icon="ph:x-bold" style="font-size: 20px;"></iconify-icon>
             </button>
-            <span style="font-weight:600; font-size:15px; flex:1;" id="compose-header-title">New message</span>
+            <span style="font-weight:600; font-size:15px; flex:1; display:flex; align-items:center; height:28px;" id="compose-header-title">New message</span>
           </div>
           <div style="display:flex; align-items:center; gap:8px; z-index:2; flex-shrink:0;">
-            <button class="hashtag-filter-select compose-visibility-btn" id="compose-visibility-btn"
+            <button class="compose-visibility-btn" id="compose-visibility-btn"
               data-visibility="public" data-quote="public" onclick="window.openVisibilityModal('')">
               <span id="compose-visibility-icon"><iconify-icon icon="ph:globe-bold"
                   style="font-size: 14px;"></iconify-icon></span>
