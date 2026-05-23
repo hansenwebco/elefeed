@@ -382,6 +382,7 @@ window.handleModalVisibilityChange = function () {
    ══════════════════════════════════════════════════════════════════════ */
 
 export function handleReply(postId, acct, mentions = '') {
+  resetReplyState();
   composeState.replyToId = postId;
   composeState.replyToAcct = acct;
   const isDesktop = window.innerWidth > 900;
@@ -448,7 +449,7 @@ export function handleReply(postId, acct, mentions = '') {
   }
 
   if (prependStr) {
-    textarea.innerText = prependStr + textarea.innerText;
+    textarea.innerText = prependStr + '\n\n' + textarea.innerText;
   }
 
   if (!isDesktop) {
@@ -471,8 +472,8 @@ window.addEventListener('click', () => {
   document.querySelectorAll('.boost-dropdown, .footer-more-dropdown').forEach(m => m.classList.remove('show'));
 });
 
-window.handleQuoteInit = async function (postId, acct, triggerEl) {
-  if (store.get('pref_confirm_interactions') === 'true') {
+window.handleQuoteInit = async function (postId, acct, triggerEl, isRestore = false) {
+  if (!isRestore && store.get('pref_confirm_interactions') === 'true') {
     // Find preview content using the direct trigger element if available, fallback to query
     const btn = triggerEl || document.querySelector(`.post-quote-btn[data-post-id="${postId}"]`) ||
       document.querySelector(`.post-boost-btn[data-post-id="${postId}"]`) ||
@@ -499,6 +500,9 @@ window.handleQuoteInit = async function (postId, acct, triggerEl) {
     if (!confirmed) return;
   }
   document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
+  if (!isRestore) {
+    resetReplyState();
+  }
   composeState.quoteId = postId;
   composeState.replyToAcct = acct;
   const isDesktop = window.innerWidth > 900;
@@ -842,7 +846,7 @@ window.handleEditInit = async function (postId) {
 
       if (qStatus && qStatus.id) {
         composeState.quoteId = qStatus.id;
-        handleQuoteInit(qStatus.id, qStatus.account?.acct || '');
+        handleQuoteInit(qStatus.id, qStatus.account?.acct || '', null, true);
       }
 
       visBtn.dataset.quote = finalQuote;
@@ -1233,7 +1237,7 @@ window.handleDeleteRedraftInit = async function (postId, triggerEl) {
     if (isDesktop) updateSidebarCharCount(); else updateCharCount();
 
     if (savedQuoteId) {
-      handleQuoteInit(savedQuoteId, savedQuoteAcct);
+      handleQuoteInit(savedQuoteId, savedQuoteAcct, null, true);
     }
 
     showToast('Post deleted - edit and re-post below.', 'success');
