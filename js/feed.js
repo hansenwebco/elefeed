@@ -124,7 +124,6 @@ import { $, state, store } from './state.js';
 import { apiGet } from './api.js';
 import { setLoading, setError, showToast, updateTabLabel } from './ui.js';
 import { renderPost, renderThreadPost, renderCondensedTree, getFilterInfo } from './render.js';
-import { getDemoHomePosts, getDemoHashtagData } from './demo.js';
 import { matchesLanguage, updateURLParam } from './utils.js';
 import { updateTitleBar } from './titlebar.js';
 
@@ -422,11 +421,6 @@ async function ensureLocalFeedLoaded() {
 /* ── Ensure home feed is fetched ───────────────────────────────────── */
 
 export async function ensureHomeFeedLoaded() {
-  if (state.demoMode) {
-    if (!state.homeFeed) state.homeFeed = getDemoHomePosts();
-    if (!state.followedHashtags) state.followedHashtags = getDemoHashtagData().tags;
-    return;
-  }
   if (!state.homeFeed) {
     const [posts, tags] = await Promise.all([
       apiGet('/api/v1/timelines/home?limit=40', state.token),
@@ -508,7 +502,7 @@ async function loadHashtagsFeed() {
 
       freshBtn.onclick = async (e) => {
         e.stopPropagation();
-        if (!state.token || state.demoMode) return;
+        if (!state.token) return;
 
         try {
           const { handleHashtagFollowToggle } = await import('./profile.js');
@@ -552,41 +546,22 @@ async function loadHashtagsFeed() {
   hashtagScrollToTop();
 
   // DATA FETCHING
-  let tagPostsPromise = null;
-
-  if (!state.demoMode) {
-    if (isSpecificTag) {
-      const tag = encodeURIComponent(state.selectedHashtagFilter);
-      tagPostsPromise = apiGet(`/api/v1/timelines/tag/${tag}?limit=40`, state.token);
-    } else {
-      await ensureHomeFeedLoaded();
-    }
-  } else if (!isSpecificTag) {
-    await ensureHomeFeedLoaded();
-  }
-
   let display = [];
-  if (state.demoMode) {
-    display = (state.homeFeed || []).filter(p => p._sourceTags && p._sourceTags.length > 0);
-    if (isSpecificTag) {
-      display = display.filter(p => p._sourceTags.includes(state.selectedHashtagFilter));
-    }
+
+  if (isSpecificTag) {
+    const tag = encodeURIComponent(state.selectedHashtagFilter);
+    const tagPosts = await apiGet(`/api/v1/timelines/tag/${tag}?limit=40`, state.token);
+    tagPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
+    state.hashtagFeed = tagPosts;
+    state.hashtagMaxId = tagPosts.length ? tagPosts[tagPosts.length - 1].id : null;
+    display = tagPosts;
   } else {
-    if (isSpecificTag) {
-      const tagPosts = await tagPostsPromise;
-      tagPosts.forEach(p => p._sourceTags = [state.selectedHashtagFilter]);
-      state.hashtagFeed = tagPosts;
-      state.hashtagMaxId = tagPosts.length ? tagPosts[tagPosts.length - 1].id : null;
-      display = tagPosts;
-    } else {
-      display = (state.homeFeed || []).filter(p => p._sourceTags && p._sourceTags.length > 0);
-      state.hashtagMaxId = state.homeMaxId;
-    }
+    await ensureHomeFeedLoaded();
+    display = (state.homeFeed || []).filter(p => p._sourceTags && p._sourceTags.length > 0);
+    state.hashtagMaxId = state.homeMaxId;
   }
 
-  if (!state.demoMode) {
-    await fetchRelationships(display);
-  }
+  await fetchRelationships(display);
   renderFilteredPosts(display);
 }
 
@@ -680,28 +655,11 @@ async function loadListsFeed() {
   hashtagScrollToTop();
 
   // DATA FETCHING
-  let listPostsPromise = null;
-
-  if (!state.demoMode && isSpecificList) {
-    listPostsPromise = apiGet(`/api/v1/timelines/list/${state.selectedListId}?limit=40`, state.token);
-  }
-
   let display = [];
-  if (state.demoMode) {
-    // Return posts from members of this list
-    const { fetchListAccounts } = await import('./lists.js');
-    const members = await fetchListAccounts(state.selectedListId);
-    const memberUsernames = new Set(members.map(m => m.username.toLowerCase()));
 
-    // Filter home feed posts by mock member usernames
-    await ensureHomeFeedLoaded();
-    display = (state.homeFeed || []).filter(p => {
-      const author = (p.reblog || p).account.username.toLowerCase();
-      return memberUsernames.has(author);
-    });
-  } else if (isSpecificList) {
+  if (isSpecificList) {
     try {
-      const listPosts = await listPostsPromise;
+      const listPosts = await apiGet(`/api/v1/timelines/list/${state.selectedListId}?limit=40`, state.token);
       state.listFeed = listPosts;
       state.listMaxId = listPosts.length ? listPosts[listPosts.length - 1].id : null;
       display = listPosts;
@@ -711,9 +669,7 @@ async function loadListsFeed() {
     }
   }
 
-  if (!state.demoMode) {
-    await fetchRelationships(display);
-  }
+  await fetchRelationships(display);
   renderFilteredPosts(display);
 }
 
@@ -817,13 +773,11 @@ export async function loadFeedTab(scrollTop = true) {
 
     if (filter === 'all') {
       await ensureHomeFeedLoaded();
-      if (!state.demoMode) await fetchRelationships(state.homeFeed);
+      await fetchRelationships(state.homeFeed);
       renderFilteredPosts(state.homeFeed);
     } else if (filter === 'following') {
       await ensureHomeFeedLoaded();
-      const display = state.demoMode
-        ? state.homeFeed.filter(p => !p.reblog)
-        : await filterForFollowing(state.homeFeed);
+      const display = await filterForFollowing(state.homeFeed);
       renderFilteredPosts(display);
     } else if (filter === 'hashtags') {
       await loadHashtagsFeed();
@@ -831,14 +785,14 @@ export async function loadFeedTab(scrollTop = true) {
       await loadListsFeed();
     } else if (filter === 'live') {
       await ensureLocalFeedLoaded();
-      if (!state.demoMode) await fetchRelationships(state.localFeed);
+      await fetchRelationships(state.localFeed);
       renderFilteredPosts(state.localFeed);
     } else if (filter === 'federated') {
       await ensureFederatedFeedLoaded();
-      if (!state.demoMode) await fetchRelationships(state.federatedFeed);
+      await fetchRelationships(state.federatedFeed);
       renderFilteredPosts(state.federatedFeed);
       // Open the SSE stream for real-time updates (no polling for federated)
-      if (!state.demoMode) startFederatedStream();
+      startFederatedStream();
     }
   } catch (err) {
     setError('feed', 'Failed to load feed: ' + err.message);
@@ -967,7 +921,7 @@ export function startFederatedStream() {
 
 async function pollForNewPosts() {
   const isFeedActive = state.activeTab === 'feed' || (state.activeTab === 'explore' && ['live', 'federated'].includes(state.exploreSubtab));
-  if (!state.token || state.demoMode || !isFeedActive) return;
+  if (!state.token || !isFeedActive) return;
   const filter = state.feedFilter;
 
   // Federated is handled entirely by SSE streaming - poller does nothing for it
@@ -1033,7 +987,7 @@ async function pollForNewPosts() {
     }
     if (!display.length) return;
 
-    if (!state.demoMode && filter !== 'following') {
+    if (filter !== 'following') {
       await fetchRelationships(display);
     }
 
@@ -1195,11 +1149,7 @@ export async function handleLoadMore(btn) {
       state.hashtagMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
       maxIdToUse = state.hashtagMaxId;
     } else if (filter === 'lists' && state.selectedListId && state.selectedListId !== 'landing') {
-      if (state.demoMode) {
-        newPosts = [];
-      } else {
-        newPosts = await apiGet(`/api/v1/timelines/list/${state.selectedListId}?limit=40&max_id=${maxIdToUse}`, state.token);
-      }
+      newPosts = await apiGet(`/api/v1/timelines/list/${state.selectedListId}?limit=40&max_id=${maxIdToUse}`, state.token);
       state.listFeed = [...(state.listFeed || []), ...newPosts];
       state.listMaxId = newPosts.length ? newPosts[newPosts.length - 1].id : null;
       maxIdToUse = state.listMaxId;
@@ -1241,12 +1191,12 @@ export async function handleLoadMore(btn) {
       return true;
     });
 
-    if (filter === 'following' && !state.demoMode) display = await filterForFollowing(display);
+    if (filter === 'following') display = await filterForFollowing(display);
     else if (filter === 'hashtags' && (!state.selectedHashtagFilter || state.selectedHashtagFilter === 'all')) {
       display = display.filter(p => p._sourceTags && p._sourceTags.length > 0);
     }
 
-    if (!state.demoMode && filter !== 'following') {
+    if (filter !== 'following') {
       await fetchRelationships(display);
     }
 

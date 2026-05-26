@@ -76,7 +76,7 @@ export async function initSettingsSync() {
 }
 
 export async function pushSettings() {
-  if (state.demoMode || !state.account || _isSyncing) return;
+  if (!state.account || _isSyncing) return;
   try {
     _isSyncing = true;
     const prefs = {};

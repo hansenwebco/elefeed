@@ -37,7 +37,7 @@ export async function initUsageTracking() {
  * Pulls usage data from the server and merges it with local data.
  */
 export async function pullUsageData() {
-  if (state.demoMode || !state.account || !state.token || _isSyncing) return;
+  if (!state.account || !state.token || _isSyncing) return;
 
   try {
     _isSyncing = true;
@@ -177,7 +177,7 @@ function updateLocalUsage(ms) {
  * Uses the private relationship note on the user's own account.
  */
 export async function syncUsage() {
-  if (state.demoMode || !state.account || !state.token || _isSyncing) return;
+  if (!state.account || !state.token || _isSyncing) return;
 
   // 1. Accumulate current session slice into local storage
   if (_activeStartTime) {

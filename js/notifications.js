@@ -108,7 +108,7 @@ async function swPost(msg) {
  * Start Web Push subscription with Mastodon server
  */
 export async function startSwPolling() {
-  if (!state.token || state.demoMode || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!state.token || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
   const bgEnabled = store.get('pref_bg_notifications') !== 'false';
 
   if (!bgEnabled) {
@@ -201,7 +201,7 @@ export async function startSwPolling() {
 
 /** Stop Web Push subscription. */
 export async function stopSwPolling() {
-  if (!state.token || state.demoMode || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!state.token || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
   try {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
@@ -357,7 +357,7 @@ export function updateNotifBadge() {
 }
 
 async function dismissNotifMarker() {
-  if (!state.token || state.demoMode) return;
+  if (!state.token) return;
   try {
     await fetch(`https://${state.server}/api/v1/markers`, {
       method: 'POST',
@@ -434,7 +434,7 @@ function setNotifCache(filter, items) {
 /* ── Loading ───────────────────────────────────────────────────────── */
 
 export async function loadNotifications(append = false) {
-  if (!state.token || state.demoMode) return;
+  if (!state.token) return;
   const content = $('notif-content');
   const filter = state.notifFilter;
   const cached = getNotifCache(filter);
@@ -667,7 +667,7 @@ export function resetNotifMarkers() {
  * 3. Default to marking latest as seen if no record exists (avoids "30" badge)
  */
 export async function pollNotifications() {
-  if (!state.token || state.demoMode) return;
+  if (!state.token) return;
 
   // Restore from storage if needed
   if (!state.lastSeenNotifId) {

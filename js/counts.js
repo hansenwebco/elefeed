@@ -51,7 +51,6 @@ let pollCount        = 0;
 /* -- Public API ------------------------------------------------------------ */
 
 export function startCountPolling() {
-  if (state.demoMode) { _log(LOG_PREFIX, 'demo mode - count polling disabled'); return; }
   if (store.get('pref_count_polling') === 'false') { _log(LOG_PREFIX, 'disabled by settings'); return; }
   _setupMutationObserver();
   _setupIntersectionObserver();
@@ -178,7 +177,7 @@ function _registerArticle(article) {
 /* -- Polling --------------------------------------------------------------- */
 
 async function _poll() {
-  if (!state.token || state.demoMode) return;
+  if (!state.token) return;
   const ids = [...visibleIds];
   if (!ids.length) {
     _log(LOG_PREFIX, 'poll skipped - no visible posts tracked');

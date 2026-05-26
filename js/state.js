@@ -79,7 +79,6 @@ export const state = {
   feedFilter: urlParams.get('feed') || 'all',
   exploreSubtab: urlParams.get('explore') || 'posts',
   pendingPosts: { feed: [] },
-  demoMode: false,
   zenMode: store.get('zen_mode') === 'true',
   desktopMenu: store.get('pref_desktop_menu') === 'true',
 

@@ -409,12 +409,7 @@ export async function loadTrendingFollowing() {
   loading.style.display = 'flex';
   if (progress) progress.textContent = 'Fetching your timeline\u2026';
 
-  if (state.demoMode) {
-    loading.style.display = 'none';
-    container.innerHTML = `<div class="feed-status"><div class="status-icon">📈</div><p>Trending from following is not available in demo mode.</p></div>`;
-    state.trendingFollowingLoaded = true;
-    return;
-  }
+
 
   try {
     const allPosts = [];

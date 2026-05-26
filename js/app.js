@@ -231,10 +231,10 @@ const loadExploreTab = loadTrendingTab;
    INIT APP (after successful auth or stored session)
    ══════════════════════════════════════════════════════════════════════ */
 
-async function initApp(server, token, demo = false) {
-  console.log(`[Init] Initializing app for server: ${server}, demo: ${demo}`);
+async function initApp(server, token) {
+  console.log(`[Init] Initializing app for server: ${server}`);
   
-  if (!server && !demo) {
+  if (!server) {
     console.error('[Init] Cannot initialize app: server is missing.');
     showScreen('login-screen');
     showLoginError('Error: Server information is missing. Please log in again.');
@@ -248,7 +248,6 @@ async function initApp(server, token, demo = false) {
   if (typeof stopFederatedStream === 'function') stopFederatedStream();
   state.server = server;
   state.token = token;
-  state.demoMode = demo;
   showScreen('app-screen');
   $('login-back-btn').style.display = 'none'; // Hide if we're in the app
   initVersion();
@@ -256,18 +255,6 @@ async function initApp(server, token, demo = false) {
 
   // Reset feeds to prevent data leakage from previous sessions/accounts
   if (typeof resetFeeds === 'function') resetFeeds();
-
-  if (demo) {
-    $('demo-notice').style.display = 'block';
-    try {
-      const { fetchUserLists } = await import('./lists.js');
-      await fetchUserLists();
-    } catch (e) {
-      console.error('Failed to pre-fetch lists on demo boot:', e);
-    }
-    loadFeedTab();
-    return;
-  }
 
   // Notify Android App if running in WebView
   if (typeof saveMastodonToken === 'function') {
@@ -410,7 +397,7 @@ async function initApp(server, token, demo = false) {
   });
 
   // Ensure this account is in our registry and set as ACTIVE before loading feeds
-  if (state.account && !demo) {
+  if (state.account) {
     const accounts = getStoredAccounts();
     const acctId = `${state.account.username}@${server}`;
     let existing = accounts.find(a => a.id === acctId);

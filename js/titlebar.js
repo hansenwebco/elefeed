@@ -20,7 +20,7 @@ export function initTitleBar() {
  * Format: 🔔3 📰5 Elefeed
  */
 export function updateTitleBar() {
-  const isLoggedOut = !state.token && !state.demoMode;
+  const isLoggedOut = !state.token;
   const baseTitle = 'Elefeed - A Tidy Mastodon Client';
 
   if (isLoggedOut) {

@@ -8,30 +8,11 @@ import { apiGet, apiPost, apiPut, apiDelete } from './api.js';
 import { showToast, showConfirm } from './ui.js';
 import { escapeHTML } from './utils.js';
 
-// --- MOCK DATA FOR DEMO MODE ---
-let mockLists = [
-  { id: 'mock-1', title: 'Design Inspiration', replies_policy: 'followed' },
-  { id: 'mock-2', title: 'Tech & Dev', replies_policy: 'followed' }
-];
-
-let mockAccounts = {
-  'mock-1': [
-    { id: 'm-a1', username: 'design_daily', display_name: 'Design Daily', avatar: '', acct: 'design_daily@mastodon.art' },
-    { id: 'm-a2', username: 'uicraft', display_name: 'UI Craft', avatar: '', acct: 'uicraft@ux.social' }
-  ],
-  'mock-2': [
-    { id: 'm-a3', username: 'webdev_news', display_name: 'WebDev News', avatar: '', acct: 'webdev_news@tech.social' }
-  ]
-};
 
 /**
  * Fetch all lists created by the user.
  */
 export async function fetchUserLists() {
-  if (state.demoMode) {
-    state.lists = [...mockLists];
-    return state.lists;
-  }
   if (!state.token) return [];
   try {
     const lists = await apiGet('/api/v1/lists', state.token);
@@ -47,19 +28,6 @@ export async function fetchUserLists() {
  * Create a new list.
  */
 export async function createUserList(title, repliesPolicy = 'followed') {
-  if (state.demoMode) {
-    const newList = {
-      id: `mock-${Date.now()}`,
-      title,
-      replies_policy: repliesPolicy
-    };
-    mockLists.push(newList);
-    mockAccounts[newList.id] = [];
-    state.lists = [...mockLists];
-    showToast(`List "${title}" created successfully!`, 'success');
-    return newList;
-  }
-
   try {
     const res = await apiPost('/api/v1/lists', {
       title,
@@ -87,17 +55,6 @@ export async function deleteUserList(listId) {
   );
   if (!confirmed) return false;
 
-  if (state.demoMode) {
-    mockLists = mockLists.filter(l => l.id !== listId);
-    delete mockAccounts[listId];
-    state.lists = [...mockLists];
-    if (state.selectedListId === listId) {
-      state.selectedListId = 'landing';
-    }
-    showToast(`List "${title}" deleted.`, 'success');
-    return true;
-  }
-
   try {
     await apiDelete(`/api/v1/lists/${listId}`, state.token);
     await fetchUserLists();
@@ -116,14 +73,6 @@ export async function deleteUserList(listId) {
  * Rename a list.
  */
 export async function renameUserList(listId, newTitle) {
-  if (state.demoMode) {
-    const list = mockLists.find(l => l.id === listId);
-    if (list) list.title = newTitle;
-    state.lists = [...mockLists];
-    showToast(`List renamed to "${newTitle}".`, 'success');
-    return list;
-  }
-
   try {
     const res = await apiPut(`/api/v1/lists/${listId}`, { title: newTitle }, state.token);
     
@@ -145,14 +94,6 @@ export async function renameUserList(listId, newTitle) {
  * Update list replies policy.
  */
 export async function updateUserListRepliesPolicy(listId, repliesPolicy) {
-  if (state.demoMode) {
-    const list = mockLists.find(l => l.id === listId);
-    if (list) list.replies_policy = repliesPolicy;
-    state.lists = [...mockLists];
-    showToast(`Replies policy updated.`, 'success');
-    return list;
-  }
-
   try {
     const res = await apiPut(`/api/v1/lists/${listId}`, { replies_policy: repliesPolicy }, state.token);
     
@@ -174,9 +115,6 @@ export async function updateUserListRepliesPolicy(listId, repliesPolicy) {
  * Fetch accounts belonging to a list.
  */
 export async function fetchListAccounts(listId) {
-  if (state.demoMode) {
-    return mockAccounts[listId] || [];
-  }
   try {
     return await apiGet(`/api/v1/lists/${listId}/accounts?limit=80`, state.token);
   } catch (err) {
@@ -189,22 +127,6 @@ export async function fetchListAccounts(listId) {
  * Add an account to a list.
  */
 export async function addAccountToList(listId, accountId, accountData = null) {
-  if (state.demoMode) {
-    if (!mockAccounts[listId]) mockAccounts[listId] = [];
-    if (!mockAccounts[listId].some(a => a.id === accountId)) {
-      const mockAcc = accountData || {
-        id: accountId,
-        username: 'profile',
-        display_name: 'Followed Profile',
-        avatar: '',
-        acct: 'profile@example.com'
-      };
-      mockAccounts[listId].push(mockAcc);
-    }
-    showToast('Profile added to list.', 'success');
-    return true;
-  }
-
   try {
     await apiPost(`/api/v1/lists/${listId}/accounts`, {
       account_ids: [accountId]
@@ -221,14 +143,6 @@ export async function addAccountToList(listId, accountId, accountData = null) {
  * Remove an account from a list.
  */
 export async function removeAccountFromList(listId, accountId) {
-  if (state.demoMode) {
-    if (mockAccounts[listId]) {
-      mockAccounts[listId] = mockAccounts[listId].filter(a => a.id !== accountId);
-    }
-    showToast('Profile removed from list.', 'success');
-    return true;
-  }
-
   try {
     await apiDelete(`/api/v1/lists/${listId}/accounts?account_ids[]=${accountId}`, state.token);
     showToast('Profile removed from list.', 'success');
@@ -243,15 +157,6 @@ export async function removeAccountFromList(listId, accountId) {
  * Fetch lists containing a specific account.
  */
 export async function fetchAccountListMemberships(accountId) {
-  if (state.demoMode) {
-    const listIds = [];
-    for (const listId in mockAccounts) {
-      if (mockAccounts[listId].some(a => a.id === accountId)) {
-        listIds.push(listId);
-      }
-    }
-    return state.lists.filter(l => listIds.includes(l.id));
-  }
   try {
     return await apiGet(`/api/v1/accounts/${accountId}/lists`, state.token);
   } catch (err) {
@@ -501,17 +406,7 @@ export function handleListMemberSearch(query) {
 
   searchDebounceTimeout = setTimeout(async () => {
     try {
-      let results = [];
-      if (state.demoMode) {
-        // Mock followed profiles search
-        results = [
-          { id: 'm-p1', username: 'kevin', display_name: 'Kevin Rose', avatar: '', acct: 'kevin@mastodon.social' },
-          { id: 'm-p2', username: 'taylor', display_name: 'Taylor Swift', avatar: '', acct: 'taylor@pop.music' },
-          { id: 'm-p3', username: 'elizabeth', display_name: 'Elizabeth', avatar: '', acct: 'elizabeth@history.org' }
-        ].filter(p => p.username.toLowerCase().includes(query.toLowerCase()) || p.display_name.toLowerCase().includes(query.toLowerCase()));
-      } else {
-        results = await apiGet(`/api/v1/accounts/search?q=${encodeURIComponent(query)}&limit=10&following=true`, state.token);
-      }
+      const results = await apiGet(`/api/v1/accounts/search?q=${encodeURIComponent(query)}&limit=10&following=true`, state.token);
 
       if (results.length === 0) {
         container.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:6px;">No matching followed profiles.</div>`;
@@ -756,118 +651,51 @@ export async function loadSmartSuggestions(listId, listTitle, customKeyword = nu
 
   let suggestions = [];
 
-  if (state.demoMode) {
-    // --- DEMO MODE MOCK SUGGESTIONS ---
-    const allMockFollowed = [
-      { id: 'm-a1', username: 'design_daily', display_name: 'Design Daily', avatar: '', acct: 'design_daily@mastodon.art', bio: 'Daily design inspiration.', tag: 'design', last_status_at: '2026-05-21', statuses_count: 1200 },
-      { id: 'm-a2', username: 'uicraft', display_name: 'UI Craft', avatar: '', acct: 'uicraft@ux.social', bio: 'Handcrafted UI designs and CSS.', tag: 'design', last_status_at: '2026-05-20', statuses_count: 850 },
-      { id: 'm-a3', username: 'webdev_news', display_name: 'WebDev News', avatar: '', acct: 'webdev_news@tech.social', bio: 'Latest news in web dev.', tag: 'webdev', last_status_at: '2026-05-19', statuses_count: 2300 },
-      { id: 'm-p1', username: 'kevin', display_name: 'Kevin Rose', avatar: '', acct: 'kevin@mastodon.social', bio: 'Tech entrepreneur, investor.', tag: 'webdev', last_status_at: '2026-05-15', statuses_count: 140 },
-      { id: 'm-p2', username: 'taylor', display_name: 'Taylor Swift', avatar: '', acct: 'taylor@pop.music', bio: 'Musician. Songwriter.', tag: 'music', last_status_at: '2026-05-10', statuses_count: 45 },
-      { id: 'm-p3', username: 'elizabeth', display_name: 'Elizabeth', avatar: '', acct: 'elizabeth@history.org', bio: 'Historian, archivist.', tag: 'history', last_status_at: '2026-04-01', statuses_count: 900 }
-    ];
-
+  if (!state.token) return;
+  try {
+    // Fetch concurrent search requests for each search tag
+    const fetchPromises = searchTags.map(tag => 
+      apiGet(`/api/v2/search?q=${encodeURIComponent(tag)}&type=accounts&following=true&limit=20`, state.token)
+        .catch(err => {
+          console.error(`Failed to fetch search suggestions for tag #${tag}:`, err);
+          return null;
+        })
+    );
+    const responses = await Promise.all(fetchPromises);
+    
     const memberIds = new Set(currentListMembers.map(m => m.id));
-    let candidates = allMockFollowed.filter(a => !memberIds.has(a.id));
+    const seenAccountIds = new Set();
+    const uniqueCandidates = [];
 
-    if (customKeyword && customKeyword.trim()) {
-      const kw = customKeyword.trim().toLowerCase();
-      candidates = candidates.filter(c => 
-        c.tag.toLowerCase().includes(kw) || 
-        c.username.toLowerCase().includes(kw) || 
-        c.display_name.toLowerCase().includes(kw) ||
-        (c.bio && c.bio.toLowerCase().includes(kw))
-      );
-      candidates.sort((a, b) => {
-        const timeA = a.last_status_at ? new Date(a.last_status_at).getTime() : 0;
-        const timeB = b.last_status_at ? new Date(b.last_status_at).getTime() : 0;
-        if (timeA !== timeB) return timeB - timeA;
-        return (b.statuses_count || 0) - (a.statuses_count || 0);
-      });
-      suggestions = candidates.slice(0, 15).map(c => ({
-        ...c,
-        reason: `Matched "${customKeyword}"`
-      }));
-    } else {
-      // Find all target tags matched by the cleanWords
-      const targetTags = [];
-      const cleanWords = listTitle
-        .toLowerCase()
-        .replace(/[^\w\s]/g, '')
-        .split(/\s+/)
-        .filter(w => w.length > 2);
+    responses.forEach((results, index) => {
+      const tag = searchTags[index];
+      if (results && results.accounts && results.accounts.length > 0) {
+        results.accounts.forEach(account => {
+          if (!memberIds.has(account.id) && !seenAccountIds.has(account.id)) {
+            seenAccountIds.add(account.id);
+            uniqueCandidates.push({
+              ...account,
+              reason: customKeyword ? `Matched "${customKeyword}"` : `Active in #${tag}`
+            });
+          }
+        });
+      }
+    });
 
-      if (cleanWords.some(w => w.includes('design') || w.includes('art') || w.includes('inspire'))) targetTags.push('design');
-      if (cleanWords.some(w => w.includes('tech') || w.includes('dev') || w.includes('web') || w.includes('code'))) targetTags.push('webdev');
-      if (cleanWords.some(w => w.includes('music') || w.includes('song'))) targetTags.push('music');
-      if (cleanWords.some(w => w.includes('history') || w.includes('archive') || w.includes('past'))) targetTags.push('history');
+    // Sort unique candidates by activity (last_status_at descending, statuses_count descending)
+    uniqueCandidates.sort((a, b) => {
+      const timeA = a.last_status_at ? new Date(a.last_status_at).getTime() : 0;
+      const timeB = b.last_status_at ? new Date(b.last_status_at).getTime() : 0;
+      if (timeA !== timeB) {
+        return timeB - timeA;
+      }
+      return (b.statuses_count || 0) - (a.statuses_count || 0);
+    });
 
-      candidates = candidates.sort((a, b) => {
-        const aMatch = targetTags.length > 0 && targetTags.includes(a.tag);
-        const bMatch = targetTags.length > 0 && targetTags.includes(b.tag);
-        if (aMatch && !bMatch) return -1;
-        if (!aMatch && bMatch) return 1;
-
-        const timeA = a.last_status_at ? new Date(a.last_status_at).getTime() : 0;
-        const timeB = b.last_status_at ? new Date(b.last_status_at).getTime() : 0;
-        if (timeA !== timeB) return timeB - timeA;
-        return (b.statuses_count || 0) - (a.statuses_count || 0);
-      });
-
-      suggestions = candidates.slice(0, 15).map(c => ({
-        ...c,
-        reason: targetTags.includes(c.tag) ? `Active in #${c.tag}` : 'Followed Profile'
-      }));
-    }
-
-  } else {
-    // --- PRODUCTION API PIPELINE ---
-    if (!state.token) return;
-    try {
-      // Fetch concurrent search requests for each search tag
-      const fetchPromises = searchTags.map(tag => 
-        apiGet(`/api/v2/search?q=${encodeURIComponent(tag)}&type=accounts&following=true&limit=20`, state.token)
-          .catch(err => {
-            console.error(`Failed to fetch search suggestions for tag #${tag}:`, err);
-            return null;
-          })
-      );
-      const responses = await Promise.all(fetchPromises);
-      
-      const memberIds = new Set(currentListMembers.map(m => m.id));
-      const seenAccountIds = new Set();
-      const uniqueCandidates = [];
-
-      responses.forEach((results, index) => {
-        const tag = searchTags[index];
-        if (results && results.accounts && results.accounts.length > 0) {
-          results.accounts.forEach(account => {
-            if (!memberIds.has(account.id) && !seenAccountIds.has(account.id)) {
-              seenAccountIds.add(account.id);
-              uniqueCandidates.push({
-                ...account,
-                reason: customKeyword ? `Matched "${customKeyword}"` : `Active in #${tag}`
-              });
-            }
-          });
-        }
-      });
-
-      // Sort unique candidates by activity (last_status_at descending, statuses_count descending)
-      uniqueCandidates.sort((a, b) => {
-        const timeA = a.last_status_at ? new Date(a.last_status_at).getTime() : 0;
-        const timeB = b.last_status_at ? new Date(b.last_status_at).getTime() : 0;
-        if (timeA !== timeB) {
-          return timeB - timeA;
-        }
-        return (b.statuses_count || 0) - (a.statuses_count || 0);
-      });
-
-      suggestions = uniqueCandidates.slice(0, 15);
-    } catch (err) {
-      console.error('Failed to load smart suggestions:', err);
-      return;
-    }
+    suggestions = uniqueCandidates.slice(0, 15);
+  } catch (err) {
+    console.error('Failed to load smart suggestions:', err);
+    return;
   }
 
   if (suggestions.length === 0) {

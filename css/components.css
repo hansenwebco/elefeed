@@ -482,16 +482,6 @@
   display: block;
 }
 
-/* ─── Demo Notice ─── */
-.demo-notice {
-  background: rgba(155, 127, 255, 0.08);
-  border-bottom: 1px solid rgba(155, 127, 255, 0.15);
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 6px 20px;
-  text-align: center;
-}
 
 /* ─── Federated Feed Info Bar ─── */
 .federated-info-bar {
