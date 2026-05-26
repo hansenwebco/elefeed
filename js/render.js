@@ -167,12 +167,20 @@ export function renderAnalyticsMenu(s) {
 export function getFilterInfo(status, context = 'home') {
   const s = status.reblog || status;
 
-  // 1. Check for blocked or muted users
-  if (state.knownBlocking.has(s.account.id)) {
-    return { isFiltered: true, filterAction: 'hide', filterTitle: 'Blocked user' };
-  }
-  if (state.knownMuting.has(s.account.id)) {
-    return { isFiltered: true, filterAction: 'hide', filterTitle: 'Muted user' };
+  // 1. Check for blocked, muted users, or blocked domains (skip only if explicitly viewing their profile page)
+  if (context !== 'account') {
+    if (state.knownBlocking.has(s.account.id)) {
+      return { isFiltered: true, filterAction: 'hide', filterTitle: 'Blocked user' };
+    }
+    if (state.knownMuting.has(s.account.id)) {
+      return { isFiltered: true, filterAction: 'hide', filterTitle: 'Muted user' };
+    }
+
+    // 1.5. Check for blocked domains
+    const accountDomain = s.account.acct.includes('@') ? s.account.acct.split('@')[1].toLowerCase() : (state.server ? state.server.toLowerCase() : '');
+    if (accountDomain && state.knownBlockedDomains && state.knownBlockedDomains.has(accountDomain)) {
+      return { isFiltered: true, filterAction: 'hide', filterTitle: 'Blocked domain' };
+    }
   }
 
   // 2. Check for muted conversation

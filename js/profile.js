@@ -981,6 +981,13 @@ export async function handleBlockToggle(btn) {
     btn.textContent = nowBlocked ? '✓ Blocked' : 'Block user';
     btn.classList.toggle('blocked', nowBlocked);
 
+    if (nowBlocked) {
+      state.knownBlocking.add(accountId);
+      state.knownMuting.delete(accountId);
+    } else {
+      state.knownBlocking.delete(accountId);
+    }
+
     // Update the follow button
     const followBtn = document.querySelector(`.profile-follow-btn[data-account-id="${accountId}"]`);
     if (followBtn) {
@@ -1055,6 +1062,13 @@ export async function handleMuteToggle(btn) {
     btn.dataset.muted = nowMuted ? 'true' : 'false';
     btn.textContent = nowMuted ? '✓ Muted' : 'Mute user';
     btn.classList.toggle('muted', nowMuted);
+
+    if (nowMuted) {
+      state.knownMuting.add(accountId);
+      state.knownBlocking.delete(accountId);
+    } else {
+      state.knownMuting.delete(accountId);
+    }
 
     // Update the follow button
     const followBtn = document.querySelector(`.profile-follow-btn[data-account-id="${accountId}"]`);

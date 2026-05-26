@@ -73,6 +73,7 @@ export const state = {
   knownNotFollowing: new Set(),
   knownMuting: new Set(),
   knownBlocking: new Set(),
+  knownBlockedDomains: new Set(),
 
   /* UI state */
   activeTab: urlParams.get('tab') || 'feed',

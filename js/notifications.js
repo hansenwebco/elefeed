@@ -284,11 +284,17 @@ if ('serviceWorker' in navigator) {
 export function openNotifDrawer() {
   const drawer = $('notif-drawer');
   const backdrop = $('notif-backdrop');
+  if (!drawer || !backdrop) return;
+
+  const alreadyOpen = drawer.classList.contains('open');
+
   drawer.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
   backdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
   state.notifDrawerOpen = true;
+
+  if (alreadyOpen) return;
 
   // Update URL state
   updateURLParam('notifications', 'true', true);
