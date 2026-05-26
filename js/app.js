@@ -49,6 +49,7 @@ import { openPostAnalyticsDrawer, closePostAnalyticsDrawer, appendMoreAnalyticsU
 import { startCountPolling, stopCountPolling, applyCountsFromStatus } from './counts.js';
 import { initTitleBar, updateTitleBar } from './titlebar.js';
 import { openFiltersDrawer, closeFiltersDrawer, initFiltersUI, loadFilters } from './filters.js';
+import { openBlocksMutesDrawer, closeBlocksMutesDrawer } from './contentControls.js';
 import { initUsageTracking, startTracking, stopTracking, renderUsageUI } from './usage.js';
 import { initSettingsSync, handleSyncToggle, triggerPush, clearAccountSettings } from './settingsSync.js';
 import { getAccountNote, extractBlock } from './sync.js';
@@ -63,6 +64,8 @@ window.getFilteredPendingPosts = getFilteredPendingPosts;
 window.activeFeedKey = activeFeedKey;
 window.openFiltersDrawer = openFiltersDrawer;
 window.closeFiltersDrawer = closeFiltersDrawer;
+window.openBlocksMutesDrawer = openBlocksMutesDrawer;
+window.closeBlocksMutesDrawer = closeBlocksMutesDrawer;
 window.openBookmarksDrawer = openBookmarksDrawer;
 window.switchAccount = switchAccount;
 window.removeAccount = removeAccount;
@@ -91,7 +94,8 @@ function isAnyDrawerOpen() {
     $('settings-drawer') && $('settings-drawer').classList.contains('open') ||
     $('search-drawer') && $('search-drawer').classList.contains('open') ||
     $('post-analytics-drawer') && $('post-analytics-drawer').classList.contains('open') ||
-    $('manage-filters-drawer') && $('manage-filters-drawer').classList.contains('open')
+    $('manage-filters-drawer') && $('manage-filters-drawer').classList.contains('open') ||
+    $('manage-blocks-mutes-drawer') && $('manage-blocks-mutes-drawer').classList.contains('open')
   );
 }
 
@@ -108,13 +112,15 @@ function setOverlayPillVisibility() {
 }
 
 function closeAnyDrawer() {
-  if ($('notif-drawer') && $('notif-drawer').classList.contains('open')) closeNotifDrawer();
-  if ($('thread-drawer') && $('thread-drawer').classList.contains('open')) closeThreadDrawer();
-  if ($('profile-drawer') && $('profile-drawer').classList.contains('open')) closeProfileDrawer();
-  if ($('compose-drawer') && $('compose-drawer').classList.contains('open')) closeComposeDrawer();
-  if ($('search-drawer') && $('search-drawer').classList.contains('open')) closeSearchDrawer();
-  if ($('post-analytics-drawer') && $('post-analytics-drawer').classList.contains('open')) closePostAnalyticsDrawer();
-  if ($('manage-filters-drawer') && $('manage-filters-drawer').classList.contains('open')) closeFiltersDrawer();
+  const params = new URLSearchParams(window.location.search);
+  if ($('notif-drawer') && $('notif-drawer').classList.contains('open') && !params.get('notifications')) closeNotifDrawer();
+  if ($('thread-drawer') && $('thread-drawer').classList.contains('open') && !params.get('thread')) closeThreadDrawer();
+  if ($('profile-drawer') && $('profile-drawer').classList.contains('open') && !params.get('profile')) closeProfileDrawer();
+  if ($('compose-drawer') && $('compose-drawer').classList.contains('open') && !params.get('compose')) closeComposeDrawer();
+  if ($('search-drawer') && $('search-drawer').classList.contains('open') && !params.get('search')) closeSearchDrawer();
+  if ($('post-analytics-drawer') && $('post-analytics-drawer').classList.contains('open') && !params.get('analytics')) closePostAnalyticsDrawer();
+  if ($('manage-filters-drawer') && $('manage-filters-drawer').classList.contains('open') && !params.get('manage_filters')) closeFiltersDrawer();
+  if ($('manage-blocks-mutes-drawer') && $('manage-blocks-mutes-drawer').classList.contains('open') && !params.get('manage_blocks_mutes')) closeBlocksMutesDrawer();
   if ($('manage-hashtag-drawer') && $('manage-hashtag-drawer').classList.contains('open')) {
     $('manage-hashtag-drawer').classList.remove('open');
     const bd = $('manage-hashtag-backdrop');
@@ -167,6 +173,9 @@ window.addEventListener('popstate', async e => {
     }
     if (currentParams.get('manage_filters')) {
       openFiltersDrawer();
+    }
+    if (currentParams.get('manage_blocks_mutes')) {
+      openBlocksMutesDrawer();
     }
 
     // Restore or clear hashtag filter state based on URL params
@@ -271,12 +280,15 @@ async function initApp(server, token) {
     console.error('Failed to load lists module for pre-fetch:', e);
   }
 
-  const [accountRes, tagsRes, instanceV1Res, _filtersRes, _listsRes] = await Promise.allSettled([
+  const [accountRes, tagsRes, instanceV1Res, _filtersRes, _listsRes, blocksRes, mutesRes, domainsRes] = await Promise.allSettled([
     apiGet('/api/v1/accounts/verify_credentials', token, server),
     apiGet('/api/v1/followed_tags?limit=200', token, server),
     apiGet('/api/v1/instance', token, server),
     loadFilters(),
-    fetchListsPromise
+    fetchListsPromise,
+    apiGet('/api/v1/blocks?limit=200', token, server),
+    apiGet('/api/v1/mutes?limit=200', token, server),
+    apiGet('/api/v1/domain_blocks?limit=200', token, server)
   ]);
 
   if (accountRes.status === 'fulfilled') {
@@ -290,6 +302,25 @@ async function initApp(server, token) {
     applyFollowingFeedFlag();
   } else {
     console.warn('Could not load account info:', accountRes.reason);
+  }
+
+  // Populate block/mute filters in state from parallel startup loads
+  if (blocksRes && blocksRes.status === 'fulfilled' && Array.isArray(blocksRes.value)) {
+    state.knownBlocking = new Set(blocksRes.value.map(acc => acc.id));
+  } else {
+    state.knownBlocking = new Set();
+  }
+
+  if (mutesRes && mutesRes.status === 'fulfilled' && Array.isArray(mutesRes.value)) {
+    state.knownMuting = new Set(mutesRes.value.map(acc => acc.id));
+  } else {
+    state.knownMuting = new Set();
+  }
+
+  if (domainsRes && domainsRes.status === 'fulfilled' && Array.isArray(domainsRes.value)) {
+    state.knownBlockedDomains = new Set(domainsRes.value.map(d => d.toLowerCase()));
+  } else {
+    state.knownBlockedDomains = new Set();
   }
 
   if (tagsRes.status === 'fulfilled') {
@@ -464,6 +495,7 @@ async function initApp(server, token) {
   const profileId = urlParams.get('profile'); if (profileId) setTimeout(() => openProfileDrawer(profileId, state.server), 300);
   const bookmarks = urlParams.get('bookmarks'); if (bookmarks) setTimeout(() => openBookmarksDrawer(), 300);
   const notifications = urlParams.get('notifications'); if (notifications) setTimeout(() => openNotifDrawer(), 300);
+  const blocksMutes = urlParams.get('manage_blocks_mutes'); if (blocksMutes) setTimeout(() => openBlocksMutesDrawer(), 300);
 }
 
 
@@ -1289,6 +1321,14 @@ if (manageFiltersMenuBtn) {
   manageFiltersMenuBtn.addEventListener('click', () => {
     $('profile-dropdown').classList.remove('show');
     openFiltersDrawer();
+  });
+}
+
+const manageBlocksMutesMenuBtn = $('manage-blocks-mutes-menu-btn');
+if (manageBlocksMutesMenuBtn) {
+  manageBlocksMutesMenuBtn.addEventListener('click', () => {
+    $('profile-dropdown').classList.remove('show');
+    openBlocksMutesDrawer();
   });
 }
 
@@ -3031,7 +3071,7 @@ document.addEventListener('mouseover', e => {
   if (!trigger) return;
 
   // Disable user profile popups in certain contexts where they are redundant or intrusive
-  if (trigger.closest('.trending-person-card') || trigger.closest('.following-drawer') || trigger.closest('.condensed-reply-wrapper') || trigger.closest('.full-reply-card')) return;
+  if (trigger.closest('.trending-person-card') || trigger.closest('.following-drawer') || trigger.closest('.condensed-reply-wrapper') || trigger.closest('.full-reply-card') || trigger.closest('#manage-blocks-mutes-drawer')) return;
 
   const accountId = trigger.dataset.profileId;
   const server = trigger.dataset.profileServer || state.server;

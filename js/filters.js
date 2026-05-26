@@ -18,8 +18,12 @@ export async function openFiltersDrawer() {
   const backdrop = $('manage-filters-backdrop');
   if (!drawer || !backdrop) return;
 
+  const alreadyOpen = drawer.classList.contains('open');
+
   drawer.classList.add('open');
   backdrop.classList.add('open');
+
+  if (alreadyOpen) return;
   
   // Update URL for history
   const url = new URL(window.location);
