@@ -47,7 +47,7 @@ export function closeFiltersDrawer() {
  * Fetch and populate filters into the global state.
  */
 export async function loadFilters() {
-  if (!state.token || state.demoMode) return;
+  if (!state.token) return;
   const container = $('filters-list-container');
   if (container && container.innerHTML === '') {
     container.innerHTML = '<div class="spinner" style="margin:20px auto;"></div>';
