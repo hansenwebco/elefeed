@@ -1482,6 +1482,11 @@ if (settingsMenuBtn) {
     // Push a history entry so the back button closes the settings drawer
     history.pushState({ drawer: 'settings-drawer' }, '', '');
 
+    // Reset active settings tab to appearance
+    if (window.switchSettingsTab) {
+      window.switchSettingsTab('appearance');
+    }
+
     // Open settings drawer
     $('settings-backdrop').classList.add('open');
     $('settings-drawer').classList.add('open');
@@ -1495,6 +1500,15 @@ if (settingsModalClose) {
     $('settings-drawer').classList.remove('open');
   });
 }
+
+window.switchSettingsTab = function(tabName) {
+  document.querySelectorAll('.settings-drawer-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.settings-drawer-tab-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `settings-panel-${tabName}`);
+  });
+};
 
 $('settings-backdrop')?.addEventListener('click', () => {
   $('settings-backdrop').classList.remove('open');
@@ -1693,7 +1707,9 @@ function refreshNotifSettingsUI() {
   const server = state.server || '';
   const isDev = acct === 'TheStoneDonkey' && server === 'beige.party';
 
-  if (debugSection) debugSection.style.display = isDev ? '' : 'none';
+  const devTabBtn = $('settings-tab-developer');
+  if (devTabBtn) devTabBtn.style.display = isDev ? '' : 'none';
+  if (debugSection) debugSection.style.display = 'block';
 
   // Sync the feature flag toggle state
   const followingToggle = $('debug-following-feed-toggle');
@@ -1883,21 +1899,6 @@ for (const type of _alertTypes) {
 }
 
 /* ── Developer Debug Panel ──────────────────────────────────────────── */
-
-// Wire up collapsible debug toggle
-const _debugToggle = $('settings-debug-toggle');
-const _debugContent = $('settings-debug-content');
-if (_debugToggle && _debugContent) {
-  _debugToggle.addEventListener('click', () => {
-    const isExpanded = _debugToggle.getAttribute('aria-expanded') === 'true';
-    _debugToggle.setAttribute('aria-expanded', !isExpanded);
-    _debugContent.style.display = isExpanded ? 'none' : 'flex';
-    const chevron = _debugToggle.querySelector('.debug-chevron');
-    if (chevron) {
-      chevron.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';
-    }
-  });
-}
 
 async function debugUpdateStatus(msg) {
   const el = $('debug-sub-status');
