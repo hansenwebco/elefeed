@@ -465,7 +465,20 @@ window.toggleBoostMenu = function (postId, triggerBtn) {
   const menu = triggerBtn
     ? triggerBtn.parentElement.querySelector('.boost-dropdown')
     : $(`boost-menu-${postId}`);
-  if (menu) menu.classList.toggle('show');
+  if (menu) {
+    const isShowing = menu.classList.toggle('show');
+    if (isShowing) {
+      menu.style.bottom = 'calc(100% + 4px)';
+      menu.style.top = 'auto';
+      menu.style.transformOrigin = 'bottom left';
+      const rect = menu.getBoundingClientRect();
+      if (rect.top < 60) {
+        menu.style.bottom = 'auto';
+        menu.style.top = 'calc(100% + 4px)';
+        menu.style.transformOrigin = 'top left';
+      }
+    }
+  }
 };
 
 window.addEventListener('click', () => {
@@ -702,6 +715,90 @@ window.handleMuteConversationToggle = async function (postId, isMuted, triggerEl
   }
 };
 
+window.handleMuteUserToggle = async function (accountId, isMuted, acct, triggerEl) {
+  if (!state.token) { showToast('Please sign in to mute users.'); return; }
+  const willBeMuted = !isMuted;
+
+  if (triggerEl) {
+    const originalMuted = isMuted;
+
+    const setUIState = (muted) => {
+      triggerEl.dataset.muted = muted ? 'true' : 'false';
+      const icon = triggerEl.querySelector('iconify-icon');
+      if (icon) icon.setAttribute('icon', muted ? 'ph:speaker-high-bold' : 'ph:user-minus-bold');
+      const span = triggerEl.querySelector('span');
+      if (span) span.textContent = muted ? 'Unmute @' + acct : 'Mute @' + acct;
+      if (muted) {
+        state.knownMuting.add(accountId);
+        state.knownBlocking.delete(accountId);
+      } else {
+        state.knownMuting.delete(accountId);
+      }
+    };
+
+    setUIState(willBeMuted);
+
+    try {
+      const endpoint = willBeMuted
+        ? `/api/v1/accounts/${accountId}/mute`
+        : `/api/v1/accounts/${accountId}/unmute`;
+
+      const res = await fetch(`https://${state.server}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${state.token}` },
+      });
+      if (!res.ok) throw new Error('Failed to update user mute state');
+
+      showToast(willBeMuted ? `Muted @${acct}` : `Unmuted @${acct}`);
+    } catch (err) {
+      setUIState(originalMuted);
+      showToast('Error: ' + err.message);
+    }
+  }
+};
+
+window.handleBlockUserToggle = async function (accountId, isBlocked, acct, triggerEl) {
+  if (!state.token) { showToast('Please sign in to block users.'); return; }
+  const willBeBlocked = !isBlocked;
+
+  if (triggerEl) {
+    const originalBlocked = isBlocked;
+
+    const setUIState = (blocked) => {
+      triggerEl.dataset.blocked = blocked ? 'true' : 'false';
+      const icon = triggerEl.querySelector('iconify-icon');
+      if (icon) icon.setAttribute('icon', blocked ? 'ph:hand-palm-bold' : 'ph:prohibit-bold');
+      const span = triggerEl.querySelector('span');
+      if (span) span.textContent = blocked ? 'Unblock @' + acct : 'Block @' + acct;
+      if (blocked) {
+        state.knownBlocking.add(accountId);
+        state.knownMuting.delete(accountId);
+      } else {
+        state.knownBlocking.delete(accountId);
+      }
+    };
+
+    setUIState(willBeBlocked);
+
+    try {
+      const endpoint = willBeBlocked
+        ? `/api/v1/accounts/${accountId}/block`
+        : `/api/v1/accounts/${accountId}/unblock`;
+
+      const res = await fetch(`https://${state.server}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${state.token}` },
+      });
+      if (!res.ok) throw new Error('Failed to update user block state');
+
+      showToast(willBeBlocked ? `Blocked @${acct}` : `Unblocked @${acct}`);
+    } catch (err) {
+      setUIState(originalBlocked);
+      showToast('Error: ' + err.message);
+    }
+  }
+};
+
 window.handleBoostSubmit = async function (postId, isBoosted, triggerEl) {
   document.querySelectorAll('.boost-dropdown').forEach(m => m.classList.remove('show'));
   if (!state.token) { showToast('Please sign in to boost posts.'); return; }
@@ -788,7 +885,20 @@ window.togglePostMenu = function (postId, triggerBtn) {
   const menu = triggerBtn
     ? triggerBtn.parentElement.querySelector('.post-dropdown')
     : $(`post-menu-${postId}`);
-  if (menu) menu.classList.toggle('show');
+  if (menu) {
+    const isShowing = menu.classList.toggle('show');
+    if (isShowing) {
+      menu.style.bottom = 'calc(100% + 4px)';
+      menu.style.top = 'auto';
+      menu.style.transformOrigin = 'bottom right';
+      const rect = menu.getBoundingClientRect();
+      if (rect.top < 60) {
+        menu.style.bottom = 'auto';
+        menu.style.top = 'calc(100% + 4px)';
+        menu.style.transformOrigin = 'top right';
+      }
+    }
+  }
 };
 
 window.addEventListener('click', () => {

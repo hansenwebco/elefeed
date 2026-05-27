@@ -687,6 +687,17 @@ function _buildPostBody(status, s, idPrefix = '', analyticsHTML = '', isOwnPost 
                <span>${s.muted ? 'Unmute Conversation' : 'Mute Conversation'}</span>
             </button>
 
+            <button class="boost-dropdown-item" data-action="mute-user" data-account-id="${s.account.id}" data-muted="${state.knownMuting.has(s.account.id) ? 'true' : 'false'}" data-acct="${escapeHTML(s.account.username || s.account.acct)}">
+               <iconify-icon icon="${state.knownMuting.has(s.account.id) ? 'ph:speaker-high-bold' : 'ph:user-minus-bold'}" style="font-size: 14px; opacity:0.6;"></iconify-icon>
+               <span>${state.knownMuting.has(s.account.id) ? 'Unmute @' + escapeHTML(s.account.username || s.account.acct) : 'Mute @' + escapeHTML(s.account.username || s.account.acct)}</span>
+            </button>
+
+            <button class="boost-dropdown-item boost-dropdown-item--danger" data-action="block-user" data-account-id="${s.account.id}" data-blocked="${state.knownBlocking.has(s.account.id) ? 'true' : 'false'}" data-acct="${escapeHTML(s.account.username || s.account.acct)}">
+               <iconify-icon icon="ph:prohibit-bold" style="font-size: 14px; opacity:0.6;"></iconify-icon>
+               <span>${state.knownBlocking.has(s.account.id) ? 'Unblock @' + escapeHTML(s.account.username || s.account.acct) : 'Block @' + escapeHTML(s.account.username || s.account.acct)}</span>
+            </button>
+
+
             ${showTranslate ? `
             <button class="boost-dropdown-item post-translate-btn" onclick="event.preventDefault(); event.stopPropagation(); window.translatePost(this, '${s.id}', '${escapeHTML(postLang || '')}', '${escapeHTML(s.url || '')}'); document.querySelectorAll('.footer-more-dropdown').forEach(m => m.classList.remove('show'));" data-original-label="Translate">
               <iconify-icon icon="ph:translate-bold" style="font-size: 14px; opacity:0.6;"></iconify-icon>
@@ -2026,7 +2037,28 @@ window.toggleFooterMoreMenu = function (postId, triggerBtn) {
     if (m.id !== `footer-more-menu-${postId}`) m.classList.remove('show');
   });
   const menu = triggerBtn.nextElementSibling;
-  if (menu) menu.classList.toggle('show');
+  if (menu) {
+    const isShowing = menu.classList.toggle('show');
+    if (isShowing) {
+      // Default to opening upwards
+      menu.style.bottom = '100%';
+      menu.style.top = 'auto';
+      menu.style.marginBottom = '8px';
+      menu.style.marginTop = '0';
+      menu.style.transformOrigin = 'bottom right';
+
+      const rect = menu.getBoundingClientRect();
+      // If it goes off the top of the screen (with a little padding for the header)
+      if (rect.top < 60) {
+        // Flip to open downwards
+        menu.style.bottom = 'auto';
+        menu.style.top = '100%';
+        menu.style.marginBottom = '0';
+        menu.style.marginTop = '8px';
+        menu.style.transformOrigin = 'top right';
+      }
+    }
+  }
 };
 
 /** Handle voting in a poll. */
