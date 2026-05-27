@@ -1419,638 +1419,676 @@
         <iconify-icon icon="ph:x-bold" style="font-size: 14px;"></iconify-icon>
       </button>
     </div>
-    <div class="manage-hashtag-drawer-inner">
 
-      <!-- Appearance -->
-      <div style="padding:16px; border-bottom:1px solid var(--border);">
-        <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">
-          Appearance</h4>
-        <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- Theme -->
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <span style="font-size:13px; color:var(--text); font-weight:500;">Appearance</span>
-            <div class="theme-selector" id="settings-theme-group">
-              <button class="theme-segment-btn" data-value="light">
-                <iconify-icon icon="ph:sun-bold" style="font-size: 14px;"></iconify-icon>
-                Light
-              </button>
-              <button class="theme-segment-btn" data-value="dark">
-                <iconify-icon icon="ph:moon-bold" style="font-size: 14px;"></iconify-icon>
-                Dark
-              </button>
-              <button class="theme-segment-btn" data-value="system">
-                <iconify-icon icon="ph:desktop-bold" style="font-size: 14px;"></iconify-icon>
-                System
-              </button>
+    <!-- Tabs Header -->
+    <div class="settings-drawer-tabs">
+      <button class="settings-drawer-tab-btn active" data-tab="appearance" onclick="window.switchSettingsTab('appearance')" title="Appearance">
+        <iconify-icon icon="ph:palette-bold" style="font-size: 15px;"></iconify-icon>
+        <span class="tab-label">Visual</span>
+      </button>
+      <button class="settings-drawer-tab-btn" data-tab="reading" onclick="window.switchSettingsTab('reading')" title="Reading & Feeds">
+        <iconify-icon icon="ph:book-open-bold" style="font-size: 15px;"></iconify-icon>
+        <span class="tab-label">Feed</span>
+      </button>
+      <button class="settings-drawer-tab-btn" data-tab="posting" onclick="window.switchSettingsTab('posting')" title="Posting Defaults">
+        <iconify-icon icon="ph:pencil-line-bold" style="font-size: 15px;"></iconify-icon>
+        <span class="tab-label">Compose</span>
+      </button>
+      <button class="settings-drawer-tab-btn" data-tab="notifications" onclick="window.switchSettingsTab('notifications')" title="Notifications">
+        <iconify-icon icon="ph:bell-bold" style="font-size: 15px;"></iconify-icon>
+        <span class="tab-label">Alerts</span>
+      </button>
+      <button class="settings-drawer-tab-btn" data-tab="sync" onclick="window.switchSettingsTab('sync')" title="Sync & Privacy">
+        <iconify-icon icon="ph:cloud-arrow-up-bold" style="font-size: 15px;"></iconify-icon>
+        <span class="tab-label">Sync</span>
+      </button>
+      <button class="settings-drawer-tab-btn" id="settings-tab-developer" data-tab="developer" onclick="window.switchSettingsTab('developer')" title="Developer" style="display:none;">
+        <iconify-icon icon="ph:code-bold" style="font-size: 15px;"></iconify-icon>
+        <span class="tab-label">Dev</span>
+      </button>
+    </div>
+
+    <div class="manage-hashtag-drawer-inner" style="flex: 1; overflow-y: auto;">
+
+      <!-- Panel 1: Appearance -->
+      <div id="settings-panel-appearance" class="settings-drawer-tab-panel active">
+        <div style="padding:16px;">
+          <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono); margin-top:0;">
+            Appearance</h4>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <!-- Theme -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">Appearance</span>
+              <div class="theme-selector" id="settings-theme-group">
+                <button class="theme-segment-btn" data-value="light">
+                  <iconify-icon icon="ph:sun-bold" style="font-size: 14px;"></iconify-icon>
+                  Light
+                </button>
+                <button class="theme-segment-btn" data-value="dark">
+                  <iconify-icon icon="ph:moon-bold" style="font-size: 14px;"></iconify-icon>
+                  Dark
+                </button>
+                <button class="theme-segment-btn" data-value="system">
+                  <iconify-icon icon="ph:desktop-bold" style="font-size: 14px;"></iconify-icon>
+                  System
+                </button>
+              </div>
             </div>
-          </div>
-          <!-- Theme (Palette) -->
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <span style="font-size:13px; color:var(--text); font-weight:500;">Theme</span>
-            <select id="settings-palette-select" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
-              <option value="classic">Classic (Default Slate & Purple)</option>
-              <option value="autumn">Autumn Blaze (Terracotta & Crimson)</option>
-              <option value="coffee">Coffee Shop (Warm Brew & Cozy Tan)</option>
-              <option value="cyber">Cyber Neon (OLED Black & Neon Vibes)</option>
-              <option value="dusk">Dusk Horizon (Indigo Night & Sunset Gold)</option>
-              <option value="forest">Forest Sanctuary (Natural Green & Earthy)</option>
-              <option value="legibility">High Contrast (Accessibility Focused)</option>
-              <option value="lavender">Lavender Dream (Soft Violet & Lilac)</option>
-              <option value="mint">Midnight Mint (Refreshing Teal & Slate)</option>
-              <option value="nord">Nordic (Arctic Gray & Frost Blue)</option>
-              <option value="ocean">Oceanic (Deep Blue & Teal)</option>
-              <option value="monochrome">Pure Monochrome (Minimalist Grayscale)</option>
-              <option value="rose">Rose (Warm Pink & Burgundy)</option>
-              <option value="solarized">Solarized (Classic Soothing Tones)</option>
-              <option value="sepia">Vintage Sepia (Warm Amber & Parchment)</option>
-            </select>
-          </div>
-          <!-- Font Family -->
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <span style="font-size:13px; color:var(--text); font-weight:500;">Font</span>
-            <select id="settings-font-family" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
-              <option value="sans">System Sans (Default)</option>
-              <option value="outfit">Outfit</option>
-              <option value="plex">IBM Plex Sans</option>
-              <option value="atkinson">Atkinson Hyperlegible</option>
-              <option value="lexend">Lexend</option>
-              <option value="serif">System Serif</option>
-              <option value="literata">Literata</option>
-              <option value="lora">Lora</option>
-              <option value="bitter">Bitter</option>
-              <option value="mono">Monospace</option>
-            </select>
-          </div>
-          <!-- Font Size -->
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">Font size</span>
-              <span id="settings-font-size-value" style="font-size:11px; color:var(--text-dim); font-family:var(--font-mono);">15px</span>
+            <!-- Theme (Palette) -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">Theme</span>
+              <select id="settings-palette-select" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
+                <option value="classic">Classic (Default Slate & Purple)</option>
+                <option value="autumn">Autumn Blaze (Terracotta & Crimson)</option>
+                <option value="coffee">Coffee Shop (Warm Brew & Cozy Tan)</option>
+                <option value="cyber">Cyber Neon (OLED Black & Neon Vibes)</option>
+                <option value="dusk">Dusk Horizon (Indigo Night & Sunset Gold)</option>
+                <option value="forest">Forest Sanctuary (Natural Green & Earthy)</option>
+                <option value="legibility">High Contrast (Accessibility Focused)</option>
+                <option value="lavender">Lavender Dream (Soft Violet & Lilac)</option>
+                <option value="mint">Midnight Mint (Refreshing Teal & Slate)</option>
+                <option value="nord">Nordic (Arctic Gray & Frost Blue)</option>
+                <option value="ocean">Oceanic (Deep Blue & Teal)</option>
+                <option value="monochrome">Pure Monochrome (Minimalist Grayscale)</option>
+                <option value="rose">Rose (Warm Pink & Burgundy)</option>
+                <option value="solarized">Solarized (Classic Soothing Tones)</option>
+                <option value="sepia">Vintage Sepia (Warm Amber & Parchment)</option>
+              </select>
             </div>
-            <select id="settings-font-size" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
-              <option value="12px">12px</option>
-              <option value="13px">13px</option>
-              <option value="14px">14px (Default)</option>
-              <option value="15px">15px</option>
-              <option value="16px">16px</option>
-              <option value="17px">17px</option>
-              <option value="18px">18px</option>
-              <option value="20px">20px</option>
-              <option value="22px">22px</option>
-              <option value="24px">24px</option>
-            </select>
-          </div>
-          <!-- New post indicator -->
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">New post indicator</span>
-              <span style="font-size:11px; color:var(--text-muted);">How to show new posts waiting in your feed.</span>
+            <!-- Font Family -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <span style="font-size:13px; color:var(--text); font-weight:500;">Font</span>
+              <select id="settings-font-family" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
+                <option value="sans">System Sans (Default)</option>
+                <option value="outfit">Outfit</option>
+                <option value="plex">IBM Plex Sans</option>
+                <option value="atkinson">Atkinson Hyperlegible</option>
+                <option value="lexend">Lexend</option>
+                <option value="serif">System Serif</option>
+                <option value="literata">Literata</option>
+                <option value="lora">Lora</option>
+                <option value="bitter">Bitter</option>
+                <option value="mono">Monospace</option>
+              </select>
             </div>
-            <div class="theme-selector" id="settings-newpost-style-group">
-              <button class="theme-segment-btn" data-value="badge">Refresh Notification</button>
-              <button class="theme-segment-btn" data-value="pill">Floating Pill</button>
+            <!-- Font Size -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Font size</span>
+                <span id="settings-font-size-value" style="font-size:11px; color:var(--text-dim); font-family:var(--font-mono);">15px</span>
+              </div>
+              <select id="settings-font-size" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
+                <option value="12px">12px</option>
+                <option value="13px">13px</option>
+                <option value="14px">14px (Default)</option>
+                <option value="15px">15px</option>
+                <option value="16px">16px</option>
+                <option value="17px">17px</option>
+                <option value="18px">18px</option>
+                <option value="20px">20px</option>
+                <option value="22px">22px</option>
+                <option value="24px">24px</option>
+              </select>
+            </div>
+
+            <!-- Typography Live Preview widget -->
+            <div class="settings-typography-preview-card" style="margin-top:4px; padding:14px; border:1px dashed var(--border); border-radius:8px; background:var(--bg);">
+              <div style="font-size:10px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.06em; font-family:var(--font-mono); margin-bottom:8px;">Live Typography Preview</div>
+              <div id="settings-typography-preview-text" style="color:var(--text); line-height:1.55; font-size:var(--app-font-size); font-family:var(--font-body);">
+                Elefeed is a visual client for the decentralized web. Read your home feeds, trending topics, and customized hashtag feeds.
+              </div>
+            </div>
+
+            <!-- New post indicator -->
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">New post indicator</span>
+                <span style="font-size:11px; color:var(--text-muted);">How to show new posts waiting in your feed.</span>
+              </div>
+              <div class="theme-selector" id="settings-newpost-style-group">
+                <button class="theme-segment-btn" data-value="badge">Refresh Notification</button>
+                <button class="theme-segment-btn" data-value="pill">Floating Pill</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Content -->
-      <div style="padding:16px; border-bottom:1px solid var(--border);">
-        <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">
-          Content</h4>
-        <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- Display & Behavior - grouped like language content -->
-          <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Display
-              & Behavior</span>
+      <!-- Panel 2: Reading & Feeds -->
+      <div id="settings-panel-reading" class="settings-drawer-tab-panel">
+        <div style="padding:16px;">
+          <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono); margin-top:0;">
+            Reading &amp; Feeds</h4>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            
+            <!-- Display & Behavior Group -->
+            <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+              <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Display &amp; Behavior</span>
 
-            <!-- Hashtag Pills -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Hashtag pills</span>
-                <span style="font-size:11px; color:var(--text-muted);">Show hashtags as bordered pills.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Enable hashtag pills">
-                <input type="checkbox" id="settings-hashtag-pills-toggle" checked />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-
-            <!-- Hide Cards -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Hide link previews</span>
-                <span style="font-size:11px; color:var(--text-muted);">Hide link preview cards within posts for a
-                  lighter feed.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Hide link previews">
-                <input type="checkbox" id="settings-hide-cards-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-
-            <!-- Clear URLs -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Clean URLs</span>
-                <span style="font-size:11px; color:var(--text-muted);">Remove extra parameters from displayed URLs (does
-                  not alter actual destination link).</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Clear URLs">
-                <input type="checkbox" id="settings-clear-urls-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-
-            <!-- Live count updates -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Live count updates</span>
-                <span style="font-size:11px; color:var(--text-muted);">Periodically refresh reply, boost, and favourite
-                  counts on visible posts.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Enable live count updates">
-                <input type="checkbox" id="settings-count-polling-toggle" checked />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-
-            <!-- Show inline thread -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Show inline thread option</span>
-                <span style="font-size:11px; color:var(--text-muted);">Show a link to view replies inline within the
-                  feed.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Show inline thread option">
-                <input type="checkbox" id="settings-show-inline-thread-toggle" checked />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-
-            <!-- Thread view style selection -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Thread view style</span>
-                <span style="font-size:11px; color:var(--text-muted);">Choose between a compact interactive branch tree or a fully expanded post list.</span>
-              </div>
-              <select id="settings-thread-view-mode" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px; cursor:pointer;">
-                <option value="dynamic">Interactive</option>
-                <option value="full">Fully Expanded</option>
-              </select>
-            </div>
-
-            <!-- Zen mode -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Zen mode</span>
-                <span style="font-size:11px; color:var(--text-muted);">Hide boosts, faves, and other UI clutter for a
-                  focused reading experience.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Enable zen mode">
-                <input type="checkbox" id="settings-zen-mode-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-
-            <!-- Combine Boost/Quote -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Combine boost and quote</span>
-                <span style="font-size:11px; color:var(--text-muted);">Combine boost and quote into a single dropdown
-                  button instead of separate buttons.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Combine boost and quote buttons">
-                <input type="checkbox" id="settings-separate-boost-quote-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-
-            <!-- Desktop Post Menu -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Show navigation under post box</span>
-                <span style="font-size:11px; color:var(--text-muted);">Display primary navigation links below the
-                  compose area, right-aligned next to the feed.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Show menu under post box">
-                <input type="checkbox" id="settings-desktop-menu-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-
-            <!-- Giphy Integration -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Giphy integration</span>
-                <span style="font-size:11px; color:var(--text-muted);">Show the GIPHY search button in the post
-                  composer.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Enable Giphy integration">
-                <input type="checkbox" id="settings-giphy-toggle" checked />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-
-            <!-- Confirm Interaction -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Confirm interactions</span>
-                <span style="font-size:11px; color:var(--text-muted);">Warning before boosting, favoriting, or
-                  quoting.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Confirm interactions warning">
-                <input type="checkbox" id="settings-confirm-interactions-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-          </div>
-          <!-- Language - grouped like sensitive content -->
-          <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Language</span>
-
-            <!-- Translation Target Language -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Translation language</span>
-                <span style="font-size:11px; color:var(--text-muted);">Preferred language for translating posts.</span>
-              </div>
-              <select id="settings-translate-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
-                <option value="browser">Browser Default</option>
-              </select>
-            </div>
-
-            <!-- Feed Language Filter -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Feed language filter</span>
-                <span style="font-size:11px; color:var(--text-muted);">Only show posts in this language across all
-                  feeds.</span>
-              </div>
-              <select id="settings-feed-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
-                <option value="all">Show All</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Privacy & Sensitivity -->
-          <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Privacy
-              & Sensitivity</span>
-            <!-- Media warning mode -->
-            <div style="display:flex; flex-direction:column; gap:6px;">
-              <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono); margin-bottom: 2px;">Media
-                blurring</span>
-              <div class="settings-radio-group" id="settings-media-warning-group">
-                <label class="settings-radio-item">
-                  <input type="radio" name="media-warning" value="none" class="settings-radio-input">
-                  <div class="settings-radio-label">
-                    <span class="settings-radio-title">Show all media without warnings</span>
-                    <span class="settings-radio-desc">Display all images and videos immediately.</span>
-                  </div>
-                </label>
-                <label class="settings-radio-item">
-                  <input type="radio" name="media-warning" value="sensitive" class="settings-radio-input">
-                  <div class="settings-radio-label">
-                    <span class="settings-radio-title">Warn only for sensitive media</span>
-                    <span class="settings-radio-desc">Overlay only on content marked sensitive by author.</span>
-                  </div>
-                </label>
-                <label class="settings-radio-item">
-                  <input type="radio" name="media-warning" value="all" class="settings-radio-input">
-                  <div class="settings-radio-label">
-                    <span class="settings-radio-title">Warn before showing all media</span>
-                    <span class="settings-radio-desc">Subtle overlay covers all images and videos.</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-            <!-- Auto-open sensitive content -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Auto-expand content warnings</span>
-                <span style="font-size:11px; color:var(--text-muted);">Automatically show content behind warnings
-                  without requiring a click.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Auto-expand content warnings">
-                <input type="checkbox" id="settings-auto-open-sensitive-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Posting Defaults -->
-          <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Posting
-              Defaults</span>
-
-            <!-- Default Visibility -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Default visibility</span>
-                <span style="font-size:11px; color:var(--text-muted);">Initial visibility for new posts.</span>
-              </div>
-              <select id="settings-post-visibility" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
-                <option value="public">🌐 Public</option>
-                <option value="unlisted">🌙 Quiet public</option>
-                <option value="private">🔒 Followers</option>
-                <option value="direct">@ Private mention</option>
-              </select>
-            </div>
-
-            <!-- Default Who can quote -->
-            <div style="display:flex; flex-direction:column; gap:6px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Default who can quote</span>
-                <span style="font-size:11px; color:var(--text-muted);">Initial quote permission for new posts.</span>
-              </div>
-              <div class="theme-selector" id="settings-post-quote-group">
-                <button class="theme-segment-btn" data-value="public">
-                  <iconify-icon icon="ph:globe-bold" style="font-size: 14px;"></iconify-icon>
-                  Anyone
-                </button>
-                <button class="theme-segment-btn" data-value="followers">
-                  <iconify-icon icon="ph:users-bold" style="font-size: 14px;"></iconify-icon>
-                  Followers
-                </button>
-                <button class="theme-segment-btn" data-value="nobody">
-                  <iconify-icon icon="ph:prohibit-bold" style="font-size: 14px;"></iconify-icon>
-                  Just me
-                </button>
-              </div>
-              <input type="hidden" id="settings-post-quote" value="public">
-            </div>
-
-            <!-- Default Language -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Default posting language</span>
-                <span style="font-size:11px; color:var(--text-muted);">Language tag added to your posts.</span>
-              </div>
-              <select id="settings-post-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
-                <option value="browser">Browser default</option>
-              </select>
-            </div>
-
-            <!-- Always mark media as sensitive -->
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="font-size:13px; color:var(--text); font-weight:500;">Always mark media as sensitive</span>
-                <span style="font-size:11px; color:var(--text-muted);">Automatically set the sensitive flag when
-                  uploading media.</span>
-              </div>
-              <label class="settings-toggle" style="flex-shrink:0;" title="Always mark media as sensitive">
-                <input type="checkbox" id="settings-always-sensitive-toggle" />
-                <span class="settings-toggle-track"></span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Privacy & Sync (Experimental) -->
-          <div style="display:flex; flex-direction:column; gap:16px; padding:16px; background:var(--surface2); border:1px solid var(--border); border-radius:12px;">
-            <div style="display:flex; flex-direction:column; gap:4px;">
-              <h4 style="font-size:11px; text-transform:uppercase; color:var(--accent); letter-spacing:0.08em; font-family:var(--font-mono); margin:0;">
-                Privacy & Sync <span style="font-size:9px; opacity:0.7;">(Experimental)</span></h4>
-              <p style="font-size:11px; color:var(--text-muted); line-height:1.5; margin:0;">
-                Elefeed uses your Mastodon account's private <b>Relationship Note</b> to store data. This is a secure,
-                personal field that is only visible to you and this application - your followers and the public cannot
-                see it.
-              </p>
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:12px;">
-              <!-- Usage Tracking -->
+              <!-- Hashtag Pills -->
               <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
                 <div style="display:flex; flex-direction:column; gap:2px;">
-                  <span style="font-size:13px; color:var(--text); font-weight:500;">Daily Usage Timer</span>
-                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Track and sync your time spent
-                    in the app today.</span>
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Hashtag pills</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Show hashtags as bordered pills.</span>
                 </div>
-                <label class="settings-toggle" style="flex-shrink:0;">
-                  <input type="checkbox" id="settings-usage-tracking-toggle" />
+                <label class="settings-toggle" style="flex-shrink:0;" title="Enable hashtag pills">
+                  <input type="checkbox" id="settings-hashtag-pills-toggle" checked />
                   <span class="settings-toggle-track"></span>
                 </label>
               </div>
 
-              <div style="height:1px; background:var(--border-subtle);"></div>
-
-              <!-- Settings Sync -->
+              <!-- Hide Cards -->
               <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
                 <div style="display:flex; flex-direction:column; gap:2px;">
-                  <span style="font-size:13px; color:var(--text); font-weight:500;">Settings Sync</span>
-                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Sync your theme, fonts, and
-                    preferences across devices.</span>
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Hide link previews</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Hide link preview cards within posts for a lighter feed.</span>
                 </div>
-                <label class="settings-toggle" style="flex-shrink:0;">
-                  <input type="checkbox" id="settings-sync-toggle" />
+                <label class="settings-toggle" style="flex-shrink:0;" title="Hide link previews">
+                  <input type="checkbox" id="settings-hide-cards-toggle" />
                   <span class="settings-toggle-track"></span>
                 </label>
               </div>
 
-              <!-- Sync Account Selection -->
-              <div id="settings-sync-account-row" style="display:none; flex-direction:column; gap:6px;">
-                <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Sync
-                  Host Account</span>
-                <select id="settings-sync-account-select" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
-                  <!-- Populated by JS -->
+              <!-- Clear URLs -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Clean URLs</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Remove extra parameters from displayed URLs (does not alter actual destination link).</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Clear URLs">
+                  <input type="checkbox" id="settings-clear-urls-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+
+              <!-- Live count updates -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Live count updates</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Periodically refresh reply, boost, and favourite counts on visible posts.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Enable live count updates">
+                  <input type="checkbox" id="settings-count-polling-toggle" checked />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+
+              <!-- Show inline thread -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Show inline thread option</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Show a link to view replies inline within the feed.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Show inline thread option">
+                  <input type="checkbox" id="settings-show-inline-thread-toggle" checked />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+
+              <!-- Thread view style selection -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Thread view style</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Choose between a compact interactive branch tree or a fully expanded post list.</span>
+                </div>
+                <select id="settings-thread-view-mode" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px; cursor:pointer;">
+                  <option value="dynamic">Interactive</option>
+                  <option value="full">Fully Expanded</option>
                 </select>
-                <p style="font-size:10px; color:var(--text-dim); line-height:1.4; margin:0;">
-                  This account will be used to store your shared settings.
+              </div>
+
+              <!-- Zen mode -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Zen mode</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Hide boosts, faves, and other UI clutter for a focused reading experience.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Enable zen mode">
+                  <input type="checkbox" id="settings-zen-mode-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Language Group -->
+            <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+              <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Language</span>
+
+              <!-- Translation Target Language -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Translation language</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Preferred language for translating posts.</span>
+                </div>
+                <select id="settings-translate-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
+                  <option value="browser">Browser Default</option>
+                </select>
+              </div>
+
+              <!-- Feed Language Filter -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Feed language filter</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Only show posts in this language across all feeds.</span>
+                </div>
+                <select id="settings-feed-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
+                  <option value="all">Show All</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Privacy & Sensitivity Group -->
+            <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+              <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Privacy &amp; Sensitivity</span>
+              <!-- Media warning mode -->
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono); margin-bottom: 2px;">Media blurring</span>
+                <div class="settings-radio-group" id="settings-media-warning-group">
+                  <label class="settings-radio-item">
+                    <input type="radio" name="media-warning" value="none" class="settings-radio-input">
+                    <div class="settings-radio-label">
+                      <span class="settings-radio-title">Show all media without warnings</span>
+                      <span class="settings-radio-desc">Display all images and videos immediately.</span>
+                    </div>
+                  </label>
+                  <label class="settings-radio-item">
+                    <input type="radio" name="media-warning" value="sensitive" class="settings-radio-input">
+                    <div class="settings-radio-label">
+                      <span class="settings-radio-title">Warn only for sensitive media</span>
+                      <span class="settings-radio-desc">Overlay only on content marked sensitive by author.</span>
+                    </div>
+                  </label>
+                  <label class="settings-radio-item">
+                    <input type="radio" name="media-warning" value="all" class="settings-radio-input">
+                    <div class="settings-radio-label">
+                      <span class="settings-radio-title">Warn before showing all media</span>
+                      <span class="settings-radio-desc">Subtle overlay covers all images and videos.</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              <!-- Auto-open sensitive content -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Auto-expand content warnings</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Automatically show content behind warnings without requiring a click.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Auto-expand content warnings">
+                  <input type="checkbox" id="settings-auto-open-sensitive-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 3: Posting Defaults -->
+      <div id="settings-panel-posting" class="settings-drawer-tab-panel">
+        <div style="padding:16px;">
+          <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono); margin-top:0;">
+            Posting &amp; Composer</h4>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            
+            <!-- Composer & Interface Layout -->
+            <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+              <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Composer &amp; Interactions</span>
+
+              <!-- Combine Boost/Quote -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Combine boost and quote</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Combine boost and quote into a single dropdown button instead of separate buttons.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Combine boost and quote buttons">
+                  <input type="checkbox" id="settings-separate-boost-quote-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+
+              <!-- Desktop Post Menu -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Show navigation under post box</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Display primary navigation links below the compose area, right-aligned next to the feed.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Show menu under post box">
+                  <input type="checkbox" id="settings-desktop-menu-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+
+              <!-- Giphy Integration -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Giphy integration</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Show the GIPHY search button in the post composer.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Enable Giphy integration">
+                  <input type="checkbox" id="settings-giphy-toggle" checked />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+
+              <!-- Confirm Interaction -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Confirm interactions</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Warning before boosting, favoriting, or quoting.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Confirm interactions warning">
+                  <input type="checkbox" id="settings-confirm-interactions-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Posting Defaults Group -->
+            <div style="display:flex; flex-direction:column; gap:10px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+              <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Posting Defaults</span>
+
+              <!-- Default Visibility -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Default visibility</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Initial visibility for new posts.</span>
+                </div>
+                <select id="settings-post-visibility" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
+                  <option value="public">🌐 Public</option>
+                  <option value="unlisted">🌙 Quiet public</option>
+                  <option value="private">🔒 Followers</option>
+                  <option value="direct">@ Private mention</option>
+                </select>
+              </div>
+
+              <!-- Default Who can quote -->
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Default who can quote</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Initial quote permission for new posts.</span>
+                </div>
+                <div class="theme-selector" id="settings-post-quote-group">
+                  <button class="theme-segment-btn" data-value="public">
+                    <iconify-icon icon="ph:globe-bold" style="font-size: 14px;"></iconify-icon>
+                    Anyone
+                  </button>
+                  <button class="theme-segment-btn" data-value="followers">
+                    <iconify-icon icon="ph:users-bold" style="font-size: 14px;"></iconify-icon>
+                    Followers
+                  </button>
+                  <button class="theme-segment-btn" data-value="nobody">
+                    <iconify-icon icon="ph:prohibit-bold" style="font-size: 14px;"></iconify-icon>
+                    Just me
+                  </button>
+                </div>
+                <input type="hidden" id="settings-post-quote" value="public">
+              </div>
+
+              <!-- Default Language -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Default posting language</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Language tag added to your posts.</span>
+                </div>
+                <select id="settings-post-lang" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px;">
+                  <option value="browser">Browser default</option>
+                </select>
+              </div>
+
+              <!-- Always mark media as sensitive -->
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:13px; color:var(--text); font-weight:500;">Always mark media as sensitive</span>
+                  <span style="font-size:11px; color:var(--text-muted);">Automatically set the sensitive flag when uploading media.</span>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;" title="Always mark media as sensitive">
+                  <input type="checkbox" id="settings-always-sensitive-toggle" />
+                  <span class="settings-toggle-track"></span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 4: Notifications -->
+      <div id="settings-panel-notifications" class="settings-drawer-tab-panel">
+        <div style="padding:16px;">
+          <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono); margin-top:0;">
+            Notifications</h4>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <!-- In-app notification previews toggle -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">In-app previews</span>
+                <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a preview toast when a new notification arrives while the app is open.</span>
+              </div>
+              <label class="settings-toggle" style="flex-shrink:0;" title="Enable in-app notification previews">
+                <input type="checkbox" id="settings-in-app-notif-toggle" checked />
+                <span class="settings-toggle-track"></span>
+              </label>
+            </div>
+            <!-- Background notifications toggle -->
+            <div id="settings-push-notifs-section" style="display:flex; flex-direction:column; gap:16px; margin-top:4px;">
+              <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Push Notifications (OS)</span>
+
+              <!-- Permission row -->
+              <div style="display:flex; flex-direction:column; gap:8px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+                <div id="settings-web-notif-perm-row" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font-size:13px; color:var(--text); font-weight:500;">Status</span>
+                    <span style="font-size:11px; color:var(--text-muted);" id="settings-notif-perm-status">Checking…</span>
+                  </div>
+                  <button id="settings-notif-perm-btn" style="padding:7px 14px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:12px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
+                    <iconify-icon icon="ph:bell-bold" style="font-size: 13px;"></iconify-icon>
+                    Enable
+                  </button>
+                </div>
+
+                <!-- Android Alarm Permission (Hidden by default, shown by JS if AndroidBridge exists) -->
+                <div id="settings-android-alarm-section" style="display:none; flex-direction:column; gap:6px; padding:10px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; margin-top:4px;">
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font-size:12px; color:var(--text); font-weight:500;">Android Alarm Permission</span>
+                    <span style="font-size:10px; color:var(--text-muted); line-height:1.4;">Allows more frequent background checks.</span>
+                  </div>
+                  <button id="settings-android-alarm-btn" style="align-self:flex-start; padding:6px 12px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:11px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
+                    <iconify-icon icon="ph:clock-bold" style="font-size: 12px;"></iconify-icon>
+                    Request Permission
+                  </button>
+                </div>
+              </div>
+
+              <div id="settings-web-push-options" style="display:flex; flex-direction:column; gap:12px;">
+                <!-- Background notifications toggle -->
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font-size:13px; color:var(--text); font-weight:500;">Background notifications</span>
+                    <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Receive alerts even when Elefeed isn't open.</span>
+                  </div>
+                  <label class="settings-toggle" style="flex-shrink:0;" title="Enable background notifications">
+                    <input type="checkbox" id="settings-bg-notif-toggle" />
+                    <span class="settings-toggle-track"></span>
+                  </label>
+                </div>
+
+                <!-- Poll interval -->
+                <div id="settings-notif-interval-row" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font-size:13px; color:var(--text); font-weight:500;">Check interval</span>
+                    <span style="font-size:11px; color:var(--text-muted);">How often to check for updates.</span>
+                  </div>
+                  <select id="settings-notif-interval" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); cursor:pointer; outline:none; min-width:90px;">
+                    <option value="30000">30 sec</option>
+                    <option value="60000">1 min</option>
+                    <option value="120000">2 min</option>
+                    <option value="300000">5 min</option>
+                    <option value="600000" selected>10 min</option>
+                    <option value="900000">15 min</option>
+                    <option value="1800000">30 min</option>
+                  </select>
+                </div>
+
+                <!-- Alert types (Collapsible) -->
+                <div id="settings-notif-alerts-row" style="display:flex; flex-direction:column; background:var(--bg); border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+                  <button id="settings-alert-types-toggle" style="width:100%; border:none; background:none; padding:12px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; outline:none; text-align:left;">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                      <span style="font-size:13px; color:var(--text); font-weight:500;">Alert types</span>
+                      <span style="font-size:11px; color:var(--text-muted);">Configure push triggers</span>
+                    </div>
+                    <iconify-icon icon="ph:caret-down-bold" id="alert-types-chevron" style="font-size: 14px; color:var(--text-dim); transition:transform 0.2s;"></iconify-icon>
+                  </button>
+
+                  <div id="settings-alert-types-content" style="display:none; flex-direction:column; gap:10px; padding:0 12px 12px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; padding-top:4px; border-top:1px solid var(--border-subtle);">
+                      <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                        <input type="checkbox" id="settings-alert-mention" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Mentions
+                      </label>
+                      <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                        <input type="checkbox" id="settings-alert-follow" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follows
+                      </label>
+                      <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                        <input type="checkbox" id="settings-alert-reblog" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Boosts
+                      </label>
+                      <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                        <input type="checkbox" id="settings-alert-favourite" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Favorites
+                      </label>
+                      <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                        <input type="checkbox" id="settings-alert-follow-request" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follow requests
+                      </label>
+                      <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                        <input type="checkbox" id="settings-alert-poll" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Polls ended
+                      </label>
+                      <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                        <input type="checkbox" id="settings-alert-status" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Posts
+                      </label>
+                      <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+                        <input type="checkbox" id="settings-alert-update" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Edits
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 5: Sync & Privacy -->
+      <div id="settings-panel-sync" class="settings-drawer-tab-panel">
+        <div style="padding:16px;">
+          <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono); margin-top:0;">
+            Sync &amp; Storage</h4>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            
+            <div style="display:flex; flex-direction:column; gap:16px; padding:16px; background:var(--surface2); border:1px solid var(--border); border-radius:12px;">
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <h4 style="font-size:11px; text-transform:uppercase; color:var(--accent); letter-spacing:0.08em; font-family:var(--font-mono); margin:0;">
+                  Privacy &amp; Sync <span style="font-size:9px; opacity:0.7;">(Experimental)</span></h4>
+                <p style="font-size:11px; color:var(--text-muted); line-height:1.5; margin:0;">
+                  Elefeed uses your Mastodon account's private <b>Relationship Note</b> to store data. This is a secure, personal field that is only visible to you and this application - your followers and the public cannot see it.
                 </p>
               </div>
-            </div>
-          </div>
 
-        </div>
-      </div>
-
-      <!-- Notifications -->
-      <div style="padding:16px; border-bottom:1px solid var(--border);">
-        <h4 style="font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; letter-spacing:0.08em; font-family:var(--font-mono);">
-          Notifications</h4>
-        <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- In-app notification previews toggle -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-            <div style="display:flex; flex-direction:column; gap:2px;">
-              <span style="font-size:13px; color:var(--text); font-weight:500;">In-app previews</span>
-              <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a preview toast when a new
-                notification arrives while the app is open.</span>
-            </div>
-            <label class="settings-toggle" style="flex-shrink:0;" title="Enable in-app notification previews">
-              <input type="checkbox" id="settings-in-app-notif-toggle" checked />
-              <span class="settings-toggle-track"></span>
-            </label>
-          </div>
-          <!-- Background notifications toggle -->
-          <div id="settings-push-notifs-section" style="display:flex; flex-direction:column; gap:16px; margin-top:4px;">
-            <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Push
-              Notifications (OS)</span>
-
-            <!-- Permission row -->
-            <div style="display:flex; flex-direction:column; gap:8px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-              <div id="settings-web-notif-perm-row" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                  <span style="font-size:13px; color:var(--text); font-weight:500;">Status</span>
-                  <span style="font-size:11px; color:var(--text-muted);" id="settings-notif-perm-status">Checking…</span>
-                </div>
-                <button id="settings-notif-perm-btn" style="padding:7px 14px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:12px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
-                  <iconify-icon icon="ph:bell-bold" style="font-size: 13px;"></iconify-icon>
-                  Enable
-                </button>
-              </div>
-
-              <!-- Android Alarm Permission (Hidden by default, shown by JS if AndroidBridge exists) -->
-              <div id="settings-android-alarm-section" style="display:none; flex-direction:column; gap:6px; padding:10px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; margin-top:4px;">
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                  <span style="font-size:12px; color:var(--text); font-weight:500;">Android Alarm Permission</span>
-                  <span style="font-size:10px; color:var(--text-muted); line-height:1.4;">Allows more frequent
-                    background checks.</span>
-                </div>
-                <button id="settings-android-alarm-btn" style="align-self:flex-start; padding:6px 12px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:11px; font-weight:500; font-family:var(--font-body); cursor:pointer; transition:opacity 0.2s; display:flex; align-items:center; gap:6px;">
-                  <iconify-icon icon="ph:clock-bold" style="font-size: 12px;"></iconify-icon>
-                  Request Permission
-                </button>
-              </div>
-            </div>
-
-            <div id="settings-web-push-options" style="display:flex; flex-direction:column; gap:12px;">
-              <!-- Background notifications toggle -->
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                  <span style="font-size:13px; color:var(--text); font-weight:500;">Background notifications</span>
-                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Receive alerts even when
-                    Elefeed isn't open.</span>
-                </div>
-                <label class="settings-toggle" style="flex-shrink:0;" title="Enable background notifications">
-                  <input type="checkbox" id="settings-bg-notif-toggle" />
-                  <span class="settings-toggle-track"></span>
-                </label>
-              </div>
-
-              <!-- Poll interval -->
-              <div id="settings-notif-interval-row" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                  <span style="font-size:13px; color:var(--text); font-weight:500;">Check interval</span>
-                  <span style="font-size:11px; color:var(--text-muted);">How often to check for updates.</span>
-                </div>
-                <select id="settings-notif-interval" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); cursor:pointer; outline:none; min-width:90px;">
-                  <option value="30000">30 sec</option>
-                  <option value="60000">1 min</option>
-                  <option value="120000">2 min</option>
-                  <option value="300000">5 min</option>
-                  <option value="600000" selected>10 min</option>
-                  <option value="900000">15 min</option>
-                  <option value="1800000">30 min</option>
-                </select>
-              </div>
-
-              <!-- Alert types (Collapsible) -->
-              <div id="settings-notif-alerts-row" style="display:flex; flex-direction:column; background:var(--bg); border:1px solid var(--border); border-radius:8px; overflow:hidden;">
-                <button id="settings-alert-types-toggle" style="width:100%; border:none; background:none; padding:12px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; outline:none; text-align:left;">
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <!-- Usage Tracking -->
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
                   <div style="display:flex; flex-direction:column; gap:2px;">
-                    <span style="font-size:13px; color:var(--text); font-weight:500;">Alert types</span>
-                    <span style="font-size:11px; color:var(--text-muted);">Configure push triggers</span>
+                    <span style="font-size:13px; color:var(--text); font-weight:500;">Daily Usage Timer</span>
+                    <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Track and sync your time spent in the app today.</span>
                   </div>
-                  <iconify-icon icon="ph:caret-down-bold" id="alert-types-chevron" style="font-size: 14px; color:var(--text-dim); transition:transform 0.2s;"></iconify-icon>
-                </button>
+                  <label class="settings-toggle" style="flex-shrink:0;">
+                    <input type="checkbox" id="settings-usage-tracking-toggle" />
+                    <span class="settings-toggle-track"></span>
+                  </label>
+                </div>
 
-                <div id="settings-alert-types-content" style="display:none; flex-direction:column; gap:10px; padding:0 12px 12px;">
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; padding-top:4px; border-top:1px solid var(--border-subtle);">
-                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                      <input type="checkbox" id="settings-alert-mention" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Mentions
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                      <input type="checkbox" id="settings-alert-follow" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follows
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                      <input type="checkbox" id="settings-alert-reblog" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Boosts
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                      <input type="checkbox" id="settings-alert-favourite" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Favorites
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                      <input type="checkbox" id="settings-alert-follow-request" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Follow requests
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                      <input type="checkbox" id="settings-alert-poll" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Polls ended
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                      <input type="checkbox" id="settings-alert-status" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Posts
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-                      <input type="checkbox" id="settings-alert-update" style="accent-color:var(--accent); width:14px; height:14px; cursor:pointer;" /> Edits
-                    </label>
+                <div style="height:1px; background:var(--border-subtle);"></div>
+
+                <!-- Settings Sync -->
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font-size:13px; color:var(--text); font-weight:500;">Settings Sync</span>
+                    <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Sync your theme, fonts, and preferences across devices.</span>
                   </div>
+                  <label class="settings-toggle" style="flex-shrink:0;">
+                    <input type="checkbox" id="settings-sync-toggle" />
+                    <span class="settings-toggle-track"></span>
+                  </label>
+                </div>
+
+                <!-- Sync Account Selection -->
+                <div id="settings-sync-account-row" style="display:none; flex-direction:column; gap:6px;">
+                  <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.07em; font-family:var(--font-mono);">Sync Host Account</span>
+                  <select id="settings-sync-account-select" style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13px; font-family:var(--font-body); outline:none; width:100%; cursor:pointer;">
+                    <!-- Populated by JS -->
+                  </select>
+                  <p style="font-size:10px; color:var(--text-dim); line-height:1.4; margin:0;">
+                    This account will be used to store your shared settings.
+                  </p>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </div>
 
-
-      <!-- Debug Panel (developer only - shown via JS) -->
-      <div id="settings-debug-section" style="display:none; padding:16px; border-top:1px solid var(--border);">
-        <button id="settings-debug-toggle" style="width:100%; border:none; background:none; padding:0; margin:0; display:flex; align-items:center; justify-content:space-between; cursor:pointer; outline:none;" aria-expanded="false" aria-controls="settings-debug-content">
-          <h4 style="font-size:11px; text-transform:uppercase; color:#f59e0b; letter-spacing:0.08em; font-family:var(--font-mono); display:flex; align-items:center; gap:6px; margin:0;">
-            <iconify-icon icon="ph:warning-circle-bold" style="font-size: 12px;"></iconify-icon>
+      <!-- Panel 6: Developer Debug (dev-only) -->
+      <div id="settings-panel-developer" class="settings-drawer-tab-panel">
+        <div style="padding:16px;">
+          <h4 style="font-size:11px; text-transform:uppercase; color:#f59e0b; letter-spacing:0.08em; font-family:var(--font-mono); margin-top:0; margin-bottom:16px; display:flex; align-items:center; gap:6px;">
+            <iconify-icon icon="ph:warning-circle-bold" style="font-size: 13px;"></iconify-icon>
             Developer Debug
           </h4>
-          <iconify-icon icon="ph:caret-down-bold" class="debug-chevron" style="font-size: 12px; color:var(--text-dim); transition:transform 0.2s;"></iconify-icon>
-        </button>
 
-        <div id="settings-debug-content" style="display:none; flex-direction:column; gap:10px; margin-top:16px;">
-          <!-- Account Sync Debug -->
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <span style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em;">Sync
-              Management</span>
-            <button id="debug-view-note" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:12px; font-family:var(--font-mono); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-              <iconify-icon icon="ph:eye-bold"></iconify-icon>
-              View Stored Account Note
-            </button>
-            <button id="debug-clear-sync" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:#ff6b6b; font-size:12px; font-family:var(--font-mono); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-              <iconify-icon icon="ph:trash-bold"></iconify-icon>
-              Delete Account Settings
-            </button>
-          </div>
-
-          <!-- Feature Flags -->
-          <div>
-            <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.08em; font-family:var(--font-mono);">
-              Feature Flags</h5>
+          <div id="settings-debug-content" style="display:flex; flex-direction:column; gap:16px;">
+            <!-- Account Sync Debug -->
             <div style="display:flex; flex-direction:column; gap:8px;">
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                  <span style="font-size:13px; color:var(--text); font-weight:500;">From Following digest</span>
-                  <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a ranked feed of top
-                    posts from people you follow in Explore.</span>
+              <span style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em;">Sync Management</span>
+              <button id="debug-view-note" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:12px; font-family:var(--font-mono); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <iconify-icon icon="ph:eye-bold"></iconify-icon>
+                View Stored Account Note
+              </button>
+              <button id="debug-clear-sync" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:#ff6b6b; font-size:12px; font-family:var(--font-mono); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <iconify-icon icon="ph:trash-bold"></iconify-icon>
+                Delete Account Settings
+              </button>
+            </div>
+
+            <!-- Feature Flags -->
+            <div>
+              <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; letter-spacing:0.08em; font-family:var(--font-mono); margin-top:0;">
+                Feature Flags</h5>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                  <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font-size:13px; color:var(--text); font-weight:500;">From Following digest</span>
+                    <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Show a ranked feed of top posts from people you follow in Explore.</span>
+                  </div>
+                  <label class="settings-toggle" style="flex-shrink:0;" title="Enable From Following digest">
+                    <input type="checkbox" id="debug-following-feed-toggle" />
+                    <span class="settings-toggle-track"></span>
+                  </label>
                 </div>
-                <label class="settings-toggle" style="flex-shrink:0;" title="Enable From Following digest">
-                  <input type="checkbox" id="debug-following-feed-toggle" />
-                  <span class="settings-toggle-track"></span>
-                </label>
               </div>
             </div>
-          </div>
 
-          <!-- Notification Testing -->
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin:0 0 0 0; letter-spacing:0.08em; font-family:var(--font-mono);">
-              Notification Testing</h5>
-            <div id="debug-sub-status" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:10px; line-height:1.6; word-break:break-all;">
-              Click "Check Status" to inspect subscription…
-            </div>
-            <div style="display:flex; flex-wrap:wrap; gap:8px;">
-              <button id="debug-check-sub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔍
-                Check Status</button>
-              <button id="debug-register-push-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔄
-                Re-register Push</button>
-              <button id="debug-force-register-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid #f59e0b44; border-radius:6px; color:#f59e0b; font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">⚡
-                Force Re-register</button>
-              <button id="debug-test-notif-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔔
-                Test Notification</button>
-              <button id="debug-unsub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:var(--danger); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🗑
-                Unsubscribe</button>
+            <!-- Notification Testing -->
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <h5 style="font-size:10px; text-transform:uppercase; color:var(--text-dim); margin:0 0 0 0; letter-spacing:0.08em; font-family:var(--font-mono);">
+                Notification Testing</h5>
+              <div id="debug-sub-status" style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:10px; line-height:1.6; word-break:break-all;">
+                Click "Check Status" to inspect subscription…
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <button id="debug-check-sub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔍 Check Status</button>
+                <button id="debug-register-push-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔄 Re-register Push</button>
+                <button id="debug-force-register-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid #f59e0b44; border-radius:6px; color:#f59e0b; font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">⚡ Force Re-register</button>
+                <button id="debug-test-notif-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🔔 Test Notification</button>
+                <button id="debug-unsub-btn" style="padding:6px 12px; background:var(--surface2); border:1px solid rgba(239,68,68,0.3); border-radius:6px; color:var(--danger); font-size:11px; font-family:var(--font-mono); cursor:pointer; white-space:nowrap;">🗑 Unsubscribe</button>
+              </div>
             </div>
           </div>
         </div>
