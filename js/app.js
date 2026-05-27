@@ -1419,6 +1419,11 @@ if (settingsMenuBtn) {
       showInlineThreadToggle.checked = state.showInlineThread;
     }
 
+    const threadViewModeSelect = $('settings-thread-view-mode');
+    if (threadViewModeSelect) {
+      threadViewModeSelect.value = state.threadViewMode || 'dynamic';
+    }
+
     const autoOpenSensitiveToggle = $('settings-auto-open-sensitive-toggle');
     if (autoOpenSensitiveToggle) {
       autoOpenSensitiveToggle.checked = store.get('pref_auto_open_sensitive') === 'true';
@@ -1744,6 +1749,20 @@ if (_showInlineThreadToggle) {
     state.showInlineThread = _showInlineThreadToggle.checked;
     store.set('pref_show_inline_thread', state.showInlineThread ? 'true' : 'false');
     triggerPush();
+  });
+}
+
+// Thread view style option
+const _threadViewModeSelect = $('settings-thread-view-mode');
+if (_threadViewModeSelect) {
+  _threadViewModeSelect.addEventListener('change', () => {
+    state.threadViewMode = _threadViewModeSelect.value;
+    store.set('pref_thread_view_mode', state.threadViewMode);
+    triggerPush();
+    // Instantly refresh active thread view to reflect layout change
+    import('./thread.js').then(m => {
+      m.updateCurrentThread(0);
+    });
   });
 }
 
@@ -2922,7 +2941,7 @@ document.addEventListener('click', e => {
   // List of selectors that should NOT trigger opening the full thread.
   const INTERACTIVE = 'a, a *, button, button *, input, select, textarea, [data-profile-id], [data-profile-id] *, .post-footer, .post-footer *, .cw-wrapper, .cw-wrapper *, .post-quote, .post-quote *, .media-item, .media-item *, .post-poll, .post-poll *, .boost-dropdown, .tab-dropdown-item, video, .sensitive-overlay, .sensitive-pill, .hashtag, .hashtag *, [onclick]';
   const postArticle = e.target.closest('article.post');
-  if (postArticle && !e.target.closest(INTERACTIVE) && !e.target.closest('.thread-drawer, .post-analytics-drawer')) {
+  if (postArticle && !e.target.closest(INTERACTIVE) && !e.target.closest('.thread-drawer, .thread-inline-panel, .post-analytics-drawer')) {
     e.preventDefault();
     const statusId = postArticle.dataset.id;
     if (statusId) {

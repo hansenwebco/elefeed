@@ -182,6 +182,14 @@ function applySettings(prefs) {
       case 'pref_show_inline_thread':
         state.showInlineThread = (prefs[key] !== 'false');
         break;
+      case 'pref_thread_view_mode':
+        state.threadViewMode = prefs[key];
+        const select = $('settings-thread-view-mode');
+        if (select) select.value = prefs[key];
+        import('./thread.js').then(m => {
+          m.updateCurrentThread(0);
+        });
+        break;
     }
   });
 

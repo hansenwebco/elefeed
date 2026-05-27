@@ -1047,6 +1047,10 @@
   min-height: 36px;
 }
 
+body.thread-active .usage-note-banner {
+  display: none !important;
+}
+
 
 .usage-note-content {
   display: flex;

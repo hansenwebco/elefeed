@@ -640,6 +640,7 @@
   white-space: nowrap;
   overflow: hidden;
   width: 100%;
+  cursor: pointer;
 }
 
 .condensed-reply-avatar {
