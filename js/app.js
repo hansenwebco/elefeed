@@ -2815,6 +2815,10 @@ document.addEventListener('click', e => {
       window.handleDeleteRedraftInit(boostItem.dataset.postId, boostItem);
     } else if (boostItem.dataset.action === 'mute-conversation') {
       window.handleMuteConversationToggle(boostItem.dataset.postId, boostItem.dataset.muted === 'true', boostItem);
+    } else if (boostItem.dataset.action === 'mute-user') {
+      window.handleMuteUserToggle(boostItem.dataset.accountId, boostItem.dataset.muted === 'true', boostItem.dataset.acct, boostItem);
+    } else if (boostItem.dataset.action === 'block-user') {
+      window.handleBlockUserToggle(boostItem.dataset.accountId, boostItem.dataset.blocked === 'true', boostItem.dataset.acct, boostItem);
     }
     return;
   }
