@@ -1461,8 +1461,7 @@ window.toggleCondensedExpansion = async function (statusId, el, forceOpen = fals
     if (c === container) return;
     c.classList.remove('active');
     c.innerHTML = '';
-    const otherId = c.id.replace('expanded-', '');
-    const trigger = document.querySelector(`.condensed-reply-node[data-status-id="${otherId}"] .condensed-reply`);
+    const trigger = c.closest('.condensed-reply-node')?.querySelector('.condensed-reply');
     if (trigger) trigger.classList.remove('expanded');
   });
 
@@ -1477,7 +1476,7 @@ window.toggleCondensedExpansion = async function (statusId, el, forceOpen = fals
   if (peekCache.has(statusId)) {
     const status = peekCache.get(statusId);
     container.innerHTML = `
-      <div class="full-reply-card">
+      <div class="full-reply-card" onclick="if (!event.target.closest('button, a, .post-stat, .post-media-item, .post-display-name, .post-author-handle, .post-avatar')) { event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', this.closest('.condensed-reply-node').querySelector('.condensed-reply')); }">
         ${renderThreadPost(status, 'reply')}
       </div>`;
     container.classList.add('active');
@@ -1501,7 +1500,7 @@ window.toggleCondensedExpansion = async function (statusId, el, forceOpen = fals
     }
 
     container.innerHTML = `
-      <div class="full-reply-card" onclick="if (!event.target.closest('button, a, .post-stat, .post-media-item, .post-display-name, .post-author-handle, .post-avatar')) { event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', document.querySelector('.condensed-reply-node[data-status-id=\\'${statusId}\\'] .condensed-reply')); }">
+      <div class="full-reply-card" onclick="if (!event.target.closest('button, a, .post-stat, .post-media-item, .post-display-name, .post-author-handle, .post-avatar')) { event.stopPropagation(); window.toggleCondensedExpansion('${statusId}', this.closest('.condensed-reply-node').querySelector('.condensed-reply')); }">
         ${renderThreadPost(status, 'reply')}
       </div>`;
 
@@ -1553,6 +1552,16 @@ export function selectReplyNode(node) {
   }
 }
 
+window.selectReplyNode = selectReplyNode;
+
+window.seedPeekCache = function(statuses) {
+  statuses.forEach(s => {
+    const id = s.reblog ? s.reblog.id : s.id;
+    peekCache.set(id, s);
+    peekCache.set(s.id, s);
+  });
+};
+
 
 function debouncedExpand(node) {
   if (expansionDebounceTimer) clearTimeout(expansionDebounceTimer);
@@ -1572,7 +1581,21 @@ window.addEventListener('keydown', (e) => {
   const key = e.key.toLowerCase();
   if (key !== 'a' && key !== 'z') return;
 
-  const allNodes = Array.from(document.querySelectorAll('.condensed-reply-node'));
+  let allNodes = [];
+  const isInline = document.body.classList.contains('thread-inline-active');
+  const isDrawerOpen = $('thread-drawer')?.classList.contains('open');
+
+  if (isInline) {
+    allNodes = Array.from($('thread-inline-content')?.querySelectorAll('.condensed-reply-node') || []);
+  } else if (isDrawerOpen) {
+    allNodes = Array.from($('thread-content')?.querySelectorAll('.condensed-reply-node') || []);
+  } else {
+    // Exclude nodes that are inside the thread panel/drawer since they are not active in feed view
+    allNodes = Array.from(document.querySelectorAll('.condensed-reply-node')).filter(node => {
+      return !node.closest('#thread-inline-panel') && !node.closest('#thread-drawer');
+    });
+  }
+
   if (allNodes.length === 0) return;
 
   e.preventDefault();

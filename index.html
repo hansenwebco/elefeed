@@ -1588,6 +1588,18 @@
               </label>
             </div>
 
+            <!-- Thread view style selection -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:13px; color:var(--text); font-weight:500;">Thread view style</span>
+                <span style="font-size:11px; color:var(--text-muted);">Choose between a compact interactive branch tree or a fully expanded post list.</span>
+              </div>
+              <select id="settings-thread-view-mode" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:12px; font-family:var(--font-body); outline:none; min-width:110px; cursor:pointer;">
+                <option value="dynamic">Interactive</option>
+                <option value="full">Fully Expanded</option>
+              </select>
+            </div>
+
             <!-- Zen mode -->
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <div style="display:flex; flex-direction:column; gap:2px;">

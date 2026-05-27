@@ -5,7 +5,7 @@
 
 import { $, state } from './state.js';
 import { apiGet } from './api.js';
-import { renderThreadPost, getFilterInfo } from './render.js';
+import { renderThreadPost, getFilterInfo, renderCondensedTree } from './render.js';
 import { fetchRelationships } from './feed.js';
 import { escapeHTML, updateURLParam } from './utils.js';
 
@@ -19,6 +19,8 @@ let activeThreadData = null;
 export function openThreadDrawer(statusId) {
   currentThreadId = statusId;
   const isDesktop = window.innerWidth > 900;
+
+  document.body.classList.add('thread-active');
 
   if (isDesktop) {
     const inlinePanel = $('thread-inline-panel');
@@ -61,6 +63,7 @@ export function closeThreadDrawer() {
   updateURLParam('thread', null);
   const wasInline = document.body.classList.contains('thread-inline-active');
   document.body.classList.remove('thread-inline-active');
+  document.body.classList.remove('thread-active');
   const drawer = $('thread-drawer');
   const backdrop = $('thread-backdrop');
   drawer.classList.remove('open');
@@ -134,6 +137,11 @@ async function loadThread(statusId, container, preserveScroll = false, scrollToI
       return !(isFiltered && filterAction === 'hide');
     });
 
+    // Seed the peek cache with the thread context statuses so they expand instantly
+    if (window.seedPeekCache) {
+      window.seedPeekCache([focalStatus, ...filteredAncestors, ...filteredDescendants]);
+    }
+
     console.log('[Thread] loadThread: rendering thread...');
     renderThread(focalStatus, filteredAncestors, filteredDescendants, container, preserveScroll ? currentScroll : 0, scrollToId);
 
@@ -190,14 +198,38 @@ export function buildFullTree(ancestors, focalStatus, descendants) {
 
 function renderTree(nodes, depth) {
   return nodes.map(node => {
-    const s = node.status.reblog ? node.status.reblog : node.status;
+    const useCondensed = state.threadViewMode !== 'full'; // Default to dynamic/condensed
 
-    const postHTML = renderThreadPost(node.status, node.variant);
-    const childrenHTML = node.children.length > 0
-      ? `<div class="thread-reply-children">${renderTree(node.children, depth + 1)}</div>`
-      : '';
+    if (useCondensed) {
+      if (node.variant === 'ancestor' || node.variant === 'focal') {
+        const postHTML = renderThreadPost(node.status, node.variant);
+        
+        let childrenHTML = '';
+        if (node.children.length > 0) {
+          const hasOnlyReplies = node.children.every(c => c.variant === 'reply');
+          if (hasOnlyReplies) {
+            // Render descendants/replies as a beautiful condensed interactive tree branch
+            childrenHTML = `<div class="condensed-reply-wrapper" style="padding-left: 20px; border-left: 1px solid var(--border); margin-left: 20px; margin-top: 10px; margin-right: 20px;">
+              ${renderCondensedTree(node.children, 0)}
+            </div>`;
+          } else {
+            childrenHTML = `<div class="thread-reply-children">${renderTree(node.children, depth + 1)}</div>`;
+          }
+        }
+        return `<div class="thread-node">${postHTML}${childrenHTML}</div>`;
+      } else {
+        // Fallback: render standalone reply nodes using the condensed tree format
+        return renderCondensedTree([node], 0);
+      }
+    } else {
+      // Legacy "Full" thread view mode: render all ancestors, focal status, and replies fully expanded
+      const postHTML = renderThreadPost(node.status, node.variant);
+      const childrenHTML = node.children.length > 0
+        ? `<div class="thread-reply-children">${renderTree(node.children, depth + 1)}</div>`
+        : '';
 
-    return `<div class="thread-node">${postHTML}${childrenHTML}</div>`;
+      return `<div class="thread-node">${postHTML}${childrenHTML}</div>`;
+    }
   }).join('');
 }
 
@@ -247,12 +279,27 @@ function renderThread(focalStatus, ancestors, descendants, container, prevScroll
   requestAnimationFrame(() => {
     // If we have a specific target post (e.g. just posted)
     if (scrollToId) {
-      const targetPost = container.querySelector(`article.post[data-post-id="${scrollToId}"]`);
+      const targetPost = container.querySelector(`article.post[data-id="${scrollToId}"], article.post[data-post-id="${scrollToId}"], .condensed-reply-node[data-status-id="${scrollToId}"]`);
       if (targetPost) {
         console.log('[Thread] Scrolling to targetPost:', scrollToId);
         targetPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
         targetPost.classList.add('flash-highlight');
-        targetPost.classList.add('selected');
+        
+        if (targetPost.classList.contains('condensed-reply-node')) {
+          if (window.selectReplyNode) {
+            window.selectReplyNode(targetPost);
+          } else {
+            targetPost.classList.add('selected');
+          }
+          
+          const trig = targetPost.querySelector('.condensed-reply');
+          if (trig && window.toggleCondensedExpansion) {
+            window.toggleCondensedExpansion(scrollToId, trig, true);
+          }
+        } else {
+          targetPost.classList.add('selected');
+        }
+        
         setTimeout(() => targetPost.classList.remove('flash-highlight'), 2000);
         return;
       }

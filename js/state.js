@@ -112,6 +112,7 @@ export const state = {
   bookmarksActive: false,
   giphyEnabled: store.get('pref_giphy_enabled') !== 'false',
   showInlineThread: store.get('pref_show_inline_thread') !== 'false',
+  threadViewMode: store.get('pref_thread_view_mode') || 'dynamic',
   
   /* Filters */
   filters: [],
