@@ -1047,3 +1047,44 @@ body {
     transform: scale(1) rotate(0deg);
   }
 }
+
+/* Default branding styling for individual letter spans (non-pride mode) */
+.login-logo .wordmark span:nth-child(n+4),
+.header-wordmark span:nth-child(n+4),
+.about-wordmark span:nth-child(n+4) {
+  color: var(--text);
+}
+
+/* 🌈 Pride Month Rainbow Logo Brand Styling (Each letter a solid color) */
+html[data-pride="true"] .login-logo .wordmark span:nth-child(1),
+html[data-pride="true"] .header-wordmark span:nth-child(1),
+html[data-pride="true"] .about-wordmark span:nth-child(1) { color: #ff4b4b !important; }
+
+html[data-pride="true"] .login-logo .wordmark span:nth-child(2),
+html[data-pride="true"] .header-wordmark span:nth-child(2),
+html[data-pride="true"] .about-wordmark span:nth-child(2) { color: #ff8f3d !important; }
+
+html[data-pride="true"] .login-logo .wordmark span:nth-child(3),
+html[data-pride="true"] .header-wordmark span:nth-child(3),
+html[data-pride="true"] .about-wordmark span:nth-child(3) { color: #ffd043 !important; }
+
+html[data-pride="true"] .login-logo .wordmark span:nth-child(4),
+html[data-pride="true"] .header-wordmark span:nth-child(4),
+html[data-pride="true"] .about-wordmark span:nth-child(4) { color: #1ddc94 !important; }
+
+html[data-pride="true"] .login-logo .wordmark span:nth-child(5),
+html[data-pride="true"] .header-wordmark span:nth-child(5),
+html[data-pride="true"] .about-wordmark span:nth-child(5) { color: #3b82f6 !important; }
+
+html[data-pride="true"] .login-logo .wordmark span:nth-child(6),
+html[data-pride="true"] .header-wordmark span:nth-child(6),
+html[data-pride="true"] .about-wordmark span:nth-child(6) { color: #8b5cf6 !important; }
+
+html[data-pride="true"] .login-logo .wordmark span:nth-child(7),
+html[data-pride="true"] .header-wordmark span:nth-child(7),
+html[data-pride="true"] .about-wordmark span:nth-child(7) { color: #ec4899 !important; }
+
+
+
+
+
