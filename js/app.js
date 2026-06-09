@@ -1201,6 +1201,12 @@ const doRefresh = async () => {
 };
 $('refresh-btn').addEventListener('click', doRefresh);
 $('header-wordmark-btn').addEventListener('click', doRefresh);
+if (document.documentElement.getAttribute('data-pride') === 'true') {
+  const wordmarkBtn = $('header-wordmark-btn');
+  if (wordmarkBtn) {
+    wordmarkBtn.setAttribute('title', 'Happy Pride! 🌈 (Refresh feed)');
+  }
+}
 
 const fedDismissBtn = $('federated-info-dismiss');
 if (fedDismissBtn) {
